@@ -24,27 +24,30 @@ A comprehensive Node.js TypeScript backend for the Ed-verse educational platform
 ## 🛠️ Installation
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Set up environment variables:**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` with your configuration:
+
    ```env
    # Database
    DATABASE_URL="postgresql://username:password@localhost:5432/edverse_db"
-   
+
    # Server
    PORT=3000
    NODE_ENV=development
-   
+
    # JWT
    JWT_SECRET="your-super-secret-jwt-key-here"
-   
+
    # Email (optional)
    SMTP_HOST="smtp.gmail.com"
    SMTP_PORT=587
@@ -53,13 +56,14 @@ A comprehensive Node.js TypeScript backend for the Ed-verse educational platform
    ```
 
 3. **Set up the database:**
+
    ```bash
    # Generate Prisma client
    npm run db:generate
-   
+
    # Push schema to database
    npm run db:push
-   
+
    # Seed the database with sample data
    npm run db:seed
    ```
@@ -74,6 +78,7 @@ A comprehensive Node.js TypeScript backend for the Ed-verse educational platform
 The backend uses a comprehensive database schema designed for educational institutions:
 
 ### Core Entities
+
 - **Users** - Authentication and user management
 - **Roles** - Role-based access control
 - **Institutions** - Multi-institution support
@@ -82,6 +87,7 @@ The backend uses a comprehensive database schema designed for educational instit
 - **Courses** - Individual academic courses
 
 ### Academic Management
+
 - **Students** - Student profiles and academic records
 - **Teachers** - Faculty profiles and teaching assignments
 - **Parents** - Parent/guardian information
@@ -90,6 +96,7 @@ The backend uses a comprehensive database schema designed for educational instit
 - **Attendance** - Student attendance tracking
 
 ### Assessment & Grading
+
 - **Examinations** - Exam scheduling and management
 - **ExamResults** - Student exam results
 - **AcademicRecords** - Comprehensive academic history
@@ -99,6 +106,7 @@ The backend uses a comprehensive database schema designed for educational instit
 ## 🔌 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
 - `POST /api/auth/refresh` - Refresh access token
@@ -108,6 +116,7 @@ The backend uses a comprehensive database schema designed for educational instit
 - `POST /api/auth/logout` - User logout
 
 ### Students
+
 - `GET /api/students` - Get all students (Admin/Teacher)
 - `GET /api/students/:id` - Get student by ID
 - `POST /api/students` - Create new student (Admin)
@@ -117,6 +126,7 @@ The backend uses a comprehensive database schema designed for educational instit
 - `GET /api/students/:id/attendance` - Get student's attendance
 
 ### Health Check
+
 - `GET /health` - Server health status
 - `GET /api` - API information and available endpoints
 
@@ -129,6 +139,7 @@ The API uses JWT (JSON Web Tokens) for authentication:
 3. **Refresh token** when access token expires
 
 ### Sample Request:
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -139,6 +150,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### Sample Authenticated Request:
+
 ```bash
 curl -X GET http://localhost:3000/api/students \
   -H "Authorization: Bearer <your-jwt-token>"
@@ -195,16 +207,19 @@ npm run db:seed
 ## 🚀 Deployment
 
 ### Build for Production
+
 ```bash
 npm run build
 ```
 
 ### Start Production Server
+
 ```bash
 npm start
 ```
 
 ### Environment Variables for Production
+
 - Set `NODE_ENV=production`
 - Use strong `JWT_SECRET`
 - Configure production database URL
@@ -214,7 +229,9 @@ npm start
 ## 📚 API Documentation
 
 ### Response Format
+
 All API responses follow this format:
+
 ```json
 {
   "success": boolean,
@@ -231,6 +248,7 @@ All API responses follow this format:
 ```
 
 ### Error Handling
+
 - **400** - Bad Request (validation errors)
 - **401** - Unauthorized (invalid/missing token)
 - **403** - Forbidden (insufficient permissions)
@@ -241,6 +259,7 @@ All API responses follow this format:
 ## 🔧 Development
 
 ### Project Structure
+
 ```
 src/
 ├── controllers/     # Route controllers
@@ -254,6 +273,7 @@ src/
 ```
 
 ### Adding New Features
+
 1. Define types in `src/types/`
 2. Create service in `src/services/`
 3. Add routes in `src/routes/`
@@ -265,15 +285,18 @@ src/
 ### Common Issues
 
 1. **Database Connection Error**
+
    - Check PostgreSQL is running
    - Verify DATABASE_URL in .env
    - Ensure database exists
 
 2. **JWT Secret Error**
+
    - Set JWT_SECRET in .env
    - Use a strong, random secret
 
 3. **Port Already in Use**
+
    - Change PORT in .env
    - Kill process using the port
 
@@ -282,6 +305,7 @@ src/
    - Check schema syntax
 
 ### Debug Mode
+
 ```bash
 DEBUG=* npm run dev
 ```
