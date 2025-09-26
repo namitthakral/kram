@@ -1,6 +1,7 @@
 # Ed-verse 🎓
 
 A modern educational platform built with a monorepo architecture featuring:
+
 - **Backend**: Node.js with TypeScript and Express
 - **Frontend**: Flutter for cross-platform mobile and web applications
 
@@ -44,6 +45,7 @@ ed-verse/
 ### Prerequisites
 
 Make sure you have the following installed:
+
 - **Node.js** (v18+) and **npm** (v9+)
 - **Flutter** (v3.10+) - [Installation Guide](https://flutter.dev/docs/get-started/install)
 - **Git**
@@ -140,6 +142,7 @@ flutter analyze         # Analyze code
 ## 📱 Platform Support
 
 The Flutter frontend supports:
+
 - **Web** (Progressive Web App)
 - **Android** (Native mobile app)
 - **iOS** (Native mobile app)
@@ -147,11 +150,13 @@ The Flutter frontend supports:
 ## 🧪 Testing
 
 ### Backend Testing
+
 - **Framework**: Jest with ts-jest
 - **Location**: `backend/tests/`
 - **Run**: `cd backend && npm test`
 
 ### Frontend Testing
+
 - **Framework**: Flutter Test
 - **Location**: `frontend/test/`
 - **Run**: `cd frontend && flutter test`
@@ -159,11 +164,14 @@ The Flutter frontend supports:
 ## 📦 Deployment
 
 ### Backend Deployment
+
 The backend can be deployed to any Node.js hosting service:
+
 - Build: `cd backend && npm run build`
 - Start: `npm start`
 
 ### Frontend Deployment
+
 - **Web**: `cd frontend && flutter build web`
 - **Android**: `cd frontend && flutter build apk`
 - **iOS**: `cd frontend && flutter build ios`

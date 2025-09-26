@@ -1,0 +1,144 @@
+// Student and Teacher Management Models
+
+model Student {
+  id                    Int              @id @default(autoincrement())
+  userId                Int              @unique @map("user_id")
+  institutionId         Int              @map("institution_id")
+  programId             Int?             @map("program_id")
+  admissionNumber       String           @unique @map("admission_number") @db.VarChar(50)
+  rollNumber            String?          @map("roll_number") @db.VarChar(50)
+  admissionDate         DateTime?        @map("admission_date") @db.Date
+  graduationDate        DateTime?        @map("graduation_date") @db.Date
+  currentSemester       Int?             @map("current_semester")
+  currentYear           Int?             @map("current_year")
+  gradeLevel            String?          @map("grade_level") @db.VarChar(20)
+  section               String?          @db.VarChar(10)
+  studentType           StudentType      @default(REGULAR) @map("student_type")
+  residentialStatus     ResidentialStatus @default(DAY_SCHOLAR) @map("residential_status")
+  transportRequired     Boolean          @default(false) @map("transport_required")
+  emergencyContactName  String?          @map("emergency_contact_name") @db.VarChar(100)
+  emergencyContactPhone String?          @map("emergency_contact_phone") @db.VarChar(15)
+  bloodGroup            String?          @map("blood_group") @db.VarChar(5)
+  medicalConditions     String?          @map("medical_conditions")
+  status                StudentStatus    @default(ACTIVE)
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user                  User             @relation(fields: [userId], references: [id])
+  institution           Institution      @relation(fields: [institutionId], references: [id])
+  program               Program?         @relation(fields: [programId], references: [id])
+  parents               Parent[]
+  enrollments           Enrollment[]
+  attendance            Attendance[]
+  examResults           ExamResult[]
+  academicRecords       AcademicRecord[]
+  submissions           Submission[]
+  studentFees           StudentFee[]
+  payments              Payment[]
+  messagesSent          Message[]        @relation("StudentMessageSender")
+  messagesReceived      Message[]        @relation("StudentMessageReceiver")
+  bookIssues            BookIssue[]
+  careerGuidance        CareerGuidance[]
+  applications          Application[]
+  studentProgress       StudentProgress[]
+
+  @@map("students")
+}
+
+model Parent {
+  id                Int            @id @default(autoincrement())
+  userId            Int            @unique @map("user_id")
+  studentId         Int            @map("student_id")
+  relation          ParentRelation
+  occupation        String?        @db.VarChar(100)
+  annualIncome      Decimal?       @map("annual_income") @db.Decimal(12, 2)
+  educationLevel    String?        @map("education_level") @db.VarChar(50)
+  isPrimaryContact  Boolean        @default(false) @map("is_primary_contact")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  user              User           @relation(fields: [userId], references: [id])
+  student           Student        @relation(fields: [studentId], references: [id])
+
+  @@map("parents")
+}
+
+model Teacher {
+  id                Int              @id @default(autoincrement())
+  userId            Int              @unique @map("user_id")
+  institutionId     Int              @map("institution_id")
+  deptId            Int?             @map("dept_id")
+  employeeId        String           @unique @map("employee_id") @db.VarChar(50)
+  designation       String?          @db.VarChar(100)
+  specialization    String?          @db.VarChar(200)
+  qualification     String?          @db.VarChar(200)
+  experienceYears   Int              @default(0) @map("experience_years")
+  joinDate          DateTime?        @map("join_date") @db.Date
+  salary            Decimal?         @db.Decimal(12, 2)
+  employmentType    EmploymentType   @default(FULL_TIME) @map("employment_type")
+  officeLocation    String?          @map("office_location") @db.VarChar(100)
+  officeHours       String?          @map("office_hours") @db.VarChar(200)
+  researchInterests String?          @map("research_interests")
+  publications      String?
+  status            TeacherStatus    @default(ACTIVE)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user              User             @relation(fields: [userId], references: [id])
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  department        Department?      @relation(fields: [deptId], references: [id])
+  headOfDepartment  Department[]     @relation("DepartmentHead")
+  classSections     ClassSection[]
+  attendanceMarked  Attendance[]     @relation("AttendanceMarker")
+  examinations      Examination[]
+  examResults       ExamResult[]
+  assignments       Assignment[]
+  submissions       Submission[]
+  careerGuidance    CareerGuidance[]
+
+  @@map("teachers")
+}
+
+// Enums
+enum StudentType {
+  REGULAR
+  TRANSFER
+  EXCHANGE
+}
+
+enum ResidentialStatus {
+  DAY_SCHOLAR
+  HOSTELER
+}
+
+enum StudentStatus {
+  ACTIVE
+  ALUMNI
+  DROPOUT
+  TRANSFERRED
+  SUSPENDED
+}
+
+enum ParentRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+  OTHER
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  VISITING
+}
+
+enum TeacherStatus {
+  ACTIVE
+  ON_LEAVE
+  RESIGNED
+  RETIRED
+}

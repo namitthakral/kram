@@ -1,0 +1,167 @@
+// Assessment and Grading Models
+
+model Examination {
+  id                  Int              @id @default(autoincrement())
+  courseId            Int              @map("course_id")
+  semesterId          Int              @map("semester_id")
+  examName            String           @map("exam_name") @db.VarChar(100)
+  examType            ExamType         @map("exam_type")
+  examDate            DateTime?        @map("exam_date") @db.Date
+  startTime           DateTime?        @map("start_time") @db.Time
+  durationMinutes     Int?             @map("duration_minutes")
+  totalMarks          Int              @map("total_marks")
+  passingMarks        Int?             @map("passing_marks")
+  weightagePercentage Decimal?         @map("weightage_percentage") @db.Decimal(5, 2)
+  instructions        String?
+  venue               String?          @db.VarChar(100)
+  status              ExamStatus       @default(SCHEDULED)
+  createdBy           Int              @map("created_by")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  course              Course           @relation(fields: [courseId], references: [id])
+  semester            Semester         @relation(fields: [semesterId], references: [id])
+  creator             Teacher          @relation(fields: [createdBy], references: [id])
+  results             ExamResult[]
+
+  @@map("examinations")
+}
+
+model ExamResult {
+  id          Int      @id @default(autoincrement())
+  examId      Int      @map("exam_id")
+  studentId   Int      @map("student_id")
+  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
+  grade       String?  @db.VarChar(5)
+  rankInClass Int?     @map("rank_in_class")
+  remarks     String?
+  isAbsent    Boolean  @default(false) @map("is_absent")
+  evaluatedBy Int?     @map("evaluated_by")
+  evaluatedAt DateTime? @map("evaluated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  exam        Examination @relation(fields: [examId], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id])
+  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id])
+
+  @@unique([examId, studentId], name: "unique_result")
+  @@map("exam_results")
+}
+
+model AcademicRecord {
+  id          Int      @id @default(autoincrement())
+  studentId   Int      @map("student_id")
+  semesterId  Int      @map("semester_id")
+  courseId    Int      @map("course_id")
+  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
+  maxMarks    Decimal? @map("max_marks") @db.Decimal(6, 2)
+  grade       String?  @db.VarChar(5)
+  gradePoints Decimal? @map("grade_points") @db.Decimal(4, 2)
+  creditsEarned Int?   @map("credits_earned")
+  status      AcademicRecordStatus @default(PASSED)
+  remarks     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  student     Student  @relation(fields: [studentId], references: [id])
+  semester    Semester @relation(fields: [semesterId], references: [id])
+  course      Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, semesterId, courseId], name: "unique_record")
+  @@map("academic_records")
+}
+
+model Assignment {
+  id                      Int                @id @default(autoincrement())
+  courseId                Int                @map("course_id")
+  sectionId               Int?               @map("section_id")
+  teacherId               Int                @map("teacher_id")
+  title                   String             @db.VarChar(200)
+  description             String?
+  instructions            String?
+  maxMarks                Int                @default(100) @map("max_marks")
+  weightagePercentage     Decimal?           @map("weightage_percentage") @db.Decimal(5, 2)
+  assignedDate            DateTime           @default(now()) @map("assigned_date") @db.Date
+  dueDate                 DateTime           @map("due_date")
+  lateSubmissionAllowed   Boolean            @default(true) @map("late_submission_allowed")
+  latePenaltyPercentage   Decimal            @default(0) @map("late_penalty_percentage") @db.Decimal(5, 2)
+  attachmentUrl           String?            @map("attachment_url") @db.VarChar(500)
+  status                  AssignmentStatus   @default(DRAFT)
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  course                  Course             @relation(fields: [courseId], references: [id])
+  section                 ClassSection?      @relation(fields: [sectionId], references: [id])
+  teacher                 Teacher            @relation(fields: [teacherId], references: [id])
+  submissions             Submission[]
+
+  @@map("assignments")
+}
+
+model Submission {
+  id            Int              @id @default(autoincrement())
+  assignmentId  Int              @map("assignment_id")
+  studentId     Int              @map("student_id")
+  fileUrl       String?          @map("file_url") @db.VarChar(500)
+  fileName      String?          @map("file_name") @db.VarChar(255)
+  fileSize      Int?             @map("file_size")
+  submissionText String?
+  submittedAt   DateTime         @default(now()) @map("submitted_at")
+  isLate        Boolean          @default(false) @map("is_late")
+  marksObtained Decimal?         @map("marks_obtained") @db.Decimal(6, 2)
+  feedback      String?
+  gradedBy      Int?             @map("graded_by")
+  gradedAt      DateTime?        @map("graded_at")
+  status        SubmissionStatus @default(SUBMITTED)
+  version       Int              @default(1)
+
+  // Relations
+  assignment    Assignment       @relation(fields: [assignmentId], references: [id])
+  student       Student          @relation(fields: [studentId], references: [id])
+  grader        Teacher?         @relation(fields: [gradedBy], references: [id])
+
+  @@unique([assignmentId, studentId, version], name: "unique_submission")
+  @@map("submissions")
+}
+
+// Enums
+enum ExamType {
+  QUIZ
+  MIDTERM
+  FINAL
+  ASSIGNMENT
+  PROJECT
+  PRACTICAL
+}
+
+enum ExamStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum AcademicRecordStatus {
+  PASSED
+  FAILED
+  INCOMPLETE
+  WITHDRAWN
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  RETURNED
+  RESUBMITTED
+}

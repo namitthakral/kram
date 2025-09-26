@@ -1,0 +1,136 @@
+// Academic Structure Models
+
+model AcademicYear {
+  id           Int             @id @default(autoincrement())
+  institutionId Int            @map("institution_id")
+  yearName     String          @map("year_name") @db.VarChar(20)
+  startDate    DateTime        @map("start_date") @db.Date
+  endDate      DateTime        @map("end_date") @db.Date
+  status       AcademicYearStatus @default(FUTURE)
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  institution  Institution     @relation(fields: [institutionId], references: [id])
+  semesters    Semester[]
+  feeStructures FeeStructure[]
+
+  @@map("academic_years")
+}
+
+model Semester {
+  id                Int            @id @default(autoincrement())
+  yearId            Int            @map("year_id")
+  semesterName      String         @map("semester_name") @db.VarChar(50)
+  semesterNumber    Int            @map("semester_number")
+  startDate         DateTime       @map("start_date") @db.Date
+  endDate           DateTime       @map("end_date") @db.Date
+  registrationStart DateTime?      @map("registration_start") @db.Date
+  registrationEnd   DateTime?      @map("registration_end") @db.Date
+  status            SemesterStatus @default(UPCOMING)
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  academicYear      AcademicYear   @relation(fields: [yearId], references: [id])
+  enrollments       Enrollment[]
+  classSections     ClassSection[]
+  examinations      Examination[]
+  academicRecords   AcademicRecord[]
+  studentFees       StudentFee[]
+  studentProgress   StudentProgress[]
+
+  @@map("semesters")
+}
+
+model Program {
+  id                  Int            @id @default(autoincrement())
+  institutionId       Int            @map("institution_id")
+  deptId              Int?           @map("dept_id")
+  name                String         @db.VarChar(200)
+  code                String?        @unique @db.VarChar(20)
+  degreeType          DegreeType     @map("degree_type")
+  durationYears       Decimal?       @map("duration_years") @db.Decimal(3, 1)
+  totalCredits        Int?           @map("total_credits")
+  description         String?
+  eligibilityCriteria String?        @map("eligibility_criteria")
+  status              ProgramStatus  @default(ACTIVE)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  institution         Institution    @relation(fields: [institutionId], references: [id])
+  department          Department?    @relation(fields: [deptId], references: [id])
+  courses             Course[]
+  students            Student[]
+  feeStructures       FeeStructure[]
+
+  @@map("programs")
+}
+
+model Course {
+  id              Int          @id @default(autoincrement())
+  programId       Int?         @map("program_id")
+  deptId          Int?         @map("dept_id")
+  courseName      String       @map("course_name") @db.VarChar(200)
+  courseCode      String       @unique @map("course_code") @db.VarChar(20)
+  credits         Int
+  lectureHours    Int          @default(0) @map("lecture_hours")
+  labHours        Int          @default(0) @map("lab_hours")
+  tutorialHours   Int          @default(0) @map("tutorial_hours")
+  courseType      CourseType   @default(CORE) @map("course_type")
+  prerequisites   String?      // JSON array of course_ids
+  description     String?
+  syllabus        String?
+  status          CourseStatus @default(ACTIVE)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  program         Program?     @relation(fields: [programId], references: [id])
+  department      Department?  @relation(fields: [deptId], references: [id])
+  enrollments     Enrollment[]
+  classSections   ClassSection[]
+  examinations    Examination[]
+  academicRecords AcademicRecord[]
+  assignments     Assignment[]
+
+  @@map("courses")
+}
+
+// Enums
+enum AcademicYearStatus {
+  CURRENT
+  PAST
+  FUTURE
+}
+
+enum SemesterStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+enum DegreeType {
+  CERTIFICATE
+  DIPLOMA
+  BACHELORS
+  MASTERS
+  PHD
+  OTHER
+}
+
+enum ProgramStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CourseType {
+  CORE
+  ELECTIVE
+  MINOR
+  MAJOR
+}
+
+enum CourseStatus {
+  ACTIVE
+  INACTIVE
+}
