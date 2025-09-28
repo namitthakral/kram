@@ -1,0 +1,116 @@
+// ============================================================================
+// STAFF MANAGEMENT MODELS
+// ============================================================================
+
+model StaffAttendance {
+  id                Int              @id @default(autoincrement())
+  staffId           Int              @map("staff_id")
+  date              DateTime         @db.Date
+  checkInTime       DateTime?        @map("check_in_time")
+  checkOutTime      DateTime?        @map("check_out_time")
+  totalHours        Decimal?         @map("total_hours") @db.Decimal(4, 2)
+  status            AttendanceStatus
+  remarks           String?
+  location          String?          @db.VarChar(100)
+  markedBy          Int?             @map("marked_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  staff             Staff            @relation(fields: [staffId], references: [id])
+  marker            User?            @relation(fields: [markedBy], references: [id])
+
+  @@unique([staffId, date], name: "unique_staff_attendance")
+  @@map("staff_attendance")
+}
+
+model StaffLeave {
+  id                Int              @id @default(autoincrement())
+  staffId           Int              @map("staff_id")
+  leaveType         LeaveType        @map("leave_type")
+  startDate         DateTime         @map("start_date") @db.Date
+  endDate           DateTime         @map("end_date") @db.Date
+  totalDays         Int              @map("total_days")
+  reason            String
+  status            LeaveStatus      @default(PENDING)
+  appliedDate       DateTime         @default(now()) @map("applied_date")
+  approvedBy        Int?             @map("approved_by")
+  approvedDate      DateTime?        @map("approved_date")
+  rejectionReason   String?          @map("rejection_reason")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  staff             Staff            @relation(fields: [staffId], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id])
+
+  @@map("staff_leaves")
+}
+
+model StaffAssignment {
+  id                Int              @id @default(autoincrement())
+  staffId           Int              @map("staff_id")
+  assignmentType    AssignmentType   @map("assignment_type")
+  title             String           @db.VarChar(200)
+  description       String?
+  location          String?          @db.VarChar(100)
+  startDate         DateTime         @map("start_date") @db.Date
+  endDate           DateTime?        @map("end_date") @db.Date
+  priority          TaskPriority     @default(MEDIUM)
+  status            StaffAssignmentStatus @default(ASSIGNED)
+  assignedBy        Int              @map("assigned_by")
+  completedAt       DateTime?        @map("completed_at")
+  remarks           String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  staff             Staff            @relation(fields: [staffId], references: [id])
+  assigner          User             @relation(fields: [assignedBy], references: [id])
+
+  @@map("staff_assignments")
+}
+
+// Staff Enums
+enum LeaveType {
+  CASUAL
+  SICK
+  ANNUAL
+  MATERNITY
+  PATERNITY
+  EMERGENCY
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AssignmentType {
+  MAINTENANCE
+  CLEANING
+  SECURITY
+  TRANSPORT
+  EVENT_SUPPORT
+  ADMINISTRATIVE
+  TECHNICAL_SUPPORT
+  OTHER
+}
+
+enum StaffAssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}

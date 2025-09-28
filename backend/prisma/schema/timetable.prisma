@@ -1,0 +1,219 @@
+// ============================================================================
+// TIMETABLE AND SCHEDULE MODELS
+// ============================================================================
+
+model TimeTable {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  academicYearId    Int              @map("academic_year_id")
+  semesterId        Int              @map("semester_id")
+  classId           Int?             @map("class_id") // For school classes
+  programId         Int?             @map("program_id") // For college programs
+  section           String?          @db.VarChar(10)
+  dayOfWeek         DayOfWeek        @map("day_of_week")
+  timeSlotId        Int              @map("time_slot_id")
+  subjectId         Int              @map("subject_id")
+  teacherId         Int              @map("teacher_id")
+  roomId            Int?             @map("room_id")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
+  program           Program?         @relation(fields: [programId], references: [id])
+  timeSlot          TimeSlot         @relation(fields: [timeSlotId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  room              Room?            @relation(fields: [roomId], references: [id])
+  substitutions     TeacherSubstitution[]
+
+  @@unique([institutionId, academicYearId, semesterId, programId, section, dayOfWeek, timeSlotId], name: "unique_timetable_slot")
+  @@map("timetables")
+}
+
+model TimeSlot {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  slotName          String           @map("slot_name") @db.VarChar(50) // "Period 1", "Morning Break", etc.
+  startTime         DateTime         @map("start_time") @db.Time
+  endTime           DateTime         @map("end_time") @db.Time
+  slotType          SlotType         @map("slot_type")
+  duration          Int              // Duration in minutes
+  isActive          Boolean          @default(true) @map("is_active")
+  sortOrder         Int              @map("sort_order")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  timetables        TimeTable[]
+
+  @@map("time_slots")
+}
+
+model Subject {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  name              String           @db.VarChar(100)
+  code              String           @db.VarChar(20)
+  description       String?
+  subjectType       SubjectType      @map("subject_type")
+  credits           Int?
+  theoryHours       Int              @default(0) @map("theory_hours")
+  practicalHours    Int              @default(0) @map("practical_hours")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  timetables        TimeTable[]
+  teacherSubjects   TeacherSubject[]
+  studentProgress   StudentProgress[]
+  attendanceSummary AttendanceSummary[]
+
+  @@unique([institutionId, code], name: "unique_subject_code")
+  @@map("subjects")
+}
+
+model Room {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  roomNumber        String           @map("room_number") @db.VarChar(20)
+  roomName          String?          @map("room_name") @db.VarChar(100)
+  roomType          RoomType         @map("room_type")
+  building          String?          @db.VarChar(100)
+  floor             String?          @db.VarChar(20)
+  capacity          Int?
+  facilities        String[]         // Array of facilities like "Projector", "AC", "Whiteboard"
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  timetables        TimeTable[]
+
+  @@unique([institutionId, roomNumber], name: "unique_room_number")
+  @@map("rooms")
+}
+
+model TeacherSubject {
+  id                Int              @id @default(autoincrement())
+  teacherId         Int              @map("teacher_id")
+  subjectId         Int              @map("subject_id")
+  academicYearId    Int              @map("academic_year_id")
+  isPrimary         Boolean          @default(false) @map("is_primary") // Primary teacher for the subject
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+
+  @@unique([teacherId, subjectId, academicYearId], name: "unique_teacher_subject")
+  @@map("teacher_subjects")
+}
+
+model TeacherSubstitution {
+  id                Int              @id @default(autoincrement())
+  originalTimetableId Int            @map("original_timetable_id")
+  substituteTeacherId Int            @map("substitute_teacher_id")
+  date              DateTime         @db.Date
+  reason            String           @db.VarChar(200)
+  status            SubstitutionStatus @default(PENDING)
+  requestedBy       Int              @map("requested_by")
+  approvedBy        Int?             @map("approved_by")
+  approvedAt        DateTime?        @map("approved_at")
+  remarks           String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  originalTimetable TimeTable        @relation(fields: [originalTimetableId], references: [id])
+  substituteTeacher Teacher          @relation("TeacherSubstitute", fields: [substituteTeacherId], references: [id])
+  requester         User             @relation("SubstitutionRequester", fields: [requestedBy], references: [id])
+  approver          User?            @relation("SubstitutionApprover", fields: [approvedBy], references: [id])
+
+  @@map("teacher_substitutions")
+}
+
+model ClassTeacher {
+  id                Int              @id @default(autoincrement())
+  teacherId         Int              @map("teacher_id")
+  programId         Int?             @map("program_id")
+  classLevel        String?          @map("class_level") @db.VarChar(20) // For schools: "Class 10", "Grade 5"
+  section           String?          @db.VarChar(10)
+  academicYearId    Int              @map("academic_year_id")
+  isActive          Boolean          @default(true) @map("is_active")
+  assignedDate      DateTime         @default(now()) @map("assigned_date")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  program           Program?         @relation(fields: [programId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+
+  @@unique([programId, classLevel, section, academicYearId], name: "unique_class_teacher")
+  @@map("class_teachers")
+}
+
+// Timetable Enums
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum SlotType {
+  LECTURE
+  PRACTICAL
+  TUTORIAL
+  BREAK
+  LUNCH
+  ASSEMBLY
+  SPORTS
+  LIBRARY
+  STUDY_HALL
+}
+
+enum SubjectType {
+  CORE
+  ELECTIVE
+  OPTIONAL
+  EXTRA_CURRICULAR
+  LANGUAGE
+  SCIENCE
+  MATHEMATICS
+  SOCIAL_STUDIES
+  ARTS
+  PHYSICAL_EDUCATION
+}
+
+enum RoomType {
+  CLASSROOM
+  LABORATORY
+  LIBRARY
+  AUDITORIUM
+  SPORTS_ROOM
+  COMPUTER_LAB
+  CONFERENCE_ROOM
+  STAFF_ROOM
+  PRINCIPAL_OFFICE
+  MEDICAL_ROOM
+}
+
+enum SubstitutionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}

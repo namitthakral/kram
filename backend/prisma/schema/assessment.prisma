@@ -1,4 +1,6 @@
-// Assessment and Grading Models
+// ============================================================================
+// ASSESSMENT MODELS
+// ============================================================================
 
 model Examination {
   id                  Int              @id @default(autoincrement())
@@ -49,30 +51,6 @@ model ExamResult {
 
   @@unique([examId, studentId], name: "unique_result")
   @@map("exam_results")
-}
-
-model AcademicRecord {
-  id          Int      @id @default(autoincrement())
-  studentId   Int      @map("student_id")
-  semesterId  Int      @map("semester_id")
-  courseId    Int      @map("course_id")
-  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
-  maxMarks    Decimal? @map("max_marks") @db.Decimal(6, 2)
-  grade       String?  @db.VarChar(5)
-  gradePoints Decimal? @map("grade_points") @db.Decimal(4, 2)
-  creditsEarned Int?   @map("credits_earned")
-  status      AcademicRecordStatus @default(PASSED)
-  remarks     String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  student     Student  @relation(fields: [studentId], references: [id])
-  semester    Semester @relation(fields: [semesterId], references: [id])
-  course      Course   @relation(fields: [courseId], references: [id])
-
-  @@unique([studentId, semesterId, courseId], name: "unique_record")
-  @@map("academic_records")
 }
 
 model Assignment {
@@ -129,7 +107,7 @@ model Submission {
   @@map("submissions")
 }
 
-// Enums
+// Assessment Enums
 enum ExamType {
   QUIZ
   MIDTERM
@@ -144,13 +122,6 @@ enum ExamStatus {
   ONGOING
   COMPLETED
   CANCELLED
-}
-
-enum AcademicRecordStatus {
-  PASSED
-  FAILED
-  INCOMPLETE
-  WITHDRAWN
 }
 
 enum AssignmentStatus {

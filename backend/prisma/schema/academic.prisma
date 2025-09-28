@@ -1,4 +1,6 @@
-// Academic Structure Models
+// ============================================================================
+// ACADEMIC STRUCTURE MODELS
+// ============================================================================
 
 model AcademicYear {
   id           Int             @id @default(autoincrement())
@@ -6,20 +8,23 @@ model AcademicYear {
   yearName     String          @map("year_name") @db.VarChar(20)
   startDate    DateTime        @map("start_date") @db.Date
   endDate      DateTime        @map("end_date") @db.Date
-  status       AcademicYearStatus @default(FUTURE)
+  status       AcademicYearStatus @default(CURRENT)
   createdAt    DateTime        @default(now()) @map("created_at")
 
   // Relations
   institution  Institution     @relation(fields: [institutionId], references: [id])
   semesters    Semester[]
   feeStructures FeeStructure[]
+  teacherSubjects TeacherSubject[]
+  classTeachers ClassTeacher[]
+  timeTables   TimeTable[]
 
   @@map("academic_years")
 }
 
 model Semester {
   id                Int            @id @default(autoincrement())
-  yearId            Int            @map("year_id")
+  academicYearId    Int            @map("academic_year_id")
   semesterName      String         @map("semester_name") @db.VarChar(50)
   semesterNumber    Int            @map("semester_number")
   startDate         DateTime       @map("start_date") @db.Date
@@ -30,13 +35,15 @@ model Semester {
   createdAt         DateTime       @default(now()) @map("created_at")
 
   // Relations
-  academicYear      AcademicYear   @relation(fields: [yearId], references: [id])
+  academicYear      AcademicYear   @relation(fields: [academicYearId], references: [id])
   enrollments       Enrollment[]
   classSections     ClassSection[]
   examinations      Examination[]
   academicRecords   AcademicRecord[]
   studentFees       StudentFee[]
   studentProgress   StudentProgress[]
+  attendanceSummary AttendanceSummary[]
+  timeTables        TimeTable[]
 
   @@map("semesters")
 }
@@ -44,7 +51,6 @@ model Semester {
 model Program {
   id                  Int            @id @default(autoincrement())
   institutionId       Int            @map("institution_id")
-  deptId              Int?           @map("dept_id")
   name                String         @db.VarChar(200)
   code                String?        @unique @db.VarChar(20)
   degreeType          DegreeType     @map("degree_type")
@@ -58,10 +64,11 @@ model Program {
 
   // Relations
   institution         Institution    @relation(fields: [institutionId], references: [id])
-  department          Department?    @relation(fields: [deptId], references: [id])
   courses             Course[]
   students            Student[]
   feeStructures       FeeStructure[]
+  timeTables          TimeTable[]
+  classTeachers       ClassTeacher[]
 
   @@map("programs")
 }
@@ -69,7 +76,6 @@ model Program {
 model Course {
   id              Int          @id @default(autoincrement())
   programId       Int?         @map("program_id")
-  deptId          Int?         @map("dept_id")
   courseName      String       @map("course_name") @db.VarChar(200)
   courseCode      String       @unique @map("course_code") @db.VarChar(20)
   credits         Int
@@ -86,29 +92,16 @@ model Course {
 
   // Relations
   program         Program?     @relation(fields: [programId], references: [id])
-  department      Department?  @relation(fields: [deptId], references: [id])
-  enrollments     Enrollment[]
-  classSections   ClassSection[]
-  examinations    Examination[]
   academicRecords AcademicRecord[]
+  classSections   ClassSection[]
+  enrollments     Enrollment[]
+  examinations    Examination[]
   assignments     Assignment[]
 
   @@map("courses")
 }
 
-// Enums
-enum AcademicYearStatus {
-  CURRENT
-  PAST
-  FUTURE
-}
-
-enum SemesterStatus {
-  UPCOMING
-  ACTIVE
-  COMPLETED
-}
-
+// Academic Enums
 enum DegreeType {
   CERTIFICATE
   DIPLOMA
@@ -133,4 +126,16 @@ enum CourseType {
 enum CourseStatus {
   ACTIVE
   INACTIVE
+}
+
+enum AcademicYearStatus {
+  CURRENT
+  PAST
+  FUTURE
+}
+
+enum SemesterStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
 }

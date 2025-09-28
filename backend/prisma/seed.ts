@@ -1,14 +1,125 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import * as bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting database seeding...')
+  console.log('🌱 Starting comprehensive database seeding...')
 
   // Create roles
   console.log('Creating roles...')
-  const roles = await Promise.all([
+  const roles = await createRoles()
+  console.log(`✅ Created ${roles.length} roles`)
+
+  // Create sample institution
+  console.log('Creating sample institution...')
+  const institution = await createInstitution()
+  console.log(`✅ Created institution: ${institution.name}`)
+
+  // Create academic year and semesters
+  console.log('Creating academic year and semesters...')
+  const { academicYear, semesters } = await createAcademicStructure(
+    institution.id
+  )
+  console.log(
+    `✅ Created academic year: ${academicYear.yearName} with ${semesters.length} semesters`
+  )
+
+  // Create program and courses
+  console.log('Creating program and courses...')
+  const { program, courses } = await createProgramAndCourses(institution.id)
+  console.log(
+    `✅ Created program: ${program.name} with ${courses.length} courses`
+  )
+
+  // Create subjects
+  console.log('Creating subjects...')
+  const subjects = await createSubjects(institution.id)
+  console.log(`✅ Created ${subjects.length} subjects`)
+
+  // Create users (admin, teacher, students, parents, staff)
+  console.log('Creating users...')
+  const { superAdmin, teacher, students, parents, librarian } =
+    await createUsers(roles, institution.id, program.id)
+  console.log(
+    `✅ Created users: 1 admin, 1 teacher, ${students.length} students, ${parents.length} parents, 2 staff`
+  )
+
+  // Create class sections and enrollments
+  console.log('Creating class sections and enrollments...')
+  const classSections = await createClassSections(
+    courses,
+    semesters[0],
+    teacher
+  )
+  await createEnrollments(students, courses, semesters[0])
+  console.log(
+    `✅ Created ${classSections.length} class sections and enrollments`
+  )
+
+  // Create notices and announcements
+  console.log('Creating notices and announcements...')
+  const notices = await createNotices(
+    institution.id,
+    superAdmin.id,
+    librarian.id
+  )
+  const announcements = await createAnnouncements(institution.id, superAdmin.id)
+  console.log(
+    `✅ Created ${notices.length} notices and ${announcements.length} announcements`
+  )
+
+  // Create library data
+  console.log('Creating library data...')
+  const books = await createLibraryData(institution.id, librarian.id)
+  console.log(`✅ Created library with ${books.length} books`)
+
+  // Create fee structures
+  console.log('Creating fee structures...')
+  const feeStructures = await createFeeStructures(
+    institution.id,
+    program.id,
+    academicYear.id
+  )
+  await createStudentFees(students, feeStructures, semesters[0])
+  console.log(`✅ Created ${feeStructures.length} fee structures`)
+
+  // Create assignments and examinations
+  console.log('Creating assignments and examinations...')
+  const assignments = await createAssignments(courses, classSections, teacher)
+  const examinations = await createExaminations(courses, semesters[0], teacher)
+  console.log(
+    `✅ Created ${assignments.length} assignments and ${examinations.length} examinations`
+  )
+
+  // Create timetable data
+  console.log('Creating timetable data...')
+  const { timeSlots, rooms, timetables } = await createTimetableData(
+    institution.id,
+    academicYear.id,
+    semesters[0],
+    program.id,
+    subjects,
+    teacher
+  )
+  console.log(
+    `✅ Created ${timeSlots.length} time slots, ${rooms.length} rooms, ${timetables.length} timetable entries`
+  )
+
+  // Create dashboard stats
+  console.log('Creating dashboard stats...')
+  const dashboardStats = await createDashboardStats(
+    institution.id,
+    students.length
+  )
+  console.log(`✅ Created ${dashboardStats.length} dashboard statistics`)
+
+  console.log('🎉 Comprehensive database seeding completed successfully!')
+  printSummary(students.length, parents.length)
+}
+
+async function createRoles() {
+  return await Promise.all([
     prisma.role.upsert({
       where: { roleName: 'super_admin' },
       update: {},
@@ -20,6 +131,7 @@ async function main() {
           'canManageInstitutions',
           'canManageAllData',
           'canAccessReports',
+          'canManageSystemSettings',
         ],
       },
     }),
@@ -35,6 +147,8 @@ async function main() {
           'canManageTeachers',
           'canManageCourses',
           'canAccessReports',
+          'canManageFees',
+          'canManageLibrary',
         ],
       },
     }),
@@ -49,6 +163,8 @@ async function main() {
           'canManageCourses',
           'canMarkAttendance',
           'canGradeAssignments',
+          'canCreateAssignments',
+          'canViewTimetable',
         ],
       },
     }),
@@ -62,6 +178,9 @@ async function main() {
           'canViewOwnData',
           'canSubmitAssignments',
           'canViewGrades',
+          'canViewTimetable',
+          'canViewNotices',
+          'canRequestGatePass',
         ],
       },
     }),
@@ -75,16 +194,40 @@ async function main() {
           'canViewChildData',
           'canViewChildGrades',
           'canViewChildAttendance',
+          'canViewNotices',
+          'canApproveGatePass',
+          'canViewFees',
         ],
       },
     }),
+    prisma.role.upsert({
+      where: { roleName: 'librarian' },
+      update: {},
+      create: {
+        roleName: 'librarian',
+        description: 'Library Staff',
+        permissions: [
+          'canManageBooks',
+          'canManageBookIssues',
+          'canViewLibraryReports',
+          'canManageLibrarySettings',
+        ],
+      },
+    }),
+    prisma.role.upsert({
+      where: { roleName: 'staff' },
+      update: {},
+      create: {
+        roleName: 'staff',
+        description: 'Support Staff',
+        permissions: ['canViewOwnData', 'canMarkAttendance', 'canViewNotices'],
+      },
+    }),
   ])
+}
 
-  console.log(`✅ Created ${roles.length} roles`)
-
-  // Create sample institution
-  console.log('Creating sample institution...')
-  const institution = await prisma.institution.upsert({
+async function createInstitution() {
+  return await prisma.institution.upsert({
     where: { id: 1 },
     update: {},
     create: {
@@ -102,33 +245,61 @@ async function main() {
       accreditation: 'Regional Education Board',
     },
   })
+}
 
-  console.log(`✅ Created institution: ${institution.name}`)
-
-  // Create sample department
-  console.log('Creating sample department...')
-  const department = await prisma.department.upsert({
+async function createAcademicStructure(institutionId: number) {
+  const academicYear = await prisma.academicYear.upsert({
     where: { id: 1 },
     update: {},
     create: {
-      institutionId: institution.id,
-      name: 'Computer Science',
-      code: 'CS',
-      description: 'Department of Computer Science and Engineering',
-      budget: 500000.0,
+      institutionId,
+      yearName: '2024-2025',
+      startDate: new Date('2024-08-01'),
+      endDate: new Date('2025-07-31'),
+      status: 'CURRENT',
     },
   })
 
-  console.log(`✅ Created department: ${department.name}`)
+  const semesters = await Promise.all([
+    prisma.semester.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        academicYearId: academicYear.id,
+        semesterName: 'Fall 2024',
+        semesterNumber: 1,
+        startDate: new Date('2024-08-15'),
+        endDate: new Date('2024-12-15'),
+        registrationStart: new Date('2024-07-01'),
+        registrationEnd: new Date('2024-08-10'),
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.semester.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        academicYearId: academicYear.id,
+        semesterName: 'Spring 2025',
+        semesterNumber: 2,
+        startDate: new Date('2025-01-15'),
+        endDate: new Date('2025-05-15'),
+        registrationStart: new Date('2024-12-01'),
+        registrationEnd: new Date('2025-01-10'),
+        status: 'UPCOMING',
+      },
+    }),
+  ])
 
-  // Create sample program
-  console.log('Creating sample program...')
+  return { academicYear, semesters }
+}
+
+async function createProgramAndCourses(institutionId: number) {
   const program = await prisma.program.upsert({
     where: { id: 1 },
     update: {},
     create: {
-      institutionId: institution.id,
-      deptId: department.id,
+      institutionId,
       name: 'Bachelor of Science in Computer Science',
       code: 'BSCS',
       degreeType: 'BACHELORS',
@@ -141,27 +312,22 @@ async function main() {
     },
   })
 
-  console.log(`✅ Created program: ${program.name}`)
-
-  // Create sample courses
-  console.log('Creating sample courses...')
   const courses = await Promise.all([
     prisma.course.upsert({
       where: { courseCode: 'CS101' },
       update: {},
       create: {
         programId: program.id,
-        deptId: department.id,
         courseName: 'Introduction to Programming',
         courseCode: 'CS101',
         credits: 3,
         lectureHours: 3,
-        labHours: 0,
-        tutorialHours: 0,
+        labHours: 2,
+        tutorialHours: 1,
         courseType: 'CORE',
         description: 'Fundamentals of programming using Python',
         syllabus:
-          'Variables, data types, control structures, functions, and basic algorithms',
+          'Variables, loops, functions, data structures, and basic algorithms',
       },
     }),
     prisma.course.upsert({
@@ -169,19 +335,17 @@ async function main() {
       update: {},
       create: {
         programId: program.id,
-        deptId: department.id,
         courseName: 'Data Structures and Algorithms',
         courseCode: 'CS102',
         credits: 4,
         lectureHours: 3,
         labHours: 2,
-        tutorialHours: 0,
+        tutorialHours: 1,
         courseType: 'CORE',
         prerequisites: JSON.stringify(['CS101']),
-        description:
-          'Study of fundamental data structures and algorithm design',
+        description: 'Advanced data structures and algorithm design',
         syllabus:
-          'Arrays, linked lists, stacks, queues, trees, graphs, sorting, and searching algorithms',
+          'Arrays, linked lists, trees, graphs, sorting, and searching algorithms',
       },
     }),
     prisma.course.upsert({
@@ -189,12 +353,11 @@ async function main() {
       update: {},
       create: {
         programId: program.id,
-        deptId: department.id,
         courseName: 'Web Development',
         courseCode: 'CS201',
         credits: 3,
         lectureHours: 2,
-        labHours: 2,
+        labHours: 3,
         tutorialHours: 0,
         courseType: 'CORE',
         prerequisites: JSON.stringify(['CS101']),
@@ -206,10 +369,48 @@ async function main() {
     }),
   ])
 
-  console.log(`✅ Created ${courses.length} courses`)
+  return { program, courses }
+}
 
-  // Create super admin user
-  console.log('Creating super admin user...')
+async function createSubjects(institutionId: number) {
+  return await Promise.all([
+    prisma.subject.upsert({
+      where: { unique_subject_code: { institutionId, code: 'MATH101' } },
+      update: {},
+      create: {
+        institutionId,
+        name: 'Calculus I',
+        code: 'MATH101',
+        description: 'Differential and integral calculus',
+        subjectType: 'CORE',
+        credits: 4,
+        theoryHours: 4,
+        practicalHours: 0,
+      },
+    }),
+    prisma.subject.upsert({
+      where: { unique_subject_code: { institutionId, code: 'ENG101' } },
+      update: {},
+      create: {
+        institutionId,
+        name: 'English Composition',
+        code: 'ENG101',
+        description: 'Academic writing and communication skills',
+        subjectType: 'CORE',
+        credits: 3,
+        theoryHours: 3,
+        practicalHours: 0,
+      },
+    }),
+  ])
+}
+
+async function createUsers(
+  roles: any[],
+  institutionId: number,
+  programId: number
+) {
+  // Create super admin
   const superAdminPassword = await bcrypt.hash('admin123!', 12)
   const superAdmin = await prisma.user.upsert({
     where: { email: 'admin@edverse.edu' },
@@ -225,10 +426,7 @@ async function main() {
     },
   })
 
-  console.log(`✅ Created super admin: ${superAdmin.email}`)
-
-  // Create sample teacher
-  console.log('Creating sample teacher...')
+  // Create teacher
   const teacherPassword = await bcrypt.hash('teacher123!', 12)
   const teacherUser = await prisma.user.upsert({
     where: { email: 'john.doe@edverse.edu' },
@@ -244,13 +442,12 @@ async function main() {
     },
   })
 
-  await prisma.teacher.upsert({
+  const teacher = await prisma.teacher.upsert({
     where: { employeeId: 'EMP001' },
     update: {},
     create: {
       userId: teacherUser.id,
-      institutionId: institution.id,
-      deptId: department.id,
+      institutionId,
       employeeId: 'EMP001',
       designation: 'Professor',
       specialization: 'Computer Science, Web Development',
@@ -266,88 +463,671 @@ async function main() {
     },
   })
 
-  console.log(`✅ Created teacher: ${teacherUser.name}`)
+  // Create students and parents
+  const students = []
+  const parents = []
 
-  // Create sample student
-  console.log('Creating sample student...')
-  const studentPassword = await bcrypt.hash('student123!', 12)
-  const studentUser = await prisma.user.upsert({
-    where: { email: 'jane.smith@edverse.edu' },
+  for (let i = 1; i <= 5; i++) {
+    const studentPassword = await bcrypt.hash(`student${i}23!`, 12)
+    const studentUser = await prisma.user.upsert({
+      where: { email: `student${i}@edverse.edu` },
+      update: {},
+      create: {
+        name: `Student ${i}`,
+        email: `student${i}@edverse.edu`,
+        phone: `+1-555-000${i + 2}`,
+        passwordHash: studentPassword,
+        roleId: roles.find(r => r.roleName === 'student')!.id,
+        emailVerified: true,
+        phoneVerified: true,
+      },
+    })
+
+    const student = await prisma.student.upsert({
+      where: { admissionNumber: `ADM00${i}` },
+      update: {},
+      create: {
+        userId: studentUser.id,
+        institutionId,
+        programId,
+        admissionNumber: `ADM00${i}`,
+        rollNumber: `202400${i}`,
+        admissionDate: new Date('2024-08-15'),
+        currentSemester: 1,
+        currentYear: 1,
+        gradeLevel: 'Freshman',
+        section: 'A',
+        studentType: 'REGULAR',
+        residentialStatus: 'DAY_SCHOLAR',
+        emergencyContactName: `Parent ${i}`,
+        emergencyContactPhone: `+1-555-000${i + 10}`,
+        bloodGroup: 'O+',
+      },
+    })
+
+    students.push(student)
+
+    // Create parent for this student
+    const parentPassword = await bcrypt.hash(`parent${i}23!`, 12)
+    const parentUser = await prisma.user.upsert({
+      where: { email: `parent${i}@email.com` },
+      update: {},
+      create: {
+        name: `Parent ${i}`,
+        email: `parent${i}@email.com`,
+        phone: `+1-555-000${i + 10}`,
+        passwordHash: parentPassword,
+        roleId: roles.find(r => r.roleName === 'parent')!.id,
+        emailVerified: true,
+        phoneVerified: true,
+      },
+    })
+
+    const parent = await prisma.parent.upsert({
+      where: { userId: parentUser.id },
+      update: {},
+      create: {
+        userId: parentUser.id,
+        studentId: student.id,
+        relation: 'FATHER',
+        occupation: 'Software Engineer',
+        annualIncome: 80000.0,
+        educationLevel: "Bachelor's Degree",
+        isPrimaryContact: true,
+      },
+    })
+
+    parents.push(parent)
+  }
+
+  // Create staff
+  const staffPassword = await bcrypt.hash('staff123!', 12)
+  const staffUser = await prisma.user.upsert({
+    where: { email: 'staff@edverse.edu' },
     update: {},
     create: {
-      name: 'Jane Smith',
-      email: 'jane.smith@edverse.edu',
-      phone: '+1-555-0003',
-      passwordHash: studentPassword,
-      roleId: roles.find(r => r.roleName === 'student')!.id,
+      name: 'Support Staff',
+      email: 'staff@edverse.edu',
+      phone: '+1-555-0010',
+      passwordHash: staffPassword,
+      roleId: roles.find(r => r.roleName === 'staff')!.id,
       emailVerified: true,
       phoneVerified: true,
     },
   })
 
-  const student = await prisma.student.upsert({
-    where: { admissionNumber: 'ADM001' },
+  await prisma.staff.upsert({
+    where: { employeeId: 'STAFF001' },
     update: {},
     create: {
-      userId: studentUser.id,
-      institutionId: institution.id,
-      programId: program.id,
-      admissionNumber: 'ADM001',
-      rollNumber: '2024001',
-      admissionDate: new Date('2024-08-15'),
-      currentSemester: 1,
-      currentYear: 1,
-      gradeLevel: 'Freshman',
-      section: 'A',
-      studentType: 'REGULAR',
-      residentialStatus: 'DAY_SCHOLAR',
-      emergencyContactName: 'Robert Smith',
-      emergencyContactPhone: '+1-555-0004',
-      bloodGroup: 'O+',
+      userId: staffUser.id,
+      institutionId,
+      employeeId: 'STAFF001',
+      staffType: 'ADMINISTRATIVE',
+      designation: 'Administrative Assistant',
+      department: 'Administration',
+      joinDate: new Date('2023-01-01'),
+      salary: 45000.0,
+      employmentType: 'FULL_TIME',
+      workingHours: 'Monday-Friday 9:00 AM - 5:00 PM',
+      skills: ['Administration', 'Customer Service', 'Data Entry'],
+      qualifications: 'Bachelor of Business Administration',
+      experience: '5 years in administrative roles',
+      emergencyContact: '+1-555-0011',
     },
   })
 
-  console.log(`✅ Created student: ${studentUser.name}`)
-
-  // Create sample parent
-  console.log('Creating sample parent...')
-  const parentPassword = await bcrypt.hash('parent123!', 12)
-  const parentUser = await prisma.user.upsert({
-    where: { email: 'robert.smith@email.com' },
+  // Create librarian
+  const librarianPassword = await bcrypt.hash('librarian123!', 12)
+  const librarianUser = await prisma.user.upsert({
+    where: { email: 'librarian@edverse.edu' },
     update: {},
     create: {
-      name: 'Robert Smith',
-      email: 'robert.smith@email.com',
-      phone: '+1-555-0004',
-      passwordHash: parentPassword,
-      roleId: roles.find(r => r.roleName === 'parent')!.id,
+      name: 'Library Manager',
+      email: 'librarian@edverse.edu',
+      phone: '+1-555-0012',
+      passwordHash: librarianPassword,
+      roleId: roles.find(r => r.roleName === 'librarian')!.id,
       emailVerified: true,
       phoneVerified: true,
     },
   })
 
-  await prisma.parent.upsert({
-    where: { userId: parentUser.id },
+  const librarian = await prisma.staff.upsert({
+    where: { employeeId: 'LIB001' },
     update: {},
     create: {
-      userId: parentUser.id,
-      studentId: student.id,
-      relation: 'FATHER',
-      occupation: 'Software Engineer',
-      annualIncome: 80000.0,
-      educationLevel: "Bachelor's Degree",
-      isPrimaryContact: true,
+      userId: librarianUser.id,
+      institutionId,
+      employeeId: 'LIB001',
+      staffType: 'ADMINISTRATIVE',
+      designation: 'Head Librarian',
+      department: 'Library',
+      joinDate: new Date('2022-06-01'),
+      salary: 55000.0,
+      employmentType: 'FULL_TIME',
+      workingHours: 'Monday-Friday 8:00 AM - 6:00 PM',
+      skills: ['Library Management', 'Cataloging', 'Research Support'],
+      qualifications: 'Master of Library Science',
+      experience: '8 years in library management',
+      emergencyContact: '+1-555-0013',
     },
   })
 
-  console.log(`✅ Created parent: ${parentUser.name}`)
+  return { superAdmin, teacher, students, parents, librarian }
+}
 
-  console.log('🎉 Database seeding completed successfully!')
+async function createClassSections(
+  courses: any[],
+  semester: any,
+  teacher: any
+) {
+  return await Promise.all([
+    prisma.classSection.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        courseId: courses[0].id,
+        semesterId: semester.id,
+        teacherId: teacher.id,
+        sectionName: 'A',
+        maxCapacity: 30,
+        currentEnrollment: 5,
+        roomNumber: 'CS-101',
+        schedule: JSON.stringify({
+          Monday: '09:00-10:30',
+          Wednesday: '09:00-10:30',
+          Friday: '09:00-10:30',
+        }),
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.classSection.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        courseId: courses[1].id,
+        semesterId: semester.id,
+        teacherId: teacher.id,
+        sectionName: 'A',
+        maxCapacity: 25,
+        currentEnrollment: 5,
+        roomNumber: 'CS-102',
+        schedule: JSON.stringify({
+          Tuesday: '10:00-11:30',
+          Thursday: '10:00-11:30',
+        }),
+        status: 'ACTIVE',
+      },
+    }),
+  ])
+}
+
+async function createEnrollments(
+  students: any[],
+  courses: any[],
+  semester: any
+) {
+  for (const student of students) {
+    for (const course of courses) {
+      await prisma.enrollment.upsert({
+        where: {
+          unique_enrollment: {
+            studentId: student.id,
+            courseId: course.id,
+            semesterId: semester.id,
+          },
+        },
+        update: {},
+        create: {
+          studentId: student.id,
+          courseId: course.id,
+          semesterId: semester.id,
+          enrollmentDate: new Date('2024-08-15'),
+          enrollmentStatus: 'ENROLLED',
+          creditsEarned: course.credits,
+          attendancePercentage: 85.0,
+        },
+      })
+    }
+  }
+}
+
+async function createNotices(
+  institutionId: number,
+  adminId: number,
+  librarianId: number
+) {
+  return await Promise.all([
+    prisma.notice.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        institutionId,
+        title: 'Welcome to Fall 2024 Semester',
+        content:
+          'Welcome all students to the Fall 2024 semester. Classes begin on August 15th.',
+        noticeType: 'GENERAL',
+        priority: 'HIGH',
+        targetAudience: ['student', 'teacher', 'parent'],
+        publishDate: new Date('2024-08-01'),
+        isActive: true,
+        isPinned: true,
+        createdBy: adminId,
+      },
+    }),
+    prisma.notice.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        institutionId,
+        title: 'Library Hours Update',
+        content:
+          'The library will be open from 8 AM to 10 PM during the semester.',
+        noticeType: 'GENERAL',
+        priority: 'MEDIUM',
+        targetAudience: ['student', 'teacher'],
+        publishDate: new Date('2024-08-05'),
+        isActive: true,
+        isPinned: false,
+        createdBy: librarianId,
+      },
+    }),
+  ])
+}
+
+async function createAnnouncements(institutionId: number, adminId: number) {
+  return await Promise.all([
+    prisma.announcement.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        institutionId,
+        title: 'New Computer Lab Opening',
+        content:
+          'We are excited to announce the opening of our new state-of-the-art computer lab.',
+        announcementType: 'GENERAL',
+        priority: 'HIGH',
+        targetAudience: ['student', 'teacher'],
+        isEmergency: false,
+        publishDate: new Date('2024-08-10'),
+        isActive: true,
+        createdBy: adminId,
+      },
+    }),
+  ])
+}
+
+async function createLibraryData(institutionId: number, librarianId: number) {
+  const bookCategory = await prisma.bookCategory.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      name: 'Computer Science',
+      description: 'Books related to computer science and programming',
+      isActive: true,
+    },
+  })
+
+  const books = await Promise.all([
+    prisma.book.upsert({
+      where: { isbn: '978-0134685991' },
+      update: {},
+      create: {
+        institutionId,
+        isbn: '978-0134685991',
+        title: 'Effective Java',
+        author: 'Joshua Bloch',
+        publisher: 'Addison-Wesley',
+        publicationYear: 2017,
+        edition: '3rd Edition',
+        language: 'English',
+        categoryId: bookCategory.id,
+        subjectArea: 'Programming',
+        totalCopies: 5,
+        availableCopies: 5,
+        location: 'CS-Section-A',
+        price: 45.99,
+        condition: 'GOOD',
+        description: 'A comprehensive guide to Java programming best practices',
+        status: 'ACTIVE',
+        addedBy: librarianId,
+      },
+    }),
+    prisma.book.upsert({
+      where: { isbn: '978-0132350884' },
+      update: {},
+      create: {
+        institutionId,
+        isbn: '978-0132350884',
+        title: 'Clean Code',
+        author: 'Robert C. Martin',
+        publisher: 'Prentice Hall',
+        publicationYear: 2008,
+        edition: '1st Edition',
+        language: 'English',
+        categoryId: bookCategory.id,
+        subjectArea: 'Software Engineering',
+        totalCopies: 3,
+        availableCopies: 3,
+        location: 'CS-Section-B',
+        price: 39.99,
+        condition: 'EXCELLENT',
+        description: 'A handbook of agile software craftsmanship',
+        status: 'ACTIVE',
+        addedBy: librarianId,
+      },
+    }),
+  ])
+
+  await prisma.librarySettings.upsert({
+    where: { institutionId },
+    update: {},
+    create: {
+      institutionId,
+      maxBooksPerStudent: 5,
+      defaultIssueDays: 14,
+      maxRenewals: 2,
+      finePerDay: 1.0,
+      reservationDays: 3,
+      isActive: true,
+    },
+  })
+
+  return books
+}
+
+async function createFeeStructures(
+  institutionId: number,
+  programId: number,
+  academicYearId: number
+) {
+  return await Promise.all([
+    prisma.feeStructure.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        institutionId,
+        programId,
+        academicYearId,
+        feeType: 'TUITION',
+        feeName: 'Fall 2024 Tuition Fee',
+        amount: 5000.0,
+        dueDate: new Date('2024-09-15'),
+        lateFeeAmount: 100.0,
+        lateFeeAfterDays: 7,
+        isRecurring: false,
+        description: 'Tuition fee for Fall 2024 semester',
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.feeStructure.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        institutionId,
+        programId,
+        academicYearId,
+        feeType: 'LIBRARY',
+        feeName: 'Library Fee',
+        amount: 100.0,
+        dueDate: new Date('2024-09-01'),
+        isRecurring: false,
+        description: 'Annual library membership fee',
+        status: 'ACTIVE',
+      },
+    }),
+  ])
+}
+
+async function createStudentFees(
+  students: any[],
+  feeStructures: any[],
+  semester: any
+) {
+  for (const student of students) {
+    for (const feeStructure of feeStructures) {
+      await prisma.studentFee.upsert({
+        where: {
+          unique_student_fee: {
+            studentId: student.id,
+            feeStructureId: feeStructure.id,
+            semesterId: semester.id,
+          },
+        },
+        update: {},
+        create: {
+          studentId: student.id,
+          feeStructureId: feeStructure.id,
+          semesterId: semester.id,
+          amountDue: feeStructure.amount,
+          amountPaid: 0.0,
+          dueDate: feeStructure.dueDate!,
+          status: 'PENDING',
+        },
+      })
+    }
+  }
+}
+
+async function createAssignments(
+  courses: any[],
+  classSections: any[],
+  teacher: any
+) {
+  return await Promise.all([
+    prisma.assignment.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        courseId: courses[0].id,
+        sectionId: classSections[0].id,
+        teacherId: teacher.id,
+        title: 'Programming Assignment 1',
+        description: 'Create a simple calculator program in Python',
+        instructions:
+          'Implement basic arithmetic operations with user input validation',
+        maxMarks: 100,
+        weightagePercentage: 15.0,
+        assignedDate: new Date('2024-08-20'),
+        dueDate: new Date('2024-09-15'),
+        lateSubmissionAllowed: true,
+        latePenaltyPercentage: 10.0,
+        status: 'PUBLISHED',
+      },
+    }),
+  ])
+}
+
+async function createExaminations(courses: any[], semester: any, teacher: any) {
+  return await Promise.all([
+    prisma.examination.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        courseId: courses[0].id,
+        semesterId: semester.id,
+        examName: 'Midterm Exam - Introduction to Programming',
+        examType: 'MIDTERM',
+        examDate: new Date('2024-10-15'),
+        startTime: new Date('2024-10-15T09:00:00'),
+        durationMinutes: 120,
+        totalMarks: 100,
+        passingMarks: 40,
+        weightagePercentage: 30.0,
+        instructions:
+          'Bring your student ID and calculator. No electronic devices allowed.',
+        venue: 'Main Hall A',
+        status: 'SCHEDULED',
+        createdBy: teacher.id,
+      },
+    }),
+  ])
+}
+
+async function createTimetableData(
+  institutionId: number,
+  academicYearId: number,
+  semester: any,
+  programId: number,
+  subjects: any[],
+  teacher: any
+) {
+  const timeSlots = await Promise.all([
+    prisma.timeSlot.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        institutionId,
+        slotName: 'Period 1',
+        startTime: new Date('2024-01-01T09:00:00'),
+        endTime: new Date('2024-01-01T10:30:00'),
+        slotType: 'LECTURE',
+        duration: 90,
+        isActive: true,
+        sortOrder: 1,
+      },
+    }),
+    prisma.timeSlot.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        institutionId,
+        slotName: 'Period 2',
+        startTime: new Date('2024-01-01T10:45:00'),
+        endTime: new Date('2024-01-01T12:15:00'),
+        slotType: 'LECTURE',
+        duration: 90,
+        isActive: true,
+        sortOrder: 2,
+      },
+    }),
+  ])
+
+  const rooms = await Promise.all([
+    prisma.room.upsert({
+      where: {
+        unique_room_number: { institutionId, roomNumber: 'CS-101' },
+      },
+      update: {},
+      create: {
+        institutionId,
+        roomNumber: 'CS-101',
+        roomName: 'Computer Lab 1',
+        roomType: 'LABORATORY',
+        building: 'Computer Science Building',
+        floor: '1st Floor',
+        capacity: 30,
+        facilities: ['Projector', 'AC', 'Whiteboard', 'Computers'],
+        isActive: true,
+      },
+    }),
+    prisma.room.upsert({
+      where: {
+        unique_room_number: { institutionId, roomNumber: 'MAIN-001' },
+      },
+      update: {},
+      create: {
+        institutionId,
+        roomNumber: 'MAIN-001',
+        roomName: 'Main Hall A',
+        roomType: 'AUDITORIUM',
+        building: 'Main Building',
+        floor: 'Ground Floor',
+        capacity: 200,
+        facilities: ['Projector', 'AC', 'Sound System', 'Stage'],
+        isActive: true,
+      },
+    }),
+  ])
+
+  const timetables = await Promise.all([
+    prisma.timeTable.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        institutionId,
+        academicYearId,
+        semesterId: semester.id,
+        programId,
+        section: 'A',
+        dayOfWeek: 'MONDAY',
+        timeSlotId: timeSlots[0].id,
+        subjectId: subjects[0].id,
+        teacherId: teacher.id,
+        roomId: rooms[0].id,
+        isActive: true,
+      },
+    }),
+  ])
+
+  return { timeSlots, rooms, timetables }
+}
+
+async function createDashboardStats(
+  institutionId: number,
+  studentCount: number
+) {
+  return await Promise.all([
+    prisma.dashboardStats.upsert({
+      where: { id: 1 },
+      update: {},
+      create: {
+        institutionId,
+        statType: 'attendance',
+        statName: 'Overall Attendance Rate',
+        statValue: 85.5,
+        statUnit: 'percentage',
+        period: 'monthly',
+        periodStart: new Date('2024-08-01'),
+        periodEnd: new Date('2024-08-31'),
+        metadata: { department: 'Computer Science', semester: 'Fall 2024' },
+      },
+    }),
+    prisma.dashboardStats.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        institutionId,
+        statType: 'enrollment',
+        statName: 'Total Students',
+        statValue: studentCount,
+        statUnit: 'count',
+        period: 'yearly',
+        periodStart: new Date('2024-08-01'),
+        periodEnd: new Date('2025-07-31'),
+      },
+    }),
+  ])
+}
+
+function printSummary(studentCount: number, parentCount: number) {
   console.log('\n📋 Sample Accounts Created:')
   console.log('Super Admin: admin@edverse.edu / admin123!')
   console.log('Teacher: john.doe@edverse.edu / teacher123!')
-  console.log('Student: jane.smith@edverse.edu / student123!')
-  console.log('Parent: robert.smith@email.com / parent123!')
+  console.log(
+    `Students: student1@edverse.edu / student123! (student1-${studentCount})`
+  )
+  console.log(
+    `Parents: parent1@email.com / parent123! (parent1-${parentCount})`
+  )
+  console.log('Staff: staff@edverse.edu / staff123!')
+  console.log('Librarian: librarian@edverse.edu / librarian123!')
+  console.log('\n📊 Data Created:')
+  console.log(
+    '- 7 roles (super_admin, admin, teacher, student, parent, librarian, staff)'
+  )
+  console.log('- 1 institution with complete academic structure')
+  console.log('- 1 program with 3 courses and 2 subjects')
+  console.log(`- ${studentCount} students with ${parentCount} parents`)
+  console.log('- 1 teacher + 2 staff members (including librarian)')
+  console.log('- 2 class sections with enrollments')
+  console.log('- 2 notices + 1 announcement')
+  console.log('- 2 books with library settings')
+  console.log('- 2 fee structures with student fees')
+  console.log('- 1 assignment + 1 examination')
+  console.log('- 2 time slots + 2 rooms + 1 timetable entry')
+  console.log('- 2 dashboard statistics')
 }
 
 main()

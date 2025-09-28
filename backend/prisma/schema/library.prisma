@@ -1,0 +1,179 @@
+// ============================================================================
+// LIBRARY MANAGEMENT MODELS
+// ============================================================================
+
+model Book {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  isbn              String?          @unique @db.VarChar(20)
+  title             String           @db.VarChar(300)
+  author            String           @db.VarChar(200)
+  publisher         String?          @db.VarChar(200)
+  publicationYear   Int?             @map("publication_year")
+  edition           String?          @db.VarChar(50)
+  language          String?          @db.VarChar(50)
+  categoryId        Int              @map("category_id")
+  subjectArea       String?          @map("subject_area") @db.VarChar(100)
+  totalCopies       Int              @default(1) @map("total_copies")
+  availableCopies   Int              @default(1) @map("available_copies")
+  location          String?          @db.VarChar(100) // Shelf/Section location
+  price             Decimal?         @db.Decimal(10, 2)
+  condition         BookCondition    @default(GOOD)
+  description       String?
+  coverImageUrl     String?          @map("cover_image_url") @db.VarChar(500)
+  status            BookStatus       @default(ACTIVE)
+  addedBy           Int              @map("added_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  category          BookCategory     @relation(fields: [categoryId], references: [id])
+  addedByUser       User             @relation(fields: [addedBy], references: [id])
+  issues            BookIssue[]
+  reservations      BookReservation[]
+  libraryTransactions LibraryTransaction[]
+
+  @@map("books")
+}
+
+model BookCategory {
+  id                Int              @id @default(autoincrement())
+  name              String           @db.VarChar(100)
+  description       String?
+  parentCategoryId  Int?             @map("parent_category_id")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  parentCategory    BookCategory?    @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
+  subCategories     BookCategory[]   @relation("CategoryHierarchy")
+  books             Book[]
+
+  @@map("book_categories")
+}
+
+model BookIssue {
+  id                Int              @id @default(autoincrement())
+  bookId            Int              @map("book_id")
+  studentId         Int              @map("student_id")
+  issuedDate        DateTime         @default(now()) @map("issued_date")
+  dueDate           DateTime         @map("due_date")
+  returnedDate      DateTime?        @map("returned_date")
+  renewalCount      Int              @default(0) @map("renewal_count")
+  maxRenewals       Int              @default(2) @map("max_renewals")
+  fineAmount        Decimal          @default(0) @map("fine_amount") @db.Decimal(8, 2)
+  finePaid          Boolean          @default(false) @map("fine_paid")
+  condition         BookCondition    @default(GOOD)
+  remarks           String?
+  status            IssueStatus      @default(ISSUED)
+  issuedBy          Int              @map("issued_by")
+  returnedBy        Int?             @map("returned_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  book              Book             @relation(fields: [bookId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id])
+  issuer            User             @relation("BookIssuer", fields: [issuedBy], references: [id])
+  returner          User?            @relation("BookReturner", fields: [returnedBy], references: [id])
+
+  @@map("book_issues")
+}
+
+model BookReservation {
+  id                Int              @id @default(autoincrement())
+  bookId            Int              @map("book_id")
+  studentId         Int              @map("student_id")
+  reservedDate      DateTime         @default(now()) @map("reserved_date")
+  expiryDate        DateTime         @map("expiry_date")
+  status            ReservationStatus @default(ACTIVE)
+  notifiedAt        DateTime?        @map("notified_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  book              Book             @relation(fields: [bookId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id])
+
+  @@unique([bookId, studentId], name: "unique_book_reservation")
+  @@map("book_reservations")
+}
+
+model LibraryTransaction {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  transactionType   TransactionType  @map("transaction_type")
+  bookId            Int?             @map("book_id")
+  amount            Decimal?         @db.Decimal(8, 2)
+  description       String           @db.VarChar(200)
+  transactionDate   DateTime         @default(now()) @map("transaction_date")
+  processedBy       Int              @map("processed_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  book              Book?            @relation(fields: [bookId], references: [id])
+  processor         User             @relation(fields: [processedBy], references: [id])
+
+  @@map("library_transactions")
+}
+
+model LibrarySettings {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @unique @map("institution_id")
+  maxBooksPerStudent Int             @default(3) @map("max_books_per_student")
+  defaultIssueDays  Int              @default(14) @map("default_issue_days")
+  maxRenewals       Int              @default(2) @map("max_renewals")
+  finePerDay        Decimal          @default(1.00) @map("fine_per_day") @db.Decimal(5, 2)
+  reservationDays   Int              @default(3) @map("reservation_days")
+  isActive          Boolean          @default(true) @map("is_active")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+
+  @@map("library_settings")
+}
+
+// Library Enums
+enum BookCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+}
+
+enum BookStatus {
+  ACTIVE
+  INACTIVE
+  LOST
+  DAMAGED
+  WITHDRAWN
+}
+
+enum IssueStatus {
+  ISSUED
+  RETURNED
+  OVERDUE
+  LOST
+  DAMAGED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  FULFILLED
+  EXPIRED
+  CANCELLED
+}
+
+enum TransactionType {
+  ISSUE
+  RETURN
+  RENEWAL
+  FINE_PAYMENT
+  BOOK_LOST
+  BOOK_DAMAGED
+  RESERVATION
+}

@@ -1,4 +1,6 @@
-// Student and Teacher Management Models
+// ============================================================================
+// STUDENT AND TEACHER MODELS
+// ============================================================================
 
 model Student {
   id                    Int              @id @default(autoincrement())
@@ -29,21 +31,61 @@ model Student {
   institution           Institution      @relation(fields: [institutionId], references: [id])
   program               Program?         @relation(fields: [programId], references: [id])
   parents               Parent[]
-  enrollments           Enrollment[]
-  attendance            Attendance[]
-  examResults           ExamResult[]
   academicRecords       AcademicRecord[]
+  attendance            Attendance[]
+  enrollments           Enrollment[]
+  examResults           ExamResult[]
   submissions           Submission[]
   studentFees           StudentFee[]
   payments              Payment[]
-  messagesSent          Message[]        @relation("StudentMessageSender")
-  messagesReceived      Message[]        @relation("StudentMessageReceiver")
   bookIssues            BookIssue[]
+  bookReservations      BookReservation[]
+  libraryTransactions   LibraryTransaction[]
+  gatePasses            GatePass[]
+  studentProgress       StudentProgress[]
+  attendanceSummary     AttendanceSummary[]
   careerGuidance        CareerGuidance[]
   applications          Application[]
-  studentProgress       StudentProgress[]
 
   @@map("students")
+}
+
+model Teacher {
+  id                Int              @id @default(autoincrement())
+  userId            Int              @unique @map("user_id")
+  institutionId     Int              @map("institution_id")
+  employeeId        String           @unique @map("employee_id") @db.VarChar(50)
+  designation       String?          @db.VarChar(100)
+  specialization    String?          @db.VarChar(200)
+  qualification     String?          @db.VarChar(200)
+  experienceYears   Int              @default(0) @map("experience_years")
+  joinDate          DateTime?        @map("join_date") @db.Date
+  salary            Decimal?         @db.Decimal(12, 2)
+  employmentType    EmploymentType   @default(FULL_TIME) @map("employment_type")
+  officeLocation    String?          @map("office_location") @db.VarChar(100)
+  officeHours       String?          @map("office_hours") @db.VarChar(200)
+  researchInterests String?          @map("research_interests")
+  publications      String?
+  status            TeacherStatus    @default(ACTIVE)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user              User             @relation(fields: [userId], references: [id])
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  attendanceMarked  Attendance[]     @relation("AttendanceMarker")
+  classSections     ClassSection[]
+  examinations      Examination[]
+  examResults       ExamResult[]
+  assignments       Assignment[]
+  submissions       Submission[]
+  careerGuidance    CareerGuidance[]
+  timeTables        TimeTable[]
+  teacherSubjects   TeacherSubject[]
+  substitutions     TeacherSubstitution[] @relation("TeacherSubstitute")
+  classTeacher      ClassTeacher[]
+
+  @@map("teachers")
 }
 
 model Parent {
@@ -65,44 +107,39 @@ model Parent {
   @@map("parents")
 }
 
-model Teacher {
+model Staff {
   id                Int              @id @default(autoincrement())
   userId            Int              @unique @map("user_id")
   institutionId     Int              @map("institution_id")
-  deptId            Int?             @map("dept_id")
   employeeId        String           @unique @map("employee_id") @db.VarChar(50)
-  designation       String?          @db.VarChar(100)
-  specialization    String?          @db.VarChar(200)
-  qualification     String?          @db.VarChar(200)
-  experienceYears   Int              @default(0) @map("experience_years")
+  staffType         StaffType        @map("staff_type")
+  designation       String           @db.VarChar(100)
+  department        String?          @db.VarChar(100)
   joinDate          DateTime?        @map("join_date") @db.Date
   salary            Decimal?         @db.Decimal(12, 2)
   employmentType    EmploymentType   @default(FULL_TIME) @map("employment_type")
-  officeLocation    String?          @map("office_location") @db.VarChar(100)
-  officeHours       String?          @map("office_hours") @db.VarChar(200)
-  researchInterests String?          @map("research_interests")
-  publications      String?
-  status            TeacherStatus    @default(ACTIVE)
+  workingHours      String?          @map("working_hours") @db.VarChar(100)
+  reportingManager  Int?             @map("reporting_manager")
+  skills            String[]         // Array of skills
+  qualifications    String?          @db.VarChar(300)
+  experience        String?          @db.VarChar(300)
+  emergencyContact  String?          @map("emergency_contact") @db.VarChar(15)
+  address           String?
+  status            StaffStatus      @default(ACTIVE)
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
   user              User             @relation(fields: [userId], references: [id])
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  department        Department?      @relation(fields: [deptId], references: [id])
-  headOfDepartment  Department[]     @relation("DepartmentHead")
-  classSections     ClassSection[]
-  attendanceMarked  Attendance[]     @relation("AttendanceMarker")
-  examinations      Examination[]
-  examResults       ExamResult[]
-  assignments       Assignment[]
-  submissions       Submission[]
-  careerGuidance    CareerGuidance[]
+  attendance        StaffAttendance[]
+  leaves            StaffLeave[]
+  assignments       StaffAssignment[]
 
-  @@map("teachers")
+  @@map("staff")
 }
 
-// Enums
+// User Enums
 enum StudentType {
   REGULAR
   TRANSFER
@@ -122,13 +159,6 @@ enum StudentStatus {
   SUSPENDED
 }
 
-enum ParentRelation {
-  FATHER
-  MOTHER
-  GUARDIAN
-  OTHER
-}
-
 enum EmploymentType {
   FULL_TIME
   PART_TIME
@@ -140,5 +170,34 @@ enum TeacherStatus {
   ACTIVE
   ON_LEAVE
   RESIGNED
+  RETIRED
+}
+
+enum ParentRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+  OTHER
+}
+
+enum StaffType {
+  ADMINISTRATIVE
+  TECHNICAL
+  SUPPORT
+  SECURITY
+  MAINTENANCE
+  TRANSPORT
+  CLEANING
+  CAFETERIA
+  MEDICAL
+  OTHER
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  RESIGNED
+  TERMINATED
   RETIRED
 }

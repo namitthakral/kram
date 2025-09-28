@@ -1,0 +1,141 @@
+// ============================================================================
+// FEES AND PAYMENT MODELS
+// ============================================================================
+
+model FeeStructure {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  programId         Int?             @map("program_id")
+  academicYearId    Int              @map("academic_year_id")
+  feeType           FeeType          @map("fee_type")
+  feeName           String           @map("fee_name") @db.VarChar(100)
+  amount            Decimal          @db.Decimal(10, 2)
+  dueDate           DateTime?        @map("due_date") @db.Date
+  lateFeeAmount     Decimal?         @default(0) @map("late_fee_amount") @db.Decimal(10, 2)
+  lateFeeAfterDays  Int?             @default(30) @map("late_fee_after_days")
+  isRecurring       Boolean          @default(false) @map("is_recurring")
+  recurringFrequency RecurringFrequency? @map("recurring_frequency")
+  description       String?
+  status            FeeStructureStatus @default(ACTIVE)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  program           Program?         @relation(fields: [programId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+  studentFees       StudentFee[]
+
+  @@map("fee_structures")
+}
+
+model StudentFee {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  feeStructureId    Int              @map("fee_structure_id")
+  semesterId        Int?             @map("semester_id")
+  amountDue         Decimal          @map("amount_due") @db.Decimal(10, 2)
+  amountPaid        Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  lateFeeApplied    Decimal          @default(0) @map("late_fee_applied") @db.Decimal(10, 2)
+  discount          Decimal          @default(0) @db.Decimal(10, 2)
+  dueDate           DateTime         @map("due_date") @db.Date
+  status            FeeStatus        @default(PENDING)
+  remarks           String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  feeStructure      FeeStructure     @relation(fields: [feeStructureId], references: [id])
+  semester          Semester?        @relation(fields: [semesterId], references: [id])
+  payments          Payment[]
+
+  @@unique([studentId, feeStructureId, semesterId], name: "unique_student_fee")
+  @@map("student_fees")
+}
+
+model Payment {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  studentFeeId      Int?             @map("student_fee_id")
+  amount            Decimal          @db.Decimal(10, 2)
+  paymentMethod     PaymentMethod    @map("payment_method")
+  paymentMode       PaymentMode      @map("payment_mode")
+  transactionId     String?          @map("transaction_id") @db.VarChar(100)
+  referenceNumber   String?          @map("reference_number") @db.VarChar(100)
+  bankName          String?          @map("bank_name") @db.VarChar(100)
+  chequeNumber      String?          @map("cheque_number") @db.VarChar(50)
+  chequeDate        DateTime?        @map("cheque_date") @db.Date
+  paymentDate       DateTime         @default(now()) @map("payment_date")
+  status            PaymentStatus    @default(PENDING)
+  remarks           String?
+  receiptNumber     String?          @unique @map("receipt_number") @db.VarChar(50)
+  processedBy       Int?             @map("processed_by")
+  processedAt       DateTime?        @map("processed_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  studentFee        StudentFee?      @relation(fields: [studentFeeId], references: [id])
+  processor         User?            @relation(fields: [processedBy], references: [id])
+
+  @@map("payments")
+}
+
+// Fee Enums
+enum FeeType {
+  TUITION
+  ADMISSION
+  EXAMINATION
+  LIBRARY
+  LABORATORY
+  TRANSPORT
+  HOSTEL
+  SPORTS
+  DEVELOPMENT
+  MISCELLANEOUS
+}
+
+enum RecurringFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMESTER
+  ANNUAL
+}
+
+enum FeeStructureStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum PaymentMethod {
+  CASH
+  CHEQUE
+  BANK_TRANSFER
+  ONLINE
+  UPI
+  CARD
+}
+
+enum PaymentMode {
+  OFFLINE
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}

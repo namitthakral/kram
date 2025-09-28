@@ -10,7 +10,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Core System Tables
+// ============================================================================
+// MULTI-FILE SCHEMA ORGANIZATION
+// ============================================================================
+// This schema is automatically generated from individual files in /prisma/schema/
+// To modify models, edit the individual files and run: npm run build:schema
+// ============================================================================
+
+
 model User {
   id                Int      @id @default(autoincrement())
   name              String   @db.VarChar(100)
@@ -33,6 +40,32 @@ model User {
   student           Student?
   teacher           Teacher?
   parent            Parent?
+  staff             Staff?
+  payments          Payment[]
+  noticesCreated    Notice[]
+  announcementsCreated Announcement[]
+  messagesSent      Message[]        @relation("MessageSender")
+  messagesReceived  Message[]        @relation("MessageReceiver")
+  groupsCreated     MessageGroup[]
+  groupMemberships  GroupMember[]
+  noticeReadReceipts NoticeReadReceipt[]
+  booksAdded        Book[]
+  bookIssues        BookIssue[]      @relation("BookIssuer")
+  bookReturns       BookIssue[]      @relation("BookReturner")
+  libraryTransactions LibraryTransaction[]
+  visitorPassApprovals VisitorPass[]
+  staffAttendanceMarked StaffAttendance[]
+  staffLeaveApprovals StaffLeave[]
+  staffAssignments  StaffAssignment[]
+  gatePassRequests  GatePass[]       @relation("GatePassRequester")
+  gatePassParentApprovals GatePass[] @relation("GatePassParentApprover")
+  gatePassTeacherApprovals GatePass[] @relation("GatePassTeacherApprover")
+  gatePassAdminApprovals GatePass[]   @relation("GatePassAdminApprover")
+  substitutionRequests TeacherSubstitution[] @relation("SubstitutionRequester")
+  substitutionApprovals TeacherSubstitution[] @relation("SubstitutionApprover")
+  applicationApprovals Application[]
+  dashboardStats    DashboardStats[]
+  systemAlertsResolved SystemAlert[]
 
   @@map("users")
 }
@@ -69,40 +102,100 @@ model Institution {
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  departments     Department[]
   students        Student[]
   programs        Program[]
   teachers        Teacher[]
+  staff           Staff[]
+  academicYears   AcademicYear[]
+  feeStructures   FeeStructure[]
+  notices         Notice[]
+  announcements   Announcement[]
+  messageGroups   MessageGroup[]
+  books           Book[]
+  librarySettings LibrarySettings[]
+  gatePasses      GatePass[]
+  gatePassSettings GatePassSettings[]
+  visitorPasses   VisitorPass[]
+  timeTables      TimeTable[]
+  timeSlots       TimeSlot[]
+  subjects        Subject[]
+  rooms           Room[]
+  dashboardStats  DashboardStats[]
+  performanceMetrics PerformanceMetrics[]
+  systemAlerts    SystemAlert[]
 
   @@map("institutions")
 }
 
-model Department {
-  id             Int            @id @default(autoincrement())
-  institutionId  Int            @map("institution_id")
-  name           String         @db.VarChar(100)
-  code           String?        @unique @db.VarChar(10)
-  description    String?
-  headTeacherId  Int?           @map("head_teacher_id")
-  budget         Decimal?       @db.Decimal(15, 2)
-  status         DepartmentStatus @default(ACTIVE)
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+// Core System Enums
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum InstitutionType {
+  SCHOOL
+  COLLEGE
+  UNIVERSITY
+  INSTITUTE
+}
+
+enum InstitutionStatus {
+  ACTIVE
+  INACTIVE
+}
+
+
+model AcademicYear {
+  id           Int             @id @default(autoincrement())
+  institutionId Int            @map("institution_id")
+  yearName     String          @map("year_name") @db.VarChar(20)
+  startDate    DateTime        @map("start_date") @db.Date
+  endDate      DateTime        @map("end_date") @db.Date
+  status       AcademicYearStatus @default(CURRENT)
+  createdAt    DateTime        @default(now()) @map("created_at")
 
   // Relations
-  institution    Institution    @relation(fields: [institutionId], references: [id])
-  headTeacher    Teacher?       @relation("DepartmentHead", fields: [headTeacherId], references: [id])
-  programs       Program[]
-  courses        Course[]
-  teachers       Teacher[]
+  institution  Institution     @relation(fields: [institutionId], references: [id])
+  semesters    Semester[]
+  feeStructures FeeStructure[]
+  teacherSubjects TeacherSubject[]
+  classTeachers ClassTeacher[]
+  timeTables   TimeTable[]
 
-  @@map("departments")
+  @@map("academic_years")
+}
+
+model Semester {
+  id                Int            @id @default(autoincrement())
+  academicYearId    Int            @map("academic_year_id")
+  semesterName      String         @map("semester_name") @db.VarChar(50)
+  semesterNumber    Int            @map("semester_number")
+  startDate         DateTime       @map("start_date") @db.Date
+  endDate           DateTime       @map("end_date") @db.Date
+  registrationStart DateTime?      @map("registration_start") @db.Date
+  registrationEnd   DateTime?      @map("registration_end") @db.Date
+  status            SemesterStatus @default(UPCOMING)
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  // Relations
+  academicYear      AcademicYear   @relation(fields: [academicYearId], references: [id])
+  enrollments       Enrollment[]
+  classSections     ClassSection[]
+  examinations      Examination[]
+  academicRecords   AcademicRecord[]
+  studentFees       StudentFee[]
+  studentProgress   StudentProgress[]
+  attendanceSummary AttendanceSummary[]
+  timeTables        TimeTable[]
+
+  @@map("semesters")
 }
 
 model Program {
   id                  Int            @id @default(autoincrement())
   institutionId       Int            @map("institution_id")
-  deptId              Int?           @map("dept_id")
   name                String         @db.VarChar(200)
   code                String?        @unique @db.VarChar(20)
   degreeType          DegreeType     @map("degree_type")
@@ -116,9 +209,11 @@ model Program {
 
   // Relations
   institution         Institution    @relation(fields: [institutionId], references: [id])
-  department          Department?    @relation(fields: [deptId], references: [id])
   courses             Course[]
   students            Student[]
+  feeStructures       FeeStructure[]
+  timeTables          TimeTable[]
+  classTeachers       ClassTeacher[]
 
   @@map("programs")
 }
@@ -126,7 +221,6 @@ model Program {
 model Course {
   id              Int          @id @default(autoincrement())
   programId       Int?         @map("program_id")
-  deptId          Int?         @map("dept_id")
   courseName      String       @map("course_name") @db.VarChar(200)
   courseCode      String       @unique @map("course_code") @db.VarChar(20)
   credits         Int
@@ -143,12 +237,54 @@ model Course {
 
   // Relations
   program         Program?     @relation(fields: [programId], references: [id])
-  department      Department?  @relation(fields: [deptId], references: [id])
   academicRecords AcademicRecord[]
   classSections   ClassSection[]
+  enrollments     Enrollment[]
+  examinations    Examination[]
+  assignments     Assignment[]
 
   @@map("courses")
 }
+
+// Academic Enums
+enum DegreeType {
+  CERTIFICATE
+  DIPLOMA
+  BACHELORS
+  MASTERS
+  PHD
+  OTHER
+}
+
+enum ProgramStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CourseType {
+  CORE
+  ELECTIVE
+  MINOR
+  MAJOR
+}
+
+enum CourseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AcademicYearStatus {
+  CURRENT
+  PAST
+  FUTURE
+}
+
+enum SemesterStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
 
 model Student {
   id                    Int              @id @default(autoincrement())
@@ -181,6 +317,19 @@ model Student {
   parents               Parent[]
   academicRecords       AcademicRecord[]
   attendance            Attendance[]
+  enrollments           Enrollment[]
+  examResults           ExamResult[]
+  submissions           Submission[]
+  studentFees           StudentFee[]
+  payments              Payment[]
+  bookIssues            BookIssue[]
+  bookReservations      BookReservation[]
+  libraryTransactions   LibraryTransaction[]
+  gatePasses            GatePass[]
+  studentProgress       StudentProgress[]
+  attendanceSummary     AttendanceSummary[]
+  careerGuidance        CareerGuidance[]
+  applications          Application[]
 
   @@map("students")
 }
@@ -189,14 +338,13 @@ model Teacher {
   id                Int              @id @default(autoincrement())
   userId            Int              @unique @map("user_id")
   institutionId     Int              @map("institution_id")
-  deptId            Int?             @map("dept_id")
   employeeId        String           @unique @map("employee_id") @db.VarChar(50)
   designation       String?          @db.VarChar(100)
   specialization    String?          @db.VarChar(200)
   qualification     String?          @db.VarChar(200)
   experienceYears   Int              @default(0) @map("experience_years")
   joinDate          DateTime?        @map("join_date") @db.Date
-  salary            Int?
+  salary            Decimal?         @db.Decimal(12, 2)
   employmentType    EmploymentType   @default(FULL_TIME) @map("employment_type")
   officeLocation    String?          @map("office_location") @db.VarChar(100)
   officeHours       String?          @map("office_hours") @db.VarChar(200)
@@ -209,10 +357,17 @@ model Teacher {
   // Relations
   user              User             @relation(fields: [userId], references: [id])
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  department        Department?      @relation(fields: [deptId], references: [id])
-  headOfDepartment  Department[]     @relation("DepartmentHead")
   attendanceMarked  Attendance[]     @relation("AttendanceMarker")
   classSections     ClassSection[]
+  examinations      Examination[]
+  examResults       ExamResult[]
+  assignments       Assignment[]
+  submissions       Submission[]
+  careerGuidance    CareerGuidance[]
+  timeTables        TimeTable[]
+  teacherSubjects   TeacherSubject[]
+  substitutions     TeacherSubstitution[] @relation("TeacherSubstitute")
+  classTeacher      ClassTeacher[]
 
   @@map("teachers")
 }
@@ -223,7 +378,7 @@ model Parent {
   studentId         Int            @map("student_id")
   relation          ParentRelation
   occupation        String?        @db.VarChar(100)
-  annualIncome      Int?           @map("annual_income")
+  annualIncome      Decimal?       @map("annual_income") @db.Decimal(12, 2)
   educationLevel    String?        @map("education_level") @db.VarChar(50)
   isPrimaryContact  Boolean        @default(false) @map("is_primary_contact")
   createdAt         DateTime       @default(now()) @map("created_at")
@@ -236,56 +391,39 @@ model Parent {
   @@map("parents")
 }
 
-// Enums
-enum UserStatus {
-  ACTIVE
-  INACTIVE
-  SUSPENDED
+model Staff {
+  id                Int              @id @default(autoincrement())
+  userId            Int              @unique @map("user_id")
+  institutionId     Int              @map("institution_id")
+  employeeId        String           @unique @map("employee_id") @db.VarChar(50)
+  staffType         StaffType        @map("staff_type")
+  designation       String           @db.VarChar(100)
+  department        String?          @db.VarChar(100)
+  joinDate          DateTime?        @map("join_date") @db.Date
+  salary            Decimal?         @db.Decimal(12, 2)
+  employmentType    EmploymentType   @default(FULL_TIME) @map("employment_type")
+  workingHours      String?          @map("working_hours") @db.VarChar(100)
+  reportingManager  Int?             @map("reporting_manager")
+  skills            String[]         // Array of skills
+  qualifications    String?          @db.VarChar(300)
+  experience        String?          @db.VarChar(300)
+  emergencyContact  String?          @map("emergency_contact") @db.VarChar(15)
+  address           String?
+  status            StaffStatus      @default(ACTIVE)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user              User             @relation(fields: [userId], references: [id])
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  attendance        StaffAttendance[]
+  leaves            StaffLeave[]
+  assignments       StaffAssignment[]
+
+  @@map("staff")
 }
 
-enum InstitutionType {
-  SCHOOL
-  COLLEGE
-  UNIVERSITY
-  INSTITUTE
-}
-
-enum InstitutionStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum DepartmentStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum DegreeType {
-  CERTIFICATE
-  DIPLOMA
-  BACHELORS
-  MASTERS
-  PHD
-  OTHER
-}
-
-enum ProgramStatus {
-  ACTIVE
-  INACTIVE
-}
-
-enum CourseType {
-  CORE
-  ELECTIVE
-  MINOR
-  MAJOR
-}
-
-enum CourseStatus {
-  ACTIVE
-  INACTIVE
-}
-
+// User Enums
 enum StudentType {
   REGULAR
   TRANSFER
@@ -305,7 +443,50 @@ enum StudentStatus {
   SUSPENDED
 }
 
-// Academic Records
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  VISITING
+}
+
+enum TeacherStatus {
+  ACTIVE
+  ON_LEAVE
+  RESIGNED
+  RETIRED
+}
+
+enum ParentRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+  OTHER
+}
+
+enum StaffType {
+  ADMINISTRATIVE
+  TECHNICAL
+  SUPPORT
+  SECURITY
+  MAINTENANCE
+  TRANSPORT
+  CLEANING
+  CAFETERIA
+  MEDICAL
+  OTHER
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  RESIGNED
+  TERMINATED
+  RETIRED
+}
+
+
 model AcademicRecord {
   id          Int      @id @default(autoincrement())
   studentId   Int      @map("student_id")
@@ -330,7 +511,6 @@ model AcademicRecord {
   @@map("academic_records")
 }
 
-// Attendance
 model Attendance {
   id          Int            @id @default(autoincrement())
   studentId   Int            @map("student_id")
@@ -350,92 +530,58 @@ model Attendance {
   @@map("attendance")
 }
 
-// Class Sections
 model ClassSection {
   id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(50)
-  code        String   @unique @db.VarChar(20)
   courseId    Int      @map("course_id")
-  teacherId   Int      @map("teacher_id")
   semesterId  Int      @map("semester_id")
-  room        String?  @db.VarChar(20)
-  schedule    String?  @db.VarChar(100)
-  maxStudents Int?     @map("max_students")
-  status      SectionStatus @default(ACTIVE)
+  teacherId   Int      @map("teacher_id")
+  sectionName String   @map("section_name") @db.VarChar(10)
+  maxCapacity Int      @default(50) @map("max_capacity")
+  currentEnrollment Int @default(0) @map("current_enrollment")
+  roomNumber  String?  @map("room_number") @db.VarChar(50)
+  schedule    Json?    // {"Monday": "09:00-10:30", "Wednesday": "09:00-10:30"}
+  status      ClassSectionStatus @default(ACTIVE)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
   course      Course   @relation(fields: [courseId], references: [id])
-  teacher     Teacher  @relation(fields: [teacherId], references: [id])
   semester    Semester @relation(fields: [semesterId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
   attendance  Attendance[]
+  assignments Assignment[]
 
   @@map("class_sections")
 }
 
-// Semesters
-model Semester {
-  id            Int      @id @default(autoincrement())
-  semesterName  String   @map("semester_name") @db.VarChar(50)
-  semesterNumber Int     @map("semester_number")
-  academicYearId Int     @map("academic_year_id")
-  startDate     DateTime @map("start_date")
-  endDate       DateTime @map("end_date")
-  status        SemesterStatus @default(ACTIVE)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+model Enrollment {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  courseId          Int              @map("course_id")
+  semesterId        Int              @map("semester_id")
+  enrollmentDate    DateTime         @default(now()) @map("enrollment_date") @db.Date
+  enrollmentStatus  EnrollmentStatus @default(ENROLLED) @map("enrollment_status")
+  grade             String?          @db.VarChar(5)
+  creditsEarned     Int              @default(0) @map("credits_earned")
+  attendancePercentage Decimal?      @map("attendance_percentage") @db.Decimal(5, 2)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id])
-  academicRecords AcademicRecord[]
-  classSections ClassSection[]
+  student           Student          @relation(fields: [studentId], references: [id])
+  course            Course           @relation(fields: [courseId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
 
-  @@map("semesters")
+  @@unique([studentId, courseId, semesterId], name: "unique_enrollment")
+  @@map("enrollments")
 }
 
-// Academic Years
-model AcademicYear {
-  id          Int      @id @default(autoincrement())
-  yearName    String   @unique @map("year_name") @db.VarChar(20)
-  startDate   DateTime @map("start_date")
-  endDate     DateTime @map("end_date")
-  status      AcademicYearStatus @default(ACTIVE)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  semesters   Semester[]
-
-  @@map("academic_years")
-}
-
-enum EmploymentType {
-  FULL_TIME
-  PART_TIME
-  CONTRACT
-  VISITING
-}
-
-enum TeacherStatus {
-  ACTIVE
-  ON_LEAVE
-  RESIGNED
-  RETIRED
-}
-
-enum ParentRelation {
-  FATHER
-  MOTHER
-  GUARDIAN
-  OTHER
-}
-
+// Records Enums
 enum AcademicRecordStatus {
   PASSED
   FAILED
   INCOMPLETE
-  PENDING
+  WITHDRAWN
 }
 
 enum AttendanceStatus {
@@ -445,20 +591,1324 @@ enum AttendanceStatus {
   EXCUSED
 }
 
-enum SectionStatus {
+enum ClassSectionStatus {
   ACTIVE
   INACTIVE
+  CANCELLED
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  DROPPED
+  COMPLETED
+  FAILED
+}
+
+
+model Examination {
+  id                  Int              @id @default(autoincrement())
+  courseId            Int              @map("course_id")
+  semesterId          Int              @map("semester_id")
+  examName            String           @map("exam_name") @db.VarChar(100)
+  examType            ExamType         @map("exam_type")
+  examDate            DateTime?        @map("exam_date") @db.Date
+  startTime           DateTime?        @map("start_time") @db.Time
+  durationMinutes     Int?             @map("duration_minutes")
+  totalMarks          Int              @map("total_marks")
+  passingMarks        Int?             @map("passing_marks")
+  weightagePercentage Decimal?         @map("weightage_percentage") @db.Decimal(5, 2)
+  instructions        String?
+  venue               String?          @db.VarChar(100)
+  status              ExamStatus       @default(SCHEDULED)
+  createdBy           Int              @map("created_by")
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  course              Course           @relation(fields: [courseId], references: [id])
+  semester            Semester         @relation(fields: [semesterId], references: [id])
+  creator             Teacher          @relation(fields: [createdBy], references: [id])
+  results             ExamResult[]
+
+  @@map("examinations")
+}
+
+model ExamResult {
+  id          Int      @id @default(autoincrement())
+  examId      Int      @map("exam_id")
+  studentId   Int      @map("student_id")
+  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
+  grade       String?  @db.VarChar(5)
+  rankInClass Int?     @map("rank_in_class")
+  remarks     String?
+  isAbsent    Boolean  @default(false) @map("is_absent")
+  evaluatedBy Int?     @map("evaluated_by")
+  evaluatedAt DateTime? @map("evaluated_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  exam        Examination @relation(fields: [examId], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id])
+  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id])
+
+  @@unique([examId, studentId], name: "unique_result")
+  @@map("exam_results")
+}
+
+model Assignment {
+  id                      Int                @id @default(autoincrement())
+  courseId                Int                @map("course_id")
+  sectionId               Int?               @map("section_id")
+  teacherId               Int                @map("teacher_id")
+  title                   String             @db.VarChar(200)
+  description             String?
+  instructions            String?
+  maxMarks                Int                @default(100) @map("max_marks")
+  weightagePercentage     Decimal?           @map("weightage_percentage") @db.Decimal(5, 2)
+  assignedDate            DateTime           @default(now()) @map("assigned_date") @db.Date
+  dueDate                 DateTime           @map("due_date")
+  lateSubmissionAllowed   Boolean            @default(true) @map("late_submission_allowed")
+  latePenaltyPercentage   Decimal            @default(0) @map("late_penalty_percentage") @db.Decimal(5, 2)
+  attachmentUrl           String?            @map("attachment_url") @db.VarChar(500)
+  status                  AssignmentStatus   @default(DRAFT)
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  course                  Course             @relation(fields: [courseId], references: [id])
+  section                 ClassSection?      @relation(fields: [sectionId], references: [id])
+  teacher                 Teacher            @relation(fields: [teacherId], references: [id])
+  submissions             Submission[]
+
+  @@map("assignments")
+}
+
+model Submission {
+  id            Int              @id @default(autoincrement())
+  assignmentId  Int              @map("assignment_id")
+  studentId     Int              @map("student_id")
+  fileUrl       String?          @map("file_url") @db.VarChar(500)
+  fileName      String?          @map("file_name") @db.VarChar(255)
+  fileSize      Int?             @map("file_size")
+  submissionText String?
+  submittedAt   DateTime         @default(now()) @map("submitted_at")
+  isLate        Boolean          @default(false) @map("is_late")
+  marksObtained Decimal?         @map("marks_obtained") @db.Decimal(6, 2)
+  feedback      String?
+  gradedBy      Int?             @map("graded_by")
+  gradedAt      DateTime?        @map("graded_at")
+  status        SubmissionStatus @default(SUBMITTED)
+  version       Int              @default(1)
+
+  // Relations
+  assignment    Assignment       @relation(fields: [assignmentId], references: [id])
+  student       Student          @relation(fields: [studentId], references: [id])
+  grader        Teacher?         @relation(fields: [gradedBy], references: [id])
+
+  @@unique([assignmentId, studentId, version], name: "unique_submission")
+  @@map("submissions")
+}
+
+// Assessment Enums
+enum ExamType {
+  QUIZ
+  MIDTERM
+  FINAL
+  ASSIGNMENT
+  PROJECT
+  PRACTICAL
+}
+
+enum ExamStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  RETURNED
+  RESUBMITTED
+}
+
+
+model FeeStructure {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  programId         Int?             @map("program_id")
+  academicYearId    Int              @map("academic_year_id")
+  feeType           FeeType          @map("fee_type")
+  feeName           String           @map("fee_name") @db.VarChar(100)
+  amount            Decimal          @db.Decimal(10, 2)
+  dueDate           DateTime?        @map("due_date") @db.Date
+  lateFeeAmount     Decimal?         @default(0) @map("late_fee_amount") @db.Decimal(10, 2)
+  lateFeeAfterDays  Int?             @default(30) @map("late_fee_after_days")
+  isRecurring       Boolean          @default(false) @map("is_recurring")
+  recurringFrequency RecurringFrequency? @map("recurring_frequency")
+  description       String?
+  status            FeeStructureStatus @default(ACTIVE)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  program           Program?         @relation(fields: [programId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+  studentFees       StudentFee[]
+
+  @@map("fee_structures")
+}
+
+model StudentFee {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  feeStructureId    Int              @map("fee_structure_id")
+  semesterId        Int?             @map("semester_id")
+  amountDue         Decimal          @map("amount_due") @db.Decimal(10, 2)
+  amountPaid        Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  lateFeeApplied    Decimal          @default(0) @map("late_fee_applied") @db.Decimal(10, 2)
+  discount          Decimal          @default(0) @db.Decimal(10, 2)
+  dueDate           DateTime         @map("due_date") @db.Date
+  status            FeeStatus        @default(PENDING)
+  remarks           String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  feeStructure      FeeStructure     @relation(fields: [feeStructureId], references: [id])
+  semester          Semester?        @relation(fields: [semesterId], references: [id])
+  payments          Payment[]
+
+  @@unique([studentId, feeStructureId, semesterId], name: "unique_student_fee")
+  @@map("student_fees")
+}
+
+model Payment {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  studentFeeId      Int?             @map("student_fee_id")
+  amount            Decimal          @db.Decimal(10, 2)
+  paymentMethod     PaymentMethod    @map("payment_method")
+  paymentMode       PaymentMode      @map("payment_mode")
+  transactionId     String?          @map("transaction_id") @db.VarChar(100)
+  referenceNumber   String?          @map("reference_number") @db.VarChar(100)
+  bankName          String?          @map("bank_name") @db.VarChar(100)
+  chequeNumber      String?          @map("cheque_number") @db.VarChar(50)
+  chequeDate        DateTime?        @map("cheque_date") @db.Date
+  paymentDate       DateTime         @default(now()) @map("payment_date")
+  status            PaymentStatus    @default(PENDING)
+  remarks           String?
+  receiptNumber     String?          @unique @map("receipt_number") @db.VarChar(50)
+  processedBy       Int?             @map("processed_by")
+  processedAt       DateTime?        @map("processed_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  studentFee        StudentFee?      @relation(fields: [studentFeeId], references: [id])
+  processor         User?            @relation(fields: [processedBy], references: [id])
+
+  @@map("payments")
+}
+
+// Fee Enums
+enum FeeType {
+  TUITION
+  ADMISSION
+  EXAMINATION
+  LIBRARY
+  LABORATORY
+  TRANSPORT
+  HOSTEL
+  SPORTS
+  DEVELOPMENT
+  MISCELLANEOUS
+}
+
+enum RecurringFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMESTER
+  ANNUAL
+}
+
+enum FeeStructureStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum FeeStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum PaymentMethod {
+  CASH
+  CHEQUE
+  BANK_TRANSFER
+  ONLINE
+  UPI
+  CARD
+}
+
+enum PaymentMode {
+  OFFLINE
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+
+model Notice {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  title             String           @db.VarChar(200)
+  content           String
+  noticeType        NoticeType       @map("notice_type")
+  priority          NoticePriority   @default(MEDIUM)
+  targetAudience    String[]         // Array of roles: ["student", "teacher", "parent"]
+  departmentIds     Int[]            @map("department_ids") // Specific departments if applicable
+  programIds        Int[]            @map("program_ids")    // Specific programs if applicable
+  classIds          Int[]            @map("class_ids")      // Specific classes if applicable
+  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
+  publishDate       DateTime         @default(now()) @map("publish_date")
+  expiryDate        DateTime?        @map("expiry_date")
+  isActive          Boolean          @default(true) @map("is_active")
+  isPinned          Boolean          @default(false) @map("is_pinned")
+  createdBy         Int              @map("created_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id])
+  readReceipts      NoticeReadReceipt[]
+
+  @@map("notices")
+}
+
+model NoticeReadReceipt {
+  id                Int              @id @default(autoincrement())
+  noticeId          Int              @map("notice_id")
+  userId            Int              @map("user_id")
+  readAt            DateTime         @default(now()) @map("read_at")
+
+  // Relations
+  notice            Notice           @relation(fields: [noticeId], references: [id])
+  user              User             @relation(fields: [userId], references: [id])
+
+  @@unique([noticeId, userId], name: "unique_notice_read")
+  @@map("notice_read_receipts")
+}
+
+model Announcement {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  title             String           @db.VarChar(200)
+  content           String
+  announcementType  AnnouncementType @map("announcement_type")
+  priority          NoticePriority   @default(MEDIUM)
+  targetAudience    String[]         // Array of roles
+  isEmergency       Boolean          @default(false) @map("is_emergency")
+  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
+  publishDate       DateTime         @default(now()) @map("publish_date")
+  expiryDate        DateTime?        @map("expiry_date")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdBy         Int              @map("created_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id])
+
+  @@map("announcements")
+}
+
+model Message {
+  id                Int              @id @default(autoincrement())
+  senderId          Int              @map("sender_id")
+  receiverId        Int?             @map("receiver_id")
+  groupId           Int?             @map("group_id")
+  subject           String?          @db.VarChar(200)
+  content           String
+  messageType       MessageType      @map("message_type")
+  priority          MessagePriority  @default(NORMAL)
+  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
+  isRead            Boolean          @default(false) @map("is_read")
+  readAt            DateTime?        @map("read_at")
+  sentAt            DateTime         @default(now()) @map("sent_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  sender            User             @relation("MessageSender", fields: [senderId], references: [id])
+  receiver          User?            @relation("MessageReceiver", fields: [receiverId], references: [id])
+  group             MessageGroup?    @relation(fields: [groupId], references: [id])
+
+  @@map("messages")
+}
+
+model MessageGroup {
+  id                Int              @id @default(autoincrement())
+  name              String           @db.VarChar(100)
+  description       String?
+  groupType         GroupType        @map("group_type")
+  institutionId     Int              @map("institution_id")
+  createdBy         Int              @map("created_by")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id])
+  members           GroupMember[]
+  messages          Message[]
+
+  @@map("message_groups")
+}
+
+model GroupMember {
+  id                Int              @id @default(autoincrement())
+  groupId           Int              @map("group_id")
+  userId            Int              @map("user_id")
+  role              GroupRole        @default(MEMBER)
+  joinedAt          DateTime         @default(now()) @map("joined_at")
+
+  // Relations
+  group             MessageGroup     @relation(fields: [groupId], references: [id])
+  user              User             @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId], name: "unique_group_member")
+  @@map("group_members")
+}
+
+// Communication Enums
+enum NoticeType {
+  GENERAL
+  ACADEMIC
+  EXAMINATION
+  ADMISSION
+  EVENT
+  HOLIDAY
+  EMERGENCY
+  MAINTENANCE
+}
+
+enum AnnouncementType {
+  GENERAL
+  ACADEMIC
+  EVENT
+  ACHIEVEMENT
+  ALERT
+  EMERGENCY
+}
+
+enum NoticePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MessageType {
+  PERSONAL
+  GROUP
+  BROADCAST
+  SYSTEM
+}
+
+enum MessagePriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum GroupType {
+  CLASS
+  DEPARTMENT
+  PROGRAM
+  CUSTOM
+  PARENT_TEACHER
+  STUDENT_GROUP
+}
+
+enum GroupRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+
+model Book {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  isbn              String?          @unique @db.VarChar(20)
+  title             String           @db.VarChar(300)
+  author            String           @db.VarChar(200)
+  publisher         String?          @db.VarChar(200)
+  publicationYear   Int?             @map("publication_year")
+  edition           String?          @db.VarChar(50)
+  language          String?          @db.VarChar(50)
+  categoryId        Int              @map("category_id")
+  subjectArea       String?          @map("subject_area") @db.VarChar(100)
+  totalCopies       Int              @default(1) @map("total_copies")
+  availableCopies   Int              @default(1) @map("available_copies")
+  location          String?          @db.VarChar(100) // Shelf/Section location
+  price             Decimal?         @db.Decimal(10, 2)
+  condition         BookCondition    @default(GOOD)
+  description       String?
+  coverImageUrl     String?          @map("cover_image_url") @db.VarChar(500)
+  status            BookStatus       @default(ACTIVE)
+  addedBy           Int              @map("added_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  category          BookCategory     @relation(fields: [categoryId], references: [id])
+  addedByUser       User             @relation(fields: [addedBy], references: [id])
+  issues            BookIssue[]
+  reservations      BookReservation[]
+  libraryTransactions LibraryTransaction[]
+
+  @@map("books")
+}
+
+model BookCategory {
+  id                Int              @id @default(autoincrement())
+  name              String           @db.VarChar(100)
+  description       String?
+  parentCategoryId  Int?             @map("parent_category_id")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  parentCategory    BookCategory?    @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id])
+  subCategories     BookCategory[]   @relation("CategoryHierarchy")
+  books             Book[]
+
+  @@map("book_categories")
+}
+
+model BookIssue {
+  id                Int              @id @default(autoincrement())
+  bookId            Int              @map("book_id")
+  studentId         Int              @map("student_id")
+  issuedDate        DateTime         @default(now()) @map("issued_date")
+  dueDate           DateTime         @map("due_date")
+  returnedDate      DateTime?        @map("returned_date")
+  renewalCount      Int              @default(0) @map("renewal_count")
+  maxRenewals       Int              @default(2) @map("max_renewals")
+  fineAmount        Decimal          @default(0) @map("fine_amount") @db.Decimal(8, 2)
+  finePaid          Boolean          @default(false) @map("fine_paid")
+  condition         BookCondition    @default(GOOD)
+  remarks           String?
+  status            IssueStatus      @default(ISSUED)
+  issuedBy          Int              @map("issued_by")
+  returnedBy        Int?             @map("returned_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  book              Book             @relation(fields: [bookId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id])
+  issuer            User             @relation("BookIssuer", fields: [issuedBy], references: [id])
+  returner          User?            @relation("BookReturner", fields: [returnedBy], references: [id])
+
+  @@map("book_issues")
+}
+
+model BookReservation {
+  id                Int              @id @default(autoincrement())
+  bookId            Int              @map("book_id")
+  studentId         Int              @map("student_id")
+  reservedDate      DateTime         @default(now()) @map("reserved_date")
+  expiryDate        DateTime         @map("expiry_date")
+  status            ReservationStatus @default(ACTIVE)
+  notifiedAt        DateTime?        @map("notified_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  book              Book             @relation(fields: [bookId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id])
+
+  @@unique([bookId, studentId], name: "unique_book_reservation")
+  @@map("book_reservations")
+}
+
+model LibraryTransaction {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  transactionType   TransactionType  @map("transaction_type")
+  bookId            Int?             @map("book_id")
+  amount            Decimal?         @db.Decimal(8, 2)
+  description       String           @db.VarChar(200)
+  transactionDate   DateTime         @default(now()) @map("transaction_date")
+  processedBy       Int              @map("processed_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  book              Book?            @relation(fields: [bookId], references: [id])
+  processor         User             @relation(fields: [processedBy], references: [id])
+
+  @@map("library_transactions")
+}
+
+model LibrarySettings {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @unique @map("institution_id")
+  maxBooksPerStudent Int             @default(3) @map("max_books_per_student")
+  defaultIssueDays  Int              @default(14) @map("default_issue_days")
+  maxRenewals       Int              @default(2) @map("max_renewals")
+  finePerDay        Decimal          @default(1.00) @map("fine_per_day") @db.Decimal(5, 2)
+  reservationDays   Int              @default(3) @map("reservation_days")
+  isActive          Boolean          @default(true) @map("is_active")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+
+  @@map("library_settings")
+}
+
+// Library Enums
+enum BookCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  DAMAGED
+}
+
+enum BookStatus {
+  ACTIVE
+  INACTIVE
+  LOST
+  DAMAGED
+  WITHDRAWN
+}
+
+enum IssueStatus {
+  ISSUED
+  RETURNED
+  OVERDUE
+  LOST
+  DAMAGED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  FULFILLED
+  EXPIRED
+  CANCELLED
+}
+
+enum TransactionType {
+  ISSUE
+  RETURN
+  RENEWAL
+  FINE_PAYMENT
+  BOOK_LOST
+  BOOK_DAMAGED
+  RESERVATION
+}
+
+
+model StaffAttendance {
+  id                Int              @id @default(autoincrement())
+  staffId           Int              @map("staff_id")
+  date              DateTime         @db.Date
+  checkInTime       DateTime?        @map("check_in_time")
+  checkOutTime      DateTime?        @map("check_out_time")
+  totalHours        Decimal?         @map("total_hours") @db.Decimal(4, 2)
+  status            AttendanceStatus
+  remarks           String?
+  location          String?          @db.VarChar(100)
+  markedBy          Int?             @map("marked_by")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  staff             Staff            @relation(fields: [staffId], references: [id])
+  marker            User?            @relation(fields: [markedBy], references: [id])
+
+  @@unique([staffId, date], name: "unique_staff_attendance")
+  @@map("staff_attendance")
+}
+
+model StaffLeave {
+  id                Int              @id @default(autoincrement())
+  staffId           Int              @map("staff_id")
+  leaveType         LeaveType        @map("leave_type")
+  startDate         DateTime         @map("start_date") @db.Date
+  endDate           DateTime         @map("end_date") @db.Date
+  totalDays         Int              @map("total_days")
+  reason            String
+  status            LeaveStatus      @default(PENDING)
+  appliedDate       DateTime         @default(now()) @map("applied_date")
+  approvedBy        Int?             @map("approved_by")
+  approvedDate      DateTime?        @map("approved_date")
+  rejectionReason   String?          @map("rejection_reason")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  staff             Staff            @relation(fields: [staffId], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id])
+
+  @@map("staff_leaves")
+}
+
+model StaffAssignment {
+  id                Int              @id @default(autoincrement())
+  staffId           Int              @map("staff_id")
+  assignmentType    AssignmentType   @map("assignment_type")
+  title             String           @db.VarChar(200)
+  description       String?
+  location          String?          @db.VarChar(100)
+  startDate         DateTime         @map("start_date") @db.Date
+  endDate           DateTime?        @map("end_date") @db.Date
+  priority          TaskPriority     @default(MEDIUM)
+  status            StaffAssignmentStatus @default(ASSIGNED)
+  assignedBy        Int              @map("assigned_by")
+  completedAt       DateTime?        @map("completed_at")
+  remarks           String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  staff             Staff            @relation(fields: [staffId], references: [id])
+  assigner          User             @relation(fields: [assignedBy], references: [id])
+
+  @@map("staff_assignments")
+}
+
+// Staff Enums
+enum LeaveType {
+  CASUAL
+  SICK
+  ANNUAL
+  MATERNITY
+  PATERNITY
+  EMERGENCY
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AssignmentType {
+  MAINTENANCE
+  CLEANING
+  SECURITY
+  TRANSPORT
+  EVENT_SUPPORT
+  ADMINISTRATIVE
+  TECHNICAL_SUPPORT
+  OTHER
+}
+
+enum StaffAssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+
+model GatePass {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  studentId         Int              @map("student_id")
+  passType          GatePassType     @map("pass_type")
+  reason            String           @db.VarChar(300)
+  requestedBy       Int              @map("requested_by") // Student or Parent
+  requestDate       DateTime         @default(now()) @map("request_date")
+  fromDate          DateTime         @map("from_date")
+  toDate            DateTime?        @map("to_date")
+  fromTime          DateTime?        @map("from_time") @db.Time
+  toTime            DateTime?        @map("to_time") @db.Time
+  destination       String?          @db.VarChar(200)
+  contactPerson     String?          @map("contact_person") @db.VarChar(100)
+  contactNumber     String?          @map("contact_number") @db.VarChar(15)
+  parentApproval    Boolean          @default(false) @map("parent_approval")
+  parentApprovedBy  Int?             @map("parent_approved_by")
+  parentApprovedAt  DateTime?        @map("parent_approved_at")
+  teacherApproval   Boolean          @default(false) @map("teacher_approval")
+  teacherApprovedBy Int?             @map("teacher_approved_by")
+  teacherApprovedAt DateTime?        @map("teacher_approved_at")
+  adminApproval     Boolean          @default(false) @map("admin_approval")
+  adminApprovedBy   Int?             @map("admin_approved_by")
+  adminApprovedAt   DateTime?        @map("admin_approved_at")
+  status            GatePassStatus   @default(PENDING)
+  actualExitTime    DateTime?        @map("actual_exit_time")
+  actualReturnTime  DateTime?        @map("actual_return_time")
+  securityRemarks   String?          @map("security_remarks")
+  rejectionReason   String?          @map("rejection_reason")
+  isEmergency       Boolean          @default(false) @map("is_emergency")
+  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id])
+  requester         User             @relation("GatePassRequester", fields: [requestedBy], references: [id])
+  parentApprover    User?            @relation("GatePassParentApprover", fields: [parentApprovedBy], references: [id])
+  teacherApprover   User?            @relation("GatePassTeacherApprover", fields: [teacherApprovedBy], references: [id])
+  adminApprover     User?            @relation("GatePassAdminApprover", fields: [adminApprovedBy], references: [id])
+
+  @@map("gate_passes")
+}
+
+model GatePassSettings {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @unique @map("institution_id")
+  requireParentApproval Boolean      @default(true) @map("require_parent_approval")
+  requireTeacherApproval Boolean     @default(true) @map("require_teacher_approval")
+  requireAdminApproval Boolean       @default(false) @map("require_admin_approval")
+  maxHoursWithoutApproval Int        @default(2) @map("max_hours_without_approval")
+  allowWeekendPasses Boolean         @default(false) @map("allow_weekend_passes")
+  allowHolidayPasses Boolean         @default(false) @map("allow_holiday_passes")
+  autoApproveEmergency Boolean       @default(false) @map("auto_approve_emergency")
+  notificationEnabled Boolean        @default(true) @map("notification_enabled")
+  smsNotification   Boolean          @default(false) @map("sms_notification")
+  emailNotification Boolean          @default(true) @map("email_notification")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+
+  @@map("gate_pass_settings")
+}
+
+model VisitorPass {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  visitorName       String           @map("visitor_name") @db.VarChar(100)
+  visitorPhone      String           @map("visitor_phone") @db.VarChar(15)
+  visitorEmail      String?          @map("visitor_email") @db.VarChar(100)
+  idProofType       String           @map("id_proof_type") @db.VarChar(50)
+  idProofNumber     String           @map("id_proof_number") @db.VarChar(50)
+  purposeOfVisit    String           @map("purpose_of_visit") @db.VarChar(300)
+  personToMeet      String           @map("person_to_meet") @db.VarChar(100)
+  department        String?          @db.VarChar(100)
+  visitDate         DateTime         @map("visit_date") @db.Date
+  expectedInTime    DateTime         @map("expected_in_time")
+  expectedOutTime   DateTime?        @map("expected_out_time")
+  actualInTime      DateTime?        @map("actual_in_time")
+  actualOutTime     DateTime?        @map("actual_out_time")
+  status            VisitorPassStatus @default(SCHEDULED)
+  approvedBy        Int?             @map("approved_by")
+  approvedAt        DateTime?        @map("approved_at")
+  securityRemarks   String?          @map("security_remarks")
+  vehicleNumber     String?          @map("vehicle_number") @db.VarChar(20)
+  accompaniedBy     String?          @map("accompanied_by") @db.VarChar(200)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id])
+
+  @@map("visitor_passes")
+}
+
+// Gate Pass Enums
+enum GatePassType {
+  TEMPORARY    // Few hours
+  HALF_DAY
+  FULL_DAY
+  MULTIPLE_DAYS
+  EMERGENCY
+  MEDICAL
+  FAMILY_FUNCTION
+  OFFICIAL_WORK
+}
+
+enum GatePassStatus {
+  PENDING
+  PARENT_APPROVED
+  TEACHER_APPROVED
+  APPROVED
+  REJECTED
+  EXPIRED
+  USED
+  CANCELLED
+}
+
+enum VisitorPassStatus {
+  SCHEDULED
+  APPROVED
+  CHECKED_IN
+  CHECKED_OUT
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+
+model TimeTable {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  academicYearId    Int              @map("academic_year_id")
+  semesterId        Int              @map("semester_id")
+  classId           Int?             @map("class_id") // For school classes
+  programId         Int?             @map("program_id") // For college programs
+  section           String?          @db.VarChar(10)
+  dayOfWeek         DayOfWeek        @map("day_of_week")
+  timeSlotId        Int              @map("time_slot_id")
+  subjectId         Int              @map("subject_id")
+  teacherId         Int              @map("teacher_id")
+  roomId            Int?             @map("room_id")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
+  program           Program?         @relation(fields: [programId], references: [id])
+  timeSlot          TimeSlot         @relation(fields: [timeSlotId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  room              Room?            @relation(fields: [roomId], references: [id])
+  substitutions     TeacherSubstitution[]
+
+  @@unique([institutionId, academicYearId, semesterId, programId, section, dayOfWeek, timeSlotId], name: "unique_timetable_slot")
+  @@map("timetables")
+}
+
+model TimeSlot {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  slotName          String           @map("slot_name") @db.VarChar(50) // "Period 1", "Morning Break", etc.
+  startTime         DateTime         @map("start_time") @db.Time
+  endTime           DateTime         @map("end_time") @db.Time
+  slotType          SlotType         @map("slot_type")
+  duration          Int              // Duration in minutes
+  isActive          Boolean          @default(true) @map("is_active")
+  sortOrder         Int              @map("sort_order")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  timetables        TimeTable[]
+
+  @@map("time_slots")
+}
+
+model Subject {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  name              String           @db.VarChar(100)
+  code              String           @db.VarChar(20)
+  description       String?
+  subjectType       SubjectType      @map("subject_type")
+  credits           Int?
+  theoryHours       Int              @default(0) @map("theory_hours")
+  practicalHours    Int              @default(0) @map("practical_hours")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  timetables        TimeTable[]
+  teacherSubjects   TeacherSubject[]
+  studentProgress   StudentProgress[]
+  attendanceSummary AttendanceSummary[]
+
+  @@unique([institutionId, code], name: "unique_subject_code")
+  @@map("subjects")
+}
+
+model Room {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  roomNumber        String           @map("room_number") @db.VarChar(20)
+  roomName          String?          @map("room_name") @db.VarChar(100)
+  roomType          RoomType         @map("room_type")
+  building          String?          @db.VarChar(100)
+  floor             String?          @db.VarChar(20)
+  capacity          Int?
+  facilities        String[]         // Array of facilities like "Projector", "AC", "Whiteboard"
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  timetables        TimeTable[]
+
+  @@unique([institutionId, roomNumber], name: "unique_room_number")
+  @@map("rooms")
+}
+
+model TeacherSubject {
+  id                Int              @id @default(autoincrement())
+  teacherId         Int              @map("teacher_id")
+  subjectId         Int              @map("subject_id")
+  academicYearId    Int              @map("academic_year_id")
+  isPrimary         Boolean          @default(false) @map("is_primary") // Primary teacher for the subject
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+
+  @@unique([teacherId, subjectId, academicYearId], name: "unique_teacher_subject")
+  @@map("teacher_subjects")
+}
+
+model TeacherSubstitution {
+  id                Int              @id @default(autoincrement())
+  originalTimetableId Int            @map("original_timetable_id")
+  substituteTeacherId Int            @map("substitute_teacher_id")
+  date              DateTime         @db.Date
+  reason            String           @db.VarChar(200)
+  status            SubstitutionStatus @default(PENDING)
+  requestedBy       Int              @map("requested_by")
+  approvedBy        Int?             @map("approved_by")
+  approvedAt        DateTime?        @map("approved_at")
+  remarks           String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  originalTimetable TimeTable        @relation(fields: [originalTimetableId], references: [id])
+  substituteTeacher Teacher          @relation("TeacherSubstitute", fields: [substituteTeacherId], references: [id])
+  requester         User             @relation("SubstitutionRequester", fields: [requestedBy], references: [id])
+  approver          User?            @relation("SubstitutionApprover", fields: [approvedBy], references: [id])
+
+  @@map("teacher_substitutions")
+}
+
+model ClassTeacher {
+  id                Int              @id @default(autoincrement())
+  teacherId         Int              @map("teacher_id")
+  programId         Int?             @map("program_id")
+  classLevel        String?          @map("class_level") @db.VarChar(20) // For schools: "Class 10", "Grade 5"
+  section           String?          @db.VarChar(10)
+  academicYearId    Int              @map("academic_year_id")
+  isActive          Boolean          @default(true) @map("is_active")
+  assignedDate      DateTime         @default(now()) @map("assigned_date")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  program           Program?         @relation(fields: [programId], references: [id])
+  academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
+
+  @@unique([programId, classLevel, section, academicYearId], name: "unique_class_teacher")
+  @@map("class_teachers")
+}
+
+// Timetable Enums
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum SlotType {
+  LECTURE
+  PRACTICAL
+  TUTORIAL
+  BREAK
+  LUNCH
+  ASSEMBLY
+  SPORTS
+  LIBRARY
+  STUDY_HALL
+}
+
+enum SubjectType {
+  CORE
+  ELECTIVE
+  OPTIONAL
+  EXTRA_CURRICULAR
+  LANGUAGE
+  SCIENCE
+  MATHEMATICS
+  SOCIAL_STUDIES
+  ARTS
+  PHYSICAL_EDUCATION
+}
+
+enum RoomType {
+  CLASSROOM
+  LABORATORY
+  LIBRARY
+  AUDITORIUM
+  SPORTS_ROOM
+  COMPUTER_LAB
+  CONFERENCE_ROOM
+  STAFF_ROOM
+  PRINCIPAL_OFFICE
+  MEDICAL_ROOM
+}
+
+enum SubstitutionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+
+model StudentProgress {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  subjectId         Int              @map("subject_id")
+  semesterId        Int              @map("semester_id")
+  academicYearId    Int              @map("academic_year_id")
+  overallGrade      String?          @map("overall_grade") @db.VarChar(5)
+  gradePoints       Decimal?         @map("grade_points") @db.Decimal(4, 2)
+  attendancePercentage Decimal?      @map("attendance_percentage") @db.Decimal(5, 2)
+  assignmentScore   Decimal?         @map("assignment_score") @db.Decimal(6, 2)
+  examScore         Decimal?         @map("exam_score") @db.Decimal(6, 2)
+  participationScore Decimal?        @map("participation_score") @db.Decimal(6, 2)
+  status            ProgressStatus   @default(ON_TRACK)
+  strengths         String[]         // Array of strengths
+  areasForImprovement String[]       @map("areas_for_improvement") // Array of improvement areas
+  teacherComments   String?          @map("teacher_comments")
+  parentComments    String?          @map("parent_comments")
+  lastUpdated       DateTime         @default(now()) @map("last_updated")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
+
+  @@unique([studentId, subjectId, semesterId], name: "unique_student_progress")
+  @@map("student_progress")
+}
+
+model DashboardStats {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  userId            Int?             @map("user_id") // For user-specific stats
+  statType          String           @map("stat_type") @db.VarChar(50) // "attendance", "performance", "fees", etc.
+  statName          String           @map("stat_name") @db.VarChar(100)
+  statValue         Decimal          @map("stat_value") @db.Decimal(15, 2)
+  statUnit          String?          @map("stat_unit") @db.VarChar(20) // "percentage", "count", "amount"
+  period            String?          @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
+  periodStart       DateTime?        @map("period_start")
+  periodEnd         DateTime?        @map("period_end")
+  metadata          Json?            // Additional data as JSON
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  user              User?            @relation(fields: [userId], references: [id])
+
+  @@map("dashboard_stats")
+}
+
+model PerformanceMetrics {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  metricType        MetricType       @map("metric_type")
+  metricName        String           @map("metric_name") @db.VarChar(100)
+  value             Decimal          @db.Decimal(15, 4)
+  targetValue       Decimal?         @map("target_value") @db.Decimal(15, 4)
+  unit              String?          @db.VarChar(20)
+  period            String           @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
+  periodStart       DateTime         @map("period_start")
+  periodEnd         DateTime         @map("period_end")
+  category          String?          @db.VarChar(50) // "academic", "financial", "operational"
+  subcategory       String?          @db.VarChar(50) // "attendance", "grades", "fees", "enrollment"
+  metadata          Json?            // Additional data as JSON
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+
+  @@map("performance_metrics")
+}
+
+model AttendanceSummary {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  subjectId         Int              @map("subject_id")
+  semesterId        Int              @map("semester_id")
+  totalClasses      Int              @map("total_classes")
+  attendedClasses   Int              @map("attended_classes")
+  absentClasses     Int              @map("absent_classes")
+  lateClasses       Int              @map("late_classes")
+  excusedAbsences   Int              @map("excused_absences")
+  attendancePercentage Decimal       @map("attendance_percentage") @db.Decimal(5, 2)
+  periodStart       DateTime         @map("period_start")
+  periodEnd         DateTime         @map("period_end")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
+
+  @@unique([studentId, subjectId, semesterId, periodStart], name: "unique_attendance_summary")
+  @@map("attendance_summary")
+}
+
+model CareerGuidance {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  teacherId         Int              @map("teacher_id")
+  sessionDate       DateTime         @map("session_date") @db.Date
+  sessionType       String           @map("session_type") @db.VarChar(50) // "individual", "group", "workshop"
+  interests         String[]         // Array of student interests
+  strengths         String[]         // Array of student strengths
+  careerGoals       String?          @map("career_goals") @db.VarChar(500)
+  recommendedPaths  String[]         @map("recommended_paths") // Array of recommended career paths
+  actionPlan        String?          @map("action_plan") @db.VarChar(1000)
+  followUpDate      DateTime?        @map("follow_up_date") @db.Date
+  teacherNotes      String?          @map("teacher_notes")
+  studentFeedback   String?          @map("student_feedback")
+  status            String           @default("ACTIVE") @db.VarChar(20)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+
+  @@map("career_guidance")
+}
+
+model Application {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  applicationType   String           @map("application_type") @db.VarChar(50) // "scholarship", "transfer", "leave", "certificate"
+  title             String           @db.VarChar(200)
+  description       String?
+  supportingDocuments String[]       @map("supporting_documents") // Array of document URLs
+  status            ApplicationStatus @default(PENDING)
+  submittedDate     DateTime         @default(now()) @map("submitted_date")
+  reviewedBy        Int?             @map("reviewed_by")
+  reviewedDate      DateTime?        @map("reviewed_date")
+  reviewComments    String?          @map("review_comments")
+  approvedDate      DateTime?        @map("approved_date")
+  rejectionReason   String?          @map("rejection_reason")
+  priority          String           @default("NORMAL") @db.VarChar(20) // "LOW", "NORMAL", "HIGH", "URGENT"
+  metadata          Json?            // Additional application-specific data
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  reviewer          User?            @relation(fields: [reviewedBy], references: [id])
+
+  @@map("applications")
+}
+
+model SystemAlert {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  alertType         String           @map("alert_type") @db.VarChar(50) // "system", "security", "academic", "financial"
+  title             String           @db.VarChar(200)
+  message           String
+  severity          AlertSeverity
+  category          String?          @db.VarChar(50)
+  isActive          Boolean          @default(true) @map("is_active")
+  isResolved        Boolean          @default(false) @map("is_resolved")
+  resolvedBy        Int?             @map("resolved_by")
+  resolvedAt        DateTime?        @map("resolved_at")
+  resolutionNotes   String?          @map("resolution_notes")
+  metadata          Json?            // Additional alert data
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  resolver          User?            @relation(fields: [resolvedBy], references: [id])
+
+  @@map("system_alerts")
+}
+
+// Analytics Enums
+enum ProgressStatus {
+  EXCELLENT
+  GOOD
+  ON_TRACK
+  NEEDS_IMPROVEMENT
+  AT_RISK
+  FAILING
+}
+
+enum MetricType {
+  COUNT
+  PERCENTAGE
+  AVERAGE
+  SUM
+  RATIO
+  TREND
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  CANCELLED
   COMPLETED
 }
 
-enum SemesterStatus {
-  ACTIVE
-  INACTIVE
-  COMPLETED
-}
-
-enum AcademicYearStatus {
-  ACTIVE
-  INACTIVE
-  COMPLETED
-}

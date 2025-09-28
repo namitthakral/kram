@@ -1,0 +1,212 @@
+// ============================================================================
+// ANALYTICS AND DASHBOARD MODELS
+// ============================================================================
+
+model StudentProgress {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  subjectId         Int              @map("subject_id")
+  semesterId        Int              @map("semester_id")
+  academicYearId    Int              @map("academic_year_id")
+  overallGrade      String?          @map("overall_grade") @db.VarChar(5)
+  gradePoints       Decimal?         @map("grade_points") @db.Decimal(4, 2)
+  attendancePercentage Decimal?      @map("attendance_percentage") @db.Decimal(5, 2)
+  assignmentScore   Decimal?         @map("assignment_score") @db.Decimal(6, 2)
+  examScore         Decimal?         @map("exam_score") @db.Decimal(6, 2)
+  participationScore Decimal?        @map("participation_score") @db.Decimal(6, 2)
+  status            ProgressStatus   @default(ON_TRACK)
+  strengths         String[]         // Array of strengths
+  areasForImprovement String[]       @map("areas_for_improvement") // Array of improvement areas
+  teacherComments   String?          @map("teacher_comments")
+  parentComments    String?          @map("parent_comments")
+  lastUpdated       DateTime         @default(now()) @map("last_updated")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
+
+  @@unique([studentId, subjectId, semesterId], name: "unique_student_progress")
+  @@map("student_progress")
+}
+
+model DashboardStats {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  userId            Int?             @map("user_id") // For user-specific stats
+  statType          String           @map("stat_type") @db.VarChar(50) // "attendance", "performance", "fees", etc.
+  statName          String           @map("stat_name") @db.VarChar(100)
+  statValue         Decimal          @map("stat_value") @db.Decimal(15, 2)
+  statUnit          String?          @map("stat_unit") @db.VarChar(20) // "percentage", "count", "amount"
+  period            String?          @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
+  periodStart       DateTime?        @map("period_start")
+  periodEnd         DateTime?        @map("period_end")
+  metadata          Json?            // Additional data as JSON
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  user              User?            @relation(fields: [userId], references: [id])
+
+  @@map("dashboard_stats")
+}
+
+model PerformanceMetrics {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  metricType        MetricType       @map("metric_type")
+  metricName        String           @map("metric_name") @db.VarChar(100)
+  value             Decimal          @db.Decimal(15, 4)
+  targetValue       Decimal?         @map("target_value") @db.Decimal(15, 4)
+  unit              String?          @db.VarChar(20)
+  period            String           @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
+  periodStart       DateTime         @map("period_start")
+  periodEnd         DateTime         @map("period_end")
+  category          String?          @db.VarChar(50) // "academic", "financial", "operational"
+  subcategory       String?          @db.VarChar(50) // "attendance", "grades", "fees", "enrollment"
+  metadata          Json?            // Additional data as JSON
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+
+  @@map("performance_metrics")
+}
+
+model AttendanceSummary {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  subjectId         Int              @map("subject_id")
+  semesterId        Int              @map("semester_id")
+  totalClasses      Int              @map("total_classes")
+  attendedClasses   Int              @map("attended_classes")
+  absentClasses     Int              @map("absent_classes")
+  lateClasses       Int              @map("late_classes")
+  excusedAbsences   Int              @map("excused_absences")
+  attendancePercentage Decimal       @map("attendance_percentage") @db.Decimal(5, 2)
+  periodStart       DateTime         @map("period_start")
+  periodEnd         DateTime         @map("period_end")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
+  semester          Semester         @relation(fields: [semesterId], references: [id])
+
+  @@unique([studentId, subjectId, semesterId, periodStart], name: "unique_attendance_summary")
+  @@map("attendance_summary")
+}
+
+model CareerGuidance {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  teacherId         Int              @map("teacher_id")
+  sessionDate       DateTime         @map("session_date") @db.Date
+  sessionType       String           @map("session_type") @db.VarChar(50) // "individual", "group", "workshop"
+  interests         String[]         // Array of student interests
+  strengths         String[]         // Array of student strengths
+  careerGoals       String?          @map("career_goals") @db.VarChar(500)
+  recommendedPaths  String[]         @map("recommended_paths") // Array of recommended career paths
+  actionPlan        String?          @map("action_plan") @db.VarChar(1000)
+  followUpDate      DateTime?        @map("follow_up_date") @db.Date
+  teacherNotes      String?          @map("teacher_notes")
+  studentFeedback   String?          @map("student_feedback")
+  status            String           @default("ACTIVE") @db.VarChar(20)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+
+  @@map("career_guidance")
+}
+
+model Application {
+  id                Int              @id @default(autoincrement())
+  studentId         Int              @map("student_id")
+  applicationType   String           @map("application_type") @db.VarChar(50) // "scholarship", "transfer", "leave", "certificate"
+  title             String           @db.VarChar(200)
+  description       String?
+  supportingDocuments String[]       @map("supporting_documents") // Array of document URLs
+  status            ApplicationStatus @default(PENDING)
+  submittedDate     DateTime         @default(now()) @map("submitted_date")
+  reviewedBy        Int?             @map("reviewed_by")
+  reviewedDate      DateTime?        @map("reviewed_date")
+  reviewComments    String?          @map("review_comments")
+  approvedDate      DateTime?        @map("approved_date")
+  rejectionReason   String?          @map("rejection_reason")
+  priority          String           @default("NORMAL") @db.VarChar(20) // "LOW", "NORMAL", "HIGH", "URGENT"
+  metadata          Json?            // Additional application-specific data
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  student           Student          @relation(fields: [studentId], references: [id])
+  reviewer          User?            @relation(fields: [reviewedBy], references: [id])
+
+  @@map("applications")
+}
+
+model SystemAlert {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  alertType         String           @map("alert_type") @db.VarChar(50) // "system", "security", "academic", "financial"
+  title             String           @db.VarChar(200)
+  message           String
+  severity          AlertSeverity
+  category          String?          @db.VarChar(50)
+  isActive          Boolean          @default(true) @map("is_active")
+  isResolved        Boolean          @default(false) @map("is_resolved")
+  resolvedBy        Int?             @map("resolved_by")
+  resolvedAt        DateTime?        @map("resolved_at")
+  resolutionNotes   String?          @map("resolution_notes")
+  metadata          Json?            // Additional alert data
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  resolver          User?            @relation(fields: [resolvedBy], references: [id])
+
+  @@map("system_alerts")
+}
+
+// Analytics Enums
+enum ProgressStatus {
+  EXCELLENT
+  GOOD
+  ON_TRACK
+  NEEDS_IMPROVEMENT
+  AT_RISK
+  FAILING
+}
+
+enum MetricType {
+  COUNT
+  PERCENTAGE
+  AVERAGE
+  SUM
+  RATIO
+  TREND
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}

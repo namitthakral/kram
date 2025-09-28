@@ -1,0 +1,135 @@
+// ============================================================================
+// GATE PASS MANAGEMENT MODELS
+// ============================================================================
+
+model GatePass {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  studentId         Int              @map("student_id")
+  passType          GatePassType     @map("pass_type")
+  reason            String           @db.VarChar(300)
+  requestedBy       Int              @map("requested_by") // Student or Parent
+  requestDate       DateTime         @default(now()) @map("request_date")
+  fromDate          DateTime         @map("from_date")
+  toDate            DateTime?        @map("to_date")
+  fromTime          DateTime?        @map("from_time") @db.Time
+  toTime            DateTime?        @map("to_time") @db.Time
+  destination       String?          @db.VarChar(200)
+  contactPerson     String?          @map("contact_person") @db.VarChar(100)
+  contactNumber     String?          @map("contact_number") @db.VarChar(15)
+  parentApproval    Boolean          @default(false) @map("parent_approval")
+  parentApprovedBy  Int?             @map("parent_approved_by")
+  parentApprovedAt  DateTime?        @map("parent_approved_at")
+  teacherApproval   Boolean          @default(false) @map("teacher_approval")
+  teacherApprovedBy Int?             @map("teacher_approved_by")
+  teacherApprovedAt DateTime?        @map("teacher_approved_at")
+  adminApproval     Boolean          @default(false) @map("admin_approval")
+  adminApprovedBy   Int?             @map("admin_approved_by")
+  adminApprovedAt   DateTime?        @map("admin_approved_at")
+  status            GatePassStatus   @default(PENDING)
+  actualExitTime    DateTime?        @map("actual_exit_time")
+  actualReturnTime  DateTime?        @map("actual_return_time")
+  securityRemarks   String?          @map("security_remarks")
+  rejectionReason   String?          @map("rejection_reason")
+  isEmergency       Boolean          @default(false) @map("is_emergency")
+  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id])
+  requester         User             @relation("GatePassRequester", fields: [requestedBy], references: [id])
+  parentApprover    User?            @relation("GatePassParentApprover", fields: [parentApprovedBy], references: [id])
+  teacherApprover   User?            @relation("GatePassTeacherApprover", fields: [teacherApprovedBy], references: [id])
+  adminApprover     User?            @relation("GatePassAdminApprover", fields: [adminApprovedBy], references: [id])
+
+  @@map("gate_passes")
+}
+
+model GatePassSettings {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @unique @map("institution_id")
+  requireParentApproval Boolean      @default(true) @map("require_parent_approval")
+  requireTeacherApproval Boolean     @default(true) @map("require_teacher_approval")
+  requireAdminApproval Boolean       @default(false) @map("require_admin_approval")
+  maxHoursWithoutApproval Int        @default(2) @map("max_hours_without_approval")
+  allowWeekendPasses Boolean         @default(false) @map("allow_weekend_passes")
+  allowHolidayPasses Boolean         @default(false) @map("allow_holiday_passes")
+  autoApproveEmergency Boolean       @default(false) @map("auto_approve_emergency")
+  notificationEnabled Boolean        @default(true) @map("notification_enabled")
+  smsNotification   Boolean          @default(false) @map("sms_notification")
+  emailNotification Boolean          @default(true) @map("email_notification")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+
+  @@map("gate_pass_settings")
+}
+
+model VisitorPass {
+  id                Int              @id @default(autoincrement())
+  institutionId     Int              @map("institution_id")
+  visitorName       String           @map("visitor_name") @db.VarChar(100)
+  visitorPhone      String           @map("visitor_phone") @db.VarChar(15)
+  visitorEmail      String?          @map("visitor_email") @db.VarChar(100)
+  idProofType       String           @map("id_proof_type") @db.VarChar(50)
+  idProofNumber     String           @map("id_proof_number") @db.VarChar(50)
+  purposeOfVisit    String           @map("purpose_of_visit") @db.VarChar(300)
+  personToMeet      String           @map("person_to_meet") @db.VarChar(100)
+  department        String?          @db.VarChar(100)
+  visitDate         DateTime         @map("visit_date") @db.Date
+  expectedInTime    DateTime         @map("expected_in_time")
+  expectedOutTime   DateTime?        @map("expected_out_time")
+  actualInTime      DateTime?        @map("actual_in_time")
+  actualOutTime     DateTime?        @map("actual_out_time")
+  status            VisitorPassStatus @default(SCHEDULED)
+  approvedBy        Int?             @map("approved_by")
+  approvedAt        DateTime?        @map("approved_at")
+  securityRemarks   String?          @map("security_remarks")
+  vehicleNumber     String?          @map("vehicle_number") @db.VarChar(20)
+  accompaniedBy     String?          @map("accompanied_by") @db.VarChar(200)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  institution       Institution      @relation(fields: [institutionId], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id])
+
+  @@map("visitor_passes")
+}
+
+// Gate Pass Enums
+enum GatePassType {
+  TEMPORARY    // Few hours
+  HALF_DAY
+  FULL_DAY
+  MULTIPLE_DAYS
+  EMERGENCY
+  MEDICAL
+  FAMILY_FUNCTION
+  OFFICIAL_WORK
+}
+
+enum GatePassStatus {
+  PENDING
+  PARENT_APPROVED
+  TEACHER_APPROVED
+  APPROVED
+  REJECTED
+  EXPIRED
+  USED
+  CANCELLED
+}
+
+enum VisitorPassStatus {
+  SCHEDULED
+  APPROVED
+  CHECKED_IN
+  CHECKED_OUT
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
