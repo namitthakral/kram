@@ -8,14 +8,34 @@ import {
   MinLength,
   MaxLength,
   IsPositive,
+  IsEmail,
 } from 'class-validator'
+import { Transform } from 'class-transformer'
 import { StudentType, ResidentialStatus } from '../../types'
 
 export class CreateStudentDto {
-  @IsNumber()
-  @IsPositive()
-  userId: number
+  // User fields - will be used to create the user automatically
+  @IsString()
+  @MinLength(1)
+  firstName: string
 
+  @IsString()
+  @MinLength(1)
+  lastName: string
+
+  @IsEmail()
+  email: string
+
+  @IsString()
+  @MinLength(10)
+  phone: string
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string
+
+  // Student-specific fields
   @IsNumber()
   @IsPositive()
   institutionId: number
@@ -148,12 +168,14 @@ export class UpdateStudentDto {
 }
 
 export class PaginationDto {
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
   page?: number = 1
 
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
   limit?: number = 10
 
   @IsString()

@@ -18,7 +18,7 @@ model AcademicRecord {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  student     Student  @relation(fields: [studentId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   semester    Semester @relation(fields: [semesterId], references: [id])
   course      Course   @relation(fields: [courseId], references: [id])
 
@@ -39,7 +39,7 @@ model Attendance {
   // Relations
   student     Student        @relation(fields: [studentId], references: [id])
   section     ClassSection   @relation(fields: [sectionId], references: [id])
-  marker      Teacher        @relation("AttendanceMarker", fields: [markedBy], references: [id])
+  marker      Teacher        @relation("AttendanceMarker", fields: [markedBy], references: [id], onDelete: Cascade)
 
   @@unique([studentId, sectionId, date], name: "unique_attendance")
   @@map("attendance")
@@ -62,7 +62,7 @@ model ClassSection {
   // Relations
   course      Course   @relation(fields: [courseId], references: [id])
   semester    Semester @relation(fields: [semesterId], references: [id])
-  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   attendance  Attendance[]
   assignments Assignment[]
 
@@ -83,7 +83,7 @@ model Enrollment {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course            Course           @relation(fields: [courseId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 

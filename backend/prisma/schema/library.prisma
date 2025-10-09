@@ -29,7 +29,7 @@ model Book {
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
   category          BookCategory     @relation(fields: [categoryId], references: [id])
-  addedByUser       User             @relation(fields: [addedBy], references: [id])
+  addedByUser       User             @relation(fields: [addedBy], references: [id], onDelete: Cascade)
   issues            BookIssue[]
   reservations      BookReservation[]
   libraryTransactions LibraryTransaction[]
@@ -74,9 +74,9 @@ model BookIssue {
 
   // Relations
   book              Book             @relation(fields: [bookId], references: [id])
-  student           Student          @relation(fields: [studentId], references: [id])
-  issuer            User             @relation("BookIssuer", fields: [issuedBy], references: [id])
-  returner          User?            @relation("BookReturner", fields: [returnedBy], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  issuer            User             @relation("BookIssuer", fields: [issuedBy], references: [id], onDelete: Cascade)
+  returner          User?            @relation("BookReturner", fields: [returnedBy], references: [id], onDelete: Cascade)
 
   @@map("book_issues")
 }
@@ -94,7 +94,7 @@ model BookReservation {
 
   // Relations
   book              Book             @relation(fields: [bookId], references: [id])
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([bookId, studentId], name: "unique_book_reservation")
   @@map("book_reservations")
@@ -112,9 +112,9 @@ model LibraryTransaction {
   createdAt         DateTime         @default(now()) @map("created_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   book              Book?            @relation(fields: [bookId], references: [id])
-  processor         User             @relation(fields: [processedBy], references: [id])
+  processor         User             @relation(fields: [processedBy], references: [id], onDelete: Cascade)
 
   @@map("library_transactions")
 }

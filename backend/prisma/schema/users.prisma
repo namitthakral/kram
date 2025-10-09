@@ -27,7 +27,7 @@ model Student {
   updatedAt             DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  user                  User             @relation(fields: [userId], references: [id])
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
   program               Program?         @relation(fields: [programId], references: [id])
   parents               Parent[]
@@ -71,7 +71,7 @@ model Teacher {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution       Institution      @relation(fields: [institutionId], references: [id])
   attendanceMarked  Attendance[]     @relation("AttendanceMarker")
   classSections     ClassSection[]
@@ -101,8 +101,8 @@ model Parent {
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
   // Relations
-  user              User           @relation(fields: [userId], references: [id])
-  student           Student        @relation(fields: [studentId], references: [id])
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student           Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("parents")
 }
@@ -130,7 +130,7 @@ model Staff {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution       Institution      @relation(fields: [institutionId], references: [id])
   attendance        StaffAttendance[]
   leaves            StaffLeave[]

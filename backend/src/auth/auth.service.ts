@@ -102,15 +102,34 @@ export class AuthService {
       throw new ConflictException('User with this email already exists')
     }
 
+    // Check if phone number already exists (if provided)
+    if (createUserDto.phoneNumber) {
+      const existingPhoneUser = await this.prisma.user.findFirst({
+        where: { phone: createUserDto.phoneNumber },
+      })
+
+      if (existingPhoneUser) {
+        throw new ConflictException(
+          'User with this phone number already exists'
+        )
+      }
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(createUserDto.password, 12)
+
+    // Combine firstName and lastName into name for database compatibility
+    const fullName =
+      `${createUserDto.firstName} ${createUserDto.lastName}`.trim()
 
     // Create user
     const user = await this.prisma.user.create({
       data: {
-        name: createUserDto.name,
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName,
+        name: fullName,
         email: createUserDto.email,
-        phone: createUserDto.phone,
+        phone: createUserDto.phoneNumber,
         passwordHash: hashedPassword,
         roleId: createUserDto.roleId,
       },
@@ -120,13 +139,19 @@ export class AuthService {
     })
 
     return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      status: user.status,
-      createdAt: user.createdAt,
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        id: user.id,
+        firstName: createUserDto.firstName,
+        lastName: createUserDto.lastName,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phone,
+        role: user.role,
+        status: user.status,
+        createdAt: user.createdAt,
+      },
     }
   }
 

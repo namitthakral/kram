@@ -18,7 +18,7 @@ model StaffAttendance {
 
   // Relations
   staff             Staff            @relation(fields: [staffId], references: [id])
-  marker            User?            @relation(fields: [markedBy], references: [id])
+  marker            User?            @relation(fields: [markedBy], references: [id], onDelete: Cascade)
 
   @@unique([staffId, date], name: "unique_staff_attendance")
   @@map("staff_attendance")
@@ -42,7 +42,7 @@ model StaffLeave {
 
   // Relations
   staff             Staff            @relation(fields: [staffId], references: [id])
-  approver          User?            @relation(fields: [approvedBy], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id], onDelete: Cascade)
 
   @@map("staff_leaves")
 }
@@ -66,7 +66,7 @@ model StaffAssignment {
 
   // Relations
   staff             Staff            @relation(fields: [staffId], references: [id])
-  assigner          User             @relation(fields: [assignedBy], references: [id])
+  assigner          User             @relation(fields: [assignedBy], references: [id], onDelete: Cascade)
 
   @@map("staff_assignments")
 }

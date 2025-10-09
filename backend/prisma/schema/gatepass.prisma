@@ -38,11 +38,11 @@ model GatePass {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  student           Student          @relation(fields: [studentId], references: [id])
-  requester         User             @relation("GatePassRequester", fields: [requestedBy], references: [id])
-  parentApprover    User?            @relation("GatePassParentApprover", fields: [parentApprovedBy], references: [id])
-  teacherApprover   User?            @relation("GatePassTeacherApprover", fields: [teacherApprovedBy], references: [id])
-  adminApprover     User?            @relation("GatePassAdminApprover", fields: [adminApprovedBy], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  requester         User             @relation("GatePassRequester", fields: [requestedBy], references: [id], onDelete: Cascade)
+  parentApprover    User?            @relation("GatePassParentApprover", fields: [parentApprovedBy], references: [id], onDelete: Cascade)
+  teacherApprover   User?            @relation("GatePassTeacherApprover", fields: [teacherApprovedBy], references: [id], onDelete: Cascade)
+  adminApprover     User?            @relation("GatePassAdminApprover", fields: [adminApprovedBy], references: [id], onDelete: Cascade)
 
   @@map("gate_passes")
 }
@@ -96,7 +96,7 @@ model VisitorPass {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  approver          User?            @relation(fields: [approvedBy], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id], onDelete: Cascade)
 
   @@map("visitor_passes")
 }

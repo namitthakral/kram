@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import {
@@ -10,6 +11,7 @@ import {
   PaginationDto,
 } from './dto/student.dto'
 import { UserWithRelations } from '../types/auth.types'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class StudentsService {
@@ -42,7 +44,10 @@ export class StudentsService {
       }>
       institutionId?: number
       isActive?: boolean
-    } = {}
+      status?: { not: 'SUSPENDED' }
+    } = {
+      status: { not: 'SUSPENDED' }, // Exclude soft deleted students
+    }
     if (search) {
       where.OR = [
         { admissionNumber: { contains: search } },
@@ -113,8 +118,11 @@ export class StudentsService {
   }
 
   async findOne(id: number, currentUser: UserWithRelations) {
-    const student = await this.prisma.student.findUnique({
-      where: { id },
+    const student = await this.prisma.student.findFirst({
+      where: {
+        id,
+        status: { not: 'SUSPENDED' }, // Exclude soft deleted students
+      },
       include: {
         user: {
           select: {
@@ -162,40 +170,122 @@ export class StudentsService {
   }
 
   async create(createStudentDto: CreateStudentDto) {
-    const student = await this.prisma.student.create({
-      data: createStudentDto,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            status: true,
-          },
-        },
-        institution: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-          },
-        },
-        program: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-      },
+    const { firstName, lastName, email, phone, password, ...studentData } =
+      createStudentDto
+
+    // Check if admission number already exists
+    const existingStudent = await this.prisma.student.findUnique({
+      where: { admissionNumber: createStudentDto.admissionNumber },
     })
 
+    if (existingStudent) {
+      throw new ConflictException(
+        'Student with this admission number already exists'
+      )
+    }
+
+    // Check if email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+    })
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists')
+    }
+
+    // Get student role ID
+    const studentRole = await this.prisma.role.findUnique({
+      where: { roleName: 'student' },
+    })
+
+    if (!studentRole) {
+      throw new NotFoundException('Student role not found')
+    }
+
+    // Generate password if not provided
+    const finalPassword = password || this.generateRandomPassword()
+    const hashedPassword = await bcrypt.hash(finalPassword, 10)
+
+    // Create user and student in a transaction
+    const result = await this.prisma.$transaction(async tx => {
+      // Create user first
+      const user = await tx.user.create({
+        data: {
+          firstName,
+          lastName,
+          name: `${firstName} ${lastName}`,
+          email,
+          phone,
+          passwordHash: hashedPassword,
+          roleId: studentRole.id,
+          emailVerified: false,
+          phoneVerified: false,
+          status: 'ACTIVE',
+        },
+      })
+
+      // Create student profile
+      const student = await tx.student.create({
+        data: {
+          ...studentData,
+          userId: user.id,
+          admissionDate: studentData.admissionDate
+            ? new Date(studentData.admissionDate)
+            : null,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              name: true,
+              email: true,
+              phone: true,
+              status: true,
+            },
+          },
+          institution: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+          program: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+        },
+      })
+
+      return { student, generatedPassword: password ? null : finalPassword }
+    })
+
+    // Return student data with generated password if applicable
     return {
       success: true,
-      data: student,
+      data: {
+        ...result.student,
+        ...(result.generatedPassword && {
+          generatedPassword: result.generatedPassword,
+        }),
+      },
       message: 'Student created successfully',
     }
+  }
+
+  private generateRandomPassword(): string {
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*'
+    let password = ''
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return password
   }
 
   async update(id: number, updateStudentDto: UpdateStudentDto) {
@@ -237,13 +327,51 @@ export class StudentsService {
   }
 
   async remove(id: number) {
-    await this.prisma.student.delete({
+    const existingStudent = await this.prisma.student.findUnique({
       where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    })
+
+    if (!existingStudent) {
+      throw new NotFoundException(`Student with ID ${id} not found`)
+    }
+
+    const student = await this.prisma.student.update({
+      where: { id },
+      data: {
+        status: 'SUSPENDED',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            name: true,
+            email: true,
+            status: true,
+          },
+        },
+        institution: {
+          select: { id: true, name: true, type: true },
+        },
+      },
     })
 
     return {
       success: true,
-      message: 'Student deleted successfully',
+      message: 'Student deactivated successfully',
+      data: student,
     }
   }
 

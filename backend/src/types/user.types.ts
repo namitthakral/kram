@@ -43,7 +43,7 @@ export interface Parent {
   studentId: number
   relation: ParentRelation
   occupation?: string
-  annualIncome?: number
+  annualIncome?: number | { toNumber(): number } // Support Prisma Decimal type
   educationLevel?: string
   isPrimaryContact: boolean
   createdAt: Date

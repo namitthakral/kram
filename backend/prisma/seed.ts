@@ -416,6 +416,8 @@ async function createUsers(
     where: { email: 'admin@edverse.edu' },
     update: {},
     create: {
+      firstName: 'Super',
+      lastName: 'Administrator',
       name: 'Super Administrator',
       email: 'admin@edverse.edu',
       phone: '+1-555-0001',
@@ -432,6 +434,8 @@ async function createUsers(
     where: { email: 'john.doe@edverse.edu' },
     update: {},
     create: {
+      firstName: 'John',
+      lastName: 'Doe',
       name: 'Dr. John Doe',
       email: 'john.doe@edverse.edu',
       phone: '+1-555-0002',
@@ -473,6 +477,8 @@ async function createUsers(
       where: { email: `student${i}@edverse.edu` },
       update: {},
       create: {
+        firstName: `Student`,
+        lastName: `${i}`,
         name: `Student ${i}`,
         email: `student${i}@edverse.edu`,
         phone: `+1-555-000${i + 2}`,
@@ -513,6 +519,8 @@ async function createUsers(
       where: { email: `parent${i}@email.com` },
       update: {},
       create: {
+        firstName: `Parent`,
+        lastName: `${i}`,
         name: `Parent ${i}`,
         email: `parent${i}@email.com`,
         phone: `+1-555-000${i + 10}`,
@@ -546,6 +554,8 @@ async function createUsers(
     where: { email: 'staff@edverse.edu' },
     update: {},
     create: {
+      firstName: 'Support',
+      lastName: 'Staff',
       name: 'Support Staff',
       email: 'staff@edverse.edu',
       phone: '+1-555-0010',
@@ -583,6 +593,8 @@ async function createUsers(
     where: { email: 'librarian@edverse.edu' },
     update: {},
     create: {
+      firstName: 'Library',
+      lastName: 'Manager',
       name: 'Library Manager',
       email: 'librarian@edverse.edu',
       phone: '+1-555-0012',

@@ -26,7 +26,7 @@ model TimeTable {
   program           Program?         @relation(fields: [programId], references: [id])
   timeSlot          TimeSlot         @relation(fields: [timeSlotId], references: [id])
   subject           Subject          @relation(fields: [subjectId], references: [id])
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   room              Room?            @relation(fields: [roomId], references: [id])
   substitutions     TeacherSubstitution[]
 
@@ -109,7 +109,7 @@ model TeacherSubject {
   createdAt         DateTime         @default(now()) @map("created_at")
 
   // Relations
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   subject           Subject          @relation(fields: [subjectId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
 
@@ -133,9 +133,9 @@ model TeacherSubstitution {
 
   // Relations
   originalTimetable TimeTable        @relation(fields: [originalTimetableId], references: [id])
-  substituteTeacher Teacher          @relation("TeacherSubstitute", fields: [substituteTeacherId], references: [id])
-  requester         User             @relation("SubstitutionRequester", fields: [requestedBy], references: [id])
-  approver          User?            @relation("SubstitutionApprover", fields: [approvedBy], references: [id])
+  substituteTeacher Teacher          @relation("TeacherSubstitute", fields: [substituteTeacherId], references: [id], onDelete: Cascade)
+  requester         User             @relation("SubstitutionRequester", fields: [requestedBy], references: [id], onDelete: Cascade)
+  approver          User?            @relation("SubstitutionApprover", fields: [approvedBy], references: [id], onDelete: Cascade)
 
   @@map("teacher_substitutions")
 }
@@ -153,7 +153,7 @@ model ClassTeacher {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   program           Program?         @relation(fields: [programId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
 

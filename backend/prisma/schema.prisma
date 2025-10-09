@@ -20,7 +20,9 @@ datasource db {
 
 model User {
   id                Int      @id @default(autoincrement())
-  name              String   @db.VarChar(100)
+  firstName         String   @db.VarChar(50)
+  lastName          String   @db.VarChar(50)
+  name              String   @db.VarChar(100) // Keep for backward compatibility
   email             String   @unique @db.VarChar(100)
   phone             String?  @db.VarChar(15)
   passwordHash      String   @map("password_hash") @db.VarChar(255)
@@ -311,7 +313,7 @@ model Student {
   updatedAt             DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  user                  User             @relation(fields: [userId], references: [id])
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
   program               Program?         @relation(fields: [programId], references: [id])
   parents               Parent[]
@@ -355,7 +357,7 @@ model Teacher {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution       Institution      @relation(fields: [institutionId], references: [id])
   attendanceMarked  Attendance[]     @relation("AttendanceMarker")
   classSections     ClassSection[]
@@ -385,8 +387,8 @@ model Parent {
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
   // Relations
-  user              User           @relation(fields: [userId], references: [id])
-  student           Student        @relation(fields: [studentId], references: [id])
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student           Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@map("parents")
 }
@@ -414,7 +416,7 @@ model Staff {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution       Institution      @relation(fields: [institutionId], references: [id])
   attendance        StaffAttendance[]
   leaves            StaffLeave[]
@@ -503,7 +505,7 @@ model AcademicRecord {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  student     Student  @relation(fields: [studentId], references: [id])
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   semester    Semester @relation(fields: [semesterId], references: [id])
   course      Course   @relation(fields: [courseId], references: [id])
 
@@ -524,7 +526,7 @@ model Attendance {
   // Relations
   student     Student        @relation(fields: [studentId], references: [id])
   section     ClassSection   @relation(fields: [sectionId], references: [id])
-  marker      Teacher        @relation("AttendanceMarker", fields: [markedBy], references: [id])
+  marker      Teacher        @relation("AttendanceMarker", fields: [markedBy], references: [id], onDelete: Cascade)
 
   @@unique([studentId, sectionId, date], name: "unique_attendance")
   @@map("attendance")
@@ -547,7 +549,7 @@ model ClassSection {
   // Relations
   course      Course   @relation(fields: [courseId], references: [id])
   semester    Semester @relation(fields: [semesterId], references: [id])
-  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   attendance  Attendance[]
   assignments Assignment[]
 
@@ -568,7 +570,7 @@ model Enrollment {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course            Course           @relation(fields: [courseId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
@@ -627,7 +629,7 @@ model Examination {
   // Relations
   course              Course           @relation(fields: [courseId], references: [id])
   semester            Semester         @relation(fields: [semesterId], references: [id])
-  creator             Teacher          @relation(fields: [createdBy], references: [id])
+  creator             Teacher          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   results             ExamResult[]
 
   @@map("examinations")
@@ -649,8 +651,8 @@ model ExamResult {
 
   // Relations
   exam        Examination @relation(fields: [examId], references: [id])
-  student     Student     @relation(fields: [studentId], references: [id])
-  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id], onDelete: Cascade)
 
   @@unique([examId, studentId], name: "unique_result")
   @@map("exam_results")
@@ -678,7 +680,7 @@ model Assignment {
   // Relations
   course                  Course             @relation(fields: [courseId], references: [id])
   section                 ClassSection?      @relation(fields: [sectionId], references: [id])
-  teacher                 Teacher            @relation(fields: [teacherId], references: [id])
+  teacher                 Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   submissions             Submission[]
 
   @@map("assignments")
@@ -703,8 +705,8 @@ model Submission {
 
   // Relations
   assignment    Assignment       @relation(fields: [assignmentId], references: [id])
-  student       Student          @relation(fields: [studentId], references: [id])
-  grader        Teacher?         @relation(fields: [gradedBy], references: [id])
+  student       Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grader        Teacher?         @relation(fields: [gradedBy], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId, version], name: "unique_submission")
   @@map("submissions")
@@ -784,7 +786,7 @@ model StudentFee {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   feeStructure      FeeStructure     @relation(fields: [feeStructureId], references: [id])
   semester          Semester?        @relation(fields: [semesterId], references: [id])
   payments          Payment[]
@@ -815,9 +817,9 @@ model Payment {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentFee        StudentFee?      @relation(fields: [studentFeeId], references: [id])
-  processor         User?            @relation(fields: [processedBy], references: [id])
+  processor         User?            @relation(fields: [processedBy], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
@@ -902,7 +904,7 @@ model Notice {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   readReceipts      NoticeReadReceipt[]
 
   @@map("notices")
@@ -916,7 +918,7 @@ model NoticeReadReceipt {
 
   // Relations
   notice            Notice           @relation(fields: [noticeId], references: [id])
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([noticeId, userId], name: "unique_notice_read")
   @@map("notice_read_receipts")
@@ -941,7 +943,7 @@ model Announcement {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("announcements")
 }
@@ -962,8 +964,8 @@ model Message {
   createdAt         DateTime         @default(now()) @map("created_at")
 
   // Relations
-  sender            User             @relation("MessageSender", fields: [senderId], references: [id])
-  receiver          User?            @relation("MessageReceiver", fields: [receiverId], references: [id])
+  sender            User             @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver          User?            @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   group             MessageGroup?    @relation(fields: [groupId], references: [id])
 
   @@map("messages")
@@ -982,7 +984,7 @@ model MessageGroup {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   members           GroupMember[]
   messages          Message[]
 
@@ -998,7 +1000,7 @@ model GroupMember {
 
   // Relations
   group             MessageGroup     @relation(fields: [groupId], references: [id])
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId], name: "unique_group_member")
   @@map("group_members")
@@ -1089,7 +1091,7 @@ model Book {
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
   category          BookCategory     @relation(fields: [categoryId], references: [id])
-  addedByUser       User             @relation(fields: [addedBy], references: [id])
+  addedByUser       User             @relation(fields: [addedBy], references: [id], onDelete: Cascade)
   issues            BookIssue[]
   reservations      BookReservation[]
   libraryTransactions LibraryTransaction[]
@@ -1134,9 +1136,9 @@ model BookIssue {
 
   // Relations
   book              Book             @relation(fields: [bookId], references: [id])
-  student           Student          @relation(fields: [studentId], references: [id])
-  issuer            User             @relation("BookIssuer", fields: [issuedBy], references: [id])
-  returner          User?            @relation("BookReturner", fields: [returnedBy], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  issuer            User             @relation("BookIssuer", fields: [issuedBy], references: [id], onDelete: Cascade)
+  returner          User?            @relation("BookReturner", fields: [returnedBy], references: [id], onDelete: Cascade)
 
   @@map("book_issues")
 }
@@ -1154,7 +1156,7 @@ model BookReservation {
 
   // Relations
   book              Book             @relation(fields: [bookId], references: [id])
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([bookId, studentId], name: "unique_book_reservation")
   @@map("book_reservations")
@@ -1172,9 +1174,9 @@ model LibraryTransaction {
   createdAt         DateTime         @default(now()) @map("created_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   book              Book?            @relation(fields: [bookId], references: [id])
-  processor         User             @relation(fields: [processedBy], references: [id])
+  processor         User             @relation(fields: [processedBy], references: [id], onDelete: Cascade)
 
   @@map("library_transactions")
 }
@@ -1255,7 +1257,7 @@ model StaffAttendance {
 
   // Relations
   staff             Staff            @relation(fields: [staffId], references: [id])
-  marker            User?            @relation(fields: [markedBy], references: [id])
+  marker            User?            @relation(fields: [markedBy], references: [id], onDelete: Cascade)
 
   @@unique([staffId, date], name: "unique_staff_attendance")
   @@map("staff_attendance")
@@ -1279,7 +1281,7 @@ model StaffLeave {
 
   // Relations
   staff             Staff            @relation(fields: [staffId], references: [id])
-  approver          User?            @relation(fields: [approvedBy], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id], onDelete: Cascade)
 
   @@map("staff_leaves")
 }
@@ -1303,7 +1305,7 @@ model StaffAssignment {
 
   // Relations
   staff             Staff            @relation(fields: [staffId], references: [id])
-  assigner          User             @relation(fields: [assignedBy], references: [id])
+  assigner          User             @relation(fields: [assignedBy], references: [id], onDelete: Cascade)
 
   @@map("staff_assignments")
 }
@@ -1389,11 +1391,11 @@ model GatePass {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  student           Student          @relation(fields: [studentId], references: [id])
-  requester         User             @relation("GatePassRequester", fields: [requestedBy], references: [id])
-  parentApprover    User?            @relation("GatePassParentApprover", fields: [parentApprovedBy], references: [id])
-  teacherApprover   User?            @relation("GatePassTeacherApprover", fields: [teacherApprovedBy], references: [id])
-  adminApprover     User?            @relation("GatePassAdminApprover", fields: [adminApprovedBy], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  requester         User             @relation("GatePassRequester", fields: [requestedBy], references: [id], onDelete: Cascade)
+  parentApprover    User?            @relation("GatePassParentApprover", fields: [parentApprovedBy], references: [id], onDelete: Cascade)
+  teacherApprover   User?            @relation("GatePassTeacherApprover", fields: [teacherApprovedBy], references: [id], onDelete: Cascade)
+  adminApprover     User?            @relation("GatePassAdminApprover", fields: [adminApprovedBy], references: [id], onDelete: Cascade)
 
   @@map("gate_passes")
 }
@@ -1447,7 +1449,7 @@ model VisitorPass {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  approver          User?            @relation(fields: [approvedBy], references: [id])
+  approver          User?            @relation(fields: [approvedBy], references: [id], onDelete: Cascade)
 
   @@map("visitor_passes")
 }
@@ -1510,7 +1512,7 @@ model TimeTable {
   program           Program?         @relation(fields: [programId], references: [id])
   timeSlot          TimeSlot         @relation(fields: [timeSlotId], references: [id])
   subject           Subject          @relation(fields: [subjectId], references: [id])
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   room              Room?            @relation(fields: [roomId], references: [id])
   substitutions     TeacherSubstitution[]
 
@@ -1593,7 +1595,7 @@ model TeacherSubject {
   createdAt         DateTime         @default(now()) @map("created_at")
 
   // Relations
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   subject           Subject          @relation(fields: [subjectId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
 
@@ -1617,9 +1619,9 @@ model TeacherSubstitution {
 
   // Relations
   originalTimetable TimeTable        @relation(fields: [originalTimetableId], references: [id])
-  substituteTeacher Teacher          @relation("TeacherSubstitute", fields: [substituteTeacherId], references: [id])
-  requester         User             @relation("SubstitutionRequester", fields: [requestedBy], references: [id])
-  approver          User?            @relation("SubstitutionApprover", fields: [approvedBy], references: [id])
+  substituteTeacher Teacher          @relation("TeacherSubstitute", fields: [substituteTeacherId], references: [id], onDelete: Cascade)
+  requester         User             @relation("SubstitutionRequester", fields: [requestedBy], references: [id], onDelete: Cascade)
+  approver          User?            @relation("SubstitutionApprover", fields: [approvedBy], references: [id], onDelete: Cascade)
 
   @@map("teacher_substitutions")
 }
@@ -1637,7 +1639,7 @@ model ClassTeacher {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   program           Program?         @relation(fields: [programId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
 
@@ -1725,7 +1727,7 @@ model StudentProgress {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   subject           Subject          @relation(fields: [subjectId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
@@ -1750,7 +1752,7 @@ model DashboardStats {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  user              User?            @relation(fields: [userId], references: [id])
+  user              User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("dashboard_stats")
 }
@@ -1794,7 +1796,7 @@ model AttendanceSummary {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   subject           Subject          @relation(fields: [subjectId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
@@ -1821,8 +1823,8 @@ model CareerGuidance {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   @@map("career_guidance")
 }
@@ -1847,8 +1849,8 @@ model Application {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
-  reviewer          User?            @relation(fields: [reviewedBy], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reviewer          User?            @relation(fields: [reviewedBy], references: [id], onDelete: Cascade)
 
   @@map("applications")
 }
@@ -1872,7 +1874,7 @@ model SystemAlert {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  resolver          User?            @relation(fields: [resolvedBy], references: [id])
+  resolver          User?            @relation(fields: [resolvedBy], references: [id], onDelete: Cascade)
 
   @@map("system_alerts")
 }

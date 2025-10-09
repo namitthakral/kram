@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './auth/auth.module'
+import { UsersModule } from './users/users.module'
 import { StudentsModule } from './students/students.module'
 import { TeachersModule } from './teachers/teachers.module'
 import { CoursesModule } from './courses/courses.module'
@@ -29,6 +30,7 @@ import { InstitutionsModule } from './institutions/institutions.module'
 
     // Feature modules
     AuthModule,
+    UsersModule,
     StudentsModule,
     TeachersModule,
     CoursesModule,

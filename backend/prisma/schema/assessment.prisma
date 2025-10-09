@@ -24,7 +24,7 @@ model Examination {
   // Relations
   course              Course           @relation(fields: [courseId], references: [id])
   semester            Semester         @relation(fields: [semesterId], references: [id])
-  creator             Teacher          @relation(fields: [createdBy], references: [id])
+  creator             Teacher          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   results             ExamResult[]
 
   @@map("examinations")
@@ -46,8 +46,8 @@ model ExamResult {
 
   // Relations
   exam        Examination @relation(fields: [examId], references: [id])
-  student     Student     @relation(fields: [studentId], references: [id])
-  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id])
+  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id], onDelete: Cascade)
 
   @@unique([examId, studentId], name: "unique_result")
   @@map("exam_results")
@@ -75,7 +75,7 @@ model Assignment {
   // Relations
   course                  Course             @relation(fields: [courseId], references: [id])
   section                 ClassSection?      @relation(fields: [sectionId], references: [id])
-  teacher                 Teacher            @relation(fields: [teacherId], references: [id])
+  teacher                 Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   submissions             Submission[]
 
   @@map("assignments")
@@ -100,8 +100,8 @@ model Submission {
 
   // Relations
   assignment    Assignment       @relation(fields: [assignmentId], references: [id])
-  student       Student          @relation(fields: [studentId], references: [id])
-  grader        Teacher?         @relation(fields: [gradedBy], references: [id])
+  student       Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grader        Teacher?         @relation(fields: [gradedBy], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId, version], name: "unique_submission")
   @@map("submissions")

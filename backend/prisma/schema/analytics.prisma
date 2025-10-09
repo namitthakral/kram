@@ -24,7 +24,7 @@ model StudentProgress {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   subject           Subject          @relation(fields: [subjectId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
@@ -49,7 +49,7 @@ model DashboardStats {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  user              User?            @relation(fields: [userId], references: [id])
+  user              User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("dashboard_stats")
 }
@@ -93,7 +93,7 @@ model AttendanceSummary {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   subject           Subject          @relation(fields: [subjectId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
@@ -120,8 +120,8 @@ model CareerGuidance {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
-  teacher           Teacher          @relation(fields: [teacherId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   @@map("career_guidance")
 }
@@ -146,8 +146,8 @@ model Application {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
-  reviewer          User?            @relation(fields: [reviewedBy], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reviewer          User?            @relation(fields: [reviewedBy], references: [id], onDelete: Cascade)
 
   @@map("applications")
 }
@@ -171,7 +171,7 @@ model SystemAlert {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  resolver          User?            @relation(fields: [resolvedBy], references: [id])
+  resolver          User?            @relation(fields: [resolvedBy], references: [id], onDelete: Cascade)
 
   @@map("system_alerts")
 }

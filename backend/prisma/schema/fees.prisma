@@ -45,7 +45,7 @@ model StudentFee {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   feeStructure      FeeStructure     @relation(fields: [feeStructureId], references: [id])
   semester          Semester?        @relation(fields: [semesterId], references: [id])
   payments          Payment[]
@@ -76,9 +76,9 @@ model Payment {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id])
+  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentFee        StudentFee?      @relation(fields: [studentFeeId], references: [id])
-  processor         User?            @relation(fields: [processedBy], references: [id])
+  processor         User?            @relation(fields: [processedBy], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }

@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, Matches } from 'class-validator'
+import { IsEmail, IsString, MinLength } from 'class-validator'
 
 export class LoginDto {
   @IsEmail()
@@ -9,25 +9,5 @@ export class LoginDto {
   password: string
 }
 
-export class CreateUserDto {
-  @IsString()
-  @MinLength(2)
-  name: string
-
-  @IsEmail()
-  email: string
-
-  @IsString()
-  @MinLength(8)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-    message:
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-  })
-  password: string
-
-  @IsString()
-  phone?: string
-
-  @IsString()
-  roleId: number
-}
+// Re-export the unified CreateUserDto
+export { CreateUserDto } from '../../common/dto/user.dto'

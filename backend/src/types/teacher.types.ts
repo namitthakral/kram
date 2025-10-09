@@ -15,7 +15,7 @@ export interface Teacher {
   qualification?: string
   experienceYears: number
   joinDate?: Date
-  salary?: number
+  salary?: number | { toNumber(): number } // Support Prisma Decimal type
   employmentType: EmploymentType
   officeLocation?: string
   officeHours?: string

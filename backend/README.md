@@ -256,6 +256,201 @@ All API responses follow this format:
 - **429** - Too Many Requests (rate limited)
 - **500** - Internal Server Error
 
+## 🏗️ Architecture Overview
+
+### NestJS Architecture Components
+
+This backend follows NestJS's modular architecture pattern, which consists of four main components that work together to create a clean, maintainable, and scalable application:
+
+#### 1. **Controllers** (`*.controller.ts`)
+
+**Purpose**: Handle HTTP requests and responses. Act as the entry point for API endpoints.
+
+**Key Features**:
+
+- **Route Definition**: Define API endpoints using decorators like `@Get()`, `@Post()`, `@Patch()`, `@Delete()`
+- **Request Handling**: Extract data from request body, parameters, and query strings
+- **Authorization**: Implement security using guards like `@UseGuards(JwtAuthGuard, RolesGuard)`
+- **Role-based Access**: Control access with `@Roles('admin', 'teacher')` decorators
+- **Data Validation**: Use DTOs to validate incoming data
+
+**Example**:
+
+```typescript
+@Controller('users')
+@UseGuards(JwtAuthGuard)
+export class UsersController {
+  @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.findOne(id)
+  }
+}
+```
+
+#### 2. **Services** (`*.service.ts`)
+
+**Purpose**: Contain business logic and data manipulation. The "brain" of your application.
+
+**Key Features**:
+
+- **Business Logic**: Implement complex operations like user creation, validation, password hashing
+- **Database Operations**: Use Prisma ORM to interact with the database
+- **Data Transformation**: Process and format data before returning to controllers
+- **Error Handling**: Throw appropriate exceptions (NotFoundException, ConflictException)
+- **Security**: Handle password hashing, data sanitization, and validation
+
+**Example**:
+
+```typescript
+@Injectable()
+export class UsersService {
+  async create(createUserDto: CreateUserDto) {
+    // Check if email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    })
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists')
+    }
+
+    // Hash password and create user
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 12)
+    return this.prisma.user.create({
+      data: { ...createUserDto, password: hashedPassword },
+    })
+  }
+}
+```
+
+#### 3. **Modules** (`*.module.ts`)
+
+**Purpose**: Organize and configure related components. Define what the module provides and what it needs.
+
+**Key Features**:
+
+- **Dependency Injection**: Register controllers, services, and other providers
+- **Imports**: Bring in other modules this module depends on
+- **Exports**: Make services available to other modules
+- **Encapsulation**: Group related functionality together
+
+**Example**:
+
+```typescript
+@Module({
+  imports: [PrismaModule], // What this module needs
+  controllers: [UsersController], // What controllers it provides
+  providers: [UsersService], // What services it provides
+  exports: [UsersService], // What it makes available to others
+})
+export class UsersModule {}
+```
+
+#### 4. **DTOs (Data Transfer Objects)** (`*.dto.ts`)
+
+**Purpose**: Define the structure and validation rules for data being transferred between client and server.
+
+**Key Features**:
+
+- **Data Validation**: Use decorators like `@IsEmail()`, `@IsString()`, `@IsOptional()`
+- **Type Safety**: Ensure data matches expected structure
+- **Documentation**: Serve as a contract for API consumers
+- **Transformation**: Transform data between different formats
+
+**Example**:
+
+```typescript
+export class CreateUserDto {
+  @IsInt()
+  roleId: number
+
+  @IsEmail()
+  email: string
+
+  @IsString()
+  password: string
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string
+}
+```
+
+### How Components Work Together
+
+```mermaid
+graph TD
+    A[Client Request] --> B[Controller]
+    B --> C[DTO Validation]
+    C --> D[Service]
+    D --> E[Database via Prisma]
+    E --> D
+    D --> B
+    B --> F[HTTP Response]
+    F --> A
+
+    G[Module] --> B
+    G --> D
+    H[Guards] --> B
+    I[Roles] --> B
+```
+
+**Request Flow**:
+
+1. **Client** sends HTTP request to `/users`
+2. **Controller** receives request, validates route and permissions
+3. **Controller** validates incoming data using **DTO** rules
+4. **Controller** calls appropriate **Service** method with validated data
+5. **Service** performs business logic and database operations
+6. **Service** returns processed data to **Controller**
+7. **Controller** sends HTTP response back to client
+
+### Benefits of This Architecture
+
+#### 🎯 **Separation of Concerns**
+
+- Each component has a single, well-defined responsibility
+- Controllers handle HTTP, services handle business logic, DTOs handle validation
+- Easy to locate and modify specific functionality
+
+#### 🔄 **Reusability**
+
+- Services can be used by multiple controllers
+- DTOs can be reused across different endpoints
+- Modules can be imported and used in other parts of the application
+
+#### 🧪 **Testability**
+
+- Each component can be tested independently
+- Easy to mock dependencies for unit testing
+- Clear boundaries make integration testing straightforward
+
+#### 🛠️ **Maintainability**
+
+- Changes to business logic don't affect API structure
+- Easy to add new features without breaking existing code
+- Clear code organization makes debugging easier
+
+#### 🔒 **Type Safety**
+
+- DTOs ensure data integrity and validation
+- TypeScript provides compile-time error checking
+- Reduces runtime errors and improves developer experience
+
+#### 🚀 **Scalability**
+
+- Modular structure allows for easy feature additions
+- Services can be optimized independently
+- Clear separation makes it easy to add caching, logging, etc.
+
+#### 🔐 **Security**
+
+- Guards and decorators handle authorization consistently
+- DTOs prevent invalid data from reaching business logic
+- Centralized security policies across the application
+
 ## 🔧 Development
 
 ### Project Structure
@@ -285,18 +480,15 @@ src/
 ### Common Issues
 
 1. **Database Connection Error**
-
    - Check PostgreSQL is running
    - Verify DATABASE_URL in .env
    - Ensure database exists
 
 2. **JWT Secret Error**
-
    - Set JWT_SECRET in .env
    - Use a strong, random secret
 
 3. **Port Already in Use**
-
    - Change PORT in .env
    - Kill process using the port
 

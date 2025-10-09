@@ -29,7 +29,7 @@ export class StudentsController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @Roles('admin', 'teacher')
+  @Roles('super_admin', 'admin', 'teacher')
   async findAll(
     @Query() paginationDto: PaginationDto,
     @CurrentUser() user: UserWithRelations
@@ -47,14 +47,14 @@ export class StudentsController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('super_admin', 'admin')
   async create(@Body() createStudentDto: CreateStudentDto) {
     return this.studentsService.create(createStudentDto)
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('super_admin', 'admin')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStudentDto: UpdateStudentDto
@@ -64,7 +64,7 @@ export class StudentsController {
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles('admin')
+  @Roles('super_admin', 'admin')
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.studentsService.remove(id)
   }

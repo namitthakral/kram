@@ -24,7 +24,7 @@ model Notice {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   readReceipts      NoticeReadReceipt[]
 
   @@map("notices")
@@ -38,7 +38,7 @@ model NoticeReadReceipt {
 
   // Relations
   notice            Notice           @relation(fields: [noticeId], references: [id])
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([noticeId, userId], name: "unique_notice_read")
   @@map("notice_read_receipts")
@@ -63,7 +63,7 @@ model Announcement {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("announcements")
 }
@@ -84,8 +84,8 @@ model Message {
   createdAt         DateTime         @default(now()) @map("created_at")
 
   // Relations
-  sender            User             @relation("MessageSender", fields: [senderId], references: [id])
-  receiver          User?            @relation("MessageReceiver", fields: [receiverId], references: [id])
+  sender            User             @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver          User?            @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   group             MessageGroup?    @relation(fields: [groupId], references: [id])
 
   @@map("messages")
@@ -104,7 +104,7 @@ model MessageGroup {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id])
+  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   members           GroupMember[]
   messages          Message[]
 
@@ -120,7 +120,7 @@ model GroupMember {
 
   // Relations
   group             MessageGroup     @relation(fields: [groupId], references: [id])
-  user              User             @relation(fields: [userId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, userId], name: "unique_group_member")
   @@map("group_members")
