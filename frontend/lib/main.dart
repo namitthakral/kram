@@ -1,75 +1,88 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'dart:developer';
 
-void main() {
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+
+import 'provider/bottom_nav_provider.dart';
+import 'provider/dashboard/favourite_provider.dart';
+import 'provider/language_provider.dart';
+import 'provider/login_signup/login_provider.dart';
+import 'provider/login_signup/signup_provider.dart';
+import 'provider/onboarding_provider.dart';
+import 'provider/profile/security/security_provider.dart';
+import 'provider/theme_provider.dart';
+import 'utils/global_constants.dart';
+import 'utils/localization/app_localizations.dart';
+import 'utils/router_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  RouterService().init();
+
+  // Configure web-specific settings
+  if (kIsWeb) {
+    // Add custom error handling for web
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      if (kDebugMode) {
+        // Log to console in debug mode
+        log('Error==>${details.toString()}');
+      }
+    };
+  }
+
   runApp(
-    const ProviderScope(
-      child: EdVerseApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()..loadLocale()),
+        ChangeNotifierProvider(create: (_) => BottomNavProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileSecurityProvider()),
+        ChangeNotifierProvider(create: (_) => FavouriteProvider()),
+        ChangeNotifierProvider(create: (_) => OnboardingProvider()),
+        ChangeNotifierProvider(create: (_) => SignUpProvider()),
+        ChangeNotifierProvider(create: (_) => LoginProvider()),
+      ],
+      child: const DivineConnectApp(),
     ),
   );
 }
 
-class EdVerseApp extends StatelessWidget {
-  const EdVerseApp({super.key});
+class DivineConnectApp extends StatelessWidget {
+  const DivineConnectApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Ed-verse',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      routerConfig: _router,
-    );
-  }
-}
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
-final GoRouter _router = GoRouter(
-  routes: <RouteBase>[
-    GoRoute(
-      path: '/',
-      builder: (BuildContext context, GoRouterState state) {
-        return const HomeScreen();
+    return GestureDetector(
+      onTap: () {
+        final currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus) {
+          WidgetsBinding.instance.focusManager.primaryFocus?.unfocus();
+        }
       },
-    ),
-  ],
-);
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Ed-verse'),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Welcome to Ed-verse!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      child: Consumer<LanguageProvider>(
+        builder:
+            (context, languageProvider, child) => MaterialApp.router(
+              title: AppLocalizations.of(context)?.translate('app_name'),
+              scaffoldMessengerKey: GlobalConstants.snackbarKey,
+              debugShowCheckedModeBanner: false,
+              themeMode: themeProvider.themeMode,
+              theme: themeProvider.lightTheme,
+              darkTheme: themeProvider.darkTheme,
+              locale: languageProvider.locale,
+              supportedLocales: languageProvider.supportedLocales,
+              localizationsDelegates: const [
+                AppLocalizationsDelegate(),
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              routerConfig: RouterService().router,
             ),
-            SizedBox(height: 16),
-            Text(
-              'Your educational platform is ready to go.',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add navigation or functionality here
-        },
-        tooltip: 'Get Started',
-        child: const Icon(Icons.play_arrow),
       ),
     );
   }
