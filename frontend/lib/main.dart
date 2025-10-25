@@ -45,13 +45,13 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SignUpProvider()),
         ChangeNotifierProvider(create: (_) => LoginProvider()),
       ],
-      child: const DivineConnectApp(),
+      child: const EdVerseApp(),
     ),
   );
 }
 
-class DivineConnectApp extends StatelessWidget {
-  const DivineConnectApp({super.key});
+class EdVerseApp extends StatelessWidget {
+  const EdVerseApp({super.key});
 
   @override
   Widget build(BuildContext context) {

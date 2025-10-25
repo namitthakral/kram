@@ -24,13 +24,14 @@ class CustomBottomNavBar extends StatelessWidget {
       children: [
         Divider(height: 0.5, thickness: 0.5, color: theme.dividerTheme.color),
         Consumer<BottomNavProvider>(
-          builder: (context, navProvider, child) => NavigationBar(
-            labelPadding: EdgeInsets.zero,
-            selectedIndex: navProvider.currentIndex,
-            onDestinationSelected: (index) => navProvider.setIndex(index),
-            height: 60,
-            destinations: _buildNavigationDestinations(translate),
-          ),
+          builder:
+              (context, navProvider, child) => NavigationBar(
+                labelPadding: EdgeInsets.zero,
+                selectedIndex: navProvider.currentIndex,
+                onDestinationSelected: (index) => navProvider.setIndex(index),
+                height: 60,
+                destinations: _buildNavigationDestinations(translate),
+              ),
         ),
       ],
     );
@@ -51,10 +52,10 @@ class CustomBottomNavBar extends StatelessWidget {
 
   // Helper method to build icon widgets
   Widget _buildIcon(String iconUrl, {bool isSelected = false}) => BaseImage(
-        asset: LocalAsset(url: iconUrl),
-        height: 25,
-        width: 25,
-        fit: BoxFit.contain,
-        color: isSelected ? CustomAppColors.primary : null,
-      );
+    asset: LocalAsset(url: iconUrl),
+    height: 25,
+    width: 25,
+    fit: BoxFit.contain,
+    color: isSelected ? CustomAppColors.primary : null,
+  );
 }

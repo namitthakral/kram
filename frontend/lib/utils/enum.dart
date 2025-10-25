@@ -5,7 +5,7 @@ enum AppBarType {
   checkout,
   addNewCard,
   paymentSuccess,
-  appointment,
+  session,
   store,
   orderDetail,
   myOrder,

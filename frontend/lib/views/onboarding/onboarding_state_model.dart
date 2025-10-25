@@ -1,5 +1,4 @@
 class OnboardingStateModel {
-
   const OnboardingStateModel({
     required this.index,
     required this.title,

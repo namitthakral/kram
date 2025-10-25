@@ -9,15 +9,16 @@ class AppLogoCircularProgressIndicator extends StatelessWidget {
     this.color = CustomAppColors.primary,
   });
 
-  factory AppLogoCircularProgressIndicator.size(Size size) => AppLogoCircularProgressIndicator(size: size);
+  factory AppLogoCircularProgressIndicator.size(Size size) =>
+      AppLogoCircularProgressIndicator(size: size);
   final Size size;
   final Color color;
 
   @override
   Widget build(BuildContext context) => ColorFiltered(
-      colorFilter: ColorFilter.mode(color, BlendMode.srcATop),
-      child: _progressIndicator,
-    );
+    colorFilter: ColorFilter.mode(color, BlendMode.srcATop),
+    child: _progressIndicator,
+  );
 
   Widget get _progressIndicator => SizedBox(
     height: size.height,

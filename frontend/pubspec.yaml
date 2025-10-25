@@ -1,10 +1,10 @@
 name: ed_verse
-description: A Flutter MVVM app for Divine Connect with Provider and Theme support.
+description: A Flutter MVVM app for EdVerse Education ERP with Provider and Theme support.
 version: 1.0.0+1
 publish_to: none
 
 environment:
-  sdk: ">=3.7.0 <4.0.0"
+  sdk: '>=3.7.0 <4.0.0'
   flutter: ^3.29.2
 
 dependencies:
@@ -29,7 +29,7 @@ dependencies:
     sdk: flutter
 
 dev_dependencies:
-  flutter_launcher_icons: "^0.14.3"
+  flutter_launcher_icons: '^0.14.3'
   flutter_test:
     sdk: flutter
   intl_translation: ^0.20.1
@@ -55,6 +55,7 @@ flutter:
         - asset: assets/font/Outfit-SemiBold.ttf
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
+  image_path: 'assets/images/app_logo.png'
   remove_alpha_ios: true

@@ -1,6 +1,6 @@
 class AppConstants {
   // App Information
-  static const String appName = 'Ed-Verse';
+  static const String appName = 'EdVerse';
   static const String appVersion = '1.0.0';
 
   // API Configuration

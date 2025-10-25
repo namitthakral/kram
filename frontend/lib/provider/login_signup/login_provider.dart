@@ -9,13 +9,21 @@ class LoginProvider extends ChangeNotifier {
       changePasswordController = TextEditingController(),
       changeConfirmPasswordController = TextEditingController();
 
-  bool _isPasswordVisible = false, _isLoginAccountClicked = false;
+  bool _isPasswordVisible = false,
+      _isLoginAccountClicked = false,
+      _rememberPassword = false;
 
   bool get isPasswordVisible => _isPasswordVisible;
   bool get isLoginAccountClicked => _isLoginAccountClicked;
+  bool get rememberPassword => _rememberPassword;
 
   void updatePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
+    notifyListeners();
+  }
+
+  void updateRememberPassword(bool value) {
+    _rememberPassword = value;
     notifyListeners();
   }
 

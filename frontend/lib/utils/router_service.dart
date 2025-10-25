@@ -53,37 +53,61 @@ class RouterService {
     GoRoute(
       path: '/splash',
       name: 'splash',
-      builder: (context, state) {
-        // final userId = state.pathParameters['userId'] ?? '';
-        return const SplashScreen();
-      },
+      pageBuilder:
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const SplashScreen(),
+          ),
     ),
     GoRoute(
       path: '/onboarding',
       name: 'onboarding',
-      builder: (context, state) {
-        // final userId = state.pathParameters['userId'] ?? '';
-        return const OnboardingMain();
-      },
+      pageBuilder:
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const OnboardingMain(),
+          ),
     ),
     GoRoute(
       path: '/home',
       name: 'home',
-      builder: (context, state) {
-        // final userId = state.pathParameters['userId'] ?? '';
-        return HomeScreen();
-      },
+      pageBuilder:
+          (context, state) =>
+              _buildPageWithTransition(key: state.pageKey, child: HomeScreen()),
     ),
-
     GoRoute(
       path: '/login',
       name: 'login',
-      builder: (context, state) {
-        // final userId = state.pathParameters['userId'] ?? '';
-        return const LoginRegisterMain();
-      },
+      pageBuilder:
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const LoginRegisterMain(),
+          ),
     ),
   ];
+
+  // Helper method to build pages with consistent slide transition
+  CustomTransitionPage<void> _buildPageWithTransition({
+    required LocalKey key,
+    required Widget child,
+  }) => CustomTransitionPage<void>(
+    key: key,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // Slide transition from right to left
+      const begin = Offset(1.0, 0.0);
+      const end = Offset.zero;
+      const curve = Curves.fastOutSlowIn;
+
+      final tween = Tween(
+        begin: begin,
+        end: end,
+      ).chain(CurveTween(curve: curve));
+
+      return SlideTransition(position: animation.drive(tween), child: child);
+    },
+    transitionDuration: const Duration(milliseconds: 250),
+  );
 
   // Navigation methods
   void goToHome() => router.goNamed('home');

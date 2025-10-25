@@ -104,10 +104,7 @@ class ResponsiveUtils {
   }
 
   /// Get responsive font size
-  static double responsiveFontSize(
-    BuildContext context,
-    double baseFontSize,
-  ) {
+  static double responsiveFontSize(BuildContext context, double baseFontSize) {
     final width = MediaQuery.of(context).size.width;
 
     if (width < mobileBreakpoint) {
@@ -222,8 +219,7 @@ class ResponsiveUtils {
     required BuildContext context,
     required T portrait,
     required T landscape,
-  }) =>
-      isLandscape(context) ? landscape : portrait;
+  }) => isLandscape(context) ? landscape : portrait;
 
   /// Get responsive padding based on orientation
   static EdgeInsets responsivePaddingWithOrientation(BuildContext context) {
@@ -246,12 +242,7 @@ class ResponsiveUtils {
 }
 
 /// Device type enum
-enum DeviceType {
-  mobile,
-  tablet,
-  desktop,
-  largeDesktop,
-}
+enum DeviceType { mobile, tablet, desktop, largeDesktop }
 
 /// Extension on BuildContext for easy access to responsive utilities
 extension ResponsiveExtension on BuildContext {
@@ -277,16 +268,14 @@ extension ResponsiveExtension on BuildContext {
   bool get isPortrait => ResponsiveUtils.isPortrait(this);
 
   /// Get responsive padding
-  EdgeInsets get responsivePadding =>
-      ResponsiveUtils.responsivePadding(this);
+  EdgeInsets get responsivePadding => ResponsiveUtils.responsivePadding(this);
 
   /// Get responsive horizontal padding
   EdgeInsets get responsiveHorizontalPadding =>
       ResponsiveUtils.responsiveHorizontalPadding(this);
 
   /// Get max content width
-  double get maxContentWidth =>
-      ResponsiveUtils.getMaxContentWidth(this);
+  double get maxContentWidth => ResponsiveUtils.getMaxContentWidth(this);
 
   /// Get grid columns
   int get gridColumns => ResponsiveUtils.getGridColumns(this);

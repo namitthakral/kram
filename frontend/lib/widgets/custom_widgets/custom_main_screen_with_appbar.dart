@@ -237,9 +237,7 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
     if (context.isDesktop) {
       return Center(
         child: Container(
-          constraints: BoxConstraints(
-            maxWidth: context.maxContentWidth,
-          ),
+          constraints: BoxConstraints(maxWidth: context.maxContentWidth),
           padding: padding,
           child: child,
         ),
@@ -319,6 +317,7 @@ class _CustomAppBarWithProfileDetail extends StatelessWidget {
     required this.onNotificationIconPressed,
     this.showBadge,
   });
+
   final String userName;
   final bool? showBadge;
   final void Function()? onNotificationIconPressed;
@@ -341,7 +340,7 @@ class _CustomAppBarWithProfileDetail extends StatelessWidget {
         ),
       ),
       leading: const CircleAvatar(
-        backgroundImage: AssetImage(CustomImages.logo),
+        backgroundImage: AssetImage(CustomImages.appLogo),
       ),
     ),
     actions: [

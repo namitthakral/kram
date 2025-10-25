@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Pre-commit hook for Flutter projects
+# To enable this hook, rename this file to 'pre-commit' and make it executable:
+#   mv .git-hooks/pre-commit.sample .git-hooks/pre-commit
+#   chmod +x .git-hooks/pre-commit
+# Then configure git to use this hooks directory:
+#   git config core.hooksPath .git-hooks
+
+echo "🔍 Running pre-commit checks..."
+
+# Change to frontend directory
+cd "$(git rev-parse --show-toplevel)/frontend" || exit 1
+
+# Get list of staged Dart files
+STAGED_DART_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$')
+
+if [ -z "$STAGED_DART_FILES" ]; then
+  echo "✅ No Dart files to check"
+  exit 0
+fi
+
+echo "📝 Checking Dart files..."
+
+# Format check
+echo "  - Checking formatting..."
+dart format --output=none --set-exit-if-changed $STAGED_DART_FILES
+FORMAT_EXIT_CODE=$?
+
+if [ $FORMAT_EXIT_CODE -ne 0 ]; then
+  echo "❌ Formatting issues found. Running dart format..."
+  dart format $STAGED_DART_FILES
+  echo "✅ Files formatted. Please review and stage the changes."
+  exit 1
+fi
+
+# Analyze
+echo "  - Running analyzer..."
+flutter analyze --no-pub
+ANALYZE_EXIT_CODE=$?
+
+if [ $ANALYZE_EXIT_CODE -ne 0 ]; then
+  echo "❌ Analysis issues found. Please fix them before committing."
+  exit 1
+fi
+
+echo "✅ All checks passed!"
+exit 0
+

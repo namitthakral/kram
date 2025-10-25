@@ -23,28 +23,26 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
-        builder: (context, navProvider, child) {
-          // Use fixed drawer for desktop/tablet
-          if (context.isDesktop || context.isTablet) {
-            return Scaffold(
-              body: Row(
-                children: [
-                  // Fixed drawer on the left
-                  const CustomNavigationDrawer(),
-                  // Main content
-                  Expanded(
-                    child: _pages[navProvider.currentIndex],
-                  ),
-                ],
-              ),
-            );
-          }
+    builder: (context, navProvider, child) {
+      // Use fixed drawer for desktop/tablet
+      if (context.isDesktop || context.isTablet) {
+        return Scaffold(
+          body: Row(
+            children: [
+              // Fixed drawer on the left
+              const CustomNavigationDrawer(),
+              // Main content
+              Expanded(child: _pages[navProvider.currentIndex]),
+            ],
+          ),
+        );
+      }
 
-          // Use bottom navigation for mobile
-          return Scaffold(
-            body: _pages[navProvider.currentIndex],
-            bottomNavigationBar: const CustomBottomNavBar(),
-          );
-        },
+      // Use bottom navigation for mobile
+      return Scaffold(
+        body: _pages[navProvider.currentIndex],
+        bottomNavigationBar: const CustomBottomNavBar(),
       );
+    },
+  );
 }

@@ -8,6 +8,8 @@ class CustomImages {
 
   // Common Images
   static const logo = '$_base/logo.png';
+  static const appLogo = '$_base/app_logo.png';
+  static const splash = '$_base/splash.png';
   static const background = '$_base/background.png';
   static const backArrowCircle = '$_icon/ic_back_arrow_in_circle.svg';
   static const backArrow = '$_icon/ic_back_arrow.svg';

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../core/constants/app_constants.dart';
-import '../provider/theme_provider.dart';
-import '../utils/extensions.dart';
-import '../utils/localization/app_localizations.dart';
+import '../utils/custom_images.dart';
 import '../utils/router_service.dart';
 import '../utils/secure_storge.dart';
 
@@ -22,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    splashImage = Image.asset('assets/images/logo.png');
+    splashImage = Image.asset(CustomImages.splash);
     _navigateToNextScreen();
   }
 
@@ -53,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
         context.router.goToLogin();
       }
     } else {
-      // User hasn't completed onboarding, show onboarding
+      // User hasn't completed onboarding, show onboarding screens
       context.router.goToOnboarding();
     }
   }
@@ -65,31 +62,19 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final themeProvider = context.read<ThemeProvider>();
-
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Image.asset(
-              'assets/images/logo.png',
-              height: 250,
-              width: 250,
-              color: themeProvider.themeData.primaryColor,
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              AppLocalizations.of(context)!.translate('app_name'),
-              style: context.textTheme.displayLg.copyWith(
-                fontSize: 30,
-                color: themeProvider.themeData.primaryColor,
-              ),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Image.asset(
+            CustomImages.splash,
+            height: 500,
+            width: 500,
+            fit: BoxFit.contain,
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }

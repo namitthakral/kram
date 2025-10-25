@@ -31,7 +31,10 @@ class ProfileScreen extends StatelessWidget {
           spacing: 8,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(translate('profile_general'), style: context.textTheme.titleLg),
+            Text(
+              translate('profile_general'),
+              style: context.textTheme.titleLg,
+            ),
             _CustomListTile(
               title: translate('profile_edit_profile'),
               iconData: Icons.account_circle_outlined,

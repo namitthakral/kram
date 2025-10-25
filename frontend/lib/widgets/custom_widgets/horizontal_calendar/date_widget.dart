@@ -71,7 +71,8 @@ class DateWidget extends StatelessWidget {
             : weekDayTextStyle ?? subTitleStyle;
 
     // Get responsive padding
-    final responsivePadding = padding ??
+    final responsivePadding =
+        padding ??
         ResponsiveUtils.responsive<EdgeInsets>(
           context: context,
           mobile: const EdgeInsets.all(4),
