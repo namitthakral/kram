@@ -23,6 +23,12 @@ class CustomAppColors {
   static const Color error = Color(0xFFef4444); // Red (alias for danger)
   static const Color info = Color(0xFF06b6d4); // Cyan
 
+  // Red color variants
+  static const Color red50 = Color(0xFFfef2f2);
+  static const Color red200 = Color(0xFFfecaca);
+  static const Color red500 = Color(0xFFef4444);
+  static const Color red700 = Color(0xFFb91c1c);
+
   // Surface Colors
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color backgroundColor = Color(0xFFF5F5F5);

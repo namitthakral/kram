@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/login_signup/login_provider.dart';
@@ -63,50 +62,50 @@ class LoginScreen extends StatelessWidget {
     String Function(String, {Map<String, dynamic>? params}) translate,
     ThemeProvider themeProvider,
   ) => Column(
-      children: [
-        // Logo with EdVerse text
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: CustomAppColors.blue500,
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: const Icon(
-                Icons.school,
-                color: CustomAppColors.white,
-                size: 28,
-              ),
+    children: [
+      // Logo with EdVerse text
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: CustomAppColors.blue500,
+              borderRadius: BorderRadius.circular(12.0),
             ),
-            const SizedBox(width: 12),
-            Text(
-              'EdVerse',
-              style: context.textTheme.titleXl.copyWith(
-                fontWeight: FontWeight.bold,
-                color: CustomAppColors.blue500,
-              ),
+            child: const Icon(
+              Icons.school,
+              color: CustomAppColors.white,
+              size: 28,
             ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        // Login title
-        Text(
-          translate('login_account'),
-          style: context.textTheme.titleXl.copyWith(
-            fontWeight: FontWeight.bold,
-            color:
-                themeProvider.isDarkMode
-                    ? CustomAppColors.darkTextPrimary
-                    : CustomAppColors.textPrimary,
           ),
-          textAlign: TextAlign.center,
+          const SizedBox(width: 12),
+          Text(
+            'EdVerse',
+            style: context.textTheme.titleXl.copyWith(
+              fontWeight: FontWeight.bold,
+              color: CustomAppColors.blue500,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 24),
+
+      // Login title
+      Text(
+        translate('login_account'),
+        style: context.textTheme.titleXl.copyWith(
+          fontWeight: FontWeight.bold,
+          color:
+              themeProvider.isDarkMode
+                  ? CustomAppColors.darkTextPrimary
+                  : CustomAppColors.textPrimary,
         ),
-      ],
-    );
+        textAlign: TextAlign.center,
+      ),
+    ],
+  );
 
   Widget _buildLoginForm(
     BuildContext context,
@@ -114,227 +113,251 @@ class LoginScreen extends StatelessWidget {
     LoginProvider provider,
     ThemeProvider themeProvider,
   ) => Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: CustomAppColors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        boxShadow: [
-          BoxShadow(
-            color: CustomAppColors.black01.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Username field
-          Text(
-            translate('username'),
-            style: context.textTheme.labelBase.copyWith(
-              fontWeight: FontWeight.w600,
-              color: CustomAppColors.textPrimary,
+    padding: const EdgeInsets.all(24.0),
+    decoration: BoxDecoration(
+      color: CustomAppColors.white,
+      borderRadius: BorderRadius.circular(16.0),
+      boxShadow: [
+        BoxShadow(
+          color: CustomAppColors.black01.withValues(alpha: 0.08),
+          blurRadius: 16,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Error message display - moved above email field
+        if (provider.errorMessage != null)
+          Container(
+            padding: const EdgeInsets.all(12.0),
+            margin: const EdgeInsets.only(bottom: 16.0),
+            decoration: BoxDecoration(
+              color: CustomAppColors.red50,
+              borderRadius: BorderRadius.circular(8.0),
+              border: Border.all(color: CustomAppColors.red200),
             ),
-          ),
-          const SizedBox(height: 8),
-          CustomTextField(
-            controller: provider.emailController,
-            hintText: translate('username_hint'),
-          ),
-          const SizedBox(height: 20),
-
-          // Password field
-          Text(
-            translate('password'),
-            style: context.textTheme.labelBase.copyWith(
-              fontWeight: FontWeight.w600,
-              color: CustomAppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Selector<LoginProvider, bool>(
-            selector: (context, provider1) => provider1.isPasswordVisible,
-            builder:
-                (context, value, child) => CustomTextField(
-                  controller: provider.passwordController,
-                  obscureText: !value,
-                  hintText: translate('password_hint'),
-                  suffixButtonIcon: ButtonIcon(
-                    icon:
-                        value
-                            ? CustomImages.iconVisible
-                            : CustomImages.iconVisibleOff,
-                    onIconTapped: provider.updatePasswordVisibility,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: CustomAppColors.red500,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    provider.errorMessage!,
+                    style: context.textTheme.bodySm.copyWith(
+                      color: CustomAppColors.red700,
+                    ),
                   ),
                 ),
+                IconButton(
+                  onPressed: provider.clearError,
+                  icon: Icon(
+                    Icons.close,
+                    color: CustomAppColors.red500,
+                    size: 18,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
 
-          // Remember me checkbox
-          Row(
-            children: [
-              Consumer<LoginProvider>(
-                builder: (context, loginProvider, child) => Checkbox(
+        // Username field
+        Text(
+          translate('username'),
+          style: context.textTheme.labelBase.copyWith(
+            fontWeight: FontWeight.w600,
+            color: CustomAppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        CustomTextField(
+          controller: provider.emailController,
+          hintText: translate('username_hint'),
+          onChanged: (value) => provider.onEmailChanged(),
+        ),
+        const SizedBox(height: 20),
+
+        // Password field
+        Text(
+          translate('password'),
+          style: context.textTheme.labelBase.copyWith(
+            fontWeight: FontWeight.w600,
+            color: CustomAppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Selector<LoginProvider, bool>(
+          selector: (context, provider1) => provider1.isPasswordVisible,
+          builder:
+              (context, value, child) => CustomTextField(
+                controller: provider.passwordController,
+                obscureText: !value,
+                hintText: translate('password_hint'),
+                onChanged: (value) => provider.onPasswordChanged(),
+                suffixButtonIcon: ButtonIcon(
+                  icon:
+                      value
+                          ? CustomImages.iconVisible
+                          : CustomImages.iconVisibleOff,
+                  onIconTapped: provider.updatePasswordVisibility,
+                ),
+              ),
+        ),
+        const SizedBox(height: 16),
+
+        // Remember me checkbox
+        Row(
+          children: [
+            Consumer<LoginProvider>(
+              builder:
+                  (context, loginProvider, child) => Checkbox(
                     value: loginProvider.rememberPassword,
                     onChanged: (value) {
                       loginProvider.updateRememberPassword(value ?? false);
                     },
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-              ),
-              Text(
-                translate('remember_password'),
-                style: context.textTheme.bodySm.copyWith(
-                  color: CustomAppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Login button
-          CustomElevatedButton(
-            text: translate('sign_in'),
-            borderRadius: 8.0,
-            onPressed: () {
-              provider.loginAccount();
-              context.router.goToHome();
-            },
-          ),
-          const SizedBox(height: 12),
-
-          // Forgot Password link
-          Center(
-            child: CustomTextButton(
-              onButtonPressed:
-                  () =>
-                      CustomBottomSheet.forgetPasswordUpdate(context: context),
-              text: translate('forgot_password'),
-              textStyle: context.textTheme.bodySm.copyWith(
-                color: CustomAppColors.blue500,
+            ),
+            Text(
+              translate('remember_password'),
+              style: context.textTheme.bodySm.copyWith(
+                color: CustomAppColors.textSecondary,
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // Login button
+        Consumer<LoginProvider>(
+          builder:
+              (context, loginProvider, child) => CustomElevatedButton(
+                text:
+                    loginProvider.isLoading
+                        ? translate('signing_in')
+                        : translate('sign_in'),
+                borderRadius: 8.0,
+                isLoading: loginProvider.isLoading,
+                onPressed:
+                    loginProvider.isLoading
+                        ? null
+                        : () async {
+                          await loginProvider.loginAccount();
+                          if (loginProvider.currentUser != null &&
+                              context.mounted) {
+                            context.router.goToHome();
+                          }
+                        },
+              ),
+        ),
+        const SizedBox(height: 12),
+
+        // Forgot Password link
+        Center(
+          child: CustomTextButton(
+            onButtonPressed:
+                () => CustomBottomSheet.forgetPasswordUpdate(context: context),
+            text: translate('forgot_password'),
+            textStyle: context.textTheme.bodySm.copyWith(
+              color: CustomAppColors.blue500,
+            ),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 
   Widget _buildFooter(
     BuildContext context,
     String Function(String, {Map<String, dynamic>? params}) translate,
     ThemeProvider themeProvider,
   ) => Column(
-      children: [
-        // Don't have an account
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              translate('dont_have_account'),
-              style: context.textTheme.bodySm.copyWith(
-                color:
-                    themeProvider.isDarkMode
-                        ? CustomAppColors.grey01
-                        : CustomAppColors.textSecondary,
-              ),
+    children: [
+      // Don't have an account
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            translate('dont_have_account'),
+            style: context.textTheme.bodySm.copyWith(
+              color:
+                  themeProvider.isDarkMode
+                      ? CustomAppColors.grey01
+                      : CustomAppColors.textSecondary,
             ),
-            const SizedBox(width: 8),
-            CustomTextButton(
-              text: translate('contact_administrator'),
-              onButtonPressed: () {
-                // Handle contact administrator
-              },
-              textStyle: context.textTheme.bodySm.copyWith(
-                color: CustomAppColors.blue500,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        // Terms and Privacy
-        Text(
-          translate('by_logging_in_agree'),
-          style: context.textTheme.bodySm.copyWith(
-            color:
-                themeProvider.isDarkMode
-                    ? CustomAppColors.grey01
-                    : CustomAppColors.textSecondary,
           ),
-          textAlign: TextAlign.center,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CustomTextButton(
-              text: translate('privacy_policy'),
-              onButtonPressed: () {},
-              textStyle: context.textTheme.bodySm.copyWith(
-                color: CustomAppColors.blue500,
-              ),
+          const SizedBox(width: 8),
+          CustomTextButton(
+            text: translate('contact_administrator'),
+            onButtonPressed: () {
+              // Handle contact administrator
+            },
+            textStyle: context.textTheme.bodySm.copyWith(
+              color: CustomAppColors.blue500,
+              fontWeight: FontWeight.w600,
             ),
-            Text(
-              translate('and'),
-              style: context.textTheme.bodySm.copyWith(
-                color:
-                    themeProvider.isDarkMode
-                        ? CustomAppColors.grey01
-                        : CustomAppColors.textSecondary,
-              ),
-            ),
-            CustomTextButton(
-              text: translate('terms_of_service'),
-              onButtonPressed: () {},
-              textStyle: context.textTheme.bodySm.copyWith(
-                color: CustomAppColors.blue500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // Copyright
-        Text(
-          translate('copyright_text'),
-          style: context.textTheme.bodySm.copyWith(
-            color:
-                themeProvider.isDarkMode
-                    ? CustomAppColors.grey01
-                    : CustomAppColors.textSecondary,
           ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-}
-
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.text,
-    required this.image,
-    required this.onPressed,
-  });
-  final String text;
-  final VoidCallback onPressed;
-  final String image;
-
-  @override
-  Widget build(BuildContext context) => ElevatedButton.icon(
-    onPressed: onPressed,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: CustomAppColors.white,
-      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 32.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
-      fixedSize: Size(MediaQuery.sizeOf(context).width, 44.0),
-    ),
-    icon: SvgPicture.asset(image, height: 24, width: 24),
-    label: Text(
-      text,
-      style: context.textTheme.labelBase.copyWith(
-        color: CustomAppColors.black01,
+        ],
       ),
-    ),
+      const SizedBox(height: 24),
+
+      // Terms and Privacy
+      Text(
+        translate('by_logging_in_agree'),
+        style: context.textTheme.bodySm.copyWith(
+          color:
+              themeProvider.isDarkMode
+                  ? CustomAppColors.grey01
+                  : CustomAppColors.textSecondary,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CustomTextButton(
+            text: translate('privacy_policy'),
+            onButtonPressed: () {},
+            textStyle: context.textTheme.bodySm.copyWith(
+              color: CustomAppColors.blue500,
+            ),
+          ),
+          Text(
+            translate('and'),
+            style: context.textTheme.bodySm.copyWith(
+              color:
+                  themeProvider.isDarkMode
+                      ? CustomAppColors.grey01
+                      : CustomAppColors.textSecondary,
+            ),
+          ),
+          CustomTextButton(
+            text: translate('terms_of_service'),
+            onButtonPressed: () {},
+            textStyle: context.textTheme.bodySm.copyWith(
+              color: CustomAppColors.blue500,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+
+      // Copyright
+      Text(
+        translate('copyright_text'),
+        style: context.textTheme.bodySm.copyWith(
+          color:
+              themeProvider.isDarkMode
+                  ? CustomAppColors.grey01
+                  : CustomAppColors.textSecondary,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    ],
   );
 }

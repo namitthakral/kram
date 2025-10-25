@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'core/services/api_service.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
 import 'provider/bottom_nav_provider.dart';
@@ -23,6 +24,7 @@ import 'utils/router_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   RouterService().init();
+  ApiService().init();
 
   // Configure web-specific settings
   if (kIsWeb) {

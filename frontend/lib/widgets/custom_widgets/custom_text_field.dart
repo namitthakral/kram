@@ -21,6 +21,7 @@ class CustomTextField extends StatelessWidget {
     this.prefixButtonIcon,
     this.suffixButtonIcon,
     this.onTap,
+    this.onChanged,
   });
   final String? label /* ,prefixIcon, suffixIcon */;
   final TextEditingController? controller;
@@ -31,6 +32,7 @@ class CustomTextField extends StatelessWidget {
   final InputBorder? border;
   final String? hintText;
   final void Function()? onTap;
+  final void Function(String)? onChanged;
   final ButtonIcon? prefixButtonIcon, suffixButtonIcon;
 
   @override
@@ -63,6 +65,7 @@ class CustomTextField extends StatelessWidget {
               textStyle ?? context.textTheme.bodySm.copyWith(color: textColor),
           readOnly: !isEnabled,
           onTap: onTap,
+          onChanged: onChanged,
           decoration: InputDecoration(
             filled: filled,
             fillColor: filled ? const Color(0xFFFBFBFD) : null,

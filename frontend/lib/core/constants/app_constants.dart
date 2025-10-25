@@ -4,8 +4,8 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  static const String baseUrl = 'https://api.ed-verse.com';
-  static const String apiVersion = 'v1';
+  static const String baseUrl = 'http://192.168.1.3:3000';
+  static const String apiVersion = '/api';
   static const Duration apiTimeout = Duration(seconds: 30);
 
   // Storage Keys
