@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../provider/bottom_nav_provider.dart';
 import '../utils/responsive_utils.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
@@ -10,8 +11,8 @@ class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
 
   final List<Widget> _pages = [
-    // DashboardScreen(),
-    const Center(child: Text('Screen 1')),
+    // Teacher Dashboard - first screen
+    const TeacherDashboardScreen(),
     const Center(child: Text('Screen 2')),
     const Center(child: Text('Screen 3')),
     const Center(child: Text('Screen 4')),

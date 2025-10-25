@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'modules/teacher/providers/performance_tab_provider.dart';
+import 'modules/teacher/screens/teacher_dashboard_screen.dart';
 import 'provider/bottom_nav_provider.dart';
 import 'provider/dashboard/favourite_provider.dart';
 import 'provider/language_provider.dart';
@@ -12,6 +14,7 @@ import 'provider/login_signup/login_provider.dart';
 import 'provider/login_signup/signup_provider.dart';
 import 'provider/onboarding_provider.dart';
 import 'provider/profile/security/security_provider.dart';
+import 'provider/segmented_control_provider.dart';
 import 'provider/theme_provider.dart';
 import 'utils/global_constants.dart';
 import 'utils/localization/app_localizations.dart';
@@ -44,6 +47,12 @@ void main() async {
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => SignUpProvider()),
         ChangeNotifierProvider(create: (_) => LoginProvider()),
+        ChangeNotifierProvider<PerformanceTabProvider>(
+          create: (_) => PerformanceTabProvider(),
+        ),
+        ChangeNotifierProvider<SegmentedControlProvider<PerformanceTab>>(
+          create: (_) => PerformanceTabProvider(),
+        ),
       ],
       child: const EdVerseApp(),
     ),

@@ -21,6 +21,8 @@ dependencies:
   intl: ^0.20.2
   provider: ^6.1.2
   shared_preferences: ^2.5.2
+  # Chart libraries
+  fl_chart: ^0.69.0
   # Responsive design support
   responsive_framework: ^1.5.1
   # Platform detection for web/mobile
