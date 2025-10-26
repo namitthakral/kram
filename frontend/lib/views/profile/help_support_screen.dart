@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/extensions.dart';
-import '../../utils/localization/app_localizations.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
 class HelpSupportScreen extends StatelessWidget {
@@ -9,13 +8,12 @@ class HelpSupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
     final descriptionStyle = context.textTheme.bodySm.copyWith(
       color: const Color(0xFF6C6C6C),
     );
 
     return CustomMainScreenWithAppbar(
-      title: translate('help_and_support'),
+      title: context.translate('help_and_support'),
       child: Column(
         children: [
           _CustomExpansionTile(

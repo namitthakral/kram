@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../core/theme/app_theme.dart';
+import 'localization/app_localizations.dart';
+
+extension BuildContextLocalizationExtension on BuildContext {
+  String translate(String key, {Map<String, dynamic>? params}) =>
+      AppLocalizations.of(this)?.translate(key, params: params) ?? key;
+}
 
 extension CustomTextTheme on TextTheme {
   // Heading styles using new typography scale

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../widgets/custom_widgets/custom_cupertino_segmented.dart';
+import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../models/dashboard_stats.dart';
 import '../providers/performance_tab_provider.dart';
 import '../widgets/chart_widgets.dart';
@@ -19,9 +21,10 @@ class TeacherDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SingleChildScrollView(
+    return CustomMainScreenWithAppbar(
+      title: context.translate('Teacher Dashboard'),
+      showBackButton: false,
+      child: SingleChildScrollView(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

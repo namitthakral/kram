@@ -4,32 +4,27 @@ import 'package:provider/provider.dart';
 import '../../provider/bottom_nav_provider.dart';
 import '../../provider/language_provider.dart';
 import '../../utils/extensions.dart';
-import '../../utils/localization/app_localizations.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
-
-    return CustomMainScreenWithAppbar(
-      showCircularBackButton: true,
-      title: translate('language'),
-      child: Consumer<LanguageProvider>(
-        builder:
-            (context, value, child) => Column(
-              children: [
-                const SizedBox(height: 16),
-                _CustomTile(title: translate('english'), flag: 'en'),
-                const SizedBox(height: 16),
-                _CustomTile(title: translate('hindi'), flag: 'hi'),
-              ],
-            ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => CustomMainScreenWithAppbar(
+    showCircularBackButton: true,
+    title: context.translate('language'),
+    child: Consumer<LanguageProvider>(
+      builder:
+          (context, value, child) => Column(
+            children: [
+              const SizedBox(height: 16),
+              _CustomTile(title: context.translate('english'), flag: 'en'),
+              const SizedBox(height: 16),
+              _CustomTile(title: context.translate('hindi'), flag: 'hi'),
+            ],
+          ),
+    ),
+  );
 }
 
 class _CustomTile extends StatelessWidget {

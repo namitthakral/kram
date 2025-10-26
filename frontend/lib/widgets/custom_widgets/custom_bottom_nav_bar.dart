@@ -5,16 +5,15 @@ import '../../models/navigation_item_model.dart';
 import '../../provider/bottom_nav_provider.dart';
 import '../../provider/theme_provider.dart';
 import '../../utils/custom_colors.dart';
+import '../../utils/extensions.dart';
 import '../../utils/images/base_image.dart';
 import '../../utils/images/image_asset.dart';
-import '../../utils/localization/app_localizations.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = themeProvider.themeData;
 
@@ -30,7 +29,7 @@ class CustomBottomNavBar extends StatelessWidget {
                 selectedIndex: navProvider.currentIndex,
                 onDestinationSelected: (index) => navProvider.setIndex(index),
                 height: 60,
-                destinations: _buildNavigationDestinations(translate),
+                destinations: _buildNavigationDestinations(context),
               ),
         ),
       ],
@@ -38,14 +37,14 @@ class CustomBottomNavBar extends StatelessWidget {
   }
 
   List<NavigationDestination> _buildNavigationDestinations(
-    String Function(String, {Map<String, dynamic>? params}) translate,
+    BuildContext context,
   ) =>
       NavigationItems.items
           .map(
             (item) => NavigationDestination(
               icon: _buildIcon(item.iconUrl),
               selectedIcon: _buildIcon(item.iconFilledUrl, isSelected: true),
-              label: translate(item.labelKey),
+              label: context.translate(item.labelKey),
             ),
           )
           .toList();

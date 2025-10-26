@@ -6,7 +6,6 @@ import '../../provider/onboarding_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/enum.dart';
 import '../../utils/extensions.dart';
-import '../../utils/localization/app_localizations.dart';
 import '../../utils/router_service.dart';
 import '../../utils/secure_storge.dart';
 import 'indicator.dart';
@@ -21,114 +20,105 @@ class OnboardingMain extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: CustomAppColors.white,
+    body: SafeArea(
+      child: Consumer<OnboardingProvider>(
+        builder:
+            (context, provider, child) => Column(
+              children: [
+                // Simple header
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                ),
 
-    return Scaffold(
-      backgroundColor: CustomAppColors.white,
-      body: SafeArea(
-        child: Consumer<OnboardingProvider>(
-          builder:
-              (context, provider, child) => Column(
-                children: [
-                  // Simple header
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  ),
-
-                  // Main content
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: PageView.builder(
-                        itemCount: provider.model.length,
-                        onPageChanged:
-                            (value) =>
-                                provider.setCurrentModel(provider.model[value]),
-                        itemBuilder:
-                            (context, index) => _CleanTitleDisplay(
-                              translate: translate,
-                              onboardingStateModel: provider.model[index],
-                            ),
-                      ),
+                // Main content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: PageView.builder(
+                      itemCount: provider.model.length,
+                      onPageChanged:
+                          (value) =>
+                              provider.setCurrentModel(provider.model[value]),
+                      itemBuilder:
+                          (context, index) => _CleanTitleDisplay(
+                            onboardingStateModel: provider.model[index],
+                          ),
                     ),
                   ),
+                ),
 
-                  // Bottom section
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        IndicatorWidget(
-                          length: provider.model.length,
-                          selectedIndex: provider.currentModel?.index ?? 0,
-                        ),
-                        const SizedBox(height: 40),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              await _markOnboardingComplete();
-                              provider.setLogintype(LoginType.register);
-                              if (context.mounted) {
-                                context.router.goToLogin();
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: CustomAppColors.blue500,
-                              foregroundColor: CustomAppColors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              translate('create_account'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
+                // Bottom section
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      IndicatorWidget(
+                        length: provider.model.length,
+                        selectedIndex: provider.currentModel?.index ?? 0,
+                      ),
+                      const SizedBox(height: 40),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
                           onPressed: () async {
                             await _markOnboardingComplete();
-                            provider.setLogintype(LoginType.login);
+                            provider.setLogintype(LoginType.register);
                             if (context.mounted) {
                               context.router.goToLogin();
                             }
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: CustomAppColors.blue500,
+                            foregroundColor: CustomAppColors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                           child: Text(
-                            translate('account_exist'),
+                            context.translate('create_account'),
                             style: const TextStyle(
-                              color: CustomAppColors.slate600,
                               fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () async {
+                          await _markOnboardingComplete();
+                          provider.setLogintype(LoginType.login);
+                          if (context.mounted) {
+                            context.router.goToLogin();
+                          }
+                        },
+                        child: Text(
+                          context.translate('account_exist'),
+                          style: const TextStyle(
+                            color: CustomAppColors.slate600,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ),
-                ],
-              ),
-        ),
+                ),
+              ],
+            ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _CleanTitleDisplay extends StatelessWidget {
-  const _CleanTitleDisplay({
-    required this.onboardingStateModel,
-    required this.translate,
-  });
+  const _CleanTitleDisplay({required this.onboardingStateModel});
 
-  final String Function(String, {Map<String, dynamic>? params}) translate;
   final OnboardingStateModel onboardingStateModel;
 
   @override
@@ -168,7 +158,7 @@ class _CleanTitleDisplay extends StatelessWidget {
 
       // Clean title
       Text(
-        translate(onboardingStateModel.title),
+        context.translate(onboardingStateModel.title),
         style: context.textTheme.titleXl.copyWith(
           color: CustomAppColors.slate800,
           fontWeight: FontWeight.bold,
@@ -184,7 +174,7 @@ class _CleanTitleDisplay extends StatelessWidget {
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Text(
-          translate(onboardingStateModel.subtitle),
+          context.translate(onboardingStateModel.subtitle),
           style: context.textTheme.bodyLg.copyWith(
             color: CustomAppColors.slate600,
             height: 1.5,

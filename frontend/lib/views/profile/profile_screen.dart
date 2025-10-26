@@ -5,7 +5,6 @@ import '../../provider/bottom_nav_provider.dart';
 import '../../provider/language_provider.dart';
 import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
-import '../../utils/localization/app_localizations.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import 'change_password_screen.dart';
 import 'help_support_screen.dart';
@@ -20,7 +19,6 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomNavProvider = context.read<BottomNavProvider>();
-    final translate = AppLocalizations.of(context)!.translate;
 
     return CustomMainScreenWithAppbar(
       showBackButton: false,
@@ -32,15 +30,15 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              translate('profile_general'),
+              context.translate('profile_general'),
               style: context.textTheme.titleLg,
             ),
             _CustomListTile(
-              title: translate('profile_edit_profile'),
+              title: context.translate('profile_edit_profile'),
               iconData: Icons.account_circle_outlined,
             ),
             _CustomListTile(
-              title: translate('profile_change_password'),
+              title: context.translate('profile_change_password'),
               iconData: Icons.lock_outlined,
               onCardTapped:
                   () => Navigator.of(context).push(
@@ -50,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
             ),
             _CustomListTile(
-              title: translate('profile_notifications'),
+              title: context.translate('profile_notifications'),
               iconData: Icons.notifications_outlined,
               onCardTapped:
                   () => Navigator.of(context).push(
@@ -60,7 +58,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
             ),
             _CustomListTile(
-              title: translate('profile_security'),
+              title: context.translate('profile_security'),
               iconData: Icons.shield_outlined,
               onCardTapped:
                   () => Navigator.of(context).push(
@@ -72,13 +70,13 @@ class ProfileScreen extends StatelessWidget {
             Consumer<LanguageProvider>(
               builder:
                   (context, value, child) => _CustomListTile(
-                    title: translate('profile_language'),
+                    title: context.translate('profile_language'),
                     iconData: Icons.language_outlined,
                     trailing:
                         context.read<LanguageProvider>().locale.languageCode ==
                                 'hi'
-                            ? translate('hindi')
-                            : translate('english'),
+                            ? context.translate('hindi')
+                            : context.translate('english'),
                     onCardTapped:
                         () => Navigator.of(context).push(
                           MaterialPageRoute(
@@ -89,11 +87,11 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8.0),
             Text(
-              translate('profile_preferences'),
+              context.translate('profile_preferences'),
               style: context.textTheme.titleLg,
             ),
             _CustomListTile(
-              title: translate('profile_legal_policies'),
+              title: context.translate('profile_legal_policies'),
               iconData: Icons.policy_outlined,
               onCardTapped:
                   () => Navigator.of(context).push(
@@ -103,7 +101,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
             ),
             _CustomListTile(
-              title: translate('profile_help_support'),
+              title: context.translate('profile_help_support'),
               iconData: Icons.help_outline_outlined,
               onCardTapped:
                   () => Navigator.of(context).push(
@@ -113,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
             ),
             _CustomListTile(
-              title: translate('profile_logout'),
+              title: context.translate('profile_logout'),
               iconData: Icons.logout_rounded,
               color: Colors.red,
               onCardTapped:

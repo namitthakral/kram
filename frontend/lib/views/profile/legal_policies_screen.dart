@@ -9,14 +9,13 @@ class LegalAndPolicies extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
     final headerStyle = context.textTheme.labelBase;
     final bodyStyle = context.textTheme.bodySm.copyWith(
       color: const Color(0xFF666876),
     );
 
     return CustomMainScreenWithAppbar(
-      title: translate('legal_policies'),
+      title: context.translate('legal_policies'),
       child: ListView(
         children: [
           Text('Policies', style: headerStyle),

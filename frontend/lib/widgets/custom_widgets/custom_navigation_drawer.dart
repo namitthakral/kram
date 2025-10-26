@@ -5,16 +5,15 @@ import '../../models/navigation_item_model.dart';
 import '../../provider/bottom_nav_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/custom_images.dart';
+import '../../utils/extensions.dart';
 import '../../utils/images/base_image.dart';
 import '../../utils/images/image_asset.dart';
-import '../../utils/localization/app_localizations.dart';
 
 class CustomNavigationDrawer extends StatelessWidget {
   const CustomNavigationDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
     final theme = Theme.of(context);
 
     return Container(
@@ -26,7 +25,7 @@ class CustomNavigationDrawer extends StatelessWidget {
       child: Column(
         children: [
           // User Header Section
-          _buildUserHeader(context, theme, translate),
+          _buildUserHeader(context, theme),
 
           const Divider(height: 1),
 
@@ -48,7 +47,6 @@ class CustomNavigationDrawer extends StatelessWidget {
                             item: item,
                             isSelected: isSelected,
                             onTap: () => navProvider.setIndex(index),
-                            translate: translate,
                           );
                         }).toList(),
                   ),
@@ -56,17 +54,13 @@ class CustomNavigationDrawer extends StatelessWidget {
           ),
 
           // Footer Section (optional - settings, logout, etc.)
-          _buildFooter(context, theme, translate),
+          _buildFooter(context, theme),
         ],
       ),
     );
   }
 
-  Widget _buildUserHeader(
-    BuildContext context,
-    ThemeData theme,
-    String Function(String, {Map<String, dynamic>? params}) translate,
-  ) => Container(
+  Widget _buildUserHeader(BuildContext context, ThemeData theme) => Container(
     padding: const EdgeInsets.all(24),
     child: Column(
       children: [
@@ -115,7 +109,6 @@ class CustomNavigationDrawer extends StatelessWidget {
     required NavigationItemModel item,
     required bool isSelected,
     required VoidCallback onTap,
-    required String Function(String, {Map<String, dynamic>? params}) translate,
   }) {
     const selectedColor = CustomAppColors.primary;
     final backgroundColor =
@@ -140,7 +133,7 @@ class CustomNavigationDrawer extends StatelessWidget {
           color: isSelected ? selectedColor : null,
         ),
         title: Text(
-          translate(item.labelKey),
+          context.translate(item.labelKey),
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: textColor,
@@ -153,11 +146,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter(
-    BuildContext context,
-    ThemeData theme,
-    String Function(String, {Map<String, dynamic>? params}) translate,
-  ) => Container(
+  Widget _buildFooter(BuildContext context, ThemeData theme) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       border: Border(top: BorderSide(color: theme.dividerColor)),
@@ -172,7 +161,10 @@ class CustomNavigationDrawer extends StatelessWidget {
             width: 24,
             fit: BoxFit.contain,
           ),
-          title: Text(translate('settings'), style: theme.textTheme.bodyMedium),
+          title: Text(
+            context.translate('settings'),
+            style: theme.textTheme.bodyMedium,
+          ),
           onTap: () {
             // Navigate to settings
           },

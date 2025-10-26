@@ -17,6 +17,7 @@ import 'provider/onboarding_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
 import 'provider/theme_provider.dart';
+import 'utils/extensions.dart';
 import 'utils/global_constants.dart';
 import 'utils/localization/app_localizations.dart';
 import 'utils/router_service.dart';
@@ -78,7 +79,7 @@ class EdVerseApp extends StatelessWidget {
       child: Consumer<LanguageProvider>(
         builder:
             (context, languageProvider, child) => MaterialApp.router(
-              title: AppLocalizations.of(context)?.translate('app_name'),
+              title: context.translate('app_name'),
               scaffoldMessengerKey: GlobalConstants.snackbarKey,
               debugShowCheckedModeBanner: false,
               themeMode: themeProvider.themeMode,

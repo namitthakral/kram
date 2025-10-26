@@ -6,7 +6,6 @@ import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/custom_images.dart';
 import '../../utils/extensions.dart';
-import '../../utils/localization/app_localizations.dart';
 import '../../utils/router_service.dart';
 import '../../utils/utils.dart';
 import 'custom_elevated_button.dart';
@@ -59,30 +58,21 @@ class CustomBottomSheet {
   }
 
   static void register({required BuildContext context}) {
-    final translate = AppLocalizations.of(context)?.translate;
-    if (translate == null) {
-      return;
-    }
-
     showCustomModalBottomSheet(
       context: context,
       config: BottomSheetConfig.halfHeight,
       child: _SuccessContent(
         iconUrl: CustomImages.iconTickCircle,
-        title: translate('register_success'),
-        description: translate('register_success_desc'),
-        buttonText: translate('go_to_homepage'),
+        title: context.translate('register_success'),
+        description: context.translate('register_success_desc'),
+        buttonText: context.translate('go_to_homepage'),
         onPressed: () => context.router.goToHome(),
       ),
     );
   }
 
   static void forgetPassword({required BuildContext context}) {
-    final translate = AppLocalizations.of(context)?.translate;
     final loginProvider = context.read<LoginProvider>();
-    if (translate == null) {
-      return;
-    }
 
     final controller = loginProvider.forgetPasswordEmailController;
     if (controller == null) {
@@ -93,11 +83,11 @@ class CustomBottomSheet {
       context: context,
       config: BottomSheetConfig.halfHeight,
       child: _ForgotPasswordContent(
-        title: translate('forgot_password'),
-        description: translate('email_or_phone_number_hint'),
+        title: context.translate('forgot_password'),
+        description: context.translate('email_or_phone_number_hint'),
         controller: controller,
-        hintText: translate('email_or_phone_number_hint'),
-        buttonText: translate('send_code'),
+        hintText: context.translate('email_or_phone_number_hint'),
+        buttonText: context.translate('send_code'),
         onPressed: () {
           context.router.goBack();
           forgetPasswordUpdate(context: context);
@@ -107,12 +97,7 @@ class CustomBottomSheet {
   }
 
   static void forgetPasswordUpdate({required BuildContext context}) {
-    final translate = AppLocalizations.of(context)?.translate;
     final provider = context.read<LoginProvider>();
-    if (translate == null) {
-      return;
-    }
-
     final passwordController = provider.changePasswordController;
     final confirmPasswordController = provider.changeConfirmPasswordController;
     if (passwordController == null || confirmPasswordController == null) {
@@ -123,14 +108,14 @@ class CustomBottomSheet {
       context: context,
       config: BottomSheetConfig.halfHeight,
       child: _PasswordUpdateContent(
-        title: translate('create_new_password'),
-        description: translate('email_or_phone_number_hint'),
-        passwordLabel: translate('password'),
-        confirmPasswordLabel: translate('confirm_password'),
+        title: context.translate('create_new_password'),
+        description: context.translate('email_or_phone_number_hint'),
+        passwordLabel: context.translate('password'),
+        confirmPasswordLabel: context.translate('confirm_password'),
         passwordController: passwordController,
         confirmPasswordController: confirmPasswordController,
-        passwordHint: translate('password_hint'),
-        buttonText: translate('profile_change_password'),
+        passwordHint: context.translate('password_hint'),
+        buttonText: context.translate('profile_change_password'),
         onPressed: provider.changePasswordButton,
       ),
     );
@@ -143,44 +128,34 @@ class CustomBottomSheet {
     required String total,
     VoidCallback? onCheckout,
   }) {
-    final translate = AppLocalizations.of(context)?.translate;
-    if (translate == null) {
-      return;
-    }
-
     showCustomModalBottomSheet(
       context: context,
       config: BottomSheetConfig.smallHeight,
       child: _CartPriceContent(
-        subtotalLabel: translate('subtotal'),
+        subtotalLabel: context.translate('subtotal'),
         subtotalValue: subtotal,
-        shippingLabel: translate('shipping'),
+        shippingLabel: context.translate('shipping'),
         shippingValue: shipping,
-        totalLabel: translate('total_amount'),
+        totalLabel: context.translate('total_amount'),
         totalValue: total,
-        checkoutText: translate('checkout'),
+        checkoutText: context.translate('checkout'),
         onCheckout: onCheckout ?? () => context.router.goBack(),
       ),
     );
   }
 
   static void showPromoCode({required BuildContext context}) {
-    final translate = AppLocalizations.of(context)?.translate;
-    if (translate == null) {
-      return;
-    }
-
     showCustomModalBottomSheet(
       context: context,
       config: BottomSheetConfig.smallHeight,
       child: const _PromoCodeContent(
-        // subtotalLabel: translate('subtotal'),
+        // subtotalLabel: context.translate('subtotal'),
         // subtotalValue: subtotal,
-        // shippingLabel: translate('shipping'),
+        // shippingLabel: context.translate('shipping'),
         // shippingValue: shipping,
-        // totalLabel: translate('total_amount'),
+        // totalLabel: context.translate('total_amount'),
         // totalValue: total,
-        // checkoutText: translate('checkout'),
+        // checkoutText: context.translate('checkout'),
         // onCheckout: onCheckout ?? () => context.router.goBack(),
       ),
     );
@@ -371,7 +346,6 @@ class _PromoCodeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return ListView.builder(
@@ -387,14 +361,17 @@ class _PromoCodeContent extends StatelessWidget {
               colorFilter: ColorFilter.mode(primaryColor, BlendMode.srcIn),
             ),
             title: Text(
-              translate(
+              context.translate(
                 'checkout_promo_cashback',
                 params: {'percentage': '35'},
               ),
               style: context.textTheme.titleSm,
             ),
             subtitle: Text(
-              translate('checkout_promo_expired_in', params: {'days': '2'}),
+              context.translate(
+                'checkout_promo_expired_in',
+                params: {'days': '2'},
+              ),
               style: context.textTheme.bodyXs.copyWith(
                 color: CustomAppColors.grey01,
               ),

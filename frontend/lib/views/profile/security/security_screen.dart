@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../provider/profile/security/security_provider.dart';
-import '../../../utils/localization/app_localizations.dart';
+import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
 class SecurityScreen extends StatefulWidget {
@@ -14,49 +14,44 @@ class SecurityScreen extends StatefulWidget {
 
 class _SecurityScreenState extends State<SecurityScreen> {
   @override
-  Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
-
-    return CustomMainScreenWithAppbar(
-      title: translate('security'),
-      child: Consumer<ProfileSecurityProvider>(
-        builder:
-            (context, profileSecurityProvider, child) => Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Color(0xFFE3E7EC)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile(
-                    title: Text(translate('face_id')),
-                    value: profileSecurityProvider.faceId,
-                    onChanged:
-                        (val) => profileSecurityProvider.setFaceId(faceId: val),
-                  ),
-                  const Divider(indent: 16.0, endIndent: 16.0),
-                  SwitchListTile(
-                    title: Text(translate('remember_password')),
-                    value: profileSecurityProvider.rememberPassword,
-                    onChanged:
-                        (val) => profileSecurityProvider.setRememberPassword(
-                          rememberPassword: val,
-                        ),
-                  ),
-                  const Divider(indent: 16.0, endIndent: 16.0),
-                  SwitchListTile(
-                    title: Text(translate('touch_id')),
-                    value: profileSecurityProvider.touchId,
-                    onChanged:
-                        (val) =>
-                            profileSecurityProvider.setTouchId(touchId: val),
-                  ),
-                ],
-              ),
+  Widget build(BuildContext context) => CustomMainScreenWithAppbar(
+    title: context.translate('security'),
+    child: Consumer<ProfileSecurityProvider>(
+      builder:
+          (context, profileSecurityProvider, child) => Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFE3E7EC)),
             ),
-      ),
-    );
-  }
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SwitchListTile(
+                  title: Text(context.translate('face_id')),
+                  value: profileSecurityProvider.faceId,
+                  onChanged:
+                      (val) => profileSecurityProvider.setFaceId(faceId: val),
+                ),
+                const Divider(indent: 16.0, endIndent: 16.0),
+                SwitchListTile(
+                  title: Text(context.translate('remember_password')),
+                  value: profileSecurityProvider.rememberPassword,
+                  onChanged:
+                      (val) => profileSecurityProvider.setRememberPassword(
+                        rememberPassword: val,
+                      ),
+                ),
+                const Divider(indent: 16.0, endIndent: 16.0),
+                SwitchListTile(
+                  title: Text(context.translate('touch_id')),
+                  value: profileSecurityProvider.touchId,
+                  onChanged:
+                      (val) => profileSecurityProvider.setTouchId(touchId: val),
+                ),
+              ],
+            ),
+          ),
+    ),
+  );
 }

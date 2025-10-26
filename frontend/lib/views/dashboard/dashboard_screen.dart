@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/enum.dart';
-import '../../utils/localization/app_localizations.dart';
+import '../../utils/extensions.dart';
 import '../../utils/responsive_utils.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
@@ -10,20 +10,16 @@ class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final translate = AppLocalizations.of(context)!.translate;
-
-    return CustomMainScreenWithAppbar(
-      appBarType: AppBarType.profile,
-      showBackButton: false,
-      title: translate('dashboard_greeting', params: {'name': 'Deepak'}),
-      child: ResponsiveLayout(
-        mobile: _buildMobileLayout(context),
-        tablet: _buildTabletLayout(context),
-        desktop: _buildDesktopLayout(context),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => CustomMainScreenWithAppbar(
+    appBarType: AppBarType.profile,
+    showBackButton: false,
+    title: context.translate('dashboard_greeting', params: {'name': 'Deepak'}),
+    child: ResponsiveLayout(
+      mobile: _buildMobileLayout(context),
+      tablet: _buildTabletLayout(context),
+      desktop: _buildDesktopLayout(context),
+    ),
+  );
 
   Widget _buildMobileLayout(BuildContext context) =>
       const SingleChildScrollView(
