@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 
 import '../../provider/bottom_nav_provider.dart';
 import '../../provider/language_provider.dart';
+import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
+import '../../utils/router_service.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import 'change_password_screen.dart';
 import 'help_support_screen.dart';
@@ -114,15 +116,83 @@ class ProfileScreen extends StatelessWidget {
               title: context.translate('profile_logout'),
               iconData: Icons.logout_rounded,
               color: Colors.red,
-              onCardTapped:
-                  () => showCustomSnackbar(
-                    message: '123213',
-                    type: SnackbarType.success,
-                  ),
+              onCardTapped: () => _showLogoutDialog(context),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (BuildContext dialogContext) => AlertDialog(
+            title: Text(
+              context.translate('logout_title'),
+              style: context.textTheme.titleLg.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              context.translate('logout_message'),
+              style: context.textTheme.bodyBase,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(
+                  context.translate('cancel'),
+                  style: context.textTheme.labelBase.copyWith(
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+
+                  final loginProvider = context.read<LoginProvider>();
+
+                  // Show loading indicator
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder:
+                        (BuildContext loadingContext) =>
+                            const Center(child: CircularProgressIndicator()),
+                  );
+
+                  // Perform logout
+                  await loginProvider.logout();
+
+                  // Close loading indicator
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
+
+                  // Navigate to login screen
+                  if (context.mounted) {
+                    context.router.goToLogin();
+
+                    // Show success message
+                    showCustomSnackbar(
+                      message: context.translate('logout_success'),
+                      type: SnackbarType.success,
+                    );
+                  }
+                },
+                child: Text(
+                  context.translate('logout'),
+                  style: context.textTheme.labelBase.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
     );
   }
 }

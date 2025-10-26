@@ -36,5 +36,10 @@
   "privacy_policy": "गोपनीयता नीति",
   "and": " और ",
   "terms_of_service": "सेवा की शर्तें",
-  "copyright_text": "© 2025 EdVerse. सभी अधिकार सुरक्षित।"
+  "copyright_text": "© 2025 EdVerse. सभी अधिकार सुरक्षित।",
+  "logout_title": "लॉगआउट",
+  "logout_message": "क्या आप वाकई लॉगआउट करना चाहते हैं?",
+  "logout": "लॉगआउट",
+  "cancel": "रद्द करें",
+  "logout_success": "आप सफलतापूर्वक लॉगआउट हो गए हैं"
 }

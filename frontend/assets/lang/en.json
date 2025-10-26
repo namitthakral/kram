@@ -118,5 +118,10 @@
   "privacy_policy": "Privacy Policy",
   "and": " and ",
   "terms_of_service": "Terms of Service",
-  "copyright_text": "© 2025 EdVerse. All rights reserved."
+  "copyright_text": "© 2025 EdVerse. All rights reserved.",
+  "logout_title": "Logout",
+  "logout_message": "Are you sure you want to logout?",
+  "logout": "Logout",
+  "cancel": "Cancel",
+  "logout_success": "You have been logged out successfully"
 }

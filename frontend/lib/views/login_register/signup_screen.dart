@@ -136,19 +136,19 @@ class SignUpScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Username field
-        Text(
-          context.translate('username'),
-          style: context.textTheme.labelBase.copyWith(
-            fontWeight: FontWeight.w600,
-            color: CustomAppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        CustomTextField(
-          controller: provider.usernameController,
-          hintText: context.translate('username_hint'),
-        ),
-        const SizedBox(height: 20),
+        // Text(
+        //   context.translate('username'),
+        //   style: context.textTheme.labelBase.copyWith(
+        //     fontWeight: FontWeight.w600,
+        //     color: CustomAppColors.textPrimary,
+        //   ),
+        // ),
+        // const SizedBox(height: 8),
+        // CustomTextField(
+        //   controller: provider.usernameController,
+        //   hintText: context.translate('username_hint'),
+        // ),
+        // const SizedBox(height: 20),
 
         // Email field
         Text(

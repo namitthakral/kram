@@ -81,7 +81,7 @@ class CustomBottomSheet {
 
     showCustomModalBottomSheet(
       context: context,
-      config: BottomSheetConfig.halfHeight,
+      config: const BottomSheetConfig(height: 0.5, canDismiss: true),
       child: _ForgotPasswordContent(
         title: context.translate('forgot_password'),
         description: context.translate('email_or_phone_number_hint'),

@@ -34,8 +34,8 @@ class LoginProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRememberPassword(bool value) {
-    _rememberPassword = value;
+  void updateRememberPassword({bool rememberPass = false}) {
+    _rememberPassword = rememberPass;
     notifyListeners();
   }
 
@@ -102,8 +102,8 @@ class LoginProvider extends ChangeNotifier {
 
       log('Login successful for user: ${response.user.email}');
       updateLoginAccountClicked(loginAccountClicked: true);
-    } catch (e) {
-      String errorMessage = 'Login failed. Please try again.';
+    } on Exception catch (e) {
+      var errorMessage = 'Login failed. Please try again.';
 
       if (e.toString().contains('Invalid credentials')) {
         errorMessage =
@@ -122,16 +122,25 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
+  /// Logout user and clear all stored data
   Future<void> logout() async {
     _setLoading(true);
     try {
       await _authService.logout();
+
+      // Clear local state
       _currentUser = null;
+      emailController?.clear();
+      passwordController?.clear();
+      updateLoginAccountClicked(loginAccountClicked: false);
       clearError();
+
       log('Logout successful');
-    } catch (e) {
+    } on Exception catch (e) {
       _setError('Logout failed: $e');
       log('Logout failed: $e');
+      // Even if logout fails, clear local data
+      _currentUser = null;
     } finally {
       _setLoading(false);
     }
@@ -144,7 +153,7 @@ class LoginProvider extends ChangeNotifier {
         _currentUser = await _authService.getCurrentUser();
       }
       return isLoggedIn;
-    } catch (e) {
+    } on Exception catch (e) {
       log('Error checking login status: $e');
       return false;
     }

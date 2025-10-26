@@ -6,6 +6,87 @@ class LoginRequest {
   Map<String, dynamic> toJson() => {'email': email, 'password': password};
 }
 
+class RegisterRequest {
+  RegisterRequest({
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.password,
+    required this.roleId,
+    this.phoneNumber,
+  });
+
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+  final int roleId;
+  final String? phoneNumber;
+
+  Map<String, dynamic> toJson() => {
+    'firstName': firstName,
+    'lastName': lastName,
+    'email': email,
+    'password': password,
+    'roleId': roleId,
+    if (phoneNumber != null) 'phoneNumber': phoneNumber,
+  };
+}
+
+class RegisterResponse {
+  RegisterResponse({
+    required this.success,
+    required this.message,
+    required this.data,
+  });
+
+  factory RegisterResponse.fromJson(Map<String, dynamic> json) =>
+      RegisterResponse(
+        success: json['success'],
+        message: json['message'],
+        data: RegisteredUser.fromJson(json['data']),
+      );
+  final bool success;
+  final String message;
+  final RegisteredUser data;
+}
+
+class RegisteredUser {
+  RegisteredUser({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.name,
+    required this.email,
+    required this.status,
+    required this.createdAt,
+    this.phoneNumber,
+    this.role,
+  });
+
+  factory RegisteredUser.fromJson(Map<String, dynamic> json) => RegisteredUser(
+    id: json['id'],
+    firstName: json['firstName'],
+    lastName: json['lastName'],
+    name: json['name'],
+    email: json['email'],
+    phoneNumber: json['phoneNumber'],
+    role: json['role'] != null ? Role.fromJson(json['role']) : null,
+    status: json['status'],
+    createdAt: DateTime.parse(json['createdAt']),
+  );
+
+  final int id;
+  final String firstName;
+  final String lastName;
+  final String name;
+  final String email;
+  final String? phoneNumber;
+  final Role? role;
+  final String status;
+  final DateTime createdAt;
+}
+
 class LoginResponse {
   LoginResponse({
     required this.user,

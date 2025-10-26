@@ -55,6 +55,38 @@ class AuthService {
     }
   }
 
+  /// Register new user
+  Future<RegisterResponse> register(RegisterRequest request) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/auth/register',
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final registerResponse = RegisterResponse.fromJson(response.data);
+        return registerResponse;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Registration failed',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw Exception('User with this email already exists');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage = e.response?.data['message'] ?? 'Invalid data';
+        throw Exception(errorMessage);
+      } else {
+        throw Exception('Registration failed: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Registration failed: $e');
+    }
+  }
+
   /// Logout user
   Future<void> logout() async {
     try {

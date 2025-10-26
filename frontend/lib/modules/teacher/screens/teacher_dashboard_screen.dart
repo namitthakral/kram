@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
-import '../../../widgets/custom_widgets/custom_cupertino_segmented.dart';
+import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../models/dashboard_stats.dart';
 import '../providers/performance_tab_provider.dart';
@@ -304,7 +304,7 @@ class TeacherDashboardScreen extends StatelessWidget {
       ),
       const SizedBox(height: 20),
       const AttendanceTrendsChart(),
-      const SizedBox(height: 20),
+
       // Legend
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -349,10 +349,10 @@ class TeacherDashboardScreen extends StatelessWidget {
     ],
   );
 
-  Widget _buildSubjectPerformanceTab() => Column(
+  Widget _buildSubjectPerformanceTab() => const Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
+      Text(
         'Subject Performance Overview',
         style: TextStyle(
           fontSize: 18,
@@ -360,20 +360,20 @@ class TeacherDashboardScreen extends StatelessWidget {
           color: Color(0xFF1e293b),
         ),
       ),
-      const SizedBox(height: 4),
-      const Text(
+      SizedBox(height: 4),
+      Text(
         'Average scores across different subjects',
         style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
       ),
-      const SizedBox(height: 20),
-      const SubjectPerformanceChart(),
+      SizedBox(height: 20),
+      SubjectPerformanceChart(),
     ],
   );
 
-  Widget _buildGradeDistributionTab() => Column(
+  Widget _buildGradeDistributionTab() => const Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
+      Text(
         'Grade Distribution',
         style: TextStyle(
           fontSize: 18,
@@ -381,13 +381,13 @@ class TeacherDashboardScreen extends StatelessWidget {
           color: Color(0xFF1e293b),
         ),
       ),
-      const SizedBox(height: 4),
-      const Text(
+      SizedBox(height: 4),
+      Text(
         'Current grade distribution across all students',
         style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
       ),
-      const SizedBox(height: 20),
-      const GradeDistributionChart(),
+      SizedBox(height: 20),
+      GradeDistributionChart(),
     ],
   );
 

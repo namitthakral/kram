@@ -6,6 +6,7 @@ import '../provider/bottom_nav_provider.dart';
 import '../utils/responsive_utils.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
 import '../widgets/custom_widgets/custom_navigation_drawer.dart';
+import 'profile/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -16,10 +17,10 @@ class HomeScreen extends StatelessWidget {
     const Center(child: Text('Screen 2')),
     const Center(child: Text('Screen 3')),
     const Center(child: Text('Screen 4')),
-    const Center(child: Text('Screen 5')),
+    // const Center(child: Text('Screen 5')),
     // StoreMain(),
     // Center(child: Text('Message Screen')),
-    // ProfileScreen(),
+    const ProfileScreen(),
   ];
 
   @override
