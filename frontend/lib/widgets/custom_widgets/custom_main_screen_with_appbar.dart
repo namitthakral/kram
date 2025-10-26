@@ -280,10 +280,10 @@ class _CustomAppBar extends StatelessWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       centerTitle: true,
-      bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(0),
-        child: Divider(color: Color(0xFFF3F3F3)),
-      ),
+      // bottom: const PreferredSize(
+      //   preferredSize: Size.fromHeight(0),
+      //   child: Divider(color: Color(0xFFF3F3F3)),
+      // ),
       leading:
           showBackButton
               ? IconButton(
@@ -304,7 +304,12 @@ class _CustomAppBar extends StatelessWidget {
                 },
               )
               : null,
-      title: Text(title, style: context.textTheme.labelBase),
+      title: Text(
+        title,
+        style: context.textTheme.labelBase.copyWith(
+          color: CustomAppColors.white,
+        ),
+      ),
       actions: appbarAction,
       actionsPadding: const EdgeInsets.only(right: 12),
     );

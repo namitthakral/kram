@@ -25,7 +25,6 @@ class TeacherDashboardScreen extends StatelessWidget {
       title: context.translate('Teacher Dashboard'),
       showBackButton: false,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -104,12 +103,12 @@ class TeacherDashboardScreen extends StatelessWidget {
   );
 
   Widget _buildStatsSection(bool isMobile) => GridView.count(
-    crossAxisCount: isMobile ? 1 : 4,
+    crossAxisCount: isMobile ? 2 : 4,
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
-    crossAxisSpacing: 16,
-    mainAxisSpacing: 16,
-    childAspectRatio: isMobile ? 4 : 1.5,
+    crossAxisSpacing: isMobile ? 12 : 16,
+    mainAxisSpacing: isMobile ? 12 : 16,
+    childAspectRatio: isMobile ? 1.3 : 1.5,
     children: const [
       StatCard(
         title: 'Total Students',
@@ -146,8 +145,7 @@ class TeacherDashboardScreen extends StatelessWidget {
     ],
   );
 
-  Widget _buildRecentActivitySection({bool isMobile = false}) => Container(
-    padding: const EdgeInsets.all(20),
+  Widget _buildRecentActivitySection({bool isMobile = false}) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
@@ -176,8 +174,7 @@ class TeacherDashboardScreen extends StatelessWidget {
     ),
   );
 
-  Widget _buildQuickActionsSection({bool isMobile = false}) => Container(
-    padding: const EdgeInsets.all(20),
+  Widget _buildQuickActionsSection({bool isMobile = false}) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
@@ -230,8 +227,7 @@ class TeacherDashboardScreen extends StatelessWidget {
     ),
   );
 
-  Widget _buildChartsSection(bool isMobile) => Container(
-    padding: const EdgeInsets.all(20),
+  Widget _buildChartsSection(bool isMobile) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),

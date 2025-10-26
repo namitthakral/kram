@@ -23,16 +23,15 @@ class LoginScreen extends StatelessWidget {
 
     return CustomMainScreenWithAppbar(
       title: context.translate('login_account'),
+      showBackButton: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32.0),
+        // padding: const EdgeInsets.all(32.0),
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 40),
-
                 // Logo and Title Section
                 _buildHeader(context, themeProvider),
                 const SizedBox(height: 40),
