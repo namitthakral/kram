@@ -158,9 +158,6 @@ class ThemeProvider extends ChangeNotifier {
       dragHandleSize: Size(60, 6),
       showDragHandle: true,
     ),
-    appBarTheme: const AppBarThemeData(
-      backgroundColor: CustomAppColors.primary,
-    ),
   );
 
   ThemeData get darkTheme => ThemeData(
