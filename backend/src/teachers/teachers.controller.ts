@@ -1,27 +1,27 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
-  UseGuards,
-  ParseIntPipe,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common'
-import { TeachersService } from './teachers.service'
-import {
-  CreateTeacherDto,
-  UpdateTeacherDto,
-  TeacherQueryDto,
-  AssignSubjectsDto,
-} from './dto/teacher.dto'
+import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
+import {
+  AssignSubjectsDto,
+  CreateTeacherDto,
+  TeacherQueryDto,
+  UpdateTeacherDto,
+} from './dto/teacher.dto'
+import { TeachersService } from './teachers.service'
 
 @Controller('teachers')
 @UseGuards(JwtAuthGuard)
@@ -86,6 +86,35 @@ export class TeachersController {
   @Roles('super_admin', 'admin', 'teacher')
   getTeacherStats(@Param('id', ParseIntPipe) id: number) {
     return this.teachersService.getTeacherStats(id)
+  }
+
+  @Get(':id/dashboard-stats')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getDashboardStats(@Param('id', ParseIntPipe) id: number) {
+    return this.teachersService.getDashboardStats(id)
+  }
+
+  @Get(':id/recent-activity')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getRecentStudentActivity(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('limit') limit?: string
+  ) {
+    const parsedLimit = limit ? parseInt(limit, 10) : 10
+    return this.teachersService.getRecentStudentActivity(id, parsedLimit)
+  }
+
+  @Get(':id/attendance-summary')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getAttendanceSummary(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('date') date?: string,
+    @Query('period') period?: 'daily' | 'weekly' | 'monthly'
+  ) {
+    return this.teachersService.getAttendanceSummary(id, date, period)
   }
 
   @Patch(':id')

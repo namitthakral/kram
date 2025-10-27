@@ -1,16 +1,16 @@
+import { EmploymentType, TeacherStatus } from '@prisma/client'
+import { Transform } from 'class-transformer'
 import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsDateString,
-  IsInt,
-  IsDecimal,
   IsArray,
+  IsDateString,
+  IsDecimal,
   IsEmail,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
   MinLength,
 } from 'class-validator'
-import { Transform } from 'class-transformer'
-import { EmploymentType, TeacherStatus } from '@prisma/client'
 
 export class CreateTeacherDto {
   // User fields - will be used to create the user automatically

@@ -1,17 +1,22 @@
+import { Prisma } from '.prisma/client'
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
-  ConflictException,
 } from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import {
-  CreateTeacherDto,
-  UpdateTeacherDto,
-  TeacherQueryDto,
+  TeacherAttendanceSummary,
+  TeacherDashboardStats,
+  TeacherStudentActivity,
+} from '../types/teacher.types'
+import {
   AssignSubjectsDto,
+  CreateTeacherDto,
+  TeacherQueryDto,
+  UpdateTeacherDto,
 } from './dto/teacher.dto'
-import { Prisma } from '.prisma/client'
-import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class TeachersService {
@@ -529,6 +534,432 @@ export class TeachersService {
       currentSemesterClasses,
       recentAssignments,
       upcomingExaminations,
+    }
+  }
+
+  async getDashboardStats(teacherId: number): Promise<TeacherDashboardStats> {
+    // Check if teacher exists
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id: teacherId },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with ID ${teacherId} not found`)
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+    const [totalStudents, todayAttendance, monthlyAttendanceStats] =
+      await Promise.all([
+        // Get total students across all teacher's active classes
+        this.prisma.classSection.aggregate({
+          where: {
+            teacherId,
+            status: 'ACTIVE',
+          },
+          _sum: { currentEnrollment: true },
+        }),
+
+        // Today's attendance for teacher's classes
+        this.prisma.attendance.groupBy({
+          by: ['status'],
+          where: {
+            section: {
+              teacherId,
+              status: 'ACTIVE',
+            },
+            date: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+          _count: {
+            status: true,
+          },
+        }),
+
+        // Monthly attendance statistics
+        this.prisma.attendance.findMany({
+          where: {
+            section: {
+              teacherId,
+              status: 'ACTIVE',
+            },
+            date: {
+              gte: startOfMonth,
+              lte: endOfMonth,
+            },
+          },
+          select: {
+            status: true,
+          },
+        }),
+      ])
+
+    // Calculate attendance statistics
+    const totalStudentsCount = totalStudents._sum.currentEnrollment || 0
+    const presentToday =
+      todayAttendance.find(a => a.status === 'PRESENT')?._count.status || 0
+    const absentToday =
+      todayAttendance.find(a => a.status === 'ABSENT')?._count.status || 0
+    const lateToday =
+      todayAttendance.find(a => a.status === 'LATE')?._count.status || 0
+
+    // Calculate monthly average
+    const totalMonthlyRecords = monthlyAttendanceStats.length
+    const presentMonthly = monthlyAttendanceStats.filter(
+      a => a.status === 'PRESENT' || a.status === 'LATE'
+    ).length
+
+    const avgAttendanceThisMonth =
+      totalMonthlyRecords > 0
+        ? Math.round((presentMonthly / totalMonthlyRecords) * 100 * 10) / 10
+        : 0
+
+    const attendancePercentageToday =
+      totalStudentsCount > 0
+        ? Math.round((presentToday / totalStudentsCount) * 100 * 10) / 10
+        : 0
+
+    return {
+      totalStudents: totalStudentsCount,
+      presentToday,
+      absentToday,
+      lateToday,
+      attendancePercentageToday,
+      avgAttendanceThisMonth,
+    }
+  }
+
+  async getRecentStudentActivity(
+    teacherId: number,
+    limit: number = 10
+  ): Promise<TeacherStudentActivity[]> {
+    // Check if teacher exists
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id: teacherId },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with ID ${teacherId} not found`)
+    }
+
+    // Get class section IDs for this teacher
+    const classSections = await this.prisma.classSection.findMany({
+      where: {
+        teacherId,
+        status: 'ACTIVE',
+      },
+      select: { id: true },
+    })
+
+    const sectionIds = classSections.map(cs => cs.id)
+
+    if (sectionIds.length === 0) {
+      return []
+    }
+
+    // Get students who have attendance records in teacher's sections
+    const studentsWithActivity = await this.prisma.student.findMany({
+      where: {
+        attendance: {
+          some: {
+            sectionId: { in: sectionIds },
+          },
+        },
+        status: 'ACTIVE',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            name: true,
+            lastLogin: true,
+          },
+        },
+        attendance: {
+          where: {
+            sectionId: { in: sectionIds },
+          },
+          orderBy: {
+            date: 'desc',
+          },
+          take: 10,
+          select: {
+            date: true,
+            status: true,
+          },
+        },
+        submissions: {
+          where: {
+            assignment: {
+              teacherId,
+            },
+          },
+          orderBy: {
+            submittedAt: 'desc',
+          },
+          take: 1,
+          select: {
+            submittedAt: true,
+            marksObtained: true,
+            assignment: {
+              select: {
+                maxMarks: true,
+              },
+            },
+          },
+        },
+        examResults: {
+          where: {
+            exam: {
+              createdBy: teacherId,
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 5,
+          select: {
+            marksObtained: true,
+            grade: true,
+            exam: {
+              select: {
+                totalMarks: true,
+              },
+            },
+          },
+        },
+      },
+      take: limit,
+      orderBy: {
+        user: {
+          lastLogin: 'desc',
+        },
+      },
+    })
+
+    // Format the response
+    return studentsWithActivity.map(student => {
+      // Calculate attendance percentage
+      const totalAttendance = student.attendance.length
+      const presentCount = student.attendance.filter(
+        a => a.status === 'PRESENT' || a.status === 'LATE'
+      ).length
+      const attendancePercentage =
+        totalAttendance > 0
+          ? Math.round((presentCount / totalAttendance) * 100)
+          : 0
+
+      // Calculate average grade
+      let averageGrade = 'N/A'
+      let averagePercentage = 0
+
+      if (student.examResults.length > 0) {
+        const totalMarks = student.examResults.reduce((sum, result) => {
+          const marks =
+            typeof result.marksObtained === 'number'
+              ? result.marksObtained
+              : parseFloat(result.marksObtained?.toString() || '0')
+          return sum + marks
+        }, 0)
+
+        const totalPossible = student.examResults.reduce((sum, result) => {
+          return sum + result.exam.totalMarks
+        }, 0)
+
+        if (totalPossible > 0) {
+          averagePercentage = Math.round((totalMarks / totalPossible) * 100)
+
+          // Assign letter grade
+          if (averagePercentage >= 90) averageGrade = 'A'
+          else if (averagePercentage >= 80) averageGrade = 'A-'
+          else if (averagePercentage >= 75) averageGrade = 'B+'
+          else if (averagePercentage >= 70) averageGrade = 'B'
+          else if (averagePercentage >= 65) averageGrade = 'B-'
+          else if (averagePercentage >= 60) averageGrade = 'C+'
+          else if (averagePercentage >= 55) averageGrade = 'C'
+          else if (averagePercentage >= 50) averageGrade = 'D'
+          else averageGrade = 'F'
+        }
+      }
+
+      // Get last active time
+      const lastSubmission = student.submissions[0]?.submittedAt
+      const lastLogin = student.user.lastLogin
+      const lastActivity = lastSubmission || lastLogin
+
+      let lastActiveText = 'No recent activity'
+      if (lastActivity) {
+        const diffMs = Date.now() - new Date(lastActivity).getTime()
+        const diffMins = Math.floor(diffMs / 60000)
+        const diffHours = Math.floor(diffMs / 3600000)
+        const diffDays = Math.floor(diffMs / 86400000)
+
+        if (diffMins < 60) {
+          lastActiveText = `${diffMins} mins ago`
+        } else if (diffHours < 24) {
+          lastActiveText = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+        } else {
+          lastActiveText = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+        }
+      }
+
+      return {
+        id: student.id,
+        name: student.user.name,
+        firstName: student.user.firstName,
+        lastName: student.user.lastName,
+        initials: `${student.user.firstName[0]}${student.user.lastName[0]}`,
+        lastActive: lastActiveText,
+        lastActivityDate: lastActivity,
+        grade: averageGrade,
+        percentage: averagePercentage,
+        attendancePercentage,
+        admissionNumber: student.admissionNumber,
+        rollNumber: student.rollNumber,
+      }
+    })
+  }
+
+  async getAttendanceSummary(
+    teacherId: number,
+    date?: string,
+    period: 'daily' | 'weekly' | 'monthly' = 'daily'
+  ): Promise<TeacherAttendanceSummary> {
+    // Check if teacher exists
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id: teacherId },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with ID ${teacherId} not found`)
+    }
+
+    const targetDate = date ? new Date(date) : new Date()
+    let startDate: Date
+    let endDate: Date
+
+    // Calculate date range based on period
+    switch (period) {
+      case 'daily':
+        startDate = new Date(targetDate)
+        startDate.setHours(0, 0, 0, 0)
+        endDate = new Date(targetDate)
+        endDate.setHours(23, 59, 59, 999)
+        break
+
+      case 'weekly':
+        startDate = new Date(targetDate)
+        startDate.setDate(targetDate.getDate() - targetDate.getDay())
+        startDate.setHours(0, 0, 0, 0)
+        endDate = new Date(startDate)
+        endDate.setDate(startDate.getDate() + 6)
+        endDate.setHours(23, 59, 59, 999)
+        break
+
+      case 'monthly':
+        startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
+        endDate = new Date(
+          targetDate.getFullYear(),
+          targetDate.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        )
+        break
+    }
+
+    // Get attendance records
+    const attendanceRecords = await this.prisma.attendance.findMany({
+      where: {
+        section: {
+          teacherId,
+          status: 'ACTIVE',
+        },
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                name: true,
+              },
+            },
+          },
+        },
+        section: {
+          include: {
+            course: {
+              select: {
+                courseName: true,
+                courseCode: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    })
+
+    // Group by status
+    const summary = attendanceRecords.reduce(
+      (acc, record) => {
+        acc[record.status.toLowerCase()] =
+          (acc[record.status.toLowerCase()] || 0) + 1
+        acc.total++
+        return acc
+      },
+      { present: 0, absent: 0, late: 0, excused: 0, total: 0 }
+    )
+
+    // Calculate percentage
+    const attendancePercentage =
+      summary.total > 0
+        ? Math.round(
+            ((summary.present + summary.late) / summary.total) * 100 * 10
+          ) / 10
+        : 0
+
+    return {
+      period,
+      startDate,
+      endDate,
+      summary,
+      attendancePercentage,
+      records: attendanceRecords.map(record => ({
+        id: record.id,
+        date: record.date,
+        status: record.status,
+        student: {
+          id: record.student.id,
+          name: record.student.user.name,
+          admissionNumber: record.student.admissionNumber,
+        },
+        course: {
+          name: record.section.course.courseName,
+          code: record.section.course.courseCode,
+        },
+        remarks: record.remarks,
+      })),
     }
   }
 }

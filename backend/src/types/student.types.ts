@@ -1,7 +1,7 @@
-import { StudentType, ResidentialStatus, StudentStatus } from '@prisma/client'
+import { ResidentialStatus, StudentStatus, StudentType } from '@prisma/client'
 
 // Re-export Prisma enums for convenience
-export { StudentType, ResidentialStatus, StudentStatus }
+export { ResidentialStatus, StudentStatus, StudentType }
 
 // Student Types
 export interface Student {

@@ -43,3 +43,82 @@ export interface CreateTeacherRequest {
   researchInterests?: string
   publications?: string
 }
+
+// Teacher Dashboard Types
+export interface TeacherDashboardStats {
+  totalStudents: number
+  presentToday: number
+  absentToday: number
+  lateToday: number
+  attendancePercentageToday: number
+  avgAttendanceThisMonth: number
+}
+
+export interface TeacherStudentActivity {
+  id: number
+  name: string
+  firstName: string
+  lastName: string
+  initials: string
+  lastActive: string
+  lastActivityDate: Date | null
+  grade: string
+  percentage: number
+  attendancePercentage: number
+  admissionNumber: string
+  rollNumber: string | null
+}
+
+export interface TeacherAttendanceSummary {
+  period: 'daily' | 'weekly' | 'monthly'
+  startDate: Date
+  endDate: Date
+  summary: {
+    present: number
+    absent: number
+    late: number
+    excused: number
+    total: number
+  }
+  attendancePercentage: number
+  records: TeacherAttendanceRecord[]
+}
+
+export interface TeacherAttendanceRecord {
+  id: number
+  date: Date
+  status: string
+  student: {
+    id: number
+    name: string
+    admissionNumber: string
+  }
+  course: {
+    name: string
+    code: string
+  }
+  remarks: string | null
+}
+
+// Additional teacher dashboard-related types
+export type TeacherAttendancePeriod = 'daily' | 'weekly' | 'monthly'
+
+export interface TeacherAttendanceStatusCount {
+  present: number
+  absent: number
+  late: number
+  excused: number
+  total: number
+}
+
+export interface TeacherStudentGradeInfo {
+  grade: string
+  percentage: number
+  totalExams: number
+}
+
+export interface TeacherDashboardFilters {
+  date?: string
+  period?: TeacherAttendancePeriod
+  limit?: number
+}
