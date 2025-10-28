@@ -90,18 +90,42 @@ class RegisteredUser {
 class LoginResponse {
   LoginResponse({
     required this.user,
-    required this.accessToken,
-    required this.refreshToken,
+    required this.tokens,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
     user: User.fromJson(json['user']),
-    accessToken: json['accessToken'],
-    refreshToken: json['refreshToken'],
+    tokens: AuthTokens.fromJson(json['tokens']),
   );
   final User user;
+  final AuthTokens tokens;
+
+  // Convenience getters for backward compatibility
+  String get accessToken => tokens.accessToken;
+  String get refreshToken => tokens.refreshToken;
+}
+
+class AuthTokens {
+  AuthTokens({
+    required this.accessToken,
+    required this.refreshToken,
+    required this.expiresIn,
+  });
+
+  factory AuthTokens.fromJson(Map<String, dynamic> json) => AuthTokens(
+    accessToken: json['accessToken'],
+    refreshToken: json['refreshToken'],
+    expiresIn: json['expiresIn'],
+  );
   final String accessToken;
   final String refreshToken;
+  final int expiresIn;
+
+  Map<String, dynamic> toJson() => {
+    'accessToken': accessToken,
+    'refreshToken': refreshToken,
+    'expiresIn': expiresIn,
+  };
 }
 
 class User {
@@ -218,21 +242,85 @@ class Student {
 }
 
 class Teacher {
-  Teacher({required this.id, required this.teacherId, this.employeeId});
+  Teacher({
+    required this.id,
+    required this.userId,
+    required this.institutionId,
+    required this.employeeId,
+    required this.designation,
+    required this.experienceYears,
+    required this.employmentType,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    this.specialization,
+    this.qualification,
+    this.joinDate,
+    this.salary,
+    this.officeLocation,
+    this.officeHours,
+    this.researchInterests,
+    this.publications,
+  });
 
   factory Teacher.fromJson(Map<String, dynamic> json) => Teacher(
     id: json['id'],
-    teacherId: json['teacherId'],
+    userId: json['userId'],
+    institutionId: json['institutionId'],
     employeeId: json['employeeId'],
+    designation: json['designation'],
+    specialization: json['specialization'],
+    qualification: json['qualification'],
+    experienceYears: json['experienceYears'],
+    joinDate: json['joinDate'] != null ? DateTime.parse(json['joinDate']) : null,
+    salary: json['salary'],
+    employmentType: json['employmentType'],
+    officeLocation: json['officeLocation'],
+    officeHours: json['officeHours'],
+    researchInterests: json['researchInterests'],
+    publications: json['publications'],
+    status: json['status'],
+    createdAt: DateTime.parse(json['createdAt']),
+    updatedAt: DateTime.parse(json['updatedAt']),
   );
   final int id;
-  final String teacherId;
-  final String? employeeId;
+  final int userId;
+  final int institutionId;
+  final String employeeId;
+  final String designation;
+  final String? specialization;
+  final String? qualification;
+  final int experienceYears;
+  final DateTime? joinDate;
+  final String? salary;
+  final String employmentType;
+  final String? officeLocation;
+  final String? officeHours;
+  final String? researchInterests;
+  final String? publications;
+  final String status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'teacherId': teacherId,
+    'userId': userId,
+    'institutionId': institutionId,
     'employeeId': employeeId,
+    'designation': designation,
+    'specialization': specialization,
+    'qualification': qualification,
+    'experienceYears': experienceYears,
+    'joinDate': joinDate?.toIso8601String(),
+    'salary': salary,
+    'employmentType': employmentType,
+    'officeLocation': officeLocation,
+    'officeHours': officeHours,
+    'researchInterests': researchInterests,
+    'publications': publications,
+    'status': status,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
   };
 }
 

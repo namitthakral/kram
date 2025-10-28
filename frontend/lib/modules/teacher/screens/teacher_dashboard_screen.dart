@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../utils/custom_colors.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
-import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
+import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../models/dashboard_stats.dart';
 import '../providers/performance_tab_provider.dart';
+import '../providers/teacher_dashboard_provider.dart';
 import '../widgets/chart_widgets.dart';
 import '../widgets/quick_action_button.dart';
 import '../widgets/stat_card.dart';
@@ -15,65 +17,112 @@ import '../widgets/student_activity_card.dart';
 
 enum PerformanceTab { attendance, subject, grade }
 
-class TeacherDashboardScreen extends StatelessWidget {
+class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
+
+  @override
+  State<TeacherDashboardScreen> createState() => _TeacherDashboardScreenState();
+}
+
+class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
+  final AuthService _authService = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    final user = await _authService.getCurrentUser();
+    if (user?.teacher?.id != null && mounted) {
+      final provider = context.read<TeacherDashboardProvider>();
+      await provider.fetchDashboardStats(user!.teacher!.id.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
 
-    return CustomMainScreenWithAppbar(
-      title: context.translate('Teacher Dashboard'),
-      appBarConfig: AppBarConfig.profile(
-        icon: Icons.school_outlined,
-        backgroundColor: CustomAppColors.primary,
-        subtitle: 'Manage classes and students',
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header (hide on mobile to save space)
-            if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
+    return FutureBuilder(
+      future: _authService.getCurrentUser(),
+      builder: (context, snapshot) {
+        // Show loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-            // Statistics Cards
-            _buildStatsSection(isMobile),
-            const SizedBox(height: 24),
+        final user = snapshot.data;
+        final teacher = user?.teacher;
 
-            // Main Content - Responsive Layout
-            if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+        // Use real user data or fallback to defaults
+        final userInitials =
+            user != null ? UserUtils.getInitials(user.name) : 'TC';
+        final userName = user?.name ?? 'Teacher';
+        final designation = teacher?.designation ?? 'Teacher';
+        final employeeId = teacher?.employeeId ?? 'N/A';
 
-            const SizedBox(height: 24),
+        return CustomMainScreenWithAppbar(
+          title: context.translate('Teacher Dashboard'),
+          appBarConfig: AppBarConfig.teacher(
+            userInitials: userInitials,
+            userName: userName,
+            designation: designation,
+            employeeId: employeeId,
+            onNotificationIconPressed: () {
+              // Notification handler to be implemented
+            },
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header (hide on mobile to save space)
+                if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
 
-            // Charts Section with Tabs
-            _buildChartsSection(isMobile),
-          ],
-        ),
-      ),
+                // Statistics Cards
+                _buildStatsSection(isMobile),
+                const SizedBox(height: 24),
+
+                // Main Content - Responsive Layout
+                if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+
+                const SizedBox(height: 24),
+
+                // Charts Section with Tabs
+                _buildChartsSection(isMobile),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   // Mobile Layout: Stack vertically
   Widget _buildMobileLayout() => Column(
-    children: [
-      _buildRecentActivitySection(isMobile: true),
-      const SizedBox(height: 16),
-      _buildQuickActionsSection(isMobile: true),
-    ],
-  );
+        children: [
+          _buildRecentActivitySection(isMobile: true),
+          const SizedBox(height: 16),
+          _buildQuickActionsSection(isMobile: true),
+        ],
+      );
 
   // Desktop Layout: Side by side
   Widget _buildDesktopLayout() => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Left Column - Recent Activity
-      Expanded(flex: 2, child: _buildRecentActivitySection()),
-      const SizedBox(width: 24),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left Column - Recent Activity
+          Expanded(flex: 2, child: _buildRecentActivitySection()),
+          const SizedBox(width: 24),
 
-      // Right Column - Quick Actions
-      Expanded(child: _buildQuickActionsSection()),
-    ],
-  );
+          // Right Column - Quick Actions
+          Expanded(child: _buildQuickActionsSection()),
+        ],
+      );
 
   Widget _buildHeader() => Row(
     children: [
@@ -107,47 +156,91 @@ class TeacherDashboardScreen extends StatelessWidget {
     ],
   );
 
-  Widget _buildStatsSection(bool isMobile) => GridView.count(
-    crossAxisCount: isMobile ? 2 : 4,
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    crossAxisSpacing: isMobile ? 12 : 16,
-    mainAxisSpacing: isMobile ? 12 : 16,
-    childAspectRatio: isMobile ? 1.3 : 1.5,
-    children: const [
-      StatCard(
-        title: 'Total Students',
-        value: '28',
-        subtitle: 'Active in your classes',
-        backgroundColor: Color(0xFFEEF2FF),
-        iconColor: Color(0xFF4F7CFF),
-        icon: Icons.groups,
-      ),
-      StatCard(
-        title: 'Present Today',
-        value: '26',
-        subtitle: '92.9% attendance',
-        backgroundColor: Color(0xFFECFDF5),
-        iconColor: Color(0xFF10b981),
-        icon: Icons.check_circle,
-      ),
-      StatCard(
-        title: 'Absent Today',
-        value: '2',
-        subtitle: 'Requires follow-up',
-        backgroundColor: Color(0xFFFEF2F2),
-        iconColor: Color(0xFFef4444),
-        icon: Icons.cancel,
-      ),
-      StatCard(
-        title: 'Avg. Attendance',
-        value: '92.5%',
-        subtitle: 'This month',
-        backgroundColor: Color(0xFFFFFBEB),
-        iconColor: Color(0xFFf59e0b),
-        icon: Icons.trending_up,
-      ),
-    ],
+  Widget _buildStatsSection(
+    bool isMobile,
+  ) => Consumer<TeacherDashboardProvider>(
+    builder: (context, dashboardProvider, child) {
+      if (dashboardProvider.isLoading) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(32.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      if (dashboardProvider.error != null) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Failed to load dashboard stats',
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: _loadDashboardData,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      final stats = dashboardProvider.dashboardStats;
+      if (stats == null) {
+        return const Center(child: Text('No data available'));
+      }
+
+      return GridView.count(
+        crossAxisCount: isMobile ? 2 : 4,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: isMobile ? 12 : 16,
+        mainAxisSpacing: isMobile ? 12 : 16,
+        childAspectRatio: isMobile ? 1.3 : 1.5,
+        children: [
+          StatCard(
+            title: 'Total Students',
+            value: '${stats.totalStudents}',
+            subtitle: 'Active in your classes',
+            backgroundColor: const Color(0xFF155dfc),
+            iconColor: const Color(0xFF155dfc),
+            icon: Icons.groups,
+          ),
+          StatCard(
+            title: 'Present Today',
+            value: '${stats.presentToday}',
+            subtitle:
+                '${stats.attendancePercentageToday.toStringAsFixed(1)}% attendance',
+            backgroundColor: const Color(0xFF00a63e),
+            iconColor: const Color(0xFF00a63e),
+            icon: Icons.check_circle,
+          ),
+          StatCard(
+            title: 'Absent Today',
+            value: '${stats.absentToday}',
+            subtitle: 'Requires follow-up',
+            backgroundColor: const Color(0xFFe7000b),
+            iconColor: const Color(0xFFe7000b),
+            icon: Icons.cancel,
+          ),
+          StatCard(
+            title: 'Avg. Attendance',
+            value: '${stats.avgAttendance.toStringAsFixed(1)}%',
+            subtitle: 'This month',
+            backgroundColor: const Color(0xFFfe9a00),
+            iconColor: const Color(0xFFfe9a00),
+            icon: Icons.trending_up,
+          ),
+        ],
+      );
+    },
   );
 
   Widget _buildRecentActivitySection({bool isMobile = false}) => DecoratedBox(

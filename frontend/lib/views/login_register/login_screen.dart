@@ -9,7 +9,6 @@ import '../../utils/extensions.dart';
 import '../../utils/router_service.dart';
 import '../../widgets/custom_widgets/custom_bottom_modal_sheet.dart';
 import '../../widgets/custom_widgets/custom_elevated_button.dart';
-import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_text_button.dart';
 import '../../widgets/custom_widgets/custom_text_field.dart';
 
@@ -21,30 +20,32 @@ class LoginScreen extends StatelessWidget {
     final provider = context.read<LoginProvider>();
     final themeProvider = context.read<ThemeProvider>();
 
-    return CustomMainScreenWithAppbar(
-      title: context.translate('login_account'),
-      appBarConfig: const AppBarConfig.standard(
-        showBackButton: false,
-      ),
-      child: SingleChildScrollView(
-        // padding: const EdgeInsets.all(32.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo and Title Section
-                _buildHeader(context, themeProvider),
-                const SizedBox(height: 40),
+    return Scaffold(
+      // title: context.translate('login_account'),
+      // // appBarConfig: const AppBarConfig.standard(
+      // //   showBackButton: false,
+      // // ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          // padding: const EdgeInsets.all(32.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo and Title Section
+                  _buildHeader(context, themeProvider),
+                  const SizedBox(height: 32),
 
-                // Login Form
-                _buildLoginForm(context, themeProvider),
-                const SizedBox(height: 16),
+                  // Login Form
+                  _buildLoginForm(context, themeProvider),
+                  const SizedBox(height: 16),
 
-                // Footer
-                _buildFooter(context, themeProvider),
-              ],
+                  // Footer
+                  _buildFooter(context, themeProvider),
+                ],
+              ),
             ),
           ),
         ),
@@ -56,32 +57,7 @@ class LoginScreen extends StatelessWidget {
       Column(
         children: [
           // Logo with EdVerse text
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: CustomAppColors.blue500,
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: const Icon(
-                  Icons.school,
-                  color: CustomAppColors.white,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'EdVerse',
-                style: context.textTheme.titleXl.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: CustomAppColors.blue500,
-                ),
-              ),
-            ],
-          ),
+          Image.asset('assets/images/app_logo.png', width: 150, height: 150),
           const SizedBox(height: 24),
 
           // Login title
