@@ -41,9 +41,10 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
-                  "    if (response.accessToken) {",
-                  "        pm.environment.set('token', response.accessToken);",
-                  "        console.log('Token saved:', response.accessToken);",
+                  "    if (response.tokens && response.tokens.accessToken) {",
+                  "        pm.environment.set('token', response.tokens.accessToken);",
+                  "        console.log('Token saved:', response.tokens.accessToken);",
+                  "        console.log('Token expires in:', response.tokens.expiresIn, 'seconds');",
                   "    }",
                   "}"
                 ],

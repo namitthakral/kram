@@ -1,14 +1,14 @@
 import {
+  ConflictException,
   Injectable,
   UnauthorizedException,
-  ConflictException,
 } from '@nestjs/common'
-import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
-import { PrismaService } from '../prisma/prisma.service'
-import { LoginDto, CreateUserDto } from './dto/auth.dto'
-import { UserWithRelations } from '../types/auth.types'
+import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcryptjs'
+import { PrismaService } from '../prisma/prisma.service'
+import { UserWithRelations } from '../types/auth.types'
+import { CreateUserDto, LoginDto } from './dto/auth.dto'
 
 @Injectable()
 export class AuthService {
@@ -87,8 +87,11 @@ export class AuthService {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
-      accessToken,
-      refreshToken,
+      tokens: {
+        accessToken,
+        refreshToken,
+        expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
+      },
     }
   }
 
@@ -179,7 +182,10 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload)
 
     return {
-      accessToken,
+      tokens: {
+        accessToken,
+        expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
+      },
     }
   }
 }
