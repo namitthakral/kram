@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/services/auth_service.dart';
+import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
+import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../models/dashboard_stats.dart';
 import '../providers/performance_tab_provider.dart';
@@ -42,21 +45,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
 
-<<<<<<< HEAD
-    return CustomMainScreenWithAppbar(
-      title: context.translate('Teacher Dashboard'),
-      appBarConfig: const AppBarConfig.profile(
-        icon: Icons.school_outlined,
-        backgroundColor: CustomAppColors.primary,
-        subtitle: 'Manage classes and students',
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header (hide on mobile to save space)
-            if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
-=======
     return FutureBuilder(
       future: _authService.getCurrentUser(),
       builder: (context, snapshot) {
@@ -66,7 +54,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
->>>>>>> a659ba1d99521684b4d00d076de60300cdce0d18
 
         final user = snapshot.data;
         final teacher = user?.teacher;
@@ -117,25 +104,25 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
   // Mobile Layout: Stack vertically
   Widget _buildMobileLayout() => Column(
-        children: [
-          _buildRecentActivitySection(isMobile: true),
-          const SizedBox(height: 16),
-          _buildQuickActionsSection(isMobile: true),
-        ],
-      );
+    children: [
+      _buildRecentActivitySection(isMobile: true),
+      const SizedBox(height: 16),
+      _buildQuickActionsSection(isMobile: true),
+    ],
+  );
 
   // Desktop Layout: Side by side
   Widget _buildDesktopLayout() => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left Column - Recent Activity
-          Expanded(flex: 2, child: _buildRecentActivitySection()),
-          const SizedBox(width: 24),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Left Column - Recent Activity
+      Expanded(flex: 2, child: _buildRecentActivitySection()),
+      const SizedBox(width: 24),
 
-          // Right Column - Quick Actions
-          Expanded(child: _buildQuickActionsSection()),
-        ],
-      );
+      // Right Column - Quick Actions
+      Expanded(child: _buildQuickActionsSection()),
+    ],
+  );
 
   Widget _buildHeader() => Row(
     children: [
