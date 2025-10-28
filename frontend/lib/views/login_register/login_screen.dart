@@ -23,7 +23,9 @@ class LoginScreen extends StatelessWidget {
 
     return CustomMainScreenWithAppbar(
       title: context.translate('login_account'),
-      showBackButton: false,
+      appBarConfig: const AppBarConfig.standard(
+        showBackButton: false,
+      ),
       child: SingleChildScrollView(
         // padding: const EdgeInsets.all(32.0),
         child: Center(
@@ -249,6 +251,7 @@ class LoginScreen extends StatelessWidget {
                           if (provider.currentUser != null && context.mounted) {
                             context.router.goToHome();
                           }
+                          // context.router.goToHome();
                         },
               ),
 

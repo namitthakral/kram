@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/services/api_service.dart';
+import 'modules/student/providers/dashboard_tab_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
 import 'provider/bottom_nav_provider.dart';
@@ -55,6 +56,9 @@ void main() async {
         ),
         ChangeNotifierProvider<SegmentedControlProvider<PerformanceTab>>(
           create: (_) => PerformanceTabProvider(),
+        ),
+        ChangeNotifierProvider<DashboardTabProvider>(
+          create: (_) => DashboardTabProvider(),
         ),
       ],
       child: const EdVerseApp(),

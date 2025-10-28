@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/enum.dart';
+import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
 import '../../utils/responsive_utils.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
@@ -11,9 +11,12 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomMainScreenWithAppbar(
-    appBarType: AppBarType.profile,
-    showBackButton: false,
     title: context.translate('dashboard_greeting', params: {'name': 'Deepak'}),
+    appBarConfig: AppBarConfig.profile(
+      icon: Icons.dashboard_outlined,
+      backgroundColor: CustomAppColors.primary,
+      subtitle: 'Welcome to your dashboard',
+    ),
     child: ResponsiveLayout(
       mobile: _buildMobileLayout(context),
       tablet: _buildTabletLayout(context),

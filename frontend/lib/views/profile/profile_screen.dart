@@ -23,9 +23,11 @@ class ProfileScreen extends StatelessWidget {
     final bottomNavProvider = context.read<BottomNavProvider>();
 
     return CustomMainScreenWithAppbar(
-      showBackButton: false,
-      onBackButtonTapped: () => bottomNavProvider.setIndex(0),
       title: 'Profile Screen',
+      appBarConfig: AppBarConfig.standard(
+        showBackButton: false,
+        onBackButtonTapped: () => bottomNavProvider.setIndex(0),
+      ),
       child: SingleChildScrollView(
         child: Column(
           spacing: 8,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../utils/custom_colors.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
@@ -23,7 +24,11 @@ class TeacherDashboardScreen extends StatelessWidget {
 
     return CustomMainScreenWithAppbar(
       title: context.translate('Teacher Dashboard'),
-      showBackButton: false,
+      appBarConfig: AppBarConfig.profile(
+        icon: Icons.school_outlined,
+        backgroundColor: CustomAppColors.primary,
+        subtitle: 'Manage classes and students',
+      ),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

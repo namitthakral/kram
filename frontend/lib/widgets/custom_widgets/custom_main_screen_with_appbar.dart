@@ -2,35 +2,79 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../utils/custom_colors.dart';
-import '../../utils/custom_images.dart';
 import '../../utils/enum.dart';
 import '../../utils/extensions.dart';
-import '../../utils/images/base_image.dart';
-import '../../utils/images/image_asset.dart';
 import '../../utils/responsive_utils.dart';
+
+/// Configuration class for app bar customization
+class AppBarConfig {
+  const AppBarConfig({
+    this.type = AppBarType.none,
+    this.showBackButton = true,
+    this.showCircularBackButton = false,
+    this.onBackButtonTapped,
+    this.actions = const [],
+    this.onNotificationIconPressed,
+    this.profileIcon,
+    this.subtitle,
+    this.iconBackgroundColor,
+    this.elevation = 5.0,
+  });
+
+  /// Creates a profile-style app bar configuration
+  const AppBarConfig.profile({
+    required IconData icon,
+    required Color backgroundColor,
+    this.subtitle,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = icon,
+       iconBackgroundColor = backgroundColor,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [];
+
+  /// Creates a standard app bar configuration with back button
+  const AppBarConfig.standard({
+    this.showBackButton = true,
+    this.showCircularBackButton = false,
+    this.onBackButtonTapped,
+    this.elevation = 5.0,
+    this.actions = const [],
+  }) : type = AppBarType.none,
+       profileIcon = null,
+       iconBackgroundColor = null,
+       subtitle = null,
+       onNotificationIconPressed = null;
+
+  final AppBarType type;
+  final bool showBackButton;
+  final bool showCircularBackButton;
+  final VoidCallback? onBackButtonTapped;
+  final List<Widget> actions;
+  final VoidCallback? onNotificationIconPressed;
+  final IconData? profileIcon;
+  final String? subtitle;
+  final Color? iconBackgroundColor;
+  final double elevation;
+}
 
 class CustomMainScreenWithAppbar extends StatelessWidget {
   const CustomMainScreenWithAppbar({
     required this.child,
     required this.title,
     super.key,
-    this.appbarAction = const [],
-    this.onBackButtonTapped,
+    this.appBarConfig = const AppBarConfig(),
     this.bottomWidget,
     this.bottomWidgetPadding = const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 32.0),
-    this.showCircularBackButton = false,
-    this.showBackButton = true,
-    this.appBarType = AppBarType.none,
-    this.onNotificationIconPressed,
   });
+
   final Widget child;
-  final Widget? bottomWidget;
-  final List<Widget> appbarAction;
   final String title;
-  final void Function()? onBackButtonTapped;
-  final bool showCircularBackButton, showBackButton;
-  final AppBarType appBarType;
-  final void Function()? onNotificationIconPressed;
+  final AppBarConfig appBarConfig;
+  final Widget? bottomWidget;
   final EdgeInsetsGeometry bottomWidgetPadding;
 
   @override
@@ -40,16 +84,12 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: _CustomAppBar(
-          showBackButton: showBackButton,
-          onBackButtonTapped: onBackButtonTapped,
-          showCircularBackButton: showCircularBackButton,
-          title: title,
-          appbarAction: appbarAction,
-          appBarType: appBarType,
-          onNotificationIconPressed: onNotificationIconPressed,
+        preferredSize: Size.fromHeight(
+          appBarConfig.type == AppBarType.profile
+              ? kToolbarHeight + 8
+              : kToolbarHeight,
         ),
+        child: _CustomAppBar(title: title, config: appBarConfig),
       ),
       bottomNavigationBar:
           bottomWidget == null
@@ -77,118 +117,119 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
 }
 
 class _CustomAppBar extends StatelessWidget {
-  const _CustomAppBar({
-    required this.showBackButton,
-    required this.onBackButtonTapped,
-    required this.showCircularBackButton,
-    required this.title,
-    required this.appbarAction,
-    required this.appBarType,
-    required this.onNotificationIconPressed,
-  });
+  const _CustomAppBar({required this.title, required this.config});
 
-  final bool showBackButton;
-  final void Function()? onBackButtonTapped;
-  final bool showCircularBackButton;
   final String title;
-  final List<Widget> appbarAction;
-  final AppBarType appBarType;
-  final void Function()? onNotificationIconPressed;
+  final AppBarConfig config;
 
   @override
   Widget build(BuildContext context) {
-    if (appBarType == AppBarType.profile) {
-      return _CustomAppBarWithProfileDetail(
-        userName: title,
-        onNotificationIconPressed: onNotificationIconPressed,
-      );
-    }
+    final isProfileType = config.type == AppBarType.profile;
 
     return AppBar(
       automaticallyImplyLeading: false,
-      centerTitle: true,
-      // bottom: const PreferredSize(
-      //   preferredSize: Size.fromHeight(0),
-      //   child: Divider(color: Color(0xFFF3F3F3)),
-      // ),
-      backgroundColor: CustomAppColors.primary,
+      centerTitle: !isProfileType,
+      backgroundColor: isProfileType ? Colors.white : CustomAppColors.primary,
+      elevation: 0,
+      surfaceTintColor: isProfileType ? Colors.white : null,
+      titleSpacing: isProfileType ? 16 : null,
+      toolbarHeight: isProfileType ? kToolbarHeight + 16 : kToolbarHeight,
+      // Add divider for profile type
+      bottom:
+          isProfileType
+              ? PreferredSize(
+                preferredSize: const Size.fromHeight(0),
+                child: Container(height: 1, color: const Color(0xFFE5E7EB)),
+              )
+              : null,
+      // Leading (back button) - only for standard type
       leading:
-          showBackButton
+          !isProfileType && config.showBackButton
               ? IconButton(
                 padding: const EdgeInsets.only(left: 16),
                 icon: SvgPicture.asset(
-                  showCircularBackButton
+                  config.showCircularBackButton
                       ? 'assets/images/icons/ic_back_arrow_in_circle.svg'
                       : 'assets/images/icons/ic_back_arrow.svg',
                   width: 60,
                   alignment: Alignment.centerLeft,
                 ),
                 onPressed: () {
-                  if (onBackButtonTapped != null) {
-                    onBackButtonTapped?.call();
+                  if (config.onBackButtonTapped != null) {
+                    config.onBackButtonTapped?.call();
                   } else {
                     Navigator.of(context).pop();
                   }
                 },
               )
               : null,
-      title: Text(
-        title,
-        style: context.textTheme.labelBase.copyWith(
-          color: CustomAppColors.white,
-        ),
-      ),
-      actions: appbarAction,
+      // Title
+      title:
+          isProfileType
+              ? Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color:
+                          config.iconBackgroundColor ?? CustomAppColors.primary,
+                      borderRadius: BorderRadius.circular(22.0),
+                    ),
+                    child: Icon(
+                      config.profileIcon ?? Icons.people_outline,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          title,
+                          style: context.textTheme.titleSm.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            color: Colors.black,
+                          ),
+                        ),
+
+                        Text(
+                          config.subtitle ?? 'Dashboard',
+                          style: context.textTheme.bodyXs.copyWith(
+                            color: const Color(0xFF666666),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+              : Text(
+                title,
+                style: context.textTheme.labelBase.copyWith(
+                  color: CustomAppColors.white,
+                ),
+              ),
+      // Actions
+      actions:
+          isProfileType && config.onNotificationIconPressed != null
+              ? [
+                IconButton(
+                  onPressed: config.onNotificationIconPressed,
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.black,
+                    size: 28,
+                  ),
+                ),
+              ]
+              : config.actions,
       actionsPadding: const EdgeInsets.only(right: 12),
     );
   }
-}
-
-class _CustomAppBarWithProfileDetail extends StatelessWidget {
-  const _CustomAppBarWithProfileDetail({
-    required this.userName,
-    required this.onNotificationIconPressed,
-    this.showBadge = false,
-  });
-
-  final String userName;
-  final bool? showBadge;
-  final void Function()? onNotificationIconPressed;
-
-  @override
-  Widget build(BuildContext context) => AppBar(
-    title: ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Transform.translate(
-        offset: const Offset(-10, 0),
-        child: Text(userName, style: context.textTheme.titleSm),
-      ),
-      subtitle: Transform.translate(
-        offset: const Offset(-10, -3),
-        child: Text(
-          'subtitle',
-          style: context.textTheme.bodyXs.copyWith(
-            color: CustomAppColors.black03,
-          ),
-        ),
-      ),
-      leading: const CircleAvatar(
-        backgroundImage: AssetImage(CustomImages.appLogo),
-      ),
-    ),
-    actions: [
-      IconButton(
-        onPressed: onNotificationIconPressed,
-        icon: Badge(
-          isLabelVisible: showBadge ?? false,
-          child: BaseImage(
-            asset: LocalAsset(url: CustomImages.iconNotification),
-            height: 25,
-            width: 25,
-            color: CustomAppColors.black01,
-          ),
-        ),
-      ),
-    ],
-  );
 }

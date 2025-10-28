@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../utils/responsive_utils.dart';
 
-/// Statistics Card Widget for Dashboard
 class StatCard extends StatelessWidget {
   const StatCard({
     required this.title,
@@ -60,7 +59,7 @@ class StatCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(isMobile ? 8 : 10),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
+                  color: iconColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: iconColor, size: isMobile ? 16 : 20),

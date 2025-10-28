@@ -11,8 +11,10 @@ class LanguageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomMainScreenWithAppbar(
-    showCircularBackButton: true,
     title: context.translate('language'),
+    appBarConfig: const AppBarConfig.standard(
+      showCircularBackButton: true,
+    ),
     child: Consumer<LanguageProvider>(
       builder:
           (context, value, child) => Column(
