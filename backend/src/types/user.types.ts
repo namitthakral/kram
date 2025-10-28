@@ -1,21 +1,27 @@
-import { UserStatus, ParentRelation } from '@prisma/client'
+import { ParentRelation, UserStatus } from '@prisma/client'
 import { Student } from './student.types'
 import { Teacher } from './teacher.types'
 
 // Re-export Prisma enums for convenience
-export { UserStatus, ParentRelation }
+export { ParentRelation, UserStatus }
 
 // Core User Types
 export interface User {
   id: number
+  uuid?: string
+  edverseId?: string
+  firstName: string
+  lastName: string
   name: string
-  email: string
+  email?: string
   phone?: string
   passwordHash: string
   roleId: number
   emailVerified: boolean
   phoneVerified: boolean
   twoFactorEnabled: boolean
+  isTemporaryPassword: boolean
+  mustChangePassword: boolean
   lastLogin?: Date
   loginAttempts: number
   accountLocked: boolean

@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -50,98 +49,125 @@ export class TeachersController {
     return { message: 'Teacher stats endpoint - to be implemented' }
   }
 
-  @Get(':id')
+  @Get(':uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.findOne(id)
+  findByUuid(@Param('uuid') uuid: string) {
+    return this.teachersService.findByUuid(uuid)
   }
 
-  @Get(':id/subjects')
+  @Get(':uuid/subjects')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
   getTeacherSubjects(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Query('academicYearId') academicYearId?: string
   ) {
     const parsedAcademicYearId = academicYearId
       ? parseInt(academicYearId, 10)
       : undefined
-    return this.teachersService.getTeacherSubjects(id, parsedAcademicYearId)
+    return this.teachersService.getTeacherSubjectsByUuid(
+      uuid,
+      parsedAcademicYearId
+    )
   }
 
-  @Get(':id/classes')
+  @Get(':uuid/classes')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
   getTeacherClasses(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Query('semesterId') semesterId?: string
   ) {
     const parsedSemesterId = semesterId ? parseInt(semesterId, 10) : undefined
-    return this.teachersService.getTeacherClasses(id, parsedSemesterId)
+    return this.teachersService.getTeacherClassesByUuid(uuid, parsedSemesterId)
   }
 
-  @Get(':id/stats')
+  @Get(':uuid/stats')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
-  getTeacherStats(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.getTeacherStats(id)
+  getTeacherStats(@Param('uuid') uuid: string) {
+    return this.teachersService.getTeacherStatsByUuid(uuid)
   }
 
-  @Get(':id/dashboard-stats')
+  @Get(':uuid/dashboard-stats')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
-  getDashboardStats(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.getDashboardStats(id)
+  getDashboardStats(@Param('uuid') uuid: string) {
+    return this.teachersService.getEnhancedDashboardStatsByUuid(uuid)
   }
 
-  @Get(':id/recent-activity')
+  @Get(':uuid/attendance-trends')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getAttendanceTrends(@Param('uuid') uuid: string) {
+    return this.teachersService.getAttendanceTrendsByUuid(uuid)
+  }
+
+  @Get(':uuid/subject-performance')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getSubjectPerformance(@Param('uuid') uuid: string) {
+    return this.teachersService.getSubjectPerformanceDataByUuid(uuid)
+  }
+
+  @Get(':uuid/grade-distribution')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getGradeDistribution(@Param('uuid') uuid: string) {
+    return this.teachersService.getGradeDistributionDataByUuid(uuid)
+  }
+
+  @Get(':uuid/recent-activity')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
   getRecentStudentActivity(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Query('limit') limit?: string
   ) {
     const parsedLimit = limit ? parseInt(limit, 10) : 10
-    return this.teachersService.getRecentStudentActivity(id, parsedLimit)
+    return this.teachersService.getRecentStudentActivityByUuid(
+      uuid,
+      parsedLimit
+    )
   }
 
-  @Get(':id/attendance-summary')
+  @Get(':uuid/attendance-summary')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
   getAttendanceSummary(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Query('date') date?: string,
     @Query('period') period?: 'daily' | 'weekly' | 'monthly'
   ) {
-    return this.teachersService.getAttendanceSummary(id, date, period)
+    return this.teachersService.getAttendanceSummaryByUuid(uuid, date, period)
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() updateTeacherDto: UpdateTeacherDto
   ) {
-    return this.teachersService.update(id, updateTeacherDto)
+    return this.teachersService.updateByUuid(uuid, updateTeacherDto)
   }
 
-  @Post(':id/assign-subjects')
+  @Post(':uuid/assign-subjects')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   assignSubjects(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() assignSubjectsDto: AssignSubjectsDto
   ) {
-    return this.teachersService.assignSubjects(id, assignSubjectsDto)
+    return this.teachersService.assignSubjectsByUuid(uuid, assignSubjectsDto)
   }
 
-  @Delete(':id')
+  @Delete(':uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.teachersService.remove(id)
+  remove(@Param('uuid') uuid: string) {
+    return this.teachersService.removeByUuid(uuid)
   }
 }

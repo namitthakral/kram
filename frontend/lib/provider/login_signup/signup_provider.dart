@@ -156,7 +156,7 @@ class SignUpProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      String errorMessage = 'Registration failed. Please try again.';
+      var errorMessage = 'Registration failed. Please try again.';
 
       if (e.toString().contains('already exists')) {
         errorMessage = 'An account with this email already exists.';
@@ -174,9 +174,7 @@ class SignUpProvider extends ChangeNotifier {
     }
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
+  bool _isValidEmail(String email) => RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
 
   @override
   void dispose() {

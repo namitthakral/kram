@@ -12,7 +12,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CustomMainScreenWithAppbar(
     title: context.translate('dashboard_greeting', params: {'name': 'Deepak'}),
-    appBarConfig: AppBarConfig.profile(
+    appBarConfig: const AppBarConfig.profile(
       icon: Icons.dashboard_outlined,
       backgroundColor: CustomAppColors.primary,
       subtitle: 'Welcome to your dashboard',

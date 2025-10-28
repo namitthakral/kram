@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/extensions.dart';
-import '../../utils/localization/app_localizations.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
 class LegalAndPolicies extends StatelessWidget {

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
+import { generateEdVerseId } from '../src/utils/edverse-id.util'
 
 const prisma = new PrismaClient()
 
@@ -113,6 +114,18 @@ async function main() {
     students.length
   )
   console.log(`✅ Created ${dashboardStats.length} dashboard statistics`)
+
+  // Create teacher dashboard test data
+  console.log('Creating teacher dashboard test data...')
+  await createTeacherDashboardData(
+    teacher,
+    students,
+    subjects,
+    classSections,
+    semesters[0],
+    academicYear
+  )
+  console.log('✅ Created comprehensive teacher dashboard test data')
 
   console.log('🎉 Comprehensive database seeding completed successfully!')
   printSummary(students.length, parents.length)
@@ -412,6 +425,7 @@ async function createUsers(
 ) {
   // Create super admin
   const superAdminPassword = await bcrypt.hash('admin123!', 12)
+  const superAdminRole = roles.find(r => r.roleName === 'super_admin')!
   const superAdmin = await prisma.user.upsert({
     where: { email: 'admin@edverse.edu' },
     update: {},
@@ -422,7 +436,8 @@ async function createUsers(
       email: 'admin@edverse.edu',
       phone: '+1-555-0001',
       passwordHash: superAdminPassword,
-      roleId: roles.find(r => r.roleName === 'super_admin')!.id,
+      roleId: superAdminRole.id,
+      edverseId: generateEdVerseId('super_admin', 1, 2024),
       emailVerified: true,
       phoneVerified: true,
     },
@@ -430,6 +445,7 @@ async function createUsers(
 
   // Create teacher
   const teacherPassword = await bcrypt.hash('teacher123!', 12)
+  const teacherRole = roles.find(r => r.roleName === 'teacher')!
   const teacherUser = await prisma.user.upsert({
     where: { email: 'john.doe@edverse.edu' },
     update: {},
@@ -440,7 +456,8 @@ async function createUsers(
       email: 'john.doe@edverse.edu',
       phone: '+1-555-0002',
       passwordHash: teacherPassword,
-      roleId: roles.find(r => r.roleName === 'teacher')!.id,
+      roleId: teacherRole.id,
+      edverseId: generateEdVerseId('teacher', 1, 2024),
       emailVerified: true,
       phoneVerified: true,
     },
@@ -470,6 +487,8 @@ async function createUsers(
   // Create students and parents
   const students = []
   const parents = []
+  const studentRole = roles.find(r => r.roleName === 'student')!
+  const parentRole = roles.find(r => r.roleName === 'parent')!
 
   for (let i = 1; i <= 5; i++) {
     const studentPassword = await bcrypt.hash(`student${i}23!`, 12)
@@ -483,7 +502,8 @@ async function createUsers(
         email: `student${i}@edverse.edu`,
         phone: `+1-555-000${i + 2}`,
         passwordHash: studentPassword,
-        roleId: roles.find(r => r.roleName === 'student')!.id,
+        roleId: studentRole.id,
+        edverseId: generateEdVerseId('student', i, 2024),
         emailVerified: true,
         phoneVerified: true,
       },
@@ -525,7 +545,8 @@ async function createUsers(
         email: `parent${i}@email.com`,
         phone: `+1-555-000${i + 10}`,
         passwordHash: parentPassword,
-        roleId: roles.find(r => r.roleName === 'parent')!.id,
+        roleId: parentRole.id,
+        edverseId: generateEdVerseId('parent', i, 2024),
         emailVerified: true,
         phoneVerified: true,
       },
@@ -550,6 +571,7 @@ async function createUsers(
 
   // Create staff
   const staffPassword = await bcrypt.hash('staff123!', 12)
+  const staffRole = roles.find(r => r.roleName === 'staff')!
   const staffUser = await prisma.user.upsert({
     where: { email: 'staff@edverse.edu' },
     update: {},
@@ -560,7 +582,8 @@ async function createUsers(
       email: 'staff@edverse.edu',
       phone: '+1-555-0010',
       passwordHash: staffPassword,
-      roleId: roles.find(r => r.roleName === 'staff')!.id,
+      roleId: staffRole.id,
+      edverseId: generateEdVerseId('staff', 1, 2024),
       emailVerified: true,
       phoneVerified: true,
     },
@@ -589,6 +612,7 @@ async function createUsers(
 
   // Create librarian
   const librarianPassword = await bcrypt.hash('librarian123!', 12)
+  const librarianRole = roles.find(r => r.roleName === 'librarian')!
   const librarianUser = await prisma.user.upsert({
     where: { email: 'librarian@edverse.edu' },
     update: {},
@@ -599,7 +623,8 @@ async function createUsers(
       email: 'librarian@edverse.edu',
       phone: '+1-555-0012',
       passwordHash: librarianPassword,
-      roleId: roles.find(r => r.roleName === 'librarian')!.id,
+      roleId: librarianRole.id,
+      edverseId: generateEdVerseId('librarian', 1, 2024),
       emailVerified: true,
       phoneVerified: true,
     },
@@ -1140,6 +1165,308 @@ function printSummary(studentCount: number, parentCount: number) {
   console.log('- 1 assignment + 1 examination')
   console.log('- 2 time slots + 2 rooms + 1 timetable entry')
   console.log('- 2 dashboard statistics')
+  console.log('- Teacher dashboard data (attendance, grades, performance)')
+}
+
+/**
+ * Create comprehensive teacher dashboard test data
+ * Includes: attendance records, student progress, teacher-subject assignments
+ */
+async function createTeacherDashboardData(
+  teacher: any,
+  students: any[],
+  subjects: any[],
+  classSections: any[],
+  semester: any,
+  academicYear: any
+) {
+  // 1. Assign subjects to teacher
+  console.log('  → Assigning subjects to teacher...')
+  for (const subject of subjects) {
+    await prisma.teacherSubject.upsert({
+      where: {
+        unique_teacher_subject: {
+          teacherId: teacher.id,
+          subjectId: subject.id,
+          academicYearId: academicYear.id,
+        },
+      },
+      update: {},
+      create: {
+        teacherId: teacher.id,
+        subjectId: subject.id,
+        academicYearId: academicYear.id,
+        isPrimary: subject.code === 'MATH101',
+      },
+    })
+  }
+
+  // 2. Create attendance records for the past month (varied patterns)
+  console.log('  → Creating attendance records...')
+  const today = new Date()
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+
+  // Create attendance for each weekday in the current month
+  for (
+    let day = new Date(startOfMonth);
+    day <= today;
+    day.setDate(day.getDate() + 1)
+  ) {
+    const dayOfWeek = day.getDay()
+    // Skip weekends
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue
+
+    for (const student of students) {
+      for (const section of classSections) {
+        // Determine attendance status based on patterns
+        const random = Math.random()
+        let status = 'PRESENT'
+
+        // Friday has worse attendance
+        if (dayOfWeek === 5) {
+          if (random < 0.15) status = 'ABSENT'
+          else if (random < 0.2) status = 'LATE'
+          else status = 'PRESENT'
+        } else {
+          if (random < 0.08) status = 'ABSENT'
+          else if (random < 0.11) status = 'LATE'
+          else if (random < 0.13) status = 'EXCUSED'
+          else status = 'PRESENT'
+        }
+
+        try {
+          await prisma.attendance.create({
+            data: {
+              studentId: student.id,
+              sectionId: section.id,
+              date: new Date(day),
+              status: status as any,
+              markedBy: teacher.id,
+              remarks: status === 'ABSENT' ? 'No reason provided' : null,
+            },
+          })
+        } catch {
+          // Skip if already exists
+        }
+      }
+    }
+  }
+
+  // 3. Create student progress records with varied grades
+  console.log('  → Creating student progress records...')
+  const gradePoints = {
+    'A+': 4.0,
+    A: 3.7,
+    'A-': 3.3,
+    'B+': 3.0,
+    B: 2.7,
+    'B-': 2.3,
+    'C+': 2.0,
+    C: 1.7,
+  }
+
+  for (const student of students) {
+    for (const subject of subjects) {
+      // Vary performance by subject
+      let baseScore = 75 + Math.random() * 20 // 75-95 range
+
+      // Mathematics tends to be harder
+      if (subject.code === 'MATH101') {
+        baseScore = 70 + Math.random() * 25
+      }
+
+      // Science varies more
+      if (subject.code === 'SCI101') {
+        baseScore = 65 + Math.random() * 30
+      }
+
+      const assignmentScore = baseScore + (Math.random() * 10 - 5)
+      const examScore = baseScore + (Math.random() * 10 - 5)
+      const participationScore = 80 + Math.random() * 15
+      const attendancePercentage = 85 + Math.random() * 12
+
+      // Determine grade based on average
+      const avgScore = (assignmentScore + examScore) / 2
+      let grade = 'B'
+      if (avgScore >= 93) grade = 'A+'
+      else if (avgScore >= 90) grade = 'A'
+      else if (avgScore >= 87) grade = 'A-'
+      else if (avgScore >= 83) grade = 'B+'
+      else if (avgScore >= 80) grade = 'B'
+      else if (avgScore >= 77) grade = 'B-'
+      else if (avgScore >= 73) grade = 'C+'
+      else grade = 'C'
+
+      const status =
+        attendancePercentage < 75
+          ? 'AT_RISK'
+          : avgScore >= 90
+            ? 'EXCELLENT'
+            : avgScore >= 80
+              ? 'ON_TRACK'
+              : 'NEEDS_IMPROVEMENT'
+
+      try {
+        await prisma.studentProgress.create({
+          data: {
+            studentId: student.id,
+            subjectId: subject.id,
+            semesterId: semester.id,
+            academicYearId: academicYear.id,
+            overallGrade: grade,
+            gradePoints: gradePoints[grade as keyof typeof gradePoints],
+            attendancePercentage: Math.round(attendancePercentage * 100) / 100,
+            assignmentScore: Math.round(assignmentScore * 100) / 100,
+            examScore: Math.round(examScore * 100) / 100,
+            participationScore: Math.round(participationScore * 100) / 100,
+            status: status as any,
+            strengths:
+              avgScore >= 85
+                ? ['Strong understanding', 'Active participation']
+                : ['Consistent effort'],
+            areasForImprovement:
+              avgScore < 80
+                ? ['Needs more practice', 'Homework completion']
+                : [],
+            teacherComments:
+              avgScore >= 90
+                ? 'Excellent performance!'
+                : avgScore >= 80
+                  ? 'Good work, keep it up!'
+                  : 'Needs improvement in understanding core concepts.',
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+  }
+
+  // 4. Create more students for better dashboard visualization
+  console.log('  → Creating additional students for dashboard...')
+  const studentRole = await prisma.role.findFirst({
+    where: { roleName: 'student' },
+  })
+
+  if (studentRole) {
+    const additionalStudentCount = 23 // To make total ~28 students
+    for (let i = 6; i <= 6 + additionalStudentCount; i++) {
+      const studentPassword = await bcrypt.hash(`student${i}23!`, 12)
+
+      try {
+        const studentUser = await prisma.user.create({
+          data: {
+            firstName: `Student`,
+            lastName: `${i}`,
+            name: `Student ${i}`,
+            email: `student${i}@edverse.edu`,
+            phone: `+1-555-0${String(100 + i).slice(-3)}`,
+            passwordHash: studentPassword,
+            roleId: studentRole.id,
+            edverseId: generateEdVerseId('student', i, 2024),
+            emailVerified: true,
+            phoneVerified: true,
+          },
+        })
+
+        const student = await prisma.student.create({
+          data: {
+            userId: studentUser.id,
+            institutionId: students[0].institutionId,
+            programId: students[0].programId,
+            admissionNumber: `ADM0${String(i).padStart(2, '0')}`,
+            rollNumber: `20240${String(i).padStart(2, '0')}`,
+            admissionDate: new Date('2024-08-15'),
+            currentSemester: 1,
+            currentYear: 1,
+            gradeLevel: 'Freshman',
+            section: 'A',
+            studentType: 'REGULAR',
+            residentialStatus: 'DAY_SCHOLAR',
+            emergencyContactName: `Parent ${i}`,
+            emergencyContactPhone: `+1-555-0${String(200 + i).slice(-3)}`,
+            bloodGroup: ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'][
+              i % 8
+            ],
+          },
+        })
+
+        // Create attendance for this student
+        for (
+          let day = new Date(startOfMonth);
+          day <= today;
+          day.setDate(day.getDate() + 1)
+        ) {
+          const dayOfWeek = day.getDay()
+          if (dayOfWeek === 0 || dayOfWeek === 6) continue
+
+          for (const section of classSections) {
+            const random = Math.random()
+            const status =
+              random < 0.08 ? 'ABSENT' : random < 0.12 ? 'LATE' : 'PRESENT'
+
+            try {
+              await prisma.attendance.create({
+                data: {
+                  studentId: student.id,
+                  sectionId: section.id,
+                  date: new Date(day),
+                  status: status as any,
+                  markedBy: teacher.id,
+                },
+              })
+            } catch {
+              // Skip if exists
+            }
+          }
+        }
+
+        // Create student progress
+        for (const subject of subjects) {
+          const baseScore = 70 + Math.random() * 25
+          const assignmentScore = baseScore + (Math.random() * 10 - 5)
+          const examScore = baseScore + (Math.random() * 10 - 5)
+          const avgScore = (assignmentScore + examScore) / 2
+
+          let grade = 'B'
+          if (avgScore >= 93) grade = 'A+'
+          else if (avgScore >= 90) grade = 'A'
+          else if (avgScore >= 87) grade = 'A-'
+          else if (avgScore >= 83) grade = 'B+'
+          else if (avgScore >= 80) grade = 'B'
+          else if (avgScore >= 77) grade = 'B-'
+          else if (avgScore >= 73) grade = 'C+'
+          else grade = 'C'
+
+          try {
+            await prisma.studentProgress.create({
+              data: {
+                studentId: student.id,
+                subjectId: subject.id,
+                semesterId: semester.id,
+                academicYearId: academicYear.id,
+                overallGrade: grade,
+                gradePoints: gradePoints[grade as keyof typeof gradePoints],
+                attendancePercentage: 85 + Math.random() * 12,
+                assignmentScore: Math.round(assignmentScore * 100) / 100,
+                examScore: Math.round(examScore * 100) / 100,
+                participationScore: 80 + Math.random() * 15,
+                status: 'ON_TRACK' as any,
+                strengths: ['Consistent effort'],
+                areasForImprovement: [],
+              },
+            })
+          } catch {
+            // Skip if exists
+          }
+        }
+      } catch {
+        // Skip if user already exists
+      }
+    }
+  }
+
+  console.log('  ✅ Teacher dashboard data created successfully!')
 }
 
 main()

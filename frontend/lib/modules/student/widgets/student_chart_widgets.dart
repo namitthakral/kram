@@ -248,7 +248,6 @@ class PerformanceTrendsChart extends StatelessWidget {
                     }
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
-                      space: 8,
                       child: text,
                     );
                   },

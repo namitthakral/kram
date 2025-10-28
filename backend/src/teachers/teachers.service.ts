@@ -7,6 +7,12 @@ import {
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import {
+  AttendanceTrendsData,
+  DailyAttendanceDetail,
+  DailyAttendancePreview,
+  EnhancedTeacherDashboardStats,
+  GradeDistributionData,
+  SubjectPerformanceData,
   TeacherAttendanceSummary,
   TeacherDashboardStats,
   TeacherStudentActivity,
@@ -176,6 +182,8 @@ export class TeachersService {
           user: {
             select: {
               id: true,
+              uuid: true,
+              edverseId: true,
               name: true,
               email: true,
               phone: true,
@@ -215,6 +223,8 @@ export class TeachersService {
         user: {
           select: {
             id: true,
+            uuid: true,
+            edverseId: true,
             name: true,
             email: true,
             phone: true,
@@ -252,6 +262,62 @@ export class TeachersService {
 
     if (!teacher) {
       throw new NotFoundException(`Teacher with ID ${id} not found`)
+    }
+
+    return teacher
+  }
+
+  async findByUuid(uuid: string) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: {
+          uuid,
+        },
+        status: { not: 'RESIGNED' },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            uuid: true,
+            edverseId: true,
+            name: true,
+            email: true,
+            phone: true,
+            status: true,
+          },
+        },
+        institution: true,
+        classSections: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                courseName: true,
+                courseCode: true,
+                credits: true,
+              },
+            },
+            semester: {
+              select: {
+                id: true,
+                semesterName: true,
+                semesterNumber: true,
+              },
+            },
+          },
+        },
+        teacherSubjects: {
+          include: {
+            subject: true,
+            academicYear: true,
+          },
+        },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
     }
 
     return teacher
@@ -961,5 +1027,940 @@ export class TeachersService {
         remarks: record.remarks,
       })),
     }
+  }
+
+  // UUID-based methods
+  async updateByUuid(uuid: string, updateTeacherDto: UpdateTeacherDto) {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing update method with the found teacher ID
+    return this.update(teacher.id, updateTeacherDto)
+  }
+
+  async removeByUuid(uuid: string) {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing remove method with the found teacher ID
+    return this.remove(teacher.id)
+  }
+
+  async assignSubjectsByUuid(
+    uuid: string,
+    assignSubjectsDto: AssignSubjectsDto
+  ) {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing assignSubjects method with the found teacher ID
+    return this.assignSubjects(teacher.id, assignSubjectsDto)
+  }
+
+  async getTeacherSubjectsByUuid(uuid: string, academicYearId?: number) {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getTeacherSubjects method with the found teacher ID
+    return this.getTeacherSubjects(teacher.id, academicYearId)
+  }
+
+  async getTeacherClassesByUuid(uuid: string, semesterId?: number) {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getTeacherClasses method with the found teacher ID
+    return this.getTeacherClasses(teacher.id, semesterId)
+  }
+
+  async getTeacherStatsByUuid(uuid: string) {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getTeacherStats method with the found teacher ID
+    return this.getTeacherStats(teacher.id)
+  }
+
+  async getDashboardStatsByUuid(uuid: string): Promise<TeacherDashboardStats> {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getDashboardStats method with the found teacher ID
+    return this.getDashboardStats(teacher.id)
+  }
+
+  async getRecentStudentActivityByUuid(
+    uuid: string,
+    limit: number = 10
+  ): Promise<TeacherStudentActivity[]> {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getRecentStudentActivity method with the found teacher ID
+    return this.getRecentStudentActivity(teacher.id, limit)
+  }
+
+  async getAttendanceSummaryByUuid(
+    uuid: string,
+    date?: string,
+    period: 'daily' | 'weekly' | 'monthly' = 'daily'
+  ): Promise<TeacherAttendanceSummary> {
+    // First find the teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getAttendanceSummary method with the found teacher ID
+    return this.getAttendanceSummary(teacher.id, date, period)
+  }
+
+  // ============================================================================
+  // ENHANCED DASHBOARD METHODS
+  // ============================================================================
+
+  /**
+   * Get enhanced dashboard stats with tab summaries and daily preview
+   */
+  async getEnhancedDashboardStats(
+    teacherId: number
+  ): Promise<EnhancedTeacherDashboardStats> {
+    // Get basic dashboard stats (existing method)
+    const basicStats = await this.getDashboardStats(teacherId)
+
+    // Get additional metrics
+    const [
+      subjectCount,
+      subjectPerformanceSummary,
+      gradeDistSummary,
+      weeklyPreview,
+    ] = await Promise.all([
+      this.getTeacherSubjectCount(teacherId),
+      this.getSubjectPerformanceSummary(teacherId),
+      this.getGradeDistributionSummary(teacherId),
+      this.getWeeklyAttendancePreview(teacherId),
+    ])
+
+    return {
+      ...basicStats,
+      totalSubjects: subjectCount,
+      overallClassAverage: subjectPerformanceSummary.overallAverage,
+      studentsAtRisk: subjectPerformanceSummary.studentsAtRisk,
+      tabSummaries: {
+        attendanceTrends: {
+          weeklyAverage: Math.round(basicStats.avgAttendanceThisMonth),
+          trend: await this.getAttendanceTrend(teacherId),
+          dailyPreview: weeklyPreview,
+          lastUpdated: new Date().toISOString(),
+        },
+        subjectPerformance: {
+          bestSubject: subjectPerformanceSummary.bestSubject,
+          needsAttention: subjectPerformanceSummary.worstSubject,
+          lastUpdated: new Date().toISOString(),
+        },
+        gradeDistribution: {
+          topGrade: gradeDistSummary.mostCommonGrade,
+          averageGrade: gradeDistSummary.averageGrade,
+          lastUpdated: new Date().toISOString(),
+        },
+      },
+    }
+  }
+
+  async getEnhancedDashboardStatsByUuid(
+    uuid: string
+  ): Promise<EnhancedTeacherDashboardStats> {
+    const teacher = await this.findByUuid(uuid)
+    return this.getEnhancedDashboardStats(teacher.id)
+  }
+
+  // ============================================================================
+  // ATTENDANCE TRENDS - DETAILED DATA
+  // ============================================================================
+
+  /**
+   * Get detailed attendance trends data for the Attendance Trends tab
+   */
+  async getAttendanceTrends(teacherId: number): Promise<AttendanceTrendsData> {
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - today.getDay()) // Start of current week
+    startOfWeek.setHours(0, 0, 0, 0)
+
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6)
+    endOfWeek.setHours(23, 59, 59, 999)
+
+    const [weeklyData, monthlyData, patterns] = await Promise.all([
+      this.getWeeklyAttendanceData(teacherId, startOfWeek, endOfWeek),
+      this.getMonthlyAttendanceData(teacherId),
+      this.getAttendancePatterns(teacherId),
+    ])
+
+    return {
+      weeklyOverview: weeklyData,
+      monthlyTrends: monthlyData,
+      attendancePatterns: patterns,
+    }
+  }
+
+  async getAttendanceTrendsByUuid(uuid: string): Promise<AttendanceTrendsData> {
+    const teacher = await this.findByUuid(uuid)
+    return this.getAttendanceTrends(teacher.id)
+  }
+
+  private async getWeeklyAttendanceData(
+    teacherId: number,
+    startDate: Date,
+    endDate: Date
+  ) {
+    const dailyAttendance: DailyAttendanceDetail[] = []
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    for (
+      let date = new Date(startDate);
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const currentDate = new Date(date)
+      currentDate.setHours(0, 0, 0, 0)
+      const nextDate = new Date(currentDate)
+      nextDate.setDate(currentDate.getDate() + 1)
+
+      const attendanceData = await this.prisma.attendance.groupBy({
+        by: ['status'],
+        where: {
+          section: {
+            teacherId,
+            status: 'ACTIVE',
+          },
+          date: {
+            gte: currentDate,
+            lt: nextDate,
+          },
+        },
+        _count: {
+          status: true,
+        },
+      })
+
+      const present =
+        attendanceData.find(a => a.status === 'PRESENT')?._count.status || 0
+      const absent =
+        attendanceData.find(a => a.status === 'ABSENT')?._count.status || 0
+      const late =
+        attendanceData.find(a => a.status === 'LATE')?._count.status || 0
+      const excused =
+        attendanceData.find(a => a.status === 'EXCUSED')?._count.status || 0
+      const total = present + absent + late + excused
+
+      dailyAttendance.push({
+        day: dayNames[currentDate.getDay()],
+        date: currentDate.toISOString().split('T')[0],
+        present,
+        absent,
+        late,
+        excused,
+        total,
+        percentage: total > 0 ? Math.round((present / total) * 100) : 0,
+      })
+    }
+
+    const weeklyAverage =
+      dailyAttendance.length > 0
+        ? Math.round(
+            dailyAttendance.reduce((sum, day) => sum + day.percentage, 0) /
+              dailyAttendance.length
+          )
+        : 0
+
+    return {
+      weekStartDate: startDate.toISOString().split('T')[0],
+      weekEndDate: endDate.toISOString().split('T')[0],
+      dailyAttendance,
+      weeklyAverage,
+    }
+  }
+
+  private async getMonthlyAttendanceData(teacherId: number) {
+    const today = new Date()
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+    // Get weekly breakdown for current month
+    const weeklyBreakdown = []
+    const weekStart = new Date(startOfMonth)
+    let weekNumber = 1
+
+    while (weekStart <= endOfMonth) {
+      const weekEnd = new Date(weekStart)
+      weekEnd.setDate(weekStart.getDate() + 6)
+      if (weekEnd > endOfMonth) weekEnd.setTime(endOfMonth.getTime())
+
+      const weekData = await this.getWeeklyAttendanceData(
+        teacherId,
+        weekStart,
+        weekEnd
+      )
+
+      const totalStudents =
+        weekData.dailyAttendance.length > 0
+          ? Math.round(
+              weekData.dailyAttendance.reduce(
+                (sum, day) => sum + day.total,
+                0
+              ) / weekData.dailyAttendance.length
+            )
+          : 0
+
+      weeklyBreakdown.push({
+        weekNumber,
+        weekStartDate: weekStart.toISOString().split('T')[0],
+        averageAttendance: weekData.weeklyAverage,
+        totalStudents,
+      })
+
+      weekStart.setDate(weekStart.getDate() + 7)
+      weekNumber++
+    }
+
+    const monthlyAverage =
+      weeklyBreakdown.length > 0
+        ? Math.round(
+            weeklyBreakdown.reduce(
+              (sum, week) => sum + week.averageAttendance,
+              0
+            ) / weeklyBreakdown.length
+          )
+        : 0
+
+    // Get previous month for comparison
+    const prevMonthStart = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1
+    )
+    const prevMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0)
+    const prevMonthAverage = await this.getMonthAttendanceAverage(
+      teacherId,
+      prevMonthStart,
+      prevMonthEnd
+    )
+
+    const percentageChange =
+      prevMonthAverage > 0
+        ? ((monthlyAverage - prevMonthAverage) / prevMonthAverage) * 100
+        : 0
+
+    const trend: 'up' | 'down' | 'stable' =
+      percentageChange > 2 ? 'up' : percentageChange < -2 ? 'down' : 'stable'
+
+    return {
+      monthYear: today.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      }),
+      weeklyBreakdown,
+      monthlyAverage,
+      comparisonWithPreviousMonth: {
+        previousMonth: prevMonthStart.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        }),
+        percentageChange: Math.round(percentageChange * 100) / 100,
+        trend,
+      },
+    }
+  }
+
+  private async getAttendancePatterns(teacherId: number) {
+    const today = new Date()
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+    // Get all attendance records for the month
+    const attendanceRecords = await this.prisma.attendance.findMany({
+      where: {
+        section: {
+          teacherId,
+          status: 'ACTIVE',
+        },
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+      include: {
+        student: true,
+      },
+    })
+
+    // Calculate day-wise attendance
+    const dayWiseAttendance: Record<
+      string,
+      { present: number; total: number }
+    > = {}
+    const dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ]
+
+    attendanceRecords.forEach(record => {
+      const dayName = dayNames[new Date(record.date).getDay()]
+      if (!dayWiseAttendance[dayName]) {
+        dayWiseAttendance[dayName] = { present: 0, total: 0 }
+      }
+      dayWiseAttendance[dayName].total++
+      if (record.status === 'PRESENT' || record.status === 'LATE') {
+        dayWiseAttendance[dayName].present++
+      }
+    })
+
+    // Find best and worst days
+    let bestDay = 'Monday'
+    let worstDay = 'Monday'
+    let bestPercentage = 0
+    let worstPercentage = 100
+
+    Object.entries(dayWiseAttendance).forEach(([day, data]) => {
+      const percentage = (data.present / data.total) * 100
+      if (percentage > bestPercentage) {
+        bestPercentage = percentage
+        bestDay = day
+      }
+      if (percentage < worstPercentage) {
+        worstPercentage = percentage
+        worstDay = day
+      }
+    })
+
+    // Calculate student attendance patterns
+    const studentAttendance: Record<
+      number,
+      { present: number; total: number }
+    > = {}
+
+    attendanceRecords.forEach(record => {
+      if (!studentAttendance[record.studentId]) {
+        studentAttendance[record.studentId] = { present: 0, total: 0 }
+      }
+      studentAttendance[record.studentId].total++
+      if (record.status === 'PRESENT' || record.status === 'LATE') {
+        studentAttendance[record.studentId].present++
+      }
+    })
+
+    const consistentAttendees = Object.values(studentAttendance).filter(
+      data => (data.present / data.total) * 100 >= 95
+    ).length
+
+    const irregularAttendees = Object.values(studentAttendance).filter(
+      data => (data.present / data.total) * 100 < 75
+    ).length
+
+    return {
+      bestAttendanceDay: bestDay,
+      worstAttendanceDay: worstDay,
+      consistentAttendees,
+      irregularAttendees,
+      improvingStudents: 0, // TODO: Implement trend analysis
+      decliningStudents: 0, // TODO: Implement trend analysis
+    }
+  }
+
+  // ============================================================================
+  // SUBJECT PERFORMANCE - DETAILED DATA
+  // ============================================================================
+
+  /**
+   * Get detailed subject performance data for the Subject Performance tab
+   */
+  async getSubjectPerformanceData(
+    teacherId: number
+  ): Promise<SubjectPerformanceData> {
+    const teacherSubjects = await this.prisma.teacherSubject.findMany({
+      where: { teacherId },
+      include: {
+        subject: true,
+        academicYear: true,
+      },
+    })
+
+    if (teacherSubjects.length === 0) {
+      return {
+        subjects: [],
+        overallClassAverage: 0,
+        bestPerformingSubject: { name: 'N/A', averageScore: 0 },
+        subjectNeedingAttention: {
+          name: 'N/A',
+          averageScore: 0,
+          studentsAtRisk: 0,
+        },
+        performanceComparison: {
+          currentMonth: 0,
+          previousMonth: 0,
+          percentageChange: 0,
+        },
+      }
+    }
+
+    const subjects = await Promise.all(
+      teacherSubjects.map(async ts => {
+        const studentProgress = await this.prisma.studentProgress.findMany({
+          where: {
+            subjectId: ts.subjectId,
+            academicYearId: ts.academicYearId,
+          },
+        })
+
+        const averageScore =
+          studentProgress.length > 0
+            ? studentProgress.reduce(
+                (sum, sp) => sum + (Number(sp.examScore) || 0),
+                0
+              ) / studentProgress.length
+            : 0
+
+        return {
+          id: ts.subject.id,
+          name: ts.subject.name,
+          code: ts.subject.code,
+          averageScore: Math.round(averageScore * 100) / 100,
+          totalStudents: studentProgress.length,
+          performanceTrend: 'stable' as const, // TODO: Implement trend calculation
+          lastUpdated: new Date().toISOString(),
+        }
+      })
+    )
+
+    const overallClassAverage =
+      subjects.length > 0
+        ? Math.round(
+            (subjects.reduce((sum, subject) => sum + subject.averageScore, 0) /
+              subjects.length) *
+              100
+          ) / 100
+        : 0
+
+    const bestPerforming = subjects.reduce(
+      (best, current) =>
+        current.averageScore > best.averageScore ? current : best,
+      subjects[0]
+    )
+
+    const needingAttention = subjects.reduce(
+      (worst, current) =>
+        current.averageScore < worst.averageScore ? current : worst,
+      subjects[0]
+    )
+
+    return {
+      subjects,
+      overallClassAverage,
+      bestPerformingSubject: {
+        name: bestPerforming.name,
+        averageScore: bestPerforming.averageScore,
+      },
+      subjectNeedingAttention: {
+        name: needingAttention.name,
+        averageScore: needingAttention.averageScore,
+        studentsAtRisk: 0, // TODO: Calculate students at risk
+      },
+      performanceComparison: {
+        currentMonth: overallClassAverage,
+        previousMonth: overallClassAverage, // TODO: Get previous month data
+        percentageChange: 0,
+      },
+    }
+  }
+
+  async getSubjectPerformanceDataByUuid(
+    uuid: string
+  ): Promise<SubjectPerformanceData> {
+    const teacher = await this.findByUuid(uuid)
+    return this.getSubjectPerformanceData(teacher.id)
+  }
+
+  // ============================================================================
+  // GRADE DISTRIBUTION - DETAILED DATA
+  // ============================================================================
+
+  /**
+   * Get detailed grade distribution data for the Grade Distribution tab
+   */
+  async getGradeDistributionData(
+    teacherId: number
+  ): Promise<GradeDistributionData> {
+    // Get all student progress records for teacher's subjects
+    const teacherSubjects = await this.prisma.teacherSubject.findMany({
+      where: { teacherId },
+      select: { subjectId: true },
+    })
+
+    const subjectIds = teacherSubjects.map(ts => ts.subjectId)
+
+    if (subjectIds.length === 0) {
+      return {
+        overallDistribution: {
+          gradeBreakdown: {},
+          percentageBreakdown: {},
+          totalStudents: 0,
+        },
+        subjectWiseDistribution: [],
+        gradeComparison: {
+          currentSemester: {},
+          previousSemester: {},
+          improvement: [],
+        },
+        topPerformers: [],
+      }
+    }
+
+    const studentProgress = await this.prisma.studentProgress.findMany({
+      where: {
+        subjectId: { in: subjectIds },
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                uuid: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        subject: true,
+      },
+    })
+
+    // Calculate overall grade distribution
+    const gradeBreakdown: Record<string, number> = {}
+    studentProgress.forEach(sp => {
+      const grade = sp.overallGrade || 'No Grade'
+      gradeBreakdown[grade] = (gradeBreakdown[grade] || 0) + 1
+    })
+
+    const totalStudents = studentProgress.length
+    const percentageBreakdown: Record<string, number> = {}
+    Object.entries(gradeBreakdown).forEach(([grade, count]) => {
+      percentageBreakdown[grade] =
+        totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0
+    })
+
+    // Subject-wise distribution
+    const subjectWiseMap = new Map<number, typeof studentProgress>()
+    studentProgress.forEach(sp => {
+      if (!subjectWiseMap.has(sp.subjectId)) {
+        subjectWiseMap.set(sp.subjectId, [])
+      }
+      subjectWiseMap.get(sp.subjectId)!.push(sp)
+    })
+
+    const subjectWiseDistribution = Array.from(subjectWiseMap.entries()).map(
+      ([subjectId, records]) => {
+        const subjectGrades: Record<string, number> = {}
+        records.forEach(sp => {
+          const grade = sp.overallGrade || 'No Grade'
+          subjectGrades[grade] = (subjectGrades[grade] || 0) + 1
+        })
+
+        const grades = records
+          .map(sp => sp.overallGrade)
+          .filter(g => g !== null) as string[]
+        const averageGrade = grades.length > 0 ? grades[0] : 'N/A' // Simplified
+
+        return {
+          subjectId,
+          subjectName: records[0].subject.name,
+          gradeDistribution: subjectGrades,
+          averageGrade,
+          medianGrade: averageGrade, // Simplified
+        }
+      }
+    )
+
+    // Top performers
+    const topPerformers = studentProgress
+      .filter(
+        sp => sp.overallGrade && ['A+', 'A', 'A-'].includes(sp.overallGrade)
+      )
+      .slice(0, 10)
+      .map(sp => ({
+        studentId: sp.student.user.uuid!,
+        studentName: `${sp.student.user.firstName} ${sp.student.user.lastName}`,
+        overallGrade: sp.overallGrade!,
+        subjectGrades: { [sp.subject.name]: sp.overallGrade! },
+      }))
+
+    return {
+      overallDistribution: {
+        gradeBreakdown,
+        percentageBreakdown,
+        totalStudents,
+      },
+      subjectWiseDistribution,
+      gradeComparison: {
+        currentSemester: gradeBreakdown,
+        previousSemester: {}, // TODO: Get previous semester data
+        improvement: [],
+      },
+      topPerformers,
+    }
+  }
+
+  async getGradeDistributionDataByUuid(
+    uuid: string
+  ): Promise<GradeDistributionData> {
+    const teacher = await this.findByUuid(uuid)
+    return this.getGradeDistributionData(teacher.id)
+  }
+
+  // ============================================================================
+  // HELPER METHODS
+  // ============================================================================
+
+  private async getTeacherSubjectCount(teacherId: number): Promise<number> {
+    return this.prisma.teacherSubject.count({
+      where: { teacherId },
+    })
+  }
+
+  private async getSubjectPerformanceSummary(teacherId: number) {
+    const subjects = await this.prisma.teacherSubject.findMany({
+      where: { teacherId },
+      include: { subject: true },
+    })
+
+    if (subjects.length === 0) {
+      return {
+        overallAverage: 0,
+        studentsAtRisk: 0,
+        bestSubject: 'N/A',
+        worstSubject: 'N/A',
+      }
+    }
+
+    const subjectScores = await Promise.all(
+      subjects.map(async ts => {
+        const progress = await this.prisma.studentProgress.findMany({
+          where: { subjectId: ts.subjectId },
+        })
+
+        const avgScore =
+          progress.length > 0
+            ? progress.reduce((sum, p) => sum + (Number(p.examScore) || 0), 0) /
+              progress.length
+            : 0
+
+        return {
+          name: ts.subject.name,
+          score: avgScore,
+        }
+      })
+    )
+
+    const overallAverage =
+      subjectScores.reduce((sum, s) => sum + s.score, 0) / subjectScores.length
+
+    const best = subjectScores.reduce((b, c) => (c.score > b.score ? c : b))
+    const worst = subjectScores.reduce((w, c) => (c.score < w.score ? c : w))
+
+    return {
+      overallAverage: Math.round(overallAverage * 100) / 100,
+      studentsAtRisk: 0, // TODO: Calculate
+      bestSubject: `${best.name} (${Math.round(best.score)}%)`,
+      worstSubject: `${worst.name} (${Math.round(worst.score)}%)`,
+    }
+  }
+
+  private async getGradeDistributionSummary(teacherId: number) {
+    const teacherSubjects = await this.prisma.teacherSubject.findMany({
+      where: { teacherId },
+      select: { subjectId: true },
+    })
+
+    const subjectIds = teacherSubjects.map(ts => ts.subjectId)
+
+    if (subjectIds.length === 0) {
+      return {
+        mostCommonGrade: 'N/A',
+        averageGrade: 'N/A',
+      }
+    }
+
+    const progress = await this.prisma.studentProgress.findMany({
+      where: { subjectId: { in: subjectIds } },
+      select: { overallGrade: true },
+    })
+
+    const gradeCounts: Record<string, number> = {}
+    progress.forEach(p => {
+      if (p.overallGrade) {
+        gradeCounts[p.overallGrade] = (gradeCounts[p.overallGrade] || 0) + 1
+      }
+    })
+
+    const mostCommon = Object.entries(gradeCounts).reduce(
+      (max, [grade, count]) => (count > max.count ? { grade, count } : max),
+      { grade: 'N/A', count: 0 }
+    )
+
+    const percentage =
+      progress.length > 0
+        ? Math.round((mostCommon.count / progress.length) * 100)
+        : 0
+
+    return {
+      mostCommonGrade: `${mostCommon.grade} (${percentage}%)`,
+      averageGrade: mostCommon.grade,
+    }
+  }
+
+  private async getWeeklyAttendancePreview(
+    teacherId: number
+  ): Promise<DailyAttendancePreview[]> {
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - today.getDay())
+    startOfWeek.setHours(0, 0, 0, 0)
+
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6)
+
+    const weekData = await this.getWeeklyAttendanceData(
+      teacherId,
+      startOfWeek,
+      endOfWeek
+    )
+
+    return weekData.dailyAttendance.map(day => ({
+      day: day.day,
+      percentage: day.percentage,
+    }))
+  }
+
+  private async getAttendanceTrend(
+    teacherId: number
+  ): Promise<'improving' | 'declining' | 'stable'> {
+    const today = new Date()
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0)
+
+    const [thisMonthAvg, lastMonthAvg] = await Promise.all([
+      this.getMonthAttendanceAverage(teacherId, thisMonth, today),
+      this.getMonthAttendanceAverage(teacherId, lastMonth, lastMonthEnd),
+    ])
+
+    const change = thisMonthAvg - lastMonthAvg
+
+    if (change > 2) return 'improving'
+    if (change < -2) return 'declining'
+    return 'stable'
+  }
+
+  private async getMonthAttendanceAverage(
+    teacherId: number,
+    startDate: Date,
+    endDate: Date
+  ): Promise<number> {
+    const attendance = await this.prisma.attendance.findMany({
+      where: {
+        section: {
+          teacherId,
+          status: 'ACTIVE',
+        },
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: { status: true },
+    })
+
+    if (attendance.length === 0) return 0
+
+    const present = attendance.filter(
+      a => a.status === 'PRESENT' || a.status === 'LATE'
+    ).length
+
+    return Math.round((present / attendance.length) * 100)
   }
 }

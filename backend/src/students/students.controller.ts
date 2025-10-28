@@ -1,26 +1,25 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common'
-import { StudentsService } from './students.service'
-import {
-  CreateStudentDto,
-  UpdateStudentDto,
-  PaginationDto,
-} from './dto/student.dto'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { UserWithRelations } from '../types/auth.types'
+import {
+  CreateStudentDto,
+  PaginationDto,
+  UpdateStudentDto,
+} from './dto/student.dto'
+import { StudentsService } from './students.service'
 
 @Controller('students')
 @UseGuards(JwtAuthGuard)
@@ -37,12 +36,12 @@ export class StudentsController {
     return this.studentsService.findAll(paginationDto, user)
   }
 
-  @Get(':id')
-  async findOne(
-    @Param('id', ParseIntPipe) id: number,
+  @Get(':uuid')
+  async findByUuid(
+    @Param('uuid') uuid: string,
     @CurrentUser() user: UserWithRelations
   ) {
-    return this.studentsService.findOne(id, user)
+    return this.studentsService.findByUuid(uuid, user)
   }
 
   @Post()
@@ -52,38 +51,43 @@ export class StudentsController {
     return this.studentsService.create(createStudentDto)
   }
 
-  @Patch(':id')
+  @Patch(':uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   async update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Body() updateStudentDto: UpdateStudentDto
   ) {
-    return this.studentsService.update(id, updateStudentDto)
+    return this.studentsService.updateByUuid(uuid, updateStudentDto)
   }
 
-  @Delete(':id')
+  @Delete(':uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.studentsService.remove(id)
+  async remove(@Param('uuid') uuid: string) {
+    return this.studentsService.removeByUuid(uuid)
   }
 
-  @Get(':id/academic-records')
+  @Get(':uuid/academic-records')
   async getAcademicRecords(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @CurrentUser() user: UserWithRelations
   ) {
-    return this.studentsService.getAcademicRecords(id, user)
+    return this.studentsService.getAcademicRecordsByUuid(uuid, user)
   }
 
-  @Get(':id/attendance')
+  @Get(':uuid/attendance')
   async getAttendance(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uuid') uuid: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @CurrentUser() user?: UserWithRelations
   ) {
-    return this.studentsService.getAttendance(id, startDate, endDate, user)
+    return this.studentsService.getAttendanceByUuid(
+      uuid,
+      startDate,
+      endDate,
+      user
+    )
   }
 }

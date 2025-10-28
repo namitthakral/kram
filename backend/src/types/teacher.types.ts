@@ -122,3 +122,182 @@ export interface TeacherDashboardFilters {
   period?: TeacherAttendancePeriod
   limit?: number
 }
+
+// ============================================================================
+// ENHANCED DASHBOARD TYPES
+// ============================================================================
+
+// Enhanced Dashboard Overview (includes tab summaries)
+export interface EnhancedTeacherDashboardStats extends TeacherDashboardStats {
+  totalSubjects: number
+  overallClassAverage: number
+  studentsAtRisk: number
+  tabSummaries: {
+    attendanceTrends: AttendanceTrendsSummary
+    subjectPerformance: SubjectPerformanceSummary
+    gradeDistribution: GradeDistributionSummary
+  }
+}
+
+export interface AttendanceTrendsSummary {
+  weeklyAverage: number
+  trend: 'improving' | 'declining' | 'stable'
+  dailyPreview: DailyAttendancePreview[]
+  lastUpdated: string
+}
+
+export interface DailyAttendancePreview {
+  day: string
+  percentage: number
+}
+
+export interface SubjectPerformanceSummary {
+  bestSubject: string
+  needsAttention: string
+  lastUpdated: string
+}
+
+export interface GradeDistributionSummary {
+  topGrade: string
+  averageGrade: string
+  lastUpdated: string
+}
+
+// ============================================================================
+// ATTENDANCE TRENDS TAB - DETAILED DATA
+// ============================================================================
+
+export interface AttendanceTrendsData {
+  weeklyOverview: WeeklyAttendanceData
+  monthlyTrends: MonthlyAttendanceData
+  attendancePatterns: AttendancePatterns
+}
+
+export interface WeeklyAttendanceData {
+  weekStartDate: string
+  weekEndDate: string
+  dailyAttendance: DailyAttendanceDetail[]
+  weeklyAverage: number
+}
+
+export interface DailyAttendanceDetail {
+  day: string
+  date: string
+  present: number
+  absent: number
+  late: number
+  excused: number
+  total: number
+  percentage: number
+}
+
+export interface MonthlyAttendanceData {
+  monthYear: string
+  weeklyBreakdown: WeeklyBreakdown[]
+  monthlyAverage: number
+  comparisonWithPreviousMonth: MonthComparison
+}
+
+export interface WeeklyBreakdown {
+  weekNumber: number
+  weekStartDate: string
+  averageAttendance: number
+  totalStudents: number
+}
+
+export interface MonthComparison {
+  previousMonth: string
+  percentageChange: number
+  trend: 'up' | 'down' | 'stable'
+}
+
+export interface AttendancePatterns {
+  bestAttendanceDay: string
+  worstAttendanceDay: string
+  consistentAttendees: number
+  irregularAttendees: number
+  improvingStudents: number
+  decliningStudents: number
+}
+
+// ============================================================================
+// SUBJECT PERFORMANCE TAB - DETAILED DATA
+// ============================================================================
+
+export interface SubjectPerformanceData {
+  subjects: SubjectPerformanceDetail[]
+  overallClassAverage: number
+  bestPerformingSubject: BestPerformingSubject
+  subjectNeedingAttention: SubjectNeedingAttention
+  performanceComparison: PerformanceComparison
+}
+
+export interface SubjectPerformanceDetail {
+  id: number
+  name: string
+  code: string
+  averageScore: number
+  totalStudents: number
+  performanceTrend: 'improving' | 'declining' | 'stable'
+  lastUpdated: string
+}
+
+export interface BestPerformingSubject {
+  name: string
+  averageScore: number
+}
+
+export interface SubjectNeedingAttention {
+  name: string
+  averageScore: number
+  studentsAtRisk: number
+}
+
+export interface PerformanceComparison {
+  currentMonth: number
+  previousMonth: number
+  percentageChange: number
+}
+
+// ============================================================================
+// GRADE DISTRIBUTION TAB - DETAILED DATA
+// ============================================================================
+
+export interface GradeDistributionData {
+  overallDistribution: OverallGradeDistribution
+  subjectWiseDistribution: SubjectGradeDistribution[]
+  gradeComparison: GradeComparisonData
+  topPerformers: TopPerformer[]
+}
+
+export interface OverallGradeDistribution {
+  gradeBreakdown: Record<string, number>
+  percentageBreakdown: Record<string, number>
+  totalStudents: number
+}
+
+export interface SubjectGradeDistribution {
+  subjectId: number
+  subjectName: string
+  gradeDistribution: Record<string, number>
+  averageGrade: string
+  medianGrade: string
+}
+
+export interface GradeComparisonData {
+  currentSemester: Record<string, number>
+  previousSemester: Record<string, number>
+  improvement: GradeImprovement[]
+}
+
+export interface GradeImprovement {
+  grade: string
+  change: number
+}
+
+export interface TopPerformer {
+  studentId: string
+  studentName: string
+  overallGrade: string
+  subjectGrades: Record<string, string>
+}

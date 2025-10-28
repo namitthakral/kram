@@ -20,16 +20,20 @@ datasource db {
 
 model User {
   id                Int      @id @default(autoincrement())
+  uuid              String?  @unique @default(uuid()) @db.Uuid
+  edverseId         String?  @unique @map("edverse_id") @db.VarChar(20)
   firstName         String   @db.VarChar(50)
   lastName          String   @db.VarChar(50)
   name              String   @db.VarChar(100) // Keep for backward compatibility
-  email             String   @unique @db.VarChar(100)
+  email             String?  @unique @db.VarChar(100)
   phone             String?  @db.VarChar(15)
   passwordHash      String   @map("password_hash") @db.VarChar(255)
   roleId            Int      @map("role_id")
   emailVerified     Boolean  @default(false) @map("email_verified")
   phoneVerified     Boolean  @default(false) @map("phone_verified")
   twoFactorEnabled  Boolean  @default(false) @map("two_factor_enabled")
+  isTemporaryPassword Boolean @default(false) @map("is_temporary_password")
+  mustChangePassword Boolean @default(false) @map("must_change_password")
   lastLogin         DateTime? @map("last_login")
   loginAttempts     Int      @default(0) @map("login_attempts")
   accountLocked     Boolean  @default(false) @map("account_locked")

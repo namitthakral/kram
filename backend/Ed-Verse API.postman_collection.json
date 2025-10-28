@@ -87,6 +87,116 @@
           "response": []
         },
         {
+          "name": "Self Registration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"myPassword123\",\n  \"role\": \"student\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/self-register",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "self-register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login with EdVerse ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"edverseId\": \"EDV-S-2024-000001\",\n  \"password\": \"NAMI2025\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/login",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login with Phone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+1234567890\",\n  \"password\": \"userPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/login",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"NAMI2025\",\n  \"newPassword\": \"myNewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/change-password",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "change-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Map Parent to Child",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"childEdverseId\": \"EDV-S-2024-000001\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/map-parent-child",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "map-parent-child"]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Profile",
           "request": {
             "method": "GET",
@@ -189,19 +299,6 @@
           "response": []
         },
         {
-          "name": "Get User by ID",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/users/16",
-              "host": ["{{api_url}}"],
-              "path": ["users", "16"]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Create New User",
           "request": {
             "method": "POST",
@@ -241,54 +338,6 @@
               "raw": "{{api_url}}/users/profile",
               "host": ["{{api_url}}"],
               "path": ["users", "profile"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update User by ID",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Namit\",\n  \"status\": \"ACTIVE\"\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/users/2",
-              "host": ["{{api_url}}"],
-              "path": ["users", "2"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Soft Delete User",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/users/15",
-              "host": ["{{api_url}}"],
-              "path": ["users", "15"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Hard Delete User",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/users/15/hard",
-              "host": ["{{api_url}}"],
-              "path": ["users", "15", "hard"]
             }
           },
           "response": []
@@ -363,67 +412,21 @@
           "response": []
         },
         {
-          "name": "Get Teacher by ID",
+          "name": "Get Teacher by UUID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{api_url}}/teachers/1",
+              "raw": "{{api_url}}/teachers/:teacher_uuid",
               "host": ["{{api_url}}"],
-              "path": ["teachers", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Teacher's Subjects",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/teachers/1/subjects",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "1", "subjects"],
-              "query": [
+              "path": ["teachers", ":teacher_uuid"],
+              "variable": [
                 {
-                  "key": "academicYearId",
-                  "value": "1",
-                  "disabled": true
+                  "key": "teacher_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
                 }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Teacher's Classes",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/teachers/1/classes",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "1", "classes"],
-              "query": [
-                {
-                  "key": "semesterId",
-                  "value": "1",
-                  "disabled": true
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Teacher Statistics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/teachers/1/stats",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "1", "stats"]
             }
           },
           "response": []
@@ -451,63 +454,6 @@
           "response": []
         },
         {
-          "name": "Update Teacher",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"designation\": \"Senior Professor\",\n  \"specialization\": \"Advanced Computer Science\",\n  \"experienceYears\": 6,\n  \"officeLocation\": \"Room 201\"\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/teachers/1",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Assign Subjects to Teacher",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"subjectIds\": [1, 2],\n  \"academicYearId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/teachers/1/assign-subjects",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "1", "assign-subjects"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Teacher",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/teachers/3",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "3"]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Get Teacher Dashboard Stats",
           "request": {
             "method": "GET",
@@ -519,14 +465,14 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacherId/dashboard-stats",
+              "raw": "{{api_url}}/teachers/:teacher_uuid/dashboard-stats",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacherId", "dashboard-stats"],
+              "path": ["teachers", ":teacher_uuid", "dashboard-stats"],
               "variable": [
                 {
-                  "key": "teacherId",
-                  "value": "1",
-                  "description": "Teacher ID"
+                  "key": "teacher_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
                 }
               ]
             },
@@ -545,76 +491,13 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{api_url}}/teachers/1/dashboard-stats",
+                  "raw": "{{api_url}}/teachers/:teacher_uuid/dashboard-stats",
                   "host": ["{{api_url}}"],
-                  "path": ["teachers", "1", "dashboard-stats"]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n    \"totalStudents\": 28,\n    \"presentToday\": 26,\n    \"absentToday\": 2,\n    \"lateToday\": 0,\n    \"attendancePercentageToday\": 92.9,\n    \"avgAttendanceThisMonth\": 92.5\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Teacher Recent Student Activity",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{api_url}}/teachers/:teacherId/recent-activity?limit=10",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacherId", "recent-activity"],
-              "query": [
-                {
-                  "key": "limit",
-                  "value": "10",
-                  "description": "Number of students to return (default: 10)"
-                }
-              ],
-              "variable": [
-                {
-                  "key": "teacherId",
-                  "value": "1",
-                  "description": "Teacher ID"
-                }
-              ]
-            },
-            "description": "Get a list of students with their recent activity, grades, and attendance information."
-          },
-          "response": [
-            {
-              "name": "Success Response",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{api_url}}/teachers/1/recent-activity?limit=10",
-                  "host": ["{{api_url}}"],
-                  "path": ["teachers", "1", "recent-activity"],
-                  "query": [
+                  "path": ["teachers", ":teacher_uuid", "dashboard-stats"],
+                  "variable": [
                     {
-                      "key": "limit",
-                      "value": "10"
+                      "key": "teacher_uuid",
+                      "value": "550e8400-e29b-41d4-a716-446655440000"
                     }
                   ]
                 }
@@ -628,12 +511,12 @@
                   "value": "application/json"
                 }
               ],
-              "body": "[\n    {\n        \"id\": 1,\n        \"name\": \"Emma Johnson\",\n        \"firstName\": \"Emma\",\n        \"lastName\": \"Johnson\",\n        \"initials\": \"EJ\",\n        \"lastActive\": \"2 hours ago\",\n        \"lastActivityDate\": \"2025-10-27T10:30:00.000Z\",\n        \"grade\": \"A\",\n        \"percentage\": 95,\n        \"attendancePercentage\": 97,\n        \"admissionNumber\": \"ADM001\",\n        \"rollNumber\": \"R001\"\n    }\n]"
+              "body": "{\n    \"totalStudents\": 28,\n    \"presentToday\": 26,\n    \"absentToday\": 2,\n    \"lateToday\": 0,\n    \"attendancePercentageToday\": 92.9,\n    \"avgAttendanceThisMonth\": 92.5,\n    \"totalSubjects\": 4,\n    \"overallClassAverage\": 81.5,\n    \"studentsAtRisk\": 3,\n    \"tabSummaries\": {\n        \"attendanceTrends\": {\n            \"weeklyAverage\": 88,\n            \"trend\": \"improving\",\n            \"dailyPreview\": [\n                {\"day\": \"Mon\", \"percentage\": 89},\n                {\"day\": \"Tue\", \"percentage\": 86},\n                {\"day\": \"Wed\", \"percentage\": 93},\n                {\"day\": \"Thu\", \"percentage\": 89},\n                {\"day\": \"Fri\", \"percentage\": 79}\n            ],\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        },\n        \"subjectPerformance\": {\n            \"bestSubject\": \"Mathematics (85%)\",\n            \"needsAttention\": \"Science (78%)\",\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        },\n        \"gradeDistribution\": {\n            \"topGrade\": \"B+ (30%)\",\n            \"averageGrade\": \"B+\",\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        }\n    }\n}"
             }
           ]
         },
         {
-          "name": "Get Teacher Attendance Summary",
+          "name": "Get Attendance Trends",
           "request": {
             "method": "GET",
             "header": [
@@ -644,31 +527,72 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacherId/attendance-summary?period=daily",
+              "raw": "{{api_url}}/teachers/:teacher_uuid/attendance-trends",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacherId", "attendance-summary"],
-              "query": [
-                {
-                  "key": "period",
-                  "value": "daily",
-                  "description": "Period type: daily, weekly, or monthly"
-                },
-                {
-                  "key": "date",
-                  "value": "2025-10-27",
-                  "description": "Target date (ISO format)",
-                  "disabled": true
-                }
-              ],
+              "path": ["teachers", ":teacher_uuid", "attendance-trends"],
               "variable": [
                 {
-                  "key": "teacherId",
-                  "value": "1",
-                  "description": "Teacher ID"
+                  "key": "teacher_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
                 }
               ]
             },
-            "description": "Get detailed attendance summary for a specific period (daily, weekly, or monthly)."
+            "description": "Get detailed attendance trends data for the Attendance Trends tab including weekly overview, monthly trends, and patterns."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subject Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:teacher_uuid/subject-performance",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":teacher_uuid", "subject-performance"],
+              "variable": [
+                {
+                  "key": "teacher_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                }
+              ]
+            },
+            "description": "Get detailed subject-wise performance data for the Subject Performance tab including average scores, trends, and comparisons."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Grade Distribution",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:teacher_uuid/grade-distribution",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":teacher_uuid", "grade-distribution"],
+              "variable": [
+                {
+                  "key": "teacher_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                }
+              ]
+            },
+            "description": "Get detailed grade distribution data for the Grade Distribution tab including overall distribution, subject-wise breakdown, and top performers."
           },
           "response": []
         }
@@ -714,14 +638,21 @@
           "response": []
         },
         {
-          "name": "Get Student by ID",
+          "name": "Get Student by UUID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{api_url}}/students/1",
+              "raw": "{{api_url}}/students/:student_uuid",
               "host": ["{{api_url}}"],
-              "path": ["students", "1"]
+              "path": ["students", ":student_uuid"],
+              "variable": [
+                {
+                  "key": "student_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
             }
           },
           "response": []
@@ -744,77 +675,6 @@
               "raw": "{{api_url}}/students",
               "host": ["{{api_url}}"],
               "path": ["students"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Student",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"currentSemester\": 2,\n  \"currentYear\": 1,\n  \"section\": \"B\",\n  \"transportRequired\": true\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/students/1",
-              "host": ["{{api_url}}"],
-              "path": ["students", "1"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Student",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/students/5",
-              "host": ["{{api_url}}"],
-              "path": ["students", "5"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student Academic Records",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/students/3/academic-records",
-              "host": ["{{api_url}}"],
-              "path": ["students", "3", "academic-records"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Student Attendance",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/students/1/attendance?startDate=2025-01-01&endDate=2025-01-31",
-              "host": ["{{api_url}}"],
-              "path": ["students", "1", "attendance"],
-              "query": [
-                {
-                  "key": "startDate",
-                  "value": "2025-01-01"
-                },
-                {
-                  "key": "endDate",
-                  "value": "2025-01-31"
-                }
-              ]
             }
           },
           "response": []

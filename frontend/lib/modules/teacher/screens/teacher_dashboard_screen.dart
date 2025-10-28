@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
-import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../models/dashboard_stats.dart';
 import '../providers/performance_tab_provider.dart';
 import '../widgets/chart_widgets.dart';
@@ -24,7 +24,7 @@ class TeacherDashboardScreen extends StatelessWidget {
 
     return CustomMainScreenWithAppbar(
       title: context.translate('Teacher Dashboard'),
-      appBarConfig: AppBarConfig.profile(
+      appBarConfig: const AppBarConfig.profile(
         icon: Icons.school_outlined,
         backgroundColor: CustomAppColors.primary,
         subtitle: 'Manage classes and students',

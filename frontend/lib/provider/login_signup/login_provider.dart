@@ -132,7 +132,7 @@ class LoginProvider extends ChangeNotifier {
       _currentUser = null;
       emailController?.clear();
       passwordController?.clear();
-      updateLoginAccountClicked(loginAccountClicked: false);
+      updateLoginAccountClicked();
       clearError();
 
       log('Logout successful');

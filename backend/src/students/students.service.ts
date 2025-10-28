@@ -1,17 +1,17 @@
 import {
+  ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
-  ConflictException,
 } from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
+import { UserWithRelations } from '../types/auth.types'
 import {
   CreateStudentDto,
-  UpdateStudentDto,
   PaginationDto,
+  UpdateStudentDto,
 } from './dto/student.dto'
-import { UserWithRelations } from '../types/auth.types'
-import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class StudentsService {
@@ -127,6 +127,8 @@ export class StudentsService {
         user: {
           select: {
             id: true,
+            uuid: true,
+            edverseId: true,
             name: true,
             email: true,
             phone: true,
@@ -141,6 +143,8 @@ export class StudentsService {
             user: {
               select: {
                 id: true,
+                uuid: true,
+                edverseId: true,
                 name: true,
                 email: true,
                 phone: true,
@@ -159,6 +163,64 @@ export class StudentsService {
     if (
       currentUser.role.roleName === 'student' &&
       currentUser.student?.id !== id
+    ) {
+      throw new ForbiddenException('Access denied')
+    }
+
+    return {
+      success: true,
+      data: student,
+    }
+  }
+
+  async findByUuid(uuid: string, currentUser: UserWithRelations) {
+    const student = await this.prisma.student.findFirst({
+      where: {
+        user: {
+          uuid,
+        },
+        status: { not: 'SUSPENDED' },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            uuid: true,
+            edverseId: true,
+            name: true,
+            email: true,
+            phone: true,
+            status: true,
+            createdAt: true,
+          },
+        },
+        institution: true,
+        program: true,
+        parents: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                uuid: true,
+                edverseId: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!student) {
+      throw new NotFoundException('Student not found')
+    }
+
+    // Check if user can access this student
+    if (
+      currentUser.role.roleName === 'student' &&
+      currentUser.student?.userId !== student.userId
     ) {
       throw new ForbiddenException('Access denied')
     }
@@ -465,5 +527,78 @@ export class StudentsService {
       success: true,
       data: attendance,
     }
+  }
+
+  // UUID-based methods
+  async updateByUuid(uuid: string, updateStudentDto: UpdateStudentDto) {
+    // First find the student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Use the existing update method with the found student ID
+    return this.update(student.id, updateStudentDto)
+  }
+
+  async removeByUuid(uuid: string) {
+    // First find the student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Use the existing remove method with the found student ID
+    return this.remove(student.id)
+  }
+
+  async getAcademicRecordsByUuid(
+    uuid: string,
+    currentUser?: UserWithRelations
+  ) {
+    // First find the student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getAcademicRecords method with the found student ID
+    return this.getAcademicRecords(student.id, currentUser)
+  }
+
+  async getAttendanceByUuid(
+    uuid: string,
+    startDate?: string,
+    endDate?: string,
+    currentUser?: UserWithRelations
+  ) {
+    // First find the student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: {
+        user: { uuid },
+      },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Use the existing getAttendance method with the found student ID
+    return this.getAttendance(student.id, startDate, endDate, currentUser)
   }
 }
