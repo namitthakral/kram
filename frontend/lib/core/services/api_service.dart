@@ -72,10 +72,11 @@ class ApiService {
   bool _isPublicEndpoint(String path) =>
       _publicEndpoints.any((endpoint) => path.contains(endpoint));
 
-  Future<String?> _getAuthToken() async => _storage.read(AppConstants.tokenKey);
+  Future<String?> _getAuthToken() async =>
+      _storage.read(AppConstants.accessTokenKey);
 
   Future<void> _clearAuthToken() async {
-    await _storage.delete(AppConstants.tokenKey);
+    await _storage.delete(AppConstants.accessTokenKey);
     await _storage.delete('refresh_token');
     await _storage.delete(AppConstants.userKey);
   }

@@ -19,22 +19,80 @@ class AppBarConfig {
     this.subtitle,
     this.iconBackgroundColor,
     this.elevation = 5.0,
+    this.userInitials,
+    this.userName,
+    this.userDetails,
+    this.gpa,
+    this.rank,
+    this.totalRank,
   });
 
-  /// Creates a profile-style app bar configuration
+  /// Creates a student app bar configuration
+  const AppBarConfig.student({
+    required String userInitials,
+    required String userName,
+    required String grade,
+    required String rollNumber,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = userInitials,
+       userName = userName,
+       userDetails = '$grade • Roll No: $rollNumber',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
+  /// Creates a teacher app bar configuration
+  const AppBarConfig.teacher({
+    required String userInitials,
+    required String userName,
+    required String designation,
+    required String employeeId,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = userInitials,
+       userName = userName,
+       userDetails = '$designation • ID: $employeeId',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
+  /// Creates a profile-style app bar configuration with user data
   const AppBarConfig.profile({
-    required IconData icon,
     required Color backgroundColor,
     this.subtitle,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
+    this.userInitials,
+    this.userName,
+    this.userDetails,
+    IconData? icon,
   }) : type = AppBarType.profile,
        profileIcon = icon,
        iconBackgroundColor = backgroundColor,
        showBackButton = false,
        showCircularBackButton = false,
        onBackButtonTapped = null,
-       actions = const [];
+       actions = const [],
+       gpa = null,
+       rank = null,
+       totalRank = null;
 
   /// Creates a standard app bar configuration with back button
   const AppBarConfig.standard({
@@ -47,7 +105,13 @@ class AppBarConfig {
        profileIcon = null,
        iconBackgroundColor = null,
        subtitle = null,
-       onNotificationIconPressed = null;
+       onNotificationIconPressed = null,
+       userInitials = null,
+       userName = null,
+       userDetails = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
 
   final AppBarType type;
   final bool showBackButton;
@@ -59,6 +123,12 @@ class AppBarConfig {
   final String? subtitle;
   final Color? iconBackgroundColor;
   final double elevation;
+  final String? userInitials;
+  final String? userName;
+  final String? userDetails;
+  final String? gpa;
+  final int? rank;
+  final int? totalRank;
 }
 
 class CustomMainScreenWithAppbar extends StatelessWidget {
@@ -176,11 +246,22 @@ class _CustomAppBar extends StatelessWidget {
                           config.iconBackgroundColor ?? CustomAppColors.primary,
                       borderRadius: BorderRadius.circular(22.0),
                     ),
-                    child: Icon(
-                      config.profileIcon ?? Icons.people_outline,
-                      color: Colors.white,
-                      size: 32,
-                    ),
+                    child: config.userInitials != null
+                        ? Center(
+                          child: Text(
+                            config.userInitials!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                        : Icon(
+                          config.profileIcon ?? Icons.people_outline,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -189,21 +270,29 @@ class _CustomAppBar extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          title,
+                          config.userName ?? title,
                           style: context.textTheme.titleSm.copyWith(
                             fontWeight: FontWeight.w600,
                             fontSize: 18,
                             color: Colors.black,
                           ),
                         ),
-
-                        Text(
-                          config.subtitle ?? 'Dashboard',
-                          style: context.textTheme.bodyXs.copyWith(
-                            color: const Color(0xFF666666),
-                            fontSize: 14,
+                        if (config.userDetails != null)
+                          Text(
+                            config.userDetails!,
+                            style: context.textTheme.bodyXs.copyWith(
+                              color: const Color(0xFF666666),
+                              fontSize: 14,
+                            ),
+                          )
+                        else
+                          Text(
+                            config.subtitle ?? 'Dashboard',
+                            style: context.textTheme.bodyXs.copyWith(
+                              color: const Color(0xFF666666),
+                              fontSize: 14,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),

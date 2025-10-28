@@ -35,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
     );
 
     // Check if user is logged in
-    final authToken = await _secureStorage.read(AppConstants.tokenKey);
+    final authToken = await _secureStorage.read(AppConstants.accessTokenKey);
 
     if (!mounted) return;
 

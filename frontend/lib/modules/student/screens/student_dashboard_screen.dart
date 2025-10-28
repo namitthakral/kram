@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../utils/custom_colors.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
+import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../teacher/widgets/stat_card.dart';
@@ -14,42 +15,75 @@ import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
 import '../widgets/subject_performance_card.dart';
 
-class StudentDashboardScreen extends StatelessWidget {
+class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
+
+  @override
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
+}
+
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
 
-    return CustomMainScreenWithAppbar(
-      title: context.translate('Student Dashboard'),
-      appBarConfig: const AppBarConfig.profile(
-        icon: Icons.person_outline,
-        backgroundColor: CustomAppColors.primary,
-        subtitle: 'Track your progress',
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with Student Info
-            _buildHeader(isMobile),
-            const SizedBox(height: 24),
+    return FutureBuilder(
+      future: _authService.getCurrentUser(),
+      builder: (context, snapshot) {
+        // Show loading state
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-            // Statistics Cards
-            _buildStatsSection(isMobile),
-            const SizedBox(height: 24),
+        final user = snapshot.data;
+        final student = user?.student;
 
-            // Main Content - Responsive Layout
-            if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+        // Use real user data or fallback to defaults
+        final userInitials =
+            user != null ? UserUtils.getInitials(user.name) : 'ST';
+        final userName = user?.name ?? 'Student';
+        const grade = 'Grade 10B'; // To be fetched from API when available
+        final rollNumber = student?.rollNumber ?? 'N/A';
 
-            const SizedBox(height: 24),
+        return CustomMainScreenWithAppbar(
+          title: context.translate('Student Dashboard'),
+          appBarConfig: AppBarConfig.student(
+            userInitials: userInitials,
+            userName: userName,
+            grade: grade,
+            rollNumber: rollNumber,
+            onNotificationIconPressed: () {
+              // Notification handler to be implemented
+            },
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // // Header with Student Info
+                // _buildHeader(isMobile),
+                // const SizedBox(height: 24),
 
-            // Charts Section with Tabs
-            _buildChartsSection(isMobile),
-          ],
-        ),
-      ),
+                // Statistics Cards
+                _buildStatsSection(isMobile),
+                const SizedBox(height: 24),
+
+                // Main Content - Responsive Layout
+                if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+
+                const SizedBox(height: 24),
+
+                // Charts Section with Tabs
+                _buildChartsSection(isMobile),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -180,32 +214,36 @@ class StudentDashboardScreen extends StatelessWidget {
         title: 'Current GPA',
         value: '3.8',
         subtitle: 'Out of 4.0\n+0.2',
-        backgroundColor: Color(0xFFECFDF5),
-        iconColor: Color(0xFF10b981),
+        backgroundColor: Color(0xFF7f22fe),
+        iconColor: Color(0xFF7f22fe),
         icon: Icons.school,
       ),
       StatCard(
         title: 'Attendance',
         value: '96.2%',
         subtitle: 'This semester\n+1.5%',
-        backgroundColor: Color(0xFFEEF2FF),
-        iconColor: Color(0xFF4F7CFF),
+        backgroundColor: Color(0xFF4f39f6),
+        iconColor: Color(0xFF4f39f6),
         icon: Icons.calendar_today,
       ),
       StatCard(
         title: 'Class Rank',
         value: '#5',
         subtitle: 'Out of 45 students\n↑2',
-        backgroundColor: Color(0xFFFEF2F2),
-        iconColor: Color(0xFFef4444),
+        backgroundColor: Color(
+          0xFFe7000b,
+        ), //TODO: WIll change acording to increase/descrease of rank
+        iconColor: Color(
+          0xFFe7000b,
+        ), //TODO: WIll change acording to increase/descrease of rank
         icon: Icons.trending_up,
       ),
       StatCard(
         title: 'Assignments Due',
         value: '3',
         subtitle: 'This week',
-        backgroundColor: Color(0xFFFFFBEB),
-        iconColor: Color(0xFFf59e0b),
+        backgroundColor: Color(0xFFfe9a00),
+        iconColor: Color(0xFFfe9a00),
         icon: Icons.assignment,
       ),
     ],

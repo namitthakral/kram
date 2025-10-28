@@ -27,7 +27,10 @@ class AuthService {
         final loginResponse = LoginResponse.fromJson(response.data);
 
         // Store tokens and user data securely
-        await _storage.write(AppConstants.tokenKey, loginResponse.accessToken);
+        await _storage.write(
+          AppConstants.accessTokenKey,
+          loginResponse.accessToken,
+        );
         await _storage.write('refresh_token', loginResponse.refreshToken);
         await _storage.write(
           AppConstants.userKey,
@@ -92,11 +95,11 @@ class AuthService {
     try {
       // Call logout endpoint if needed
       await _apiService.dio.post('/auth/logout');
-    } catch (e) {
+    } on Exception catch (e) {
       // Continue with logout even if API call fails
     } finally {
       // Clear stored data
-      await _storage.delete(AppConstants.tokenKey);
+      await _storage.delete(AppConstants.accessTokenKey);
       await _storage.delete('refresh_token');
       await _storage.delete(AppConstants.userKey);
     }
@@ -104,7 +107,7 @@ class AuthService {
 
   /// Check if user is logged in
   Future<bool> isLoggedIn() async {
-    final token = await _storage.read(AppConstants.tokenKey);
+    final token = await _storage.read(AppConstants.accessTokenKey);
     return token != null && token.isNotEmpty;
   }
 
@@ -117,15 +120,14 @@ class AuthService {
         return User.fromJson(userData);
       }
       return null;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
 
   /// Get auth token
-  Future<String?> getAuthToken() async {
-    return await _storage.read(AppConstants.tokenKey);
-  }
+  Future<String?> getAuthToken() async =>
+      _storage.read(AppConstants.accessTokenKey);
 
   /// Refresh auth token
   Future<String> refreshToken() async {
@@ -142,7 +144,7 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final newToken = response.data['accessToken'];
-        await _storage.write(AppConstants.tokenKey, newToken);
+        await _storage.write(AppConstants.accessTokenKey, newToken);
         return newToken;
       } else {
         throw Exception('Token refresh failed');

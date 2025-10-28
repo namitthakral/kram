@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'core/services/api_service.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
+import 'modules/teacher/providers/teacher_dashboard_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
 import 'provider/bottom_nav_provider.dart';
 import 'provider/dashboard/favourite_provider.dart';
@@ -59,6 +60,9 @@ void main() async {
         ),
         ChangeNotifierProvider<DashboardTabProvider>(
           create: (_) => DashboardTabProvider(),
+        ),
+        ChangeNotifierProvider<TeacherDashboardProvider>(
+          create: (_) => TeacherDashboardProvider(),
         ),
       ],
       child: const EdVerseApp(),
