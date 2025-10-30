@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../utils/secure_storge.dart';
 import '../constants/app_constants.dart';
@@ -38,7 +41,12 @@ class ApiService {
 
     // Add interceptors
     _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true),
+      LogInterceptor(
+        requestBody: kDebugMode,
+        responseBody: kDebugMode,
+        error: true,
+        logPrint: (obj) => log(obj.toString()),
+      ),
     );
 
     // Add auth interceptor with automatic token refresh
@@ -80,6 +88,15 @@ class ApiService {
           handler.next(options);
         },
         onError: (error, handler) async {
+          // Log error for debugging (especially important for web)
+          if (kIsWeb) {
+            log('API Error on Web: ${error.message}');
+            log('Request URL: ${error.requestOptions.uri}');
+            if (error.type == DioExceptionType.connectionError) {
+              log('Connection error - check CORS and network connectivity');
+            }
+          }
+
           // Handle common errors
           if (error.response?.statusCode == 401) {
             final originalRequest = error.requestOptions;
@@ -104,8 +121,9 @@ class ApiService {
 
                 // Return the successful response
                 return handler.resolve(response);
-              } on Exception {
+              } on Exception catch (e) {
                 _isRefreshing = false;
+                log('Token refresh failed: $e');
                 // Token refresh failed, clear tokens and let user login again
                 await _clearAuthToken();
                 handler.next(error);

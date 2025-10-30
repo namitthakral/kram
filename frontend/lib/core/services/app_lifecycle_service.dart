@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -35,6 +36,13 @@ class AppLifecycleService extends WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     log('App lifecycle state changed: $state');
+
+    // Skip lifecycle handling on web - it can cause navigation issues
+    // Web apps don't really have background/foreground states like mobile
+    if (kIsWeb) {
+      log('Skipping lifecycle handling on web platform');
+      return;
+    }
 
     // When app resumes from background, check and refresh token
     if (state == AppLifecycleState.resumed) {

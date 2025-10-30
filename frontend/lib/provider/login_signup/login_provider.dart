@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/utils/validators.dart';
 import '../../models/auth_models.dart';
@@ -132,13 +133,25 @@ class LoginProvider extends ChangeNotifier {
     } on Exception catch (e) {
       var errorMessage = 'Login failed. Please try again.';
 
-      if (e.toString().contains('Invalid credentials')) {
+      final errorString = e.toString().toLowerCase();
+
+      if (errorString.contains('invalid credentials')) {
         errorMessage = 'Invalid credentials. Please check your login details.';
-      } else if (e.toString().contains('Account is not active')) {
+      } else if (errorString.contains('account is not active')) {
         errorMessage =
             'Your account is not active. Please contact administrator.';
-      } else if (e.toString().contains('Network')) {
-        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (errorString.contains('xmlhttprequest') ||
+          errorString.contains('connection') ||
+          errorString.contains('network') ||
+          errorString.contains('errored')) {
+        errorMessage =
+            'Cannot connect to server. Please check:\n'
+            '1. Backend server is running on ${AppConstants.baseUrl}\n'
+            '2. Network connectivity\n'
+            '3. CORS is configured properly';
+      } else if (errorString.contains('timeout')) {
+        errorMessage =
+            'Connection timeout. Please check your network and try again.';
       }
 
       _setError(errorMessage);

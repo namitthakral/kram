@@ -86,7 +86,7 @@ class RouterService {
     ),
   ];
 
-  // Helper method to build pages with consistent slide transition
+  // Helper method to build pages with consistent fade transition (better for web)
   CustomTransitionPage<void> _buildPageWithTransition({
     required LocalKey key,
     required Widget child,
@@ -94,19 +94,13 @@ class RouterService {
     key: key,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      // Slide transition from right to left
-      const begin = Offset(1.0, 0.0);
-      const end = Offset.zero;
-      const curve = Curves.fastOutSlowIn;
-
-      final tween = Tween(
-        begin: begin,
-        end: end,
-      ).chain(CurveTween(curve: curve));
-
-      return SlideTransition(position: animation.drive(tween), child: child);
+      // Use fade transition for web (no slide), looks more native
+      return FadeTransition(
+        opacity: animation,
+        child: child,
+      );
     },
-    transitionDuration: const Duration(milliseconds: 250),
+    transitionDuration: const Duration(milliseconds: 200),
   );
 
   // Navigation methods
