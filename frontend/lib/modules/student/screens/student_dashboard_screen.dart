@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/services/auth_service.dart';
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
+import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
@@ -15,41 +16,34 @@ import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
 import '../widgets/subject_performance_card.dart';
 
-class StudentDashboardScreen extends StatefulWidget {
+class StudentDashboardScreen extends StatelessWidget {
   const StudentDashboardScreen({super.key});
-
-  @override
-  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
-}
-
-class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
-  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+    final student = user?.student;
 
-    return FutureBuilder(
-      future: _authService.getCurrentUser(),
-      builder: (context, snapshot) {
-        // Show loading state
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.router.goToLogin();
         }
+      });
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        final user = snapshot.data;
-        final student = user?.student;
+    // Use real user data
+    final userInitials = UserUtils.getInitials(user.name);
+    final userName = user.name;
+    const grade = 'Grade 10B'; // To be fetched from API when available
+    final rollNumber = student?.rollNumber ?? 'N/A';
 
-        // Use real user data or fallback to defaults
-        final userInitials =
-            user != null ? UserUtils.getInitials(user.name) : 'ST';
-        final userName = user?.name ?? 'Student';
-        const grade = 'Grade 10B'; // To be fetched from API when available
-        final rollNumber = student?.rollNumber ?? 'N/A';
-
-        return CustomMainScreenWithAppbar(
+    return CustomMainScreenWithAppbar(
           title: context.translate('Student Dashboard'),
           appBarConfig: AppBarConfig.student(
             userInitials: userInitials,
@@ -83,8 +77,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             ),
           ),
         );
-      },
-    );
   }
 
   // Mobile Layout: Stack vertically
@@ -107,99 +99,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       // Right Column - Upcoming Events
       Expanded(child: _buildUpcomingEventsSection()),
     ],
-  );
-
-  Widget _buildHeader(bool isMobile) => Container(
-    padding: EdgeInsets.all(isMobile ? 16 : 20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.03),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        // Student Avatar
-        Container(
-          width: isMobile ? 56 : 64,
-          height: isMobile ? 56 : 64,
-          decoration: const BoxDecoration(
-            color: Color(0xFF4F7CFF),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              'AJ',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isMobile ? 20 : 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-        SizedBox(width: isMobile ? 12 : 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Alex Johnson',
-                style: TextStyle(
-                  fontSize: isMobile ? 18 : 24,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1e293b),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Grade 10B • Roll No: 2024-10-027',
-                style: TextStyle(
-                  fontSize: isMobile ? 12 : 14,
-                  color: const Color(0xFF64748b),
-                ),
-              ),
-            ],
-          ),
-        ),
-        // GPA Badge
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 12 : 20,
-            vertical: isMobile ? 8 : 12,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFF4F7CFF),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Text(
-                'GPA 3.8',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isMobile ? 16 : 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Rank #5 of 45',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isMobile ? 10 : 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
   );
 
   Widget _buildStatsSection(bool isMobile) => GridView.count(

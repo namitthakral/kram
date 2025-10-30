@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../core/constants/app_constants.dart';
+import '../core/services/auth_service.dart';
+import '../provider/login_signup/login_provider.dart';
 import '../utils/custom_images.dart';
 import '../utils/router_service.dart';
 import '../utils/secure_storge.dart';
@@ -15,6 +18,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   Image? splashImage;
   final _secureStorage = SecureStorageService();
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -27,7 +31,9 @@ class _SplashScreenState extends State<SplashScreen> {
     // Wait for 3 seconds to show splash screen
     await Future.delayed(const Duration(seconds: 3));
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     // Check if user has completed onboarding
     final hasCompletedOnboarding = await _secureStorage.read(
@@ -37,14 +43,36 @@ class _SplashScreenState extends State<SplashScreen> {
     // Check if user is logged in
     final authToken = await _secureStorage.read(AppConstants.accessTokenKey);
 
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     // Navigate based on app state
     if (hasCompletedOnboarding == 'true') {
       // User has completed onboarding
       if (authToken != null && authToken.isNotEmpty) {
-        // User is logged in, go to home
-        context.router.goToHome();
+        // Validate and refresh token if needed
+        final isTokenValid = await _authService.validateAndRefreshToken();
+
+        if (!mounted) {
+          return;
+        }
+
+        if (isTokenValid) {
+          // Load user data into LoginProvider
+          final loginProvider = context.read<LoginProvider>();
+          await loginProvider.checkLoginStatus();
+
+          if (!mounted) {
+            return;
+          }
+
+          // Token is valid or successfully refreshed, go to home
+          context.router.goToHome();
+        } else {
+          // Token validation/refresh failed, go to login
+          context.router.goToLogin();
+        }
       } else {
         // User completed onboarding but not logged in, go to login
         context.router.goToLogin();

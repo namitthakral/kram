@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 import 'core/services/api_service.dart';
+import 'core/services/app_lifecycle_service.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/providers/teacher_dashboard_provider.dart';
@@ -70,8 +71,32 @@ void main() async {
   );
 }
 
-class EdVerseApp extends StatelessWidget {
+class EdVerseApp extends StatefulWidget {
   const EdVerseApp({super.key});
+
+  @override
+  State<EdVerseApp> createState() => _EdVerseAppState();
+}
+
+class _EdVerseAppState extends State<EdVerseApp> {
+  final AppLifecycleService _lifecycleService = AppLifecycleService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize lifecycle service after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _lifecycleService.init(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _lifecycleService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

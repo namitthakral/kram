@@ -1,228 +1,197 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../models/dashboard_stats.dart';
+
 /// Widget for displaying attendance trends as a stacked bar chart
 class AttendanceTrendsChart extends StatelessWidget {
-  const AttendanceTrendsChart({super.key});
+  const AttendanceTrendsChart({super.key, this.trendsData});
+
+  final AttendanceTrendsResponse? trendsData;
+
+  List<AttendanceData> _getDefaultData() => const [
+    AttendanceData(day: 'Mon', present: 0, absent: 0),
+    AttendanceData(day: 'Tue', present: 0, absent: 0),
+    AttendanceData(day: 'Wed', present: 0, absent: 0),
+    AttendanceData(day: 'Thu', present: 0, absent: 0),
+    AttendanceData(day: 'Fri', present: 0, absent: 0),
+  ];
+
+  double _calculateMaxY(List<AttendanceData> data) {
+    if (data.isEmpty) {
+      return 10;
+    }
+    final maxValue = data.map((e) => e.total).reduce((a, b) => a > b ? a : b);
+    if (maxValue == 0) return 10;
+    return (maxValue * 1.2).ceilToDouble();
+  }
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: 250,
-    padding: const EdgeInsets.all(16),
-    child: BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: 28,
-        barTouchData: BarTouchData(enabled: true),
-        titlesData: FlTitlesData(
-          rightTitles: const AxisTitles(),
-          topTitles: const AxisTitles(),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                const style = TextStyle(
-                  color: Color(0xFF64748b),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                );
-                Widget text;
-                switch (value.toInt()) {
-                  case 0:
-                    text = const Text('Mon', style: style);
-                    break;
-                  case 1:
-                    text = const Text('Tue', style: style);
-                    break;
-                  case 2:
-                    text = const Text('Wed', style: style);
-                    break;
-                  case 3:
-                    text = const Text('Thu', style: style);
-                    break;
-                  case 4:
-                    text = const Text('Fri', style: style);
-                    break;
-                  default:
-                    text = const Text('', style: style);
-                    break;
-                }
-                return SideTitleWidget(
-                  axisSide: meta.axisSide,
-                  space: 4,
-                  child: text,
+  Widget build(BuildContext context) {
+    final data =
+        trendsData != null
+            ? trendsData!.weeklyOverview.dailyAttendance
+                .map(
+                  (e) => AttendanceData(
+                    day: e.day,
+                    present: e.present,
+                    absent: e.absent,
+                  ),
+                )
+                .toList()
+            : _getDefaultData();
+    final maxY = _calculateMaxY(data);
+
+    return Container(
+      height: 250,
+      padding: const EdgeInsets.all(16),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: maxY,
+          minY: 0,
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                final day = data[groupIndex].day;
+                final value = rod.toY.toInt();
+                final type = rodIndex == 0 ? 'Present' : 'Absent';
+                return BarTooltipItem(
+                  '$day\n$type: $value',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 );
               },
             ),
           ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 40,
-              interval: 7,
-              getTitlesWidget: (value, meta) {
-                const style = TextStyle(
-                  color: Color(0xFF64748b),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                );
-                return Text(value.toInt().toString(), style: style);
-              },
+          titlesData: FlTitlesData(
+            rightTitles: const AxisTitles(),
+            topTitles: const AxisTitles(),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  const style = TextStyle(
+                    color: Color(0xFF64748b),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  );
+                  final index = value.toInt();
+                  if (index >= 0 && index < data.length) {
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      space: 4,
+                      child: Text(data[index].day, style: style),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                interval: maxY > 10 ? (maxY / 5).ceilToDouble() : 2,
+                getTitlesWidget: (value, meta) {
+                  const style = TextStyle(
+                    color: Color(0xFF64748b),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  );
+                  return Text(value.toInt().toString(), style: style);
+                },
+              ),
             ),
           ),
+          borderData: FlBorderData(
+            show: true,
+            border: Border.all(color: const Color(0xFFe2e8f0)),
+          ),
+          barGroups: _buildBarGroups(data),
         ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: const Color(0xFFe2e8f0)),
-        ),
-        barGroups: [
-          BarChartGroupData(
-            x: 0,
-            barRods: [
-              BarChartRodData(
-                toY: 25,
-                color: const Color(0xFF10b981),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-              BarChartRodData(
-                toY: 3,
-                fromY: 0,
-                color: const Color(0xFFef4444),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-            ],
-          ),
-          BarChartGroupData(
-            x: 1,
-            barRods: [
-              BarChartRodData(
-                toY: 24,
-                color: const Color(0xFF10b981),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-              BarChartRodData(
-                toY: 4,
-                fromY: 0,
-                color: const Color(0xFFef4444),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-            ],
-          ),
-          BarChartGroupData(
-            x: 2,
-            barRods: [
-              BarChartRodData(
-                toY: 26,
-                color: const Color(0xFF10b981),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-              BarChartRodData(
-                toY: 2,
-                fromY: 0,
-                color: const Color(0xFFef4444),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-            ],
-          ),
-          BarChartGroupData(
-            x: 3,
-            barRods: [
-              BarChartRodData(
-                toY: 25,
-                color: const Color(0xFF10b981),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-              BarChartRodData(
-                toY: 3,
-                fromY: 0,
-                color: const Color(0xFFef4444),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-            ],
-          ),
-          BarChartGroupData(
-            x: 4,
-            barRods: [
-              BarChartRodData(
-                toY: 22,
-                color: const Color(0xFF10b981),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-              BarChartRodData(
-                toY: 6,
-                fromY: 0,
-                color: const Color(0xFFef4444),
-                width: 20,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(4),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
-    ),
-  );
+    );
+  }
+
+  List<BarChartGroupData> _buildBarGroups(List<AttendanceData> data) =>
+      List.generate(data.length, (index) {
+        final item = data[index];
+        return BarChartGroupData(
+          x: index,
+          barRods: [
+            BarChartRodData(
+              toY: item.present > 0 ? item.present.toDouble() : 0.5,
+              color: const Color(0xFF10b981),
+              width: 20,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
+            ),
+            BarChartRodData(
+              toY: item.absent > 0 ? item.absent.toDouble() : 0.5,
+              color: const Color(0xFFef4444),
+              width: 20,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
+            ),
+          ],
+        );
+      });
 }
 
-/// Widget for displaying subject performance as horizontal progress bars
 class SubjectPerformanceChart extends StatelessWidget {
-  const SubjectPerformanceChart({super.key});
+  const SubjectPerformanceChart({super.key, this.performanceData});
+
+  final SubjectPerformanceResponse? performanceData;
+
+  List<SubjectPerformance> _getDefaultData() => const [
+    SubjectPerformance(subject: 'Mathematics', percentage: 0),
+    SubjectPerformance(subject: 'Science', percentage: 0),
+    SubjectPerformance(subject: 'English', percentage: 0),
+    SubjectPerformance(subject: 'History', percentage: 0),
+  ];
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      children: [
-        _buildSubjectProgress('Mathematics', 85),
-        const SizedBox(height: 16),
-        _buildSubjectProgress('Science', 78),
-        const SizedBox(height: 16),
-        _buildSubjectProgress('English', 82),
-        const SizedBox(height: 16),
-        _buildSubjectProgress('History', 76),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final data =
+        performanceData != null
+            ? performanceData!.subjects
+                .map(
+                  (e) => SubjectPerformance(
+                    subject: e.name,
+                    percentage: e.averageScore,
+                  ),
+                )
+                .toList()
+            : _getDefaultData();
 
-  Widget _buildSubjectProgress(String subject, int percentage) => Column(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children:
+            data
+                .map(
+                  (subject) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildSubjectProgress(
+                      subject.subject,
+                      subject.percentage,
+                    ),
+                  ),
+                )
+                .toList(),
+      ),
+    );
+  }
+
+  Widget _buildSubjectProgress(String subject, double percentage) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Row(
@@ -237,7 +206,7 @@ class SubjectPerformanceChart extends StatelessWidget {
             ),
           ),
           Text(
-            '$percentage%',
+            '${percentage.toInt()}%',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -260,107 +229,145 @@ class SubjectPerformanceChart extends StatelessWidget {
   );
 }
 
-/// Widget for displaying grade distribution as a donut chart
-class GradeDistributionChart extends StatelessWidget {
-  const GradeDistributionChart({super.key});
+class GradeDistributionChart extends StatefulWidget {
+  const GradeDistributionChart({super.key, this.distributionData});
+
+  final GradeDistributionResponse? distributionData;
 
   @override
-  Widget build(BuildContext context) => Container(
-    height: 250,
-    padding: const EdgeInsets.all(16),
-    child: Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(enabled: true),
-              borderData: FlBorderData(show: false),
-              sectionsSpace: 2,
-              centerSpaceRadius: 60,
-              sections: [
-                PieChartSectionData(
-                  color: const Color(0xFFf59e0b),
-                  value: 30,
-                  title: 'B+',
-                  radius: 50,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                PieChartSectionData(
-                  color: const Color(0xFF4F7CFF),
-                  value: 25,
-                  title: 'A',
-                  radius: 50,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                PieChartSectionData(
-                  color: const Color(0xFFef4444),
-                  value: 20,
-                  title: 'B',
-                  radius: 50,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                PieChartSectionData(
-                  color: const Color(0xFF10b981),
-                  value: 15,
-                  title: 'A+',
-                  radius: 50,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                PieChartSectionData(
-                  color: const Color(0xFF64748b),
-                  value: 10,
-                  title: 'C',
-                  radius: 50,
-                  titleStyle: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildLegendItem('A+', 15, const Color(0xFF10b981)),
-              const SizedBox(height: 8),
-              _buildLegendItem('A', 25, const Color(0xFF4F7CFF)),
-              const SizedBox(height: 8),
-              _buildLegendItem('B+', 30, const Color(0xFFf59e0b)),
-              const SizedBox(height: 8),
-              _buildLegendItem('B', 20, const Color(0xFFef4444)),
-              const SizedBox(height: 8),
-              _buildLegendItem('C', 10, const Color(0xFF64748b)),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
+  State<GradeDistributionChart> createState() => _GradeDistributionChartState();
+}
 
-  Widget _buildLegendItem(String grade, int percentage, Color color) => Row(
+class _GradeDistributionChartState extends State<GradeDistributionChart> {
+  int touchedIndex = -1;
+
+  List<GradeDistribution> _getDefaultData() => const [
+    GradeDistribution(grade: 'A+', percentage: 0, color: '#10b981'),
+    GradeDistribution(grade: 'A', percentage: 0, color: '#4F7CFF'),
+    GradeDistribution(grade: 'B+', percentage: 0, color: '#f59e0b'),
+    GradeDistribution(grade: 'B', percentage: 0, color: '#ef4444'),
+    GradeDistribution(grade: 'C', percentage: 0, color: '#64748b'),
+  ];
+
+  Color _parseColor(String colorString) {
+    final hexColor = colorString.replaceAll('#', '');
+    return Color(int.parse('FF$hexColor', radix: 16));
+  }
+
+  List<GradeDistribution> _getChartData() {
+    if (widget.distributionData == null) {
+      return _getDefaultData();
+    }
+
+    final gradeBreakdown =
+        widget.distributionData!.overallDistribution.percentageBreakdown;
+    final result = <GradeDistribution>[];
+    final gradeColors = {
+      'A+': '#10b981',
+      'A': '#4F7CFF',
+      'A-': '#22c55e',
+      'B+': '#f59e0b',
+      'B': '#f97316',
+      'B-': '#fb923c',
+      'C+': '#ef4444',
+      'C': '#dc2626',
+      'D': '#64748b',
+      'F': '#94a3b8',
+    };
+
+    gradeBreakdown.forEach((grade, percentage) {
+      result.add(
+        GradeDistribution(
+          grade: grade,
+          percentage: percentage.toDouble(),
+          color: gradeColors[grade] ?? '#64748b',
+        ),
+      );
+    });
+
+    return result.isNotEmpty ? result : _getDefaultData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = _getChartData();
+    final hasData = data.any((element) => element.percentage > 0);
+
+    return SizedBox(
+      height: 320,
+      child:
+          !hasData
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.pie_chart_outline,
+                      size: 64,
+                      color: Colors.grey[300],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No grade data available',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              )
+              : Column(
+                children: [
+                  Expanded(
+                    child: PieChart(
+                      PieChartData(
+                        pieTouchData: PieTouchData(
+                          touchCallback: (
+                            FlTouchEvent event,
+                            pieTouchResponse,
+                          ) {
+                            setState(() {
+                              if (!event.isInterestedForInteractions ||
+                                  pieTouchResponse == null ||
+                                  pieTouchResponse.touchedSection == null) {
+                                touchedIndex = -1;
+                                return;
+                              }
+                              touchedIndex =
+                                  pieTouchResponse
+                                      .touchedSection!
+                                      .touchedSectionIndex;
+                            });
+                          },
+                        ),
+                        borderData: FlBorderData(show: false),
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 30,
+                        sections: _showingSections(data),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children:
+                        data
+                            .map(
+                              (item) => _buildLegendItem(
+                                item.grade,
+                                '${item.percentage.toInt()}%',
+                                _parseColor(item.color),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ],
+              ),
+    );
+  }
+
+  Widget _buildLegendItem(String grade, String value, Color color) => Row(
+    mainAxisSize: MainAxisSize.min,
     children: [
       Container(
         width: 12,
@@ -370,9 +377,9 @@ class GradeDistributionChart extends StatelessWidget {
           borderRadius: BorderRadius.circular(2),
         ),
       ),
-      const SizedBox(width: 8),
+      const SizedBox(width: 4),
       Text(
-        '$grade $percentage%',
+        '$grade - $value',
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
@@ -380,5 +387,77 @@ class GradeDistributionChart extends StatelessWidget {
         ),
       ),
     ],
+  );
+
+  List<PieChartSectionData> _showingSections(List<GradeDistribution> data) =>
+      List.generate(data.length, (i) {
+        final isTouched = i == touchedIndex;
+        final fontSize = isTouched ? 20.0 : 16.0;
+        final radius = isTouched ? 110.0 : 100.0;
+        const shadows = [Shadow(blurRadius: 2)];
+        final item = data[i];
+
+        return PieChartSectionData(
+          color: _parseColor(item.color),
+          value: item.percentage > 0 ? item.percentage : 0.1,
+          title: '${item.percentage.toInt()}%',
+          radius: radius,
+          titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: shadows,
+          ),
+          badgeWidget: _GradeBadge(
+            grade: item.grade,
+            size: isTouched ? 55.0 : 40.0,
+            borderColor: _parseColor(item.color),
+          ),
+          badgePositionPercentageOffset: .98,
+        );
+      });
+}
+
+class _GradeBadge extends StatelessWidget {
+  const _GradeBadge({
+    required this.grade,
+    required this.size,
+    required this.borderColor,
+  });
+
+  final String grade;
+  final double size;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: PieChart.defaultDuration,
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      shape: BoxShape.circle,
+      border: Border.all(color: borderColor, width: 2),
+      boxShadow: <BoxShadow>[
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.5),
+          offset: const Offset(3, 3),
+          blurRadius: 3,
+        ),
+      ],
+    ),
+    padding: EdgeInsets.all(size * .15),
+    child: Center(
+      child: FittedBox(
+        child: Text(
+          grade,
+          style: TextStyle(
+            fontSize: size * 0.35,
+            fontWeight: FontWeight.bold,
+            color: borderColor,
+          ),
+        ),
+      ),
+    ),
   );
 }

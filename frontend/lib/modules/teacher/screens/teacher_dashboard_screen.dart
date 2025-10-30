@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/services/auth_service.dart';
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
+import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
@@ -25,80 +26,82 @@ class TeacherDashboardScreen extends StatefulWidget {
 }
 
 class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
-  final AuthService _authService = AuthService();
-
   @override
   void initState() {
     super.initState();
-    _loadDashboardData();
+    // Defer loading until after the build phase completes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDashboardData();
+    });
   }
 
   Future<void> _loadDashboardData() async {
-    final user = await _authService.getCurrentUser();
-    if (user?.teacher?.id != null && mounted) {
+    final loginProvider = context.read<LoginProvider>();
+    final user = loginProvider.currentUser;
+
+    if (user?.uuid != null && user?.teacher != null && mounted) {
       final provider = context.read<TeacherDashboardProvider>();
-      await provider.fetchDashboardStats(user!.teacher!.id.toString());
+      await Future.wait([
+        provider.fetchDashboardStats(user!.uuid!),
+        provider.fetchAllChartData(user.uuid!),
+      ]);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+    final teacher = user?.teacher;
 
-    return FutureBuilder(
-      future: _authService.getCurrentUser(),
-      builder: (context, snapshot) {
-        // Show loading state
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.router.goToLogin();
         }
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-        final user = snapshot.data;
-        final teacher = user?.teacher;
+    // Use real user data
+    final userInitials = UserUtils.getInitials(user.name);
+    final userName = user.name;
+    final designation = teacher?.designation ?? 'Teacher';
+    final employeeId = teacher?.employeeId ?? 'N/A';
 
-        // Use real user data or fallback to defaults
-        final userInitials =
-            user != null ? UserUtils.getInitials(user.name) : 'TC';
-        final userName = user?.name ?? 'Teacher';
-        final designation = teacher?.designation ?? 'Teacher';
-        final employeeId = teacher?.employeeId ?? 'N/A';
+    return CustomMainScreenWithAppbar(
+      title: context.translate('Teacher Dashboard'),
+      appBarConfig: AppBarConfig.teacher(
+        userInitials: userInitials,
+        userName: userName,
+        designation: designation,
+        employeeId: employeeId,
+        onNotificationIconPressed: () {
+          // Notification handler to be implemented
+        },
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header (hide on mobile to save space)
+            // if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
 
-        return CustomMainScreenWithAppbar(
-          title: context.translate('Teacher Dashboard'),
-          appBarConfig: AppBarConfig.teacher(
-            userInitials: userInitials,
-            userName: userName,
-            designation: designation,
-            employeeId: employeeId,
-            onNotificationIconPressed: () {
-              // Notification handler to be implemented
-            },
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header (hide on mobile to save space)
-                if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
+            // Statistics Cards
+            _buildStatsSection(isMobile),
+            const SizedBox(height: 24),
 
-                // Statistics Cards
-                _buildStatsSection(isMobile),
-                const SizedBox(height: 24),
+            // Main Content - Responsive Layout
+            if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
 
-                // Main Content - Responsive Layout
-                if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+            const SizedBox(height: 24),
 
-                const SizedBox(height: 24),
-
-                // Charts Section with Tabs
-                _buildChartsSection(isMobile),
-              ],
-            ),
-          ),
-        );
-      },
+            // Charts Section with Tabs
+            _buildChartsSection(isMobile),
+          ],
+        ),
+      ),
     );
   }
 
@@ -124,120 +127,111 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     ],
   );
 
-  Widget _buildHeader() => Row(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF4F7CFF),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(Icons.school, color: Colors.white, size: 24),
-      ),
-      const SizedBox(width: 16),
-      const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Teacher Dashboard',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1e293b),
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Class overview and management',
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-          ),
-        ],
-      ),
-    ],
-  );
-
   Widget _buildStatsSection(
     bool isMobile,
   ) => Consumer<TeacherDashboardProvider>(
     builder: (context, dashboardProvider, child) {
-      if (dashboardProvider.isLoading) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(32.0),
-            child: CircularProgressIndicator(),
-          ),
-        );
-      }
-
-      if (dashboardProvider.error != null) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                const Text(
-                  'Failed to load dashboard stats',
-                  style: TextStyle(fontSize: 16, color: Colors.red),
-                ),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: _loadDashboardData,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-
+      // Use stats from provider or default values
       final stats = dashboardProvider.dashboardStats;
-      if (stats == null) {
-        return const Center(child: Text('No data available'));
-      }
+      final totalStudents = stats?.totalStudents ?? 0;
+      final presentToday = stats?.presentToday ?? 0;
+      final absentToday = stats?.absentToday ?? 0;
+      final attendancePercentageToday = stats?.attendancePercentageToday ?? 0.0;
+      final avgAttendance = stats?.avgAttendance ?? 0.0;
 
-      return GridView.count(
-        crossAxisCount: isMobile ? 2 : 4,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: isMobile ? 12 : 16,
-        mainAxisSpacing: isMobile ? 12 : 16,
-        childAspectRatio: isMobile ? 1.3 : 1.5,
+      // Show loading overlay if loading
+      return Stack(
         children: [
-          StatCard(
-            title: 'Total Students',
-            value: '${stats.totalStudents}',
-            subtitle: 'Active in your classes',
-            backgroundColor: const Color(0xFF155dfc),
-            iconColor: const Color(0xFF155dfc),
-            icon: Icons.groups,
+          GridView.count(
+            crossAxisCount: isMobile ? 2 : 4,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: isMobile ? 12 : 16,
+            mainAxisSpacing: isMobile ? 12 : 16,
+            childAspectRatio: isMobile ? 1.3 : 1.5,
+            children: [
+              StatCard(
+                title: 'Total Students',
+                value: '$totalStudents',
+                subtitle: 'Active in your classes',
+                backgroundColor: const Color(0xFF155dfc),
+                iconColor: const Color(0xFF155dfc),
+                icon: Icons.groups,
+              ),
+              StatCard(
+                title: 'Present Today',
+                value: '$presentToday',
+                subtitle:
+                    '${attendancePercentageToday.toStringAsFixed(1)}% attendance',
+                backgroundColor: const Color(0xFF00a63e),
+                iconColor: const Color(0xFF00a63e),
+                icon: Icons.check_circle,
+              ),
+              StatCard(
+                title: 'Absent Today',
+                value: '$absentToday',
+                subtitle: 'Requires follow-up',
+                backgroundColor: const Color(0xFFe7000b),
+                iconColor: const Color(0xFFe7000b),
+                icon: Icons.cancel,
+              ),
+              StatCard(
+                title: 'Avg. Attendance',
+                value: '${avgAttendance.toStringAsFixed(1)}%',
+                subtitle: 'This month',
+                backgroundColor: const Color(0xFFfe9a00),
+                iconColor: const Color(0xFFfe9a00),
+                icon: Icons.trending_up,
+              ),
+            ],
           ),
-          StatCard(
-            title: 'Present Today',
-            value: '${stats.presentToday}',
-            subtitle:
-                '${stats.attendancePercentageToday.toStringAsFixed(1)}% attendance',
-            backgroundColor: const Color(0xFF00a63e),
-            iconColor: const Color(0xFF00a63e),
-            icon: Icons.check_circle,
-          ),
-          StatCard(
-            title: 'Absent Today',
-            value: '${stats.absentToday}',
-            subtitle: 'Requires follow-up',
-            backgroundColor: const Color(0xFFe7000b),
-            iconColor: const Color(0xFFe7000b),
-            icon: Icons.cancel,
-          ),
-          StatCard(
-            title: 'Avg. Attendance',
-            value: '${stats.avgAttendance.toStringAsFixed(1)}%',
-            subtitle: 'This month',
-            backgroundColor: const Color(0xFFfe9a00),
-            iconColor: const Color(0xFFfe9a00),
-            icon: Icons.trending_up,
-          ),
+
+          // Show loading indicator overlay if loading
+          if (dashboardProvider.isLoading)
+            Container(
+              color: Colors.white.withOpacity(0.8),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+
+          // Show error message if there's an error
+          if (dashboardProvider.error != null && !dashboardProvider.isLoading)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade700,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Failed to load stats',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _loadDashboardData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       );
     },
@@ -384,109 +378,124 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     ),
   );
 
-  Widget _buildAttendanceTrendsTab() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text(
-        'Weekly Attendance Overview',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1e293b),
-        ),
-      ),
-      const SizedBox(height: 4),
-      const Text(
-        'Daily attendance for this week',
-        style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-      ),
-      const SizedBox(height: 20),
-      const AttendanceTrendsChart(),
+  Widget _buildAttendanceTrendsTab() => Consumer<TeacherDashboardProvider>(
+    builder:
+        (context, dashboardProvider, child) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Weekly Attendance Overview',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Daily attendance for this week',
+              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            ),
+            const SizedBox(height: 20),
+            AttendanceTrendsChart(
+              trendsData: dashboardProvider.attendanceTrends,
+            ),
 
-      // Legend
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: const Color(0xFF10b981),
-              borderRadius: BorderRadius.circular(2),
+            // Legend
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10b981),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Present',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF1e293b),
+                  ),
+                ),
+                const SizedBox(width: 24),
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFef4444),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Absent',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF1e293b),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Present',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1e293b),
-            ),
-          ),
-          const SizedBox(width: 24),
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: const Color(0xFFef4444),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Absent',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1e293b),
-            ),
-          ),
-        ],
-      ),
-    ],
+          ],
+        ),
   );
 
-  Widget _buildSubjectPerformanceTab() => const Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Subject Performance Overview',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1e293b),
+  Widget _buildSubjectPerformanceTab() => Consumer<TeacherDashboardProvider>(
+    builder:
+        (context, dashboardProvider, child) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Subject Performance Overview',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Average scores across different subjects',
+              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            ),
+            const SizedBox(height: 20),
+            SubjectPerformanceChart(
+              performanceData: dashboardProvider.subjectPerformance,
+            ),
+          ],
         ),
-      ),
-      SizedBox(height: 4),
-      Text(
-        'Average scores across different subjects',
-        style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-      ),
-      SizedBox(height: 20),
-      SubjectPerformanceChart(),
-    ],
   );
 
-  Widget _buildGradeDistributionTab() => const Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Grade Distribution',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1e293b),
+  Widget _buildGradeDistributionTab() => Consumer<TeacherDashboardProvider>(
+    builder:
+        (context, dashboardProvider, child) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Grade Distribution',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b),
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Current grade distribution across all students',
+              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            ),
+            const SizedBox(height: 20),
+            GradeDistributionChart(
+              distributionData: dashboardProvider.gradeDistribution,
+            ),
+          ],
         ),
-      ),
-      SizedBox(height: 4),
-      Text(
-        'Current grade distribution across all students',
-        style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-      ),
-      SizedBox(height: 20),
-      GradeDistributionChart(),
-    ],
   );
 
   List<StudentActivity> _getMockStudents() => const [

@@ -4,7 +4,7 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration,
-  static const String baseUrl = 'http://192.168.1.11:3000';
+  static const String baseUrl = 'http://192.168.1.3:3000';
   // static const String baseUrl = 'http://10.0.2.2:3000';
   static const String apiVersion = '/api';
   static const Duration apiTimeout = Duration(seconds: 30);
@@ -12,6 +12,7 @@ class AppConstants {
   // Storage Keys
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
+  static const String tokenExpiryKey = 'token_expiry';
   static const String userKey = 'user_data';
   static const String themeKey = 'theme_mode';
   static const String languageKey = 'language_code';

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../core/services/api_service.dart';
 import '../models/dashboard_stats.dart';
 
-/// Service for teacher-related API calls
 class TeacherService {
   factory TeacherService() => _instance;
   TeacherService._internal();
@@ -11,18 +10,10 @@ class TeacherService {
 
   final ApiService _apiService = ApiService();
 
-  /// Get teacher dashboard statistics
-  ///
-  /// Fetches comprehensive dashboard stats including:
-  /// - Total students
-  /// - Present/absent counts for today
-  /// - Late arrivals
-  /// - Today's attendance percentage
-  /// - Monthly average attendance
-  Future<DashboardStats> getDashboardStats(String teacherId) async {
+  Future<DashboardStats> getDashboardStats(String userUuid) async {
     try {
       final response = await _apiService.dio.get(
-        '/teachers/$teacherId/dashboard-stats',
+        '/teachers/$userUuid/dashboard-stats',
       );
 
       if (response.statusCode == 200) {
@@ -48,15 +39,13 @@ class TeacherService {
     }
   }
 
-  /// Get recent student activity
-  /// Returns list of students with their recent activities
   Future<List<StudentActivity>> getRecentActivity(
-    String teacherId, {
+    String userUuid, {
     int limit = 10,
   }) async {
     try {
       final response = await _apiService.dio.get(
-        '/teachers/$teacherId/recent-activity',
+        '/teachers/$userUuid/recent-activity',
         queryParameters: {'limit': limit},
       );
 
@@ -73,6 +62,97 @@ class TeacherService {
       }
     } catch (e) {
       throw Exception('Failed to load recent activity: $e');
+    }
+  }
+
+  Future<AttendanceTrendsResponse> getAttendanceTrends(String userUuid) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/attendance-trends',
+      );
+
+      if (response.statusCode == 200) {
+        return AttendanceTrendsResponse.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load attendance trends',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Teacher not found');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized access');
+      } else {
+        throw Exception('Failed to load attendance trends: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  Future<SubjectPerformanceResponse> getSubjectPerformance(
+    String userUuid,
+  ) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/subject-performance',
+      );
+
+      if (response.statusCode == 200) {
+        return SubjectPerformanceResponse.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load subject performance',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Teacher not found');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized access');
+      } else {
+        throw Exception('Failed to load subject performance: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
+
+  Future<GradeDistributionResponse> getGradeDistribution(
+    String userUuid,
+  ) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/grade-distribution',
+      );
+
+      if (response.statusCode == 200) {
+        return GradeDistributionResponse.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load grade distribution',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Teacher not found');
+      } else if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized access');
+      } else {
+        throw Exception('Failed to load grade distribution: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Unexpected error: $e');
     }
   }
 }

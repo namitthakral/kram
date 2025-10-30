@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../utils/secure_storge.dart';
 import '../constants/app_constants.dart';
+import 'auth_service.dart';
 
 class ApiService {
   factory ApiService() => _instance;
@@ -10,6 +11,7 @@ class ApiService {
 
   late Dio _dio;
   final SecureStorageService _storage = SecureStorageService();
+  bool _isRefreshing = false;
 
   /// List of endpoints that don't require authentication token
   ///
@@ -39,7 +41,7 @@ class ApiService {
       LogInterceptor(requestBody: true, responseBody: true),
     );
 
-    // Add auth interceptor
+    // Add auth interceptor with automatic token refresh
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -47,22 +49,75 @@ class ApiService {
           final requiresAuth = !_isPublicEndpoint(options.path);
 
           if (requiresAuth) {
-            // Add auth token if available
-            final token = await _getAuthToken();
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
+            // Check if token is expired and refresh if needed
+            try {
+              final authService = AuthService();
+              final isExpired = await authService.isTokenExpired();
+
+              if (isExpired && !_isRefreshing) {
+                // Token is expired, try to refresh
+                _isRefreshing = true;
+                try {
+                  await authService.refreshToken();
+                  _isRefreshing = false;
+                } on Exception {
+                  _isRefreshing = false;
+                  // Refresh failed, let the request continue with old token
+                  // and let error handler deal with 401
+                }
+              }
+
+              // Add auth token if available
+              final token = await _getAuthToken();
+              if (token != null && token.isNotEmpty) {
+                options.headers['Authorization'] = 'Bearer $token';
+              }
+            } on Exception {
+              // If token check fails, continue without token
             }
           }
 
           handler.next(options);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
           // Handle common errors
           if (error.response?.statusCode == 401) {
-            // Handle unauthorized access - clear tokens
-            _clearAuthToken();
+            final originalRequest = error.requestOptions;
+
+            // Check if this is not a refresh token request to avoid infinite loop
+            if (!originalRequest.path.contains('/auth/refresh') &&
+                !_isRefreshing) {
+              _isRefreshing = true;
+
+              try {
+                // Try to refresh the token
+                final authService = AuthService();
+                final newToken = await authService.refreshToken();
+                _isRefreshing = false;
+
+                // Retry the original request with new token
+                originalRequest.headers['Authorization'] = 'Bearer $newToken';
+
+                // Create a new Dio instance to retry the request
+                final retryDio = Dio(_dio.options);
+                final response = await retryDio.fetch(originalRequest);
+
+                // Return the successful response
+                return handler.resolve(response);
+              } on Exception {
+                _isRefreshing = false;
+                // Token refresh failed, clear tokens and let user login again
+                await _clearAuthToken();
+                handler.next(error);
+              }
+            } else {
+              // If refresh token request failed or already refreshing, clear tokens
+              await _clearAuthToken();
+              handler.next(error);
+            }
+          } else {
+            handler.next(error);
           }
-          handler.next(error);
         },
       ),
     );

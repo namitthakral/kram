@@ -1,9 +1,30 @@
 class LoginRequest {
-  LoginRequest({required this.email, required this.password});
-  final String email;
+  LoginRequest({required this.password, this.email, this.phone, this.edverseId})
+    : assert(
+        email != null || phone != null || edverseId != null,
+        'At least one of email, phone, or edverseId must be provided',
+      );
+
+  final String? email;
+  final String? phone;
+  final String? edverseId;
   final String password;
 
-  Map<String, dynamic> toJson() => {'email': email, 'password': password};
+  Map<String, dynamic> toJson() {
+    final data = {'password': password};
+
+    if (email != null) {
+      data['email'] = email!;
+    }
+    if (phone != null) {
+      data['phone'] = phone!;
+    }
+    if (edverseId != null) {
+      data['edverseId'] = edverseId!;
+    }
+
+    return data;
+  }
 }
 
 class RegisterRequest {
@@ -88,28 +109,39 @@ class RegisteredUser {
 }
 
 class LoginResponse {
-  LoginResponse({
-    required this.user,
-    required this.tokens,
-  });
+  LoginResponse({required this.user, required this.tokens});
 
-  factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
-    user: User.fromJson(json['user']),
-    tokens: AuthTokens.fromJson(json['tokens']),
-  );
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    // Handle both response formats:
+    // 1. With tokens object: {"user": {...}, "tokens": {...}}
+    // 2. With tokens at root: {"user": {...}, "accessToken": "...", "refreshToken": "...", "expiresIn": ...}
+    final AuthTokens tokens;
+    if (json['tokens'] != null) {
+      tokens = AuthTokens.fromJson(json['tokens']);
+    } else {
+      // Extract tokens from root level
+      tokens = AuthTokens(
+        accessToken: json['accessToken'] ?? '',
+        refreshToken: json['refreshToken'],
+        expiresIn: json['expiresIn'] ?? 3600,
+      );
+    }
+
+    return LoginResponse(user: User.fromJson(json['user']), tokens: tokens);
+  }
   final User user;
   final AuthTokens tokens;
 
   // Convenience getters for backward compatibility
   String get accessToken => tokens.accessToken;
-  String get refreshToken => tokens.refreshToken;
+  String? get refreshToken => tokens.refreshToken;
 }
 
 class AuthTokens {
   AuthTokens({
     required this.accessToken,
-    required this.refreshToken,
     required this.expiresIn,
+    this.refreshToken,
   });
 
   factory AuthTokens.fromJson(Map<String, dynamic> json) => AuthTokens(
@@ -118,12 +150,12 @@ class AuthTokens {
     expiresIn: json['expiresIn'],
   );
   final String accessToken;
-  final String refreshToken;
+  final String? refreshToken;
   final int expiresIn;
 
   Map<String, dynamic> toJson() => {
     'accessToken': accessToken,
-    'refreshToken': refreshToken,
+    if (refreshToken != null) 'refreshToken': refreshToken,
     'expiresIn': expiresIn,
   };
 }
@@ -136,15 +168,21 @@ class User {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.uuid,
+    this.edverseId,
     this.phone,
     this.role,
     this.student,
     this.teacher,
     this.parent,
+    this.mustChangePassword,
+    this.isTemporaryPassword,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json['id'],
+    uuid: json['uuid'],
+    edverseId: json['edverseId'],
     name: json['name'],
     email: json['email'],
     phone: json['phone'],
@@ -153,10 +191,20 @@ class User {
     teacher: json['teacher'] != null ? Teacher.fromJson(json['teacher']) : null,
     parent: json['parent'] != null ? Parent.fromJson(json['parent']) : null,
     status: json['status'],
-    createdAt: DateTime.parse(json['createdAt']),
-    updatedAt: DateTime.parse(json['updatedAt']),
+    mustChangePassword: json['mustChangePassword'] ?? false,
+    isTemporaryPassword: json['isTemporaryPassword'] ?? false,
+    createdAt:
+        json['createdAt'] != null
+            ? DateTime.parse(json['createdAt'])
+            : DateTime.now(),
+    updatedAt:
+        json['updatedAt'] != null
+            ? DateTime.parse(json['updatedAt'])
+            : DateTime.now(),
   );
   final int id;
+  final String? uuid;
+  final String? edverseId;
   final String name;
   final String email;
   final String? phone;
@@ -165,11 +213,15 @@ class User {
   final Teacher? teacher;
   final Parent? parent;
   final String status;
+  final bool? mustChangePassword;
+  final bool? isTemporaryPassword;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'uuid': uuid,
+    'edverseId': edverseId,
     'name': name,
     'email': email,
     'phone': phone,
@@ -178,6 +230,8 @@ class User {
     'teacher': teacher?.toJson(),
     'parent': parent?.toJson(),
     'status': status,
+    'mustChangePassword': mustChangePassword,
+    'isTemporaryPassword': isTemporaryPassword,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -217,27 +271,107 @@ class Role {
 class Student {
   Student({
     required this.id,
-    required this.studentId,
+    required this.userId,
+    this.institutionId,
+    this.programId,
     this.admissionNumber,
     this.rollNumber,
+    this.admissionDate,
+    this.graduationDate,
+    this.currentSemester,
+    this.currentYear,
+    this.gradeLevel,
+    this.section,
+    this.studentType,
+    this.residentialStatus,
+    this.transportRequired,
+    this.emergencyContactName,
+    this.emergencyContactPhone,
+    this.bloodGroup,
+    this.medicalConditions,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) => Student(
     id: json['id'],
-    studentId: json['studentId'],
+    userId: json['userId'],
+    institutionId: json['institutionId'],
+    programId: json['programId'],
     admissionNumber: json['admissionNumber'],
     rollNumber: json['rollNumber'],
+    admissionDate:
+        json['admissionDate'] != null
+            ? DateTime.parse(json['admissionDate'])
+            : null,
+    graduationDate:
+        json['graduationDate'] != null
+            ? DateTime.parse(json['graduationDate'])
+            : null,
+    currentSemester: json['currentSemester'],
+    currentYear: json['currentYear'],
+    gradeLevel: json['gradeLevel'],
+    section: json['section'],
+    studentType: json['studentType'],
+    residentialStatus: json['residentialStatus'],
+    transportRequired: json['transportRequired'] ?? false,
+    emergencyContactName: json['emergencyContactName'],
+    emergencyContactPhone: json['emergencyContactPhone'],
+    bloodGroup: json['bloodGroup'],
+    medicalConditions: json['medicalConditions'],
+    status: json['status'],
+    createdAt:
+        json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+    updatedAt:
+        json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
   );
   final int id;
-  final String studentId;
+  final int userId;
+  final int? institutionId;
+  final int? programId;
   final String? admissionNumber;
   final String? rollNumber;
+  final DateTime? admissionDate;
+  final DateTime? graduationDate;
+  final int? currentSemester;
+  final int? currentYear;
+  final String? gradeLevel;
+  final String? section;
+  final String? studentType;
+  final String? residentialStatus;
+  final bool? transportRequired;
+  final String? emergencyContactName;
+  final String? emergencyContactPhone;
+  final String? bloodGroup;
+  final String? medicalConditions;
+  final String? status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'studentId': studentId,
+    'userId': userId,
+    'institutionId': institutionId,
+    'programId': programId,
     'admissionNumber': admissionNumber,
     'rollNumber': rollNumber,
+    'admissionDate': admissionDate?.toIso8601String(),
+    'graduationDate': graduationDate?.toIso8601String(),
+    'currentSemester': currentSemester,
+    'currentYear': currentYear,
+    'gradeLevel': gradeLevel,
+    'section': section,
+    'studentType': studentType,
+    'residentialStatus': residentialStatus,
+    'transportRequired': transportRequired,
+    'emergencyContactName': emergencyContactName,
+    'emergencyContactPhone': emergencyContactPhone,
+    'bloodGroup': bloodGroup,
+    'medicalConditions': medicalConditions,
+    'status': status,
+    'createdAt': createdAt?.toIso8601String(),
+    'updatedAt': updatedAt?.toIso8601String(),
   };
 }
 
@@ -253,6 +387,7 @@ class Teacher {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.uuid,
     this.specialization,
     this.qualification,
     this.joinDate,
@@ -265,6 +400,7 @@ class Teacher {
 
   factory Teacher.fromJson(Map<String, dynamic> json) => Teacher(
     id: json['id'],
+    uuid: json['uuid'],
     userId: json['userId'],
     institutionId: json['institutionId'],
     employeeId: json['employeeId'],
@@ -272,7 +408,8 @@ class Teacher {
     specialization: json['specialization'],
     qualification: json['qualification'],
     experienceYears: json['experienceYears'],
-    joinDate: json['joinDate'] != null ? DateTime.parse(json['joinDate']) : null,
+    joinDate:
+        json['joinDate'] != null ? DateTime.parse(json['joinDate']) : null,
     salary: json['salary'],
     employmentType: json['employmentType'],
     officeLocation: json['officeLocation'],
@@ -284,6 +421,7 @@ class Teacher {
     updatedAt: DateTime.parse(json['updatedAt']),
   );
   final int id;
+  final String? uuid;
   final int userId;
   final int institutionId;
   final String employeeId;
@@ -304,6 +442,7 @@ class Teacher {
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    'uuid': uuid,
     'userId': userId,
     'institutionId': institutionId,
     'employeeId': employeeId,

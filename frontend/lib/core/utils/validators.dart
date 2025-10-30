@@ -1,4 +1,48 @@
+enum LoginIdentifierType { email, phone, edverseId }
+
+class LoginIdentifier {
+  LoginIdentifier({
+    required this.type,
+    required this.value,
+  });
+  final LoginIdentifierType type;
+  final String value;
+}
+
 class Validators {
+  /// Detects whether the input is an email, phone number, or edverseId
+  /// Returns a LoginIdentifier with the detected type and value
+  static LoginIdentifier detectLoginIdentifier(String input) {
+    final trimmedInput = input.trim();
+
+    // Check if it's an email
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+    if (emailRegex.hasMatch(trimmedInput)) {
+      return LoginIdentifier(
+        type: LoginIdentifierType.email,
+        value: trimmedInput,
+      );
+    }
+
+    // Check if it's a phone number (digits only, 10-15 characters)
+    // Supports formats like: 1234567890, +911234567890, etc.
+    final phoneRegex = RegExp(r'^\+?[0-9]{10,15}$');
+    if (phoneRegex.hasMatch(trimmedInput)) {
+      return LoginIdentifier(
+        type: LoginIdentifierType.phone,
+        value: trimmedInput,
+      );
+    }
+
+    // Default to edverseId for any other format
+    return LoginIdentifier(
+      type: LoginIdentifierType.edverseId,
+      value: trimmedInput,
+    );
+  }
+
   static String? email(String? value) {
     if (value == null || value.isEmpty) {
       return 'Email is required';

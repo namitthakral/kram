@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
+import '../../core/constants/role_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../models/auth_models.dart';
 
@@ -144,7 +145,7 @@ class SignUpProvider extends ChangeNotifier {
         lastName: lastName,
         email: email,
         password: password,
-        roleId: 1, // Default role ID - you can make this configurable
+        roleId: RoleConstants.parent.id, // Default to parent role
         phoneNumber: phone?.isNotEmpty == true ? phone : null,
       );
 

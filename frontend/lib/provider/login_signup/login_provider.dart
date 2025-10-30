@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 
 import '../../core/services/auth_service.dart';
+import '../../core/utils/validators.dart';
 import '../../models/auth_models.dart';
 
 class LoginProvider extends ChangeNotifier {
@@ -15,7 +16,8 @@ class LoginProvider extends ChangeNotifier {
   bool _isPasswordVisible = false,
       _isLoginAccountClicked = false,
       _rememberPassword = false,
-      _isLoading = false;
+      _isLoading = false,
+      _isLoggingOut = false;
 
   String? _errorMessage;
   User? _currentUser;
@@ -24,6 +26,7 @@ class LoginProvider extends ChangeNotifier {
   bool get isLoginAccountClicked => _isLoginAccountClicked;
   bool get rememberPassword => _rememberPassword;
   bool get isLoading => _isLoading;
+  bool get isLoggingOut => _isLoggingOut;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
 
@@ -78,14 +81,14 @@ class LoginProvider extends ChangeNotifier {
     _setError(null);
 
     // Validate input fields
-    final email = emailController?.text.trim() ?? '';
+    final identifier = emailController?.text.trim() ?? '';
     final password = passwordController?.text.trim() ?? '';
 
-    if (email.isEmpty && password.isEmpty) {
-      _setError('Please enter both email and password');
+    if (identifier.isEmpty && password.isEmpty) {
+      _setError('Please enter both login credentials and password');
       return;
-    } else if (email.isEmpty) {
-      _setError('Please enter your email address');
+    } else if (identifier.isEmpty) {
+      _setError('Please enter your EdVerse ID, email, or phone number');
       return;
     } else if (password.isEmpty) {
       _setError('Please enter your password');
@@ -95,7 +98,31 @@ class LoginProvider extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      final loginRequest = LoginRequest(email: email, password: password);
+      // Detect what type of identifier the user entered
+      final loginIdentifier = Validators.detectLoginIdentifier(identifier);
+
+      // Create login request based on detected type
+      final LoginRequest loginRequest;
+      switch (loginIdentifier.type) {
+        case LoginIdentifierType.email:
+          loginRequest = LoginRequest(
+            password: password,
+            email: loginIdentifier.value,
+          );
+          log('Logging in with email: ${loginIdentifier.value}');
+        case LoginIdentifierType.phone:
+          loginRequest = LoginRequest(
+            password: password,
+            phone: loginIdentifier.value,
+          );
+          log('Logging in with phone: ${loginIdentifier.value}');
+        case LoginIdentifierType.edverseId:
+          loginRequest = LoginRequest(
+            password: password,
+            edverseId: loginIdentifier.value,
+          );
+          log('Logging in with EdVerse ID: ${loginIdentifier.value}');
+      }
 
       final response = await _authService.login(loginRequest);
       _currentUser = response.user;
@@ -106,8 +133,7 @@ class LoginProvider extends ChangeNotifier {
       var errorMessage = 'Login failed. Please try again.';
 
       if (e.toString().contains('Invalid credentials')) {
-        errorMessage =
-            'Invalid email or password. Please check your credentials.';
+        errorMessage = 'Invalid credentials. Please check your login details.';
       } else if (e.toString().contains('Account is not active')) {
         errorMessage =
             'Your account is not active. Please contact administrator.';
@@ -124,7 +150,15 @@ class LoginProvider extends ChangeNotifier {
 
   /// Logout user and clear all stored data
   Future<void> logout() async {
+    // Prevent duplicate logout calls
+    if (_isLoggingOut) {
+      return;
+    }
+
+    _isLoggingOut = true;
     _setLoading(true);
+    notifyListeners();
+
     try {
       await _authService.logout();
 
@@ -143,6 +177,8 @@ class LoginProvider extends ChangeNotifier {
       _currentUser = null;
     } finally {
       _setLoading(false);
+      _isLoggingOut = false;
+      notifyListeners();
     }
   }
 
@@ -151,6 +187,7 @@ class LoginProvider extends ChangeNotifier {
       final isLoggedIn = await _authService.isLoggedIn();
       if (isLoggedIn) {
         _currentUser = await _authService.getCurrentUser();
+        notifyListeners(); // Notify UI that user data is loaded
       }
       return isLoggedIn;
     } on Exception catch (e) {
