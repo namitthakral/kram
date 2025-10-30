@@ -15,7 +15,6 @@ import {
 import {
   ActivateAccountDto,
   ChangePasswordDto,
-  CreateUserDto,
   LoginDto,
   SelfRegistrationDto,
 } from './dto/auth.dto'
@@ -139,111 +138,6 @@ export class AuthService {
     }
   }
 
-  async register(createUserDto: CreateUserDto) {
-    // This endpoint is for ADMIN-CREATED institutional users
-    // Users created here get temporary passwords and must change them on first login
-
-    // Check if user already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: createUserDto.email },
-    })
-
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists')
-    }
-
-    // Check if phone number already exists (if provided)
-    if (createUserDto.phoneNumber) {
-      const existingPhoneUser = await this.prisma.user.findFirst({
-        where: { phone: createUserDto.phoneNumber },
-      })
-
-      if (existingPhoneUser) {
-        throw new ConflictException(
-          'User with this phone number already exists'
-        )
-      }
-    }
-
-    // Get role to determine EdVerse ID prefix
-    const role = await this.prisma.role.findUnique({
-      where: { id: createUserDto.roleId },
-    })
-
-    if (!role) {
-      throw new ConflictException('Invalid role ID')
-    }
-
-    // Generate EdVerse ID
-    // Get the count of users with this role in current year for sequence number
-    const currentYear = new Date().getFullYear()
-    const usersWithRoleThisYear = await this.prisma.user.count({
-      where: {
-        roleId: createUserDto.roleId,
-        createdAt: {
-          gte: new Date(`${currentYear}-01-01`),
-          lt: new Date(`${currentYear + 1}-01-01`),
-        },
-      },
-    })
-
-    const sequence = usersWithRoleThisYear + 1
-    const edverseId = generateEdVerseId(role.roleName, sequence, currentYear)
-
-    // Generate temporary password based on user's name and current year
-    const temporaryPassword = generateTemporaryPassword(
-      createUserDto.firstName,
-      createUserDto.lastName
-    )
-
-    // Hash the temporary password
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 12)
-
-    // Combine firstName and lastName into name for database compatibility
-    const fullName =
-      `${createUserDto.firstName} ${createUserDto.lastName}`.trim()
-
-    // Create user with INACTIVE status (requires password change to become active)
-    const user = await this.prisma.user.create({
-      data: {
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        name: fullName,
-        email: createUserDto.email,
-        phone: createUserDto.phoneNumber,
-        passwordHash: hashedPassword,
-        roleId: createUserDto.roleId,
-        edverseId,
-        status: 'INACTIVE', // User must change password before becoming active
-        isTemporaryPassword: true,
-        mustChangePassword: true,
-      },
-      include: {
-        role: true,
-      },
-    })
-
-    return {
-      success: true,
-      message: 'User created successfully by admin',
-      data: {
-        id: user.id,
-        uuid: user.uuid,
-        edverseId: user.edverseId,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        name: user.name,
-        email: user.email,
-        phoneNumber: user.phone,
-        role: user.role,
-        status: user.status,
-        temporaryPassword, // Return this so admin can share with user
-        mustChangePassword: user.mustChangePassword,
-        createdAt: user.createdAt,
-      },
-    }
-  }
-
   async refreshToken(userId: number) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -265,23 +159,34 @@ export class AuthService {
       roleId: user.roleId,
     }
 
+    // Generate new access token
     const accessToken = this.jwtService.sign(payload)
+
+    // Generate new refresh token (token rotation for security)
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      expiresIn: '7d',
+    })
 
     return {
       tokens: {
         accessToken,
+        refreshToken,
         expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
       },
     }
   }
 
-  async selfRegister(selfRegistrationDto: SelfRegistrationDto) {
+  async selfRegister(
+    selfRegistrationDto: SelfRegistrationDto,
+    institutionCode?: string
+  ) {
     // Check if user already exists
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [
           { email: selfRegistrationDto.email },
-          { phone: selfRegistrationDto.phone },
+          { phone: selfRegistrationDto.phoneNumber },
         ],
       },
     })
@@ -292,13 +197,13 @@ export class AuthService {
       )
     }
 
-    // Get role
+    // Get role by ID
     const role = await this.prisma.role.findUnique({
-      where: { roleName: selfRegistrationDto.role },
+      where: { id: selfRegistrationDto.roleId },
     })
 
     if (!role) {
-      throw new ConflictException('Invalid role')
+      throw new ConflictException('Invalid role ID')
     }
 
     // Restrict certain roles from self-registration
@@ -309,22 +214,50 @@ export class AuthService {
       )
     }
 
-    // Generate EdVerse ID
-    const currentYear = new Date().getFullYear()
-    const usersWithRoleThisYear = await this.prisma.user.count({
-      where: {
-        roleId: role.id,
-        createdAt: {
-          gte: new Date(`${currentYear}-01-01`),
-          lt: new Date(`${currentYear + 1}-01-01`),
-        },
-      },
+    // Determine institution ID
+    let institutionId = selfRegistrationDto.institutionId
+
+    // If institution code provided in query parameter, look it up
+    if (institutionCode && !institutionId) {
+      const instByCode = await this.prisma.institution.findUnique({
+        where: { code: institutionCode.toUpperCase() },
+        select: { id: true },
+      })
+
+      if (instByCode) {
+        institutionId = instByCode.id
+      }
+    }
+
+    // If still no institution ID, default to 1 (for backward compatibility)
+    if (!institutionId) {
+      institutionId = 1
+      console.warn(
+        '⚠️  No institutionId or code provided, defaulting to institution ID 1'
+      )
+    }
+
+    // Get institution to generate EdVerse ID with institution code
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+      select: { code: true },
     })
 
-    const sequence = usersWithRoleThisYear + 1
+    if (!institution) {
+      throw new ConflictException('Institution not found')
+    }
+
+    if (!institution.code) {
+      throw new ConflictException(
+        'Institution code not configured. Please contact administrator.'
+      )
+    }
+
+    // Generate EdVerse ID with institution code
+    const currentYear = new Date().getFullYear()
     const edverseId = generateEdVerseId(
-      selfRegistrationDto.role,
-      sequence,
+      institution.code,
+      role.roleName,
       currentYear
     )
 
@@ -342,7 +275,7 @@ export class AuthService {
         lastName: selfRegistrationDto.lastName,
         name: fullName,
         email: selfRegistrationDto.email,
-        phone: selfRegistrationDto.phone,
+        phone: selfRegistrationDto.phoneNumber,
         passwordHash: hashedPassword,
         roleId: role.id,
         edverseId,
@@ -356,13 +289,10 @@ export class AuthService {
     })
 
     // Create role-specific record
-    await this.createRoleSpecificRecord(user, selfRegistrationDto)
+    await this.createRoleSpecificRecord(user, role.roleName)
 
     // Handle parent-child mapping if provided
-    if (
-      selfRegistrationDto.role === 'parent' &&
-      selfRegistrationDto.childEdverseId
-    ) {
+    if (role.roleName === 'parent' && selfRegistrationDto.childEdverseId) {
       await this.mapParentToChild(user.id, selfRegistrationDto.childEdverseId)
     }
 
@@ -531,9 +461,9 @@ export class AuthService {
 
   private async createRoleSpecificRecord(
     user: { id: number },
-    registrationDto: SelfRegistrationDto
+    roleName: string
   ) {
-    switch (registrationDto.role) {
+    switch (roleName) {
       case 'student':
         // Create student record - will need institution and program info
         // For now, we'll create a basic record
@@ -604,20 +534,29 @@ export class AuthService {
       throw new ConflictException('Invalid role ID')
     }
 
-    // Generate EdVerse ID
-    const currentYear = new Date().getFullYear()
-    const usersWithRoleThisYear = await this.prisma.user.count({
-      where: {
-        roleId: userData.roleId,
-        createdAt: {
-          gte: new Date(`${currentYear}-01-01`),
-          lt: new Date(`${currentYear + 1}-01-01`),
-        },
-      },
+    // Get institution to generate EdVerse ID with institution code
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: userData.institutionId },
+      select: { code: true },
     })
 
-    const sequence = usersWithRoleThisYear + 1
-    const edverseId = generateEdVerseId(role.roleName, sequence, currentYear)
+    if (!institution) {
+      throw new ConflictException('Institution not found')
+    }
+
+    if (!institution.code) {
+      throw new ConflictException(
+        'Institution code not configured. Please contact administrator.'
+      )
+    }
+
+    // Generate EdVerse ID with institution code
+    const currentYear = new Date().getFullYear()
+    const edverseId = generateEdVerseId(
+      institution.code,
+      role.roleName,
+      currentYear
+    )
 
     // Create user
     const user = await this.prisma.user.create({

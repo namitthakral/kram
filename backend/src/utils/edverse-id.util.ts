@@ -1,15 +1,14 @@
 /**
  * EdVerse ID Generation Utility
  *
- * Generates unique EdVerse IDs for users based on their role
- * Format: EDV-{ROLE_CODE}-{YEAR}-{SEQUENCE}
+ * Generates unique EdVerse IDs for users based on their institution and role
+ * Format: {INST_CODE}-{ROLE}{YY}-{RAND4}
  *
  * Examples:
- * - EDV-S-2025-000001 (Student)
- * - EDV-T-2025-000001 (Teacher)
- * - EDV-P-2025-000001 (Parent)
- * - EDV-A-2025-000001 (Admin)
- * - EDV-ST-2025-000001 (Staff)
+ * - DPS-S25-K8M2 (Student at Delhi Public School, 2025)
+ * - IITD-T25-P9X7 (Teacher at IIT Delhi, 2025)
+ * - SSC-AD25-L3N8 (Admin at St. Stephen's College, 2025)
+ * - MU-P25-Q4R6 (Parent at Manipal University, 2025)
  */
 
 /**
@@ -17,43 +16,164 @@
  */
 const ROLE_CODES: Record<string, string> = {
   super_admin: 'SA',
-  admin: 'A',
+  admin: 'AD',
   teacher: 'T',
   student: 'S',
   parent: 'P',
-  staff: 'ST',
+  staff: 'SF',
 }
 
 /**
- * Generate EdVerse ID
+ * Generate institution code from institution name
+ * Creates a 2-4 character acronym based on significant words
+ *
+ * @param institutionName - The full name of the institution
+ * @param existingCodes - Optional array of existing codes to avoid duplicates
+ * @returns Institution code (2-4 characters)
+ *
+ * @example
+ * generateInstitutionCode("Delhi Public School") // "DPS"
+ * generateInstitutionCode("Indian Institute of Technology Delhi") // "IITD"
+ * generateInstitutionCode("Delhi University") // "DU"
+ * generateInstitutionCode("St. Stephen's College") // "SSC"
+ */
+export function generateInstitutionCode(
+  institutionName: string,
+  existingCodes: string[] = []
+): string {
+  // Clean and normalize the name
+  const cleanName = institutionName.trim()
+
+  // Common words to ignore when creating acronym
+  const skipWords = [
+    'the',
+    'of',
+    'and',
+    '&',
+    'a',
+    'an',
+    'for',
+    'in',
+    'at',
+    'to',
+  ]
+
+  // Split into words and filter out common words and short words
+  const words = cleanName
+    .toLowerCase()
+    .split(/[\s\-,.()]+/)
+    .filter(word => word.length > 0 && !skipWords.includes(word))
+
+  // Strategy 1: Create acronym from first letters of significant words (max 4)
+  let code = words
+    .slice(0, 4)
+    .map(word => word[0].toUpperCase())
+    .join('')
+
+  // Strategy 2: If acronym is too short, use first N characters from name
+  if (code.length < 2) {
+    code = cleanName
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .slice(0, 3)
+      .toUpperCase()
+  }
+
+  // Limit to 2-4 characters
+  code = code.slice(0, 4)
+
+  // Ensure minimum 2 characters
+  if (code.length < 2) {
+    code = code.padEnd(2, 'X')
+  }
+
+  // Handle duplicates by adding numeric suffix
+  let finalCode = code
+  let suffix = 1
+  while (existingCodes.includes(finalCode)) {
+    // If adding suffix would exceed 4 chars, truncate the base code
+    const baseCode = code.length >= 4 ? code.slice(0, 3) : code
+    finalCode = baseCode + suffix
+    suffix++
+  }
+
+  return finalCode
+}
+
+/**
+ * Validate institution code format
+ * @param code - The institution code to validate
+ * @returns true if valid (2-4 alphanumeric characters), false otherwise
+ */
+export function isValidInstitutionCode(code: string): boolean {
+  return /^[A-Z0-9]{2,4}$/.test(code)
+}
+
+/**
+ * Generate random alphanumeric code (excludes ambiguous characters)
+ * Excludes: 0, O, 1, I to avoid confusion
+ *
+ * @param length - Length of the random code
+ * @returns Random code string
+ */
+function generateRandomCode(length: number): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+  let result = ''
+  const crypto = require('crypto')
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = crypto.randomInt(0, chars.length)
+    result += chars.charAt(randomIndex)
+  }
+
+  return result
+}
+
+/**
+ * Generate EdVerse ID with institution code
+ *
+ * @param institutionCode - The institution code (2-4 characters)
  * @param roleName - The role name (e.g., 'student', 'teacher')
- * @param sequence - The sequence number for this role/year combination
  * @param year - Optional year (defaults to current year)
  * @returns EdVerse ID string
+ *
+ * @example
+ * generateEdVerseId("DPS", "student") // "DPS-S25-K8M2"
+ * generateEdVerseId("IITD", "teacher", 2024) // "IITD-T24-P9X7"
  */
 export function generateEdVerseId(
+  institutionCode: string,
   roleName: string,
-  sequence: number,
   year?: number
 ): string {
   const roleCode = ROLE_CODES[roleName.toLowerCase()] || 'U' // 'U' for Unknown
   const currentYear = year || new Date().getFullYear()
-  const paddedSequence = sequence.toString().padStart(6, '0')
+  const yearShort = currentYear.toString().slice(-2) // Last 2 digits
+  const randomCode = generateRandomCode(4)
 
-  return `EDV-${roleCode}-${currentYear}-${paddedSequence}`
+  // Normalize institution code to uppercase
+  const instCode = institutionCode.toUpperCase()
+
+  return `${instCode}-${roleCode}${yearShort}-${randomCode}`
 }
 
 /**
  * Parse EdVerse ID to extract components
+ *
  * @param edverseId - The EdVerse ID to parse
- * @returns Object containing role code, year, and sequence
+ * @returns Object containing institution code, role code, year, and random code
+ *
+ * @example
+ * parseEdVerseId("DPS-S25-K8M2")
+ * // Returns: { institutionCode: "DPS", roleCode: "S", year: 2025, randomCode: "K8M2" }
  */
 export function parseEdVerseId(edverseId: string): {
+  institutionCode: string
   roleCode: string
   year: number
-  sequence: number
+  randomCode: string
 } | null {
-  const pattern = /^EDV-([A-Z]+)-(\d{4})-(\d{6})$/
+  // Pattern: {2-4 chars}-{1-2 chars}{2 digits}-{4 chars}
+  const pattern = /^([A-Z0-9]{2,4})-([A-Z]{1,2})(\d{2})-([A-Z0-9]{4})$/
   const match = edverseId.match(pattern)
 
   if (!match) {
@@ -61,25 +181,36 @@ export function parseEdVerseId(edverseId: string): {
   }
 
   return {
-    roleCode: match[1],
-    year: parseInt(match[2], 10),
-    sequence: parseInt(match[3], 10),
+    institutionCode: match[1],
+    roleCode: match[2],
+    year: 2000 + parseInt(match[3], 10), // Convert 25 -> 2025
+    randomCode: match[4],
   }
 }
 
 /**
  * Validate EdVerse ID format
+ *
  * @param edverseId - The EdVerse ID to validate
  * @returns true if valid, false otherwise
+ *
+ * @example
+ * isValidEdVerseId("DPS-S25-K8M2") // true
+ * isValidEdVerseId("INVALID-ID") // false
  */
 export function isValidEdVerseId(edverseId: string): boolean {
-  return /^EDV-[A-Z]+-\d{4}-\d{6}$/.test(edverseId)
+  return /^[A-Z0-9]{2,4}-[A-Z]{1,2}\d{2}-[A-Z0-9]{4}$/.test(edverseId)
 }
 
 /**
  * Get role name from EdVerse ID
+ *
  * @param edverseId - The EdVerse ID
  * @returns Role name or null if invalid
+ *
+ * @example
+ * getRoleNameFromEdVerseId("DPS-S25-K8M2") // "student"
+ * getRoleNameFromEdVerseId("IITD-T25-P9X7") // "teacher"
  */
 export function getRoleNameFromEdVerseId(edverseId: string): string | null {
   const parsed = parseEdVerseId(edverseId)
@@ -90,6 +221,22 @@ export function getRoleNameFromEdVerseId(edverseId: string): string | null {
   )
 
   return roleEntry ? roleEntry[0] : null
+}
+
+/**
+ * Get institution code from EdVerse ID
+ *
+ * @param edverseId - The EdVerse ID
+ * @returns Institution code or null if invalid
+ *
+ * @example
+ * getInstitutionCodeFromEdVerseId("DPS-S25-K8M2") // "DPS"
+ */
+export function getInstitutionCodeFromEdVerseId(
+  edverseId: string
+): string | null {
+  const parsed = parseEdVerseId(edverseId)
+  return parsed ? parsed.institutionCode : null
 }
 
 /**

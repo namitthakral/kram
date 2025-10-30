@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule } from '@nestjs/throttler'
-import { PrismaModule } from './prisma/prisma.module'
+import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
-import { UsersModule } from './users/users.module'
-import { StudentsModule } from './students/students.module'
-import { TeachersModule } from './teachers/teachers.module'
 import { CoursesModule } from './courses/courses.module'
 import { InstitutionsModule } from './institutions/institutions.module'
+import { PrismaModule } from './prisma/prisma.module'
+import { StudentsModule } from './students/students.module'
+import { TeachersModule } from './teachers/teachers.module'
+import { UsersModule } from './users/users.module'
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { InstitutionsModule } from './institutions/institutions.module'
 
     // Feature modules
     AuthModule,
+    AdminModule,
     UsersModule,
     StudentsModule,
     TeachersModule,

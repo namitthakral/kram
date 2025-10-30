@@ -11,7 +11,7 @@
       "name": "Authentication",
       "item": [
         {
-          "name": "User Registration",
+          "name": "User Registration (Self)",
           "request": {
             "method": "POST",
             "header": [
@@ -22,7 +22,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"firstName\": \"Namit\",\n    \"lastName\": \"Thakra;\",\n    \"email\": \"namitt68@gmail.com\",\n    \"password\": \"Test@1234\",\n    \"roleId\": 2,\n    \"phoneNumber\": \"1234567890\"\n}"
+              "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"SecurePass123!\",\n    \"roleId\": 3,\n    \"phoneNumber\": \"1234567890\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/auth/register",
@@ -30,7 +30,32 @@
               "path": ["auth", "register"]
             }
           },
-          "response": []
+          "response": [
+            {
+              "name": "Successful Registration",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"SecurePass123!\",\n    \"roleId\": 3,\n    \"phoneNumber\": \"1234567890\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/auth/register",
+                  "host": ["{{api_url}}"],
+                  "path": ["auth", "register"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"message\": \"User registered successfully\",\n    \"data\": {\n        \"id\": 42,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"edverseId\": \"EDV-P-2025-000001\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"phoneNumber\": \"1234567890\",\n        \"role\": {\n            \"id\": 3,\n            \"roleName\": \"parent\",\n            \"description\": \"Parent/Guardian\",\n            \"permissions\": [\"canViewOwnData\", \"canViewChildData\"]\n        },\n        \"status\": \"ACTIVE\",\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
+            }
+          ]
         },
         {
           "name": "User Login",
@@ -205,6 +230,296 @@
               "raw": "{{api_url}}/auth/profile",
               "host": ["{{api_url}}"],
               "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "Create Institutional User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"email\": \"jane.smith@school.edu\",\n    \"roleId\": 1,\n    \"phoneNumber\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/admin/users",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users"]
+            }
+          },
+          "response": [
+            {
+              "name": "Successful Creation",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"email\": \"jane.smith@school.edu\",\n    \"roleId\": 1,\n    \"phoneNumber\": \"9876543210\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/admin/users",
+                  "host": ["{{api_url}}"],
+                  "path": ["admin", "users"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Institutional user created successfully\",\n    \"data\": {\n        \"id\": 43,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n        \"edverseId\": \"EDV-S-2025-000032\",\n        \"firstName\": \"Jane\",\n        \"lastName\": \"Smith\",\n        \"name\": \"Jane Smith\",\n        \"email\": \"jane.smith@school.edu\",\n        \"phoneNumber\": \"9876543210\",\n        \"role\": {\n            \"id\": 1,\n            \"roleName\": \"student\",\n            \"description\": \"Student\",\n            \"permissions\": [\"canViewOwnData\", \"canSubmitAssignments\"]\n        },\n        \"status\": \"INACTIVE\",\n        \"temporaryPassword\": \"JANE2025\",\n        \"mustChangePassword\": true,\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users?page=1&limit=10&search=&roleId=&status=&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "roleId",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users/stats",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users by Role",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users/role/:roleId?page=1&limit=10",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", "role", ":roleId"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "roleId",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by UUID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users/:user_uuid",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", ":user_uuid"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstName\": \"Jane Updated\",\n    \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/admin/users/:user_uuid",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", ":user_uuid"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User (Soft)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users/:user_uuid",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", ":user_uuid"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User (Hard)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users/:user_uuid/hard",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", ":user_uuid", "hard"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Import Users",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n    {\n        \"firstName\": \"Student1\",\n        \"lastName\": \"Test\",\n        \"email\": \"student1@school.edu\",\n        \"roleId\": 1,\n        \"phoneNumber\": \"1111111111\"\n    },\n    {\n        \"firstName\": \"Student2\",\n        \"lastName\": \"Test\",\n        \"email\": \"student2@school.edu\",\n        \"roleId\": 1,\n        \"phoneNumber\": \"2222222222\"\n    }\n]"
+            },
+            "url": {
+              "raw": "{{api_url}}/admin/users/bulk-import",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", "bulk-import"]
             }
           },
           "response": []
@@ -417,12 +732,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacher_uuid",
+              "raw": "{{api_url}}/teachers/:user_uuid",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacher_uuid"],
+              "path": ["teachers", ":user_uuid"],
               "variable": [
                 {
-                  "key": "teacher_uuid",
+                  "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440000",
                   "description": "Teacher UUID"
                 }
@@ -465,12 +780,12 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacher_uuid/dashboard-stats",
+              "raw": "{{api_url}}/teachers/:user_uuid/dashboard-stats",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacher_uuid", "dashboard-stats"],
+              "path": ["teachers", ":user_uuid", "dashboard-stats"],
               "variable": [
                 {
-                  "key": "teacher_uuid",
+                  "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440000",
                   "description": "Teacher UUID"
                 }
@@ -491,12 +806,12 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{api_url}}/teachers/:teacher_uuid/dashboard-stats",
+                  "raw": "{{api_url}}/teachers/:user_uuid/dashboard-stats",
                   "host": ["{{api_url}}"],
-                  "path": ["teachers", ":teacher_uuid", "dashboard-stats"],
+                  "path": ["teachers", ":user_uuid", "dashboard-stats"],
                   "variable": [
                     {
-                      "key": "teacher_uuid",
+                      "key": "user_uuid",
                       "value": "550e8400-e29b-41d4-a716-446655440000"
                     }
                   ]
@@ -527,12 +842,12 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacher_uuid/attendance-trends",
+              "raw": "{{api_url}}/teachers/:user_uuid/attendance-trends",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacher_uuid", "attendance-trends"],
+              "path": ["teachers", ":user_uuid", "attendance-trends"],
               "variable": [
                 {
-                  "key": "teacher_uuid",
+                  "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440000",
                   "description": "Teacher UUID"
                 }
@@ -554,12 +869,12 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacher_uuid/subject-performance",
+              "raw": "{{api_url}}/teachers/:user_uuid/subject-performance",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacher_uuid", "subject-performance"],
+              "path": ["teachers", ":user_uuid", "subject-performance"],
               "variable": [
                 {
-                  "key": "teacher_uuid",
+                  "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440000",
                   "description": "Teacher UUID"
                 }
@@ -581,12 +896,12 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:teacher_uuid/grade-distribution",
+              "raw": "{{api_url}}/teachers/:user_uuid/grade-distribution",
               "host": ["{{api_url}}"],
-              "path": ["teachers", ":teacher_uuid", "grade-distribution"],
+              "path": ["teachers", ":user_uuid", "grade-distribution"],
               "variable": [
                 {
-                  "key": "teacher_uuid",
+                  "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440000",
                   "description": "Teacher UUID"
                 }
@@ -643,12 +958,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{api_url}}/students/:student_uuid",
+              "raw": "{{api_url}}/students/:user_uuid",
               "host": ["{{api_url}}"],
-              "path": ["students", ":student_uuid"],
+              "path": ["students", ":user_uuid"],
               "variable": [
                 {
-                  "key": "student_uuid",
+                  "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440001",
                   "description": "Student UUID"
                 }

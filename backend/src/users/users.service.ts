@@ -1,12 +1,12 @@
+import { Prisma } from '.prisma/client'
 import {
+  ConflictException,
   Injectable,
   NotFoundException,
-  ConflictException,
 } from '@nestjs/common'
+import * as bcrypt from 'bcryptjs'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
-import { Prisma } from '.prisma/client'
-import * as bcrypt from 'bcryptjs'
 
 @Injectable()
 export class UsersService {
@@ -413,5 +413,186 @@ export class UsersService {
         roleName: roleMap.get(roleId) || 'Unknown',
       })),
     }
+  }
+
+  // UUID-based methods
+  async findByUuid(uuid: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { uuid },
+      include: {
+        role: true,
+        student: {
+          include: {
+            institution: true,
+            program: true,
+            parents: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+        teacher: {
+          include: {
+            institution: true,
+          },
+        },
+        parent: {
+          include: {
+            student: {
+              include: {
+                user: true,
+                institution: true,
+                program: true,
+              },
+            },
+          },
+        },
+        staff: {
+          include: {
+            institution: true,
+          },
+        },
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    // Remove passwordHash from response
+    delete user.passwordHash
+    return user
+  }
+
+  async updateByUuid(uuid: string, updateUserDto: UpdateUserDto) {
+    // Check if user exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { uuid },
+    })
+
+    if (!existingUser) {
+      throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    // Check if email already exists (if being updated)
+    if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
+      const emailExists = await this.prisma.user.findUnique({
+        where: { email: updateUserDto.email },
+      })
+
+      if (emailExists) {
+        throw new ConflictException('User with this email already exists')
+      }
+    }
+
+    // Check if phone number already exists (if being updated)
+    if (
+      updateUserDto.phoneNumber &&
+      updateUserDto.phoneNumber !== existingUser.phone
+    ) {
+      const phoneExists = await this.prisma.user.findFirst({
+        where: { phone: updateUserDto.phoneNumber },
+      })
+
+      if (phoneExists) {
+        throw new ConflictException(
+          'User with this phone number already exists'
+        )
+      }
+    }
+
+    // Build update data with proper typing
+    const updateData: Prisma.UserUpdateInput = {
+      ...(updateUserDto.roleId && { roleId: updateUserDto.roleId }),
+      ...(updateUserDto.email && { email: updateUserDto.email }),
+      ...(updateUserDto.phoneNumber && { phone: updateUserDto.phoneNumber }),
+      // Handle firstName and lastName updates
+      ...(updateUserDto.firstName && { firstName: updateUserDto.firstName }),
+      ...(updateUserDto.lastName && { lastName: updateUserDto.lastName }),
+      // Update the combined name field for backward compatibility
+      ...(updateUserDto.firstName || updateUserDto.lastName
+        ? {
+            name: (() => {
+              const firstName =
+                updateUserDto.firstName || existingUser.firstName || ''
+              const lastName =
+                updateUserDto.lastName || existingUser.lastName || ''
+              return `${firstName} ${lastName}`.trim()
+            })(),
+          }
+        : {}),
+      ...(updateUserDto.isVerified !== undefined && {
+        emailVerified: updateUserDto.isVerified,
+      }),
+      ...(updateUserDto.accountLocked !== undefined && {
+        accountLocked: updateUserDto.accountLocked,
+      }),
+      ...(updateUserDto.status && { status: updateUserDto.status }),
+    }
+
+    // Hash password if being updated
+    if (updateUserDto.password) {
+      updateData.passwordHash = await bcrypt.hash(updateUserDto.password, 12)
+    }
+
+    // Update user
+    const user = await this.prisma.user.update({
+      where: { uuid },
+      data: updateData,
+      include: {
+        role: true,
+        student: true,
+        teacher: true,
+        parent: true,
+        staff: true,
+      },
+    })
+
+    // Remove passwordHash from response
+    delete user.passwordHash
+    return user
+  }
+
+  async removeByUuid(uuid: string) {
+    // Check if user exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { uuid },
+    })
+
+    if (!existingUser) {
+      throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    // Soft delete by updating status
+    const user = await this.prisma.user.update({
+      where: { uuid },
+      data: { status: 'INACTIVE' },
+      include: {
+        role: true,
+      },
+    })
+
+    // Remove passwordHash from response
+    delete user.passwordHash
+    return user
+  }
+
+  async hardDeleteByUuid(uuid: string) {
+    // Check if user exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { uuid },
+    })
+
+    if (!existingUser) {
+      throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    // Hard delete user
+    await this.prisma.user.delete({
+      where: { uuid },
+    })
+
+    return { message: 'User deleted successfully' }
   }
 }

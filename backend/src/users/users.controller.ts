@@ -1,24 +1,24 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
-  UseGuards,
-  ParseIntPipe,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common'
-import { UsersService } from './users.service'
-import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { UserWithRelations } from '../types/auth.types'
+import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
+import { UsersService } from './users.service'
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -61,11 +61,11 @@ export class UsersController {
     return this.usersService.findOne(user.id)
   }
 
-  @Get(':id')
+  @Get(':user_uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id)
+  findOne(@Param('user_uuid') userUuid: string) {
+    return this.usersService.findByUuid(userUuid)
   }
 
   @Patch('profile')
@@ -76,29 +76,29 @@ export class UsersController {
     return this.usersService.update(user.id, updateUserDto)
   }
 
-  @Patch(':id')
+  @Patch(':user_uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('user_uuid') userUuid: string,
     @Body() updateUserDto: UpdateUserDto
   ) {
-    return this.usersService.update(id, updateUserDto)
+    return this.usersService.updateByUuid(userUuid, updateUserDto)
   }
 
-  @Delete(':id')
+  @Delete(':user_uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id)
+  remove(@Param('user_uuid') userUuid: string) {
+    return this.usersService.removeByUuid(userUuid)
   }
 
-  @Delete(':id/hard')
+  @Delete(':user_uuid/hard')
   @UseGuards(RolesGuard)
   @Roles('super_admin')
   @HttpCode(HttpStatus.NO_CONTENT)
-  hardDelete(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.hardDelete(id)
+  hardDelete(@Param('user_uuid') userUuid: string) {
+    return this.usersService.hardDeleteByUuid(userUuid)
   }
 }

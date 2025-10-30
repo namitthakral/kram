@@ -1,16 +1,16 @@
-import {
-  IsEmail,
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsDateString,
-  IsBoolean,
-  IsInt,
-  MinLength,
-  Matches,
-} from 'class-validator'
-import { Transform } from 'class-transformer'
 import { UserStatus } from '@prisma/client'
+import { Transform } from 'class-transformer'
+import {
+  IsBoolean,
+  IsDateString,
+  IsEmail,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator'
 
 export class CreateUserDto {
   @IsString()
@@ -35,6 +35,10 @@ export class CreateUserDto {
   @IsInt()
   @Transform(({ value }) => Number(value))
   roleId: number
+
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  institutionId: number
 
   @IsOptional()
   @IsString()

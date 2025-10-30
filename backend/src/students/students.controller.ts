@@ -36,12 +36,12 @@ export class StudentsController {
     return this.studentsService.findAll(paginationDto, user)
   }
 
-  @Get(':uuid')
+  @Get(':user_uuid')
   async findByUuid(
-    @Param('uuid') uuid: string,
+    @Param('user_uuid') userUuid: string,
     @CurrentUser() user: UserWithRelations
   ) {
-    return this.studentsService.findByUuid(uuid, user)
+    return this.studentsService.findByUuid(userUuid, user)
   }
 
   @Post()
@@ -51,40 +51,40 @@ export class StudentsController {
     return this.studentsService.create(createStudentDto)
   }
 
-  @Patch(':uuid')
+  @Patch(':user_uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
   async update(
-    @Param('uuid') uuid: string,
+    @Param('user_uuid') userUuid: string,
     @Body() updateStudentDto: UpdateStudentDto
   ) {
-    return this.studentsService.updateByUuid(uuid, updateStudentDto)
+    return this.studentsService.updateByUuid(userUuid, updateStudentDto)
   }
 
-  @Delete(':uuid')
+  @Delete(':user_uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
-  async remove(@Param('uuid') uuid: string) {
-    return this.studentsService.removeByUuid(uuid)
+  async remove(@Param('user_uuid') userUuid: string) {
+    return this.studentsService.removeByUuid(userUuid)
   }
 
-  @Get(':uuid/academic-records')
+  @Get(':user_uuid/academic-records')
   async getAcademicRecords(
-    @Param('uuid') uuid: string,
+    @Param('user_uuid') userUuid: string,
     @CurrentUser() user: UserWithRelations
   ) {
-    return this.studentsService.getAcademicRecordsByUuid(uuid, user)
+    return this.studentsService.getAcademicRecordsByUuid(userUuid, user)
   }
 
-  @Get(':uuid/attendance')
+  @Get(':user_uuid/attendance')
   async getAttendance(
-    @Param('uuid') uuid: string,
+    @Param('user_uuid') userUuid: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @CurrentUser() user?: UserWithRelations
   ) {
     return this.studentsService.getAttendanceByUuid(
-      uuid,
+      userUuid,
       startDate,
       endDate,
       user

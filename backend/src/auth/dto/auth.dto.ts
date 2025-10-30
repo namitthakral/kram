@@ -1,6 +1,7 @@
+import { Transform } from 'class-transformer'
 import {
   IsEmail,
-  IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   MinLength,
@@ -37,14 +38,20 @@ export class SelfRegistrationDto {
 
   @IsOptional()
   @IsString()
-  phone?: string
+  phoneNumber?: string
 
   @IsString()
   @MinLength(6)
   password: string
 
-  @IsEnum(['student', 'teacher', 'parent', 'staff'])
-  role: string
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  roleId: number
+
+  @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  institutionId?: number
 
   @IsOptional()
   @IsString()
