@@ -90,4 +90,76 @@ export class StudentsController {
       user
     )
   }
+
+  @Get(':user_uuid/dashboard-stats')
+  async getDashboardStats(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.studentsService.getDashboardStatsByUuid(userUuid, user)
+  }
+
+  @Get(':user_uuid/assignments')
+  async getAssignments(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('limit') limit?: string,
+    @Query('status') status?: string
+  ) {
+    return this.studentsService.getAssignmentsByUuid(
+      userUuid,
+      parseInt(limit || '10'),
+      status,
+      user
+    )
+  }
+
+  @Get(':user_uuid/performance-trends')
+  async getPerformanceTrends(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('startMonth') startMonth?: string,
+    @Query('endMonth') endMonth?: string
+  ) {
+    return this.studentsService.getPerformanceTrendsByUuid(
+      userUuid,
+      startMonth,
+      endMonth,
+      user
+    )
+  }
+
+  @Get(':user_uuid/attendance-history')
+  async getAttendanceHistory(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('semesterId') semesterId?: string
+  ) {
+    return this.studentsService.getAttendanceHistoryByUuid(
+      userUuid,
+      semesterId ? parseInt(semesterId) : undefined,
+      user
+    )
+  }
+
+  @Get(':user_uuid/subject-performance')
+  async getSubjectPerformance(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.studentsService.getSubjectPerformanceByUuid(userUuid, user)
+  }
+
+  @Get(':user_uuid/upcoming-events')
+  async getUpcomingEvents(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('limit') limit?: string
+  ) {
+    return this.studentsService.getUpcomingEventsByUuid(
+      userUuid,
+      parseInt(limit || '10'),
+      user
+    )
+  }
 }

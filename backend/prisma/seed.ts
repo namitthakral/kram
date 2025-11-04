@@ -127,6 +127,10 @@ async function main() {
   )
   console.log('✅ Created comprehensive teacher dashboard test data')
 
+  // Create student dashboard data
+  await createStudentDashboardData()
+  console.log('✅ Created comprehensive student dashboard test data')
+
   console.log('🎉 Comprehensive database seeding completed successfully!')
   printSummary(students.length, parents.length)
 }
@@ -1468,6 +1472,316 @@ async function createTeacherDashboardData(
   }
 
   console.log('  ✅ Teacher dashboard data created successfully!')
+}
+
+async function createStudentDashboardData() {
+  console.log('📊 Creating student dashboard data...')
+
+  // Get active semester and academic year
+  const activeSemester = await prisma.semester.findFirst({
+    where: { status: 'ACTIVE' },
+  })
+
+  const activeAcademicYear = await prisma.academicYear.findFirst({
+    where: { status: 'CURRENT' },
+  })
+
+  if (!activeSemester || !activeAcademicYear) {
+    console.log(
+      '  ⚠️ No active semester or academic year found, skipping student dashboard data'
+    )
+    return
+  }
+
+  // Get all students
+  const students = await prisma.student.findMany({
+    include: { user: true },
+    take: 10, // Limit to first 10 students for demo
+  })
+
+  // Get all subjects
+  const subjects = await prisma.subject.findMany({
+    take: 5, // Mathematics, Physics, Chemistry, English, History
+  })
+
+  if (students.length === 0 || subjects.length === 0) {
+    console.log(
+      '  ⚠️ No students or subjects found, skipping student dashboard data'
+    )
+    return
+  }
+
+  console.log(
+    `  📝 Creating data for ${students.length} students and ${subjects.length} subjects`
+  )
+
+  // Create performance trends data (last 6 months)
+  const months = [
+    { name: 'Jan', date: new Date(2024, 0, 15) },
+    { name: 'Feb', date: new Date(2024, 1, 15) },
+    { name: 'Mar', date: new Date(2024, 2, 15) },
+    { name: 'Apr', date: new Date(2024, 3, 15) },
+    { name: 'May', date: new Date(2024, 4, 15) },
+    { name: 'Jun', date: new Date(2024, 5, 15) },
+  ]
+
+  for (const student of students) {
+    console.log(`  👤 Creating dashboard data for ${student.user.name}`)
+
+    // Create student progress for each subject and month
+    for (const subject of subjects) {
+      let baseScore = 3.0 + Math.random() * 1.0 // Base GPA between 3.0-4.0
+
+      for (const month of months) {
+        // Add some variation to create trends
+        const variation = (Math.random() - 0.5) * 0.3
+        const monthScore = Math.max(2.0, Math.min(4.0, baseScore + variation))
+
+        try {
+          await prisma.studentProgress.create({
+            data: {
+              studentId: student.id,
+              subjectId: subject.id,
+              semesterId: activeSemester.id,
+              academicYearId: activeAcademicYear.id,
+              overallGrade:
+                monthScore >= 3.7
+                  ? 'A'
+                  : monthScore >= 3.3
+                    ? 'B+'
+                    : monthScore >= 3.0
+                      ? 'B'
+                      : monthScore >= 2.7
+                        ? 'C+'
+                        : 'C',
+              gradePoints: monthScore,
+              attendancePercentage: 85 + Math.random() * 12,
+              assignmentScore: monthScore * 25, // Convert to percentage
+              examScore: monthScore * 25,
+              participationScore: 80 + Math.random() * 15,
+              status:
+                monthScore >= 3.5
+                  ? 'EXCELLENT'
+                  : monthScore >= 3.0
+                    ? 'ON_TRACK'
+                    : 'NEEDS_IMPROVEMENT',
+              strengths:
+                monthScore >= 3.5
+                  ? ['Excellent understanding', 'Active participation']
+                  : ['Consistent effort'],
+              areasForImprovement:
+                monthScore < 3.0
+                  ? ['Needs more practice', 'Attendance improvement']
+                  : [],
+              teacherComments: `${month.name} performance: ${monthScore >= 3.5 ? 'Excellent' : monthScore >= 3.0 ? 'Good' : 'Needs improvement'}`,
+              createdAt: month.date,
+              lastUpdated: month.date,
+            },
+          })
+        } catch {
+          // Skip if already exists
+        }
+
+        // Slightly adjust base score for next month (create trends)
+        baseScore += (Math.random() - 0.4) * 0.1
+        baseScore = Math.max(2.5, Math.min(4.0, baseScore))
+      }
+    }
+
+    // Create academic records for GPA calculation
+    for (const subject of subjects) {
+      const gradePoints = 3.0 + Math.random() * 1.0
+      const credits = 3 + Math.floor(Math.random() * 2) // 3-4 credits
+
+      try {
+        await prisma.academicRecord.create({
+          data: {
+            studentId: student.id,
+            semesterId: activeSemester.id,
+            courseId: subject.id, // Using subject as course for simplicity
+            marksObtained: gradePoints * 25, // Convert to percentage
+            maxMarks: 100,
+            grade:
+              gradePoints >= 3.7
+                ? 'A'
+                : gradePoints >= 3.3
+                  ? 'B+'
+                  : gradePoints >= 3.0
+                    ? 'B'
+                    : 'C',
+            gradePoints: gradePoints,
+            creditsEarned: credits,
+            status: 'PASSED',
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+
+    // Create attendance records for the last 3 months
+    const attendanceDates = []
+    const today = new Date()
+    for (let i = 90; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(date.getDate() - i)
+      // Only weekdays
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        attendanceDates.push(date)
+      }
+    }
+
+    // Get class sections for attendance
+    const classSections = await prisma.classSection.findMany({
+      take: 3, // Limit to 3 sections
+    })
+
+    for (const section of classSections) {
+      for (const date of attendanceDates) {
+        // 90% chance of being present
+        const isPresent = Math.random() > 0.1
+
+        try {
+          await prisma.attendance.create({
+            data: {
+              studentId: student.id,
+              sectionId: section.id,
+              date: date,
+              status: isPresent
+                ? 'PRESENT'
+                : Math.random() > 0.5
+                  ? 'ABSENT'
+                  : 'LATE',
+              markedBy: section.teacherId,
+              markedAt: date,
+            },
+          })
+        } catch {
+          // Skip if already exists
+        }
+      }
+    }
+  }
+
+  // Create upcoming examinations
+  console.log('  📅 Creating upcoming examinations...')
+  const courses = await prisma.course.findMany({ take: 5 })
+
+  const upcomingDates = [
+    {
+      name: 'Mathematics Test',
+      date: new Date(2025, 10, 25),
+      time: '10:00:00',
+    }, // Nov 25, 2025
+    { name: 'Physics Quiz', date: new Date(2025, 10, 28), time: '14:00:00' }, // Nov 28, 2025
+    {
+      name: 'Chemistry Midterm',
+      date: new Date(2025, 11, 2),
+      time: '09:00:00',
+    }, // Dec 2, 2025
+    {
+      name: 'English Essay Test',
+      date: new Date(2025, 11, 5),
+      time: '11:00:00',
+    }, // Dec 5, 2025
+    { name: 'History Final', date: new Date(2025, 11, 8), time: '13:00:00' }, // Dec 8, 2025
+  ]
+
+  for (let i = 0; i < Math.min(courses.length, upcomingDates.length); i++) {
+    const course = courses[i]
+    const examData = upcomingDates[i]
+
+    try {
+      await prisma.examination.create({
+        data: {
+          courseId: course.id,
+          semesterId: activeSemester.id,
+          examName: examData.name,
+          examType:
+            i === 4
+              ? 'FINAL'
+              : i === 2
+                ? 'MIDTERM'
+                : i === 1
+                  ? 'QUIZ'
+                  : 'ASSIGNMENT',
+          examDate: examData.date,
+          startTime: new Date(`2024-01-01T${examData.time}`),
+          durationMinutes: 120,
+          totalMarks: 100,
+          passingMarks: 40,
+          status: 'SCHEDULED',
+          createdBy: 1, // Assuming teacher ID 1
+          instructions: `Instructions for ${examData.name}`,
+          venue: `Room ${100 + i}`,
+        },
+      })
+    } catch {
+      // Skip if already exists
+    }
+  }
+
+  // Create upcoming assignments
+  console.log('  📋 Creating upcoming assignments...')
+  const teachers = await prisma.teacher.findMany({ take: 3 })
+
+  if (teachers.length > 0) {
+    const assignmentData = [
+      {
+        title: 'Science Fair Project',
+        dueDate: new Date(2025, 10, 30),
+        subject: 'Physics',
+      },
+      {
+        title: 'History Research Paper',
+        dueDate: new Date(2025, 11, 3),
+        subject: 'History',
+      },
+      {
+        title: 'Chemistry Lab Report',
+        dueDate: new Date(2025, 11, 7),
+        subject: 'Chemistry',
+      },
+      {
+        title: 'Math Problem Set 5',
+        dueDate: new Date(2025, 11, 10),
+        subject: 'Mathematics',
+      },
+      {
+        title: 'English Literature Essay',
+        dueDate: new Date(2025, 11, 12),
+        subject: 'English',
+      },
+    ]
+
+    for (let i = 0; i < Math.min(courses.length, assignmentData.length); i++) {
+      const course = courses[i]
+      const assignment = assignmentData[i]
+      const teacher = teachers[i % teachers.length]
+
+      try {
+        await prisma.assignment.create({
+          data: {
+            courseId: course.id,
+            teacherId: teacher.id,
+            title: assignment.title,
+            description: `Complete the ${assignment.title} as discussed in class.`,
+            instructions: `Detailed instructions for ${assignment.title}`,
+            maxMarks: 100,
+            assignedDate: new Date(),
+            dueDate: assignment.dueDate,
+            status: 'PUBLISHED',
+            lateSubmissionAllowed: true,
+            latePenaltyPercentage: 10,
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+  }
+
+  console.log('  ✅ Student dashboard data created successfully!')
 }
 
 main()

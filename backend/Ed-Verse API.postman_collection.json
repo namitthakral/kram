@@ -993,6 +993,206 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Student Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/dashboard-stats",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "dashboard-stats"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get comprehensive dashboard statistics including GPA, attendance, class rank, and assignments due count."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Assignments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/assignments?limit=10&status=pending",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "assignments"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of assignments to return"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "Filter by status: pending, submitted, graded"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get student's recent assignments and tests with submission status, grades, and scores."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Performance Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/performance-trends?startMonth=2024-01&endMonth=2024-06",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "performance-trends"],
+              "query": [
+                {
+                  "key": "startMonth",
+                  "value": "2024-01",
+                  "description": "Start month in YYYY-MM format"
+                },
+                {
+                  "key": "endMonth",
+                  "value": "2024-06",
+                  "description": "End month in YYYY-MM format"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get subject-wise performance trends over time for chart visualization."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Attendance History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/attendance-history?semesterId=1",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "attendance-history"],
+              "query": [
+                {
+                  "key": "semesterId",
+                  "value": "1",
+                  "description": "Semester ID (optional, defaults to current semester)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get monthly attendance history for bar chart visualization."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Subject Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/subject-performance",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "subject-performance"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get detailed subject performance with teachers, grades, and next test dates."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Upcoming Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/upcoming-events?limit=10",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "upcoming-events"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of events to return"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get upcoming tests, assignments, and events for the student."
+          },
+          "response": []
         }
       ]
     },
