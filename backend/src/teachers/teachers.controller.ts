@@ -14,6 +14,11 @@ import {
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import { CreateAssignmentDto, UpdateAssignmentDto } from './dto/assignment.dto'
+import {
+  CreateExaminationDto,
+  UpdateExaminationDto,
+} from './dto/examination.dto'
 import {
   AssignSubjectsDto,
   CreateTeacherDto,
@@ -179,5 +184,146 @@ export class TeachersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('user_uuid') userUuid: string) {
     return this.teachersService.removeByUuid(userUuid)
+  }
+
+  // ==================== Assignment Management ====================
+
+  @Post(':user_uuid/assignments')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  createAssignment(
+    @Param('user_uuid') userUuid: string,
+    @Body() createAssignmentDto: CreateAssignmentDto
+  ) {
+    return this.teachersService.createAssignment(userUuid, createAssignmentDto)
+  }
+
+  @Get(':user_uuid/assignments')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getTeacherAssignments(
+    @Param('user_uuid') userUuid: string,
+    @Query('status') status?: string,
+    @Query('courseId') courseId?: string
+  ) {
+    const parsedCourseId = courseId ? parseInt(courseId, 10) : undefined
+    return this.teachersService.getTeacherAssignments(
+      userUuid,
+      status,
+      parsedCourseId
+    )
+  }
+
+  @Get(':user_uuid/assignments/:assignmentId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getAssignmentById(
+    @Param('user_uuid') userUuid: string,
+    @Param('assignmentId') assignmentId: string
+  ) {
+    return this.teachersService.getAssignmentById(
+      userUuid,
+      parseInt(assignmentId, 10)
+    )
+  }
+
+  @Patch(':user_uuid/assignments/:assignmentId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  updateAssignment(
+    @Param('user_uuid') userUuid: string,
+    @Param('assignmentId') assignmentId: string,
+    @Body() updateAssignmentDto: UpdateAssignmentDto
+  ) {
+    return this.teachersService.updateAssignment(
+      userUuid,
+      parseInt(assignmentId, 10),
+      updateAssignmentDto
+    )
+  }
+
+  @Delete(':user_uuid/assignments/:assignmentId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  deleteAssignment(
+    @Param('user_uuid') userUuid: string,
+    @Param('assignmentId') assignmentId: string
+  ) {
+    return this.teachersService.deleteAssignment(
+      userUuid,
+      parseInt(assignmentId, 10)
+    )
+  }
+
+  // ==================== Examination Management ====================
+
+  @Post(':user_uuid/examinations')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  createExamination(
+    @Param('user_uuid') userUuid: string,
+    @Body() createExaminationDto: CreateExaminationDto
+  ) {
+    return this.teachersService.createExamination(
+      userUuid,
+      createExaminationDto
+    )
+  }
+
+  @Get(':user_uuid/examinations')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getTeacherExaminations(
+    @Param('user_uuid') userUuid: string,
+    @Query('status') status?: string,
+    @Query('courseId') courseId?: string
+  ) {
+    const parsedCourseId = courseId ? parseInt(courseId, 10) : undefined
+    return this.teachersService.getTeacherExaminations(
+      userUuid,
+      status,
+      parsedCourseId
+    )
+  }
+
+  @Get(':user_uuid/examinations/:examinationId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getExaminationById(
+    @Param('user_uuid') userUuid: string,
+    @Param('examinationId') examinationId: string
+  ) {
+    return this.teachersService.getExaminationById(
+      userUuid,
+      parseInt(examinationId, 10)
+    )
+  }
+
+  @Patch(':user_uuid/examinations/:examinationId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  updateExamination(
+    @Param('user_uuid') userUuid: string,
+    @Param('examinationId') examinationId: string,
+    @Body() updateExaminationDto: UpdateExaminationDto
+  ) {
+    return this.teachersService.updateExamination(
+      userUuid,
+      parseInt(examinationId, 10),
+      updateExaminationDto
+    )
+  }
+
+  @Delete(':user_uuid/examinations/:examinationId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  deleteExamination(
+    @Param('user_uuid') userUuid: string,
+    @Param('examinationId') examinationId: string
+  ) {
+    return this.teachersService.deleteExamination(
+      userUuid,
+      parseInt(examinationId, 10)
+    )
   }
 }

@@ -17,6 +17,11 @@ import {
   TeacherDashboardStats,
   TeacherStudentActivity,
 } from '../types/teacher.types'
+import { CreateAssignmentDto, UpdateAssignmentDto } from './dto/assignment.dto'
+import {
+  CreateExaminationDto,
+  UpdateExaminationDto,
+} from './dto/examination.dto'
 import {
   AssignSubjectsDto,
   CreateTeacherDto,
@@ -1962,5 +1967,547 @@ export class TeachersService {
     ).length
 
     return Math.round((present / attendance.length) * 100)
+  }
+
+  // ==================== Assignment Management ====================
+
+  async createAssignment(
+    userUuid: string,
+    createAssignmentDto: CreateAssignmentDto
+  ) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+      include: { user: true },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Verify course exists
+    const course = await this.prisma.course.findUnique({
+      where: { id: createAssignmentDto.courseId },
+    })
+
+    if (!course) {
+      throw new NotFoundException(
+        `Course with ID ${createAssignmentDto.courseId} not found`
+      )
+    }
+
+    // Verify section exists if provided
+    if (createAssignmentDto.sectionId) {
+      const section = await this.prisma.classSection.findUnique({
+        where: { id: createAssignmentDto.sectionId },
+      })
+
+      if (!section) {
+        throw new NotFoundException(
+          `Section with ID ${createAssignmentDto.sectionId} not found`
+        )
+      }
+    }
+
+    const { dueDate, status, ...rest } = createAssignmentDto
+
+    const assignment = await this.prisma.assignment.create({
+      data: {
+        ...rest,
+        teacherId: teacher.id,
+        dueDate: new Date(dueDate),
+        status: (status as any) || 'DRAFT',
+      },
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        section: { select: { sectionName: true } },
+        teacher: {
+          select: {
+            user: { select: { name: true, email: true } },
+          },
+        },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Assignment created successfully',
+      data: assignment,
+    }
+  }
+
+  async getTeacherAssignments(
+    userUuid: string,
+    status?: string,
+    courseId?: number
+  ) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const where: Prisma.AssignmentWhereInput = { teacherId: teacher.id }
+
+    if (status) {
+      where.status = status as any
+    }
+
+    if (courseId) {
+      where.courseId = courseId
+    }
+
+    const assignments = await this.prisma.assignment.findMany({
+      where,
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        section: { select: { sectionName: true } },
+        submissions: {
+          select: {
+            id: true,
+            status: true,
+            submittedAt: true,
+          },
+        },
+      },
+      orderBy: { dueDate: 'desc' },
+    })
+
+    // Add submission statistics
+    const assignmentsWithStats = assignments.map(assignment => ({
+      ...assignment,
+      submissionStats: {
+        total: assignment.submissions.length,
+        submitted: assignment.submissions.filter(
+          s => s.status === 'SUBMITTED' || s.status === 'GRADED'
+        ).length,
+        graded: assignment.submissions.filter(s => s.status === 'GRADED')
+          .length,
+        returned: assignment.submissions.filter(s => s.status === 'RETURNED')
+          .length,
+      },
+    }))
+
+    return {
+      success: true,
+      data: {
+        assignments: assignmentsWithStats,
+        totalCount: assignmentsWithStats.length,
+      },
+    }
+  }
+
+  async getAssignmentById(userUuid: string, assignmentId: number) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        section: { select: { sectionName: true } },
+        teacher: {
+          select: {
+            user: { select: { name: true, email: true } },
+          },
+        },
+        submissions: {
+          include: {
+            student: {
+              select: {
+                user: { select: { name: true, email: true } },
+                admissionNumber: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!assignment) {
+      throw new NotFoundException(
+        `Assignment with ID ${assignmentId} not found`
+      )
+    }
+
+    // Verify the assignment belongs to this teacher
+    if (assignment.teacherId !== teacher.id) {
+      throw new NotFoundException(
+        'You do not have permission to access this assignment'
+      )
+    }
+
+    return {
+      success: true,
+      data: assignment,
+    }
+  }
+
+  async updateAssignment(
+    userUuid: string,
+    assignmentId: number,
+    updateAssignmentDto: UpdateAssignmentDto
+  ) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+    })
+
+    if (!assignment) {
+      throw new NotFoundException(
+        `Assignment with ID ${assignmentId} not found`
+      )
+    }
+
+    // Verify the assignment belongs to this teacher
+    if (assignment.teacherId !== teacher.id) {
+      throw new NotFoundException(
+        'You do not have permission to update this assignment'
+      )
+    }
+
+    const { dueDate: dueDateStr, status, ...updateRest } = updateAssignmentDto
+    const updateData: any = { ...updateRest }
+
+    if (dueDateStr) {
+      updateData.dueDate = new Date(dueDateStr)
+    }
+
+    if (status) {
+      updateData.status = status
+    }
+
+    const updatedAssignment = await this.prisma.assignment.update({
+      where: { id: assignmentId },
+      data: updateData,
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        section: { select: { sectionName: true } },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Assignment updated successfully',
+      data: updatedAssignment,
+    }
+  }
+
+  async deleteAssignment(userUuid: string, assignmentId: number) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const assignment = await this.prisma.assignment.findUnique({
+      where: { id: assignmentId },
+    })
+
+    if (!assignment) {
+      throw new NotFoundException(
+        `Assignment with ID ${assignmentId} not found`
+      )
+    }
+
+    // Verify the assignment belongs to this teacher
+    if (assignment.teacherId !== teacher.id) {
+      throw new NotFoundException(
+        'You do not have permission to delete this assignment'
+      )
+    }
+
+    await this.prisma.assignment.delete({
+      where: { id: assignmentId },
+    })
+
+    return {
+      success: true,
+      message: 'Assignment deleted successfully',
+    }
+  }
+
+  // ==================== Examination Management ====================
+
+  async createExamination(
+    userUuid: string,
+    createExaminationDto: CreateExaminationDto
+  ) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+      include: { user: true },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Verify course exists
+    const course = await this.prisma.course.findUnique({
+      where: { id: createExaminationDto.courseId },
+    })
+
+    if (!course) {
+      throw new NotFoundException(
+        `Course with ID ${createExaminationDto.courseId} not found`
+      )
+    }
+
+    // Verify semester exists
+    const semester = await this.prisma.semester.findUnique({
+      where: { id: createExaminationDto.semesterId },
+    })
+
+    if (!semester) {
+      throw new NotFoundException(
+        `Semester with ID ${createExaminationDto.semesterId} not found`
+      )
+    }
+
+    const { examDate, startTime, examType, status, ...examinationRest } =
+      createExaminationDto
+
+    const examinationData: any = {
+      ...examinationRest,
+      courseId: createExaminationDto.courseId,
+      semesterId: createExaminationDto.semesterId,
+      createdBy: teacher.id,
+      examDate: new Date(examDate),
+      examType: examType,
+      status: status || 'SCHEDULED',
+      startTime: startTime ? new Date(`2024-01-01T${startTime}`) : undefined,
+    }
+
+    const examination = await this.prisma.examination.create({
+      data: examinationData,
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        semester: { select: { semesterName: true } },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Examination created successfully',
+      data: examination,
+    }
+  }
+
+  async getTeacherExaminations(
+    userUuid: string,
+    status?: string,
+    courseId?: number
+  ) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const where: Prisma.ExaminationWhereInput = { createdBy: teacher.id }
+
+    if (status) {
+      where.status = status as any
+    }
+
+    if (courseId) {
+      where.courseId = courseId
+    }
+
+    const examinations = await this.prisma.examination.findMany({
+      where,
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        semester: { select: { semesterName: true } },
+        results: {
+          select: {
+            id: true,
+            marksObtained: true,
+            grade: true,
+          },
+        },
+      },
+      orderBy: { examDate: 'desc' },
+    })
+
+    // Add result statistics
+    const examinationsWithStats = examinations.map(examination => ({
+      ...examination,
+      resultStats: {
+        total: examination.results.length,
+        graded: examination.results.filter(r => r.grade !== null).length,
+        averageMarks:
+          examination.results.length > 0
+            ? examination.results.reduce(
+                (sum, r) => sum + (Number(r.marksObtained) || 0),
+                0
+              ) / examination.results.length
+            : 0,
+      },
+    }))
+
+    return {
+      success: true,
+      data: {
+        examinations: examinationsWithStats,
+        totalCount: examinationsWithStats.length,
+      },
+    }
+  }
+
+  async getExaminationById(userUuid: string, examinationId: number) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examinationId },
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        semester: { select: { semesterName: true } },
+        results: {
+          include: {
+            student: {
+              select: {
+                user: { select: { name: true, email: true } },
+                admissionNumber: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(
+        `Examination with ID ${examinationId} not found`
+      )
+    }
+
+    // Verify the examination belongs to this teacher
+    if (examination.createdBy !== teacher.id) {
+      throw new NotFoundException(
+        'You do not have permission to access this examination'
+      )
+    }
+
+    return {
+      success: true,
+      data: examination,
+    }
+  }
+
+  async updateExamination(
+    userUuid: string,
+    examinationId: number,
+    updateExaminationDto: UpdateExaminationDto
+  ) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examinationId },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(
+        `Examination with ID ${examinationId} not found`
+      )
+    }
+
+    // Verify the examination belongs to this teacher
+    if (examination.createdBy !== teacher.id) {
+      throw new NotFoundException(
+        'You do not have permission to update this examination'
+      )
+    }
+
+    const { examDate, startTime, ...updateRest } = updateExaminationDto
+    const updateData: any = { ...updateRest }
+
+    if (examDate) {
+      updateData.examDate = new Date(examDate)
+    }
+
+    if (startTime) {
+      updateData.startTime = new Date(`2024-01-01T${startTime}`)
+    }
+
+    const updatedExamination = await this.prisma.examination.update({
+      where: { id: examinationId },
+      data: updateData,
+      include: {
+        course: { select: { courseName: true, courseCode: true } },
+        semester: { select: { semesterName: true } },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Examination updated successfully',
+      data: updatedExamination,
+    }
+  }
+
+  async deleteExamination(userUuid: string, examinationId: number) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examinationId },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(
+        `Examination with ID ${examinationId} not found`
+      )
+    }
+
+    // Verify the examination belongs to this teacher
+    if (examination.createdBy !== teacher.id) {
+      throw new NotFoundException(
+        'You do not have permission to delete this examination'
+      )
+    }
+
+    await this.prisma.examination.delete({
+      where: { id: examinationId },
+    })
+
+    return {
+      success: true,
+      message: 'Examination deleted successfully',
+    }
   }
 }
