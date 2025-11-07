@@ -2792,7 +2792,9 @@ export class TeachersService {
       reasons.push(`Missing ${missingAssignments} assignments`)
       riskScore += 30
     } else if (missingAssignments >= 1) {
-      reasons.push(`Missing ${missingAssignments} assignment${missingAssignments > 1 ? 's' : ''}`)
+      reasons.push(
+        `Missing ${missingAssignments} assignment${missingAssignments > 1 ? 's' : ''}`
+      )
       riskScore += 15
     }
 

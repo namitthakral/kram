@@ -131,6 +131,9 @@ async function main() {
   await createStudentDashboardData()
   console.log('✅ Created comprehensive student dashboard test data')
 
+  // Create Phase 1 test data
+  await createPhase1TestData()
+
   console.log('🎉 Comprehensive database seeding completed successfully!')
   printSummary(students.length, parents.length)
 }
@@ -1782,6 +1785,334 @@ async function createStudentDashboardData() {
   }
 
   console.log('  ✅ Student dashboard data created successfully!')
+}
+
+async function createPhase1TestData() {
+  console.log(
+    '🎯 Creating Phase 1 test data (Pending Submissions & At-Risk Students)...'
+  )
+
+  // Get teacher and students
+  const teacher = await prisma.teacher.findFirst({
+    where: { user: { email: 'john.doe@edverse.edu' } },
+    include: { user: true },
+  })
+
+  if (!teacher) {
+    console.log('  ⚠️ No teacher found, skipping Phase 1 data')
+    return
+  }
+
+  const students = await prisma.student.findMany({
+    where: { status: 'ACTIVE' },
+    include: { user: true },
+  })
+
+  if (students.length === 0) {
+    console.log('  ⚠️ No students found, skipping Phase 1 data')
+    return
+  }
+
+  console.log(`  📚 Found ${students.length} students to work with`)
+
+  // Get active semester and courses
+  const activeSemester = await prisma.semester.findFirst({
+    where: { status: 'ACTIVE' },
+  })
+
+  const courses = await prisma.course.findMany({
+    take: 3,
+  })
+
+  if (!activeSemester || courses.length === 0) {
+    console.log(
+      '  ⚠️ No active semester or courses found, skipping Phase 1 data'
+    )
+    return
+  }
+
+  // Get or create class sections
+  const classSections = await prisma.classSection.findMany({
+    where: { teacherId: teacher.id, status: 'ACTIVE' },
+  })
+
+  console.log('  📝 Creating assignments with pending submissions...')
+
+  // Create assignments with PAST due dates (positive days = days AGO)
+  const assignmentDates = [
+    { days: 7, title: 'Week 1 Quiz', priority: 'high' }, // 7 days ago
+    { days: 5, title: 'Chapter 2 Essay', priority: 'high' }, // 5 days ago
+    { days: 4, title: 'Lab Report #1', priority: 'high' }, // 4 days ago
+    { days: 2, title: 'Homework Set 3', priority: 'medium' }, // 2 days ago
+    { days: 1, title: 'Reading Response', priority: 'medium' }, // 1 day ago
+    { days: 0, title: 'Discussion Post', priority: 'low' }, // Today
+  ]
+
+  const createdAssignments = []
+
+  for (let i = 0; i < assignmentDates.length; i++) {
+    const assignmentInfo = assignmentDates[i]
+    const course = courses[i % courses.length]
+
+    try {
+      const assignment = await prisma.assignment.create({
+        data: {
+          courseId: course.id,
+          teacherId: teacher.id,
+          title: assignmentInfo.title,
+          description: `Complete ${assignmentInfo.title} assignment`,
+          instructions: 'Follow the guidelines provided in class',
+          maxMarks: 100,
+          assignedDate: new Date(
+            Date.now() - (assignmentInfo.days + 7) * 24 * 60 * 60 * 1000
+          ), // Assigned 7 days before due
+          dueDate: new Date(
+            Date.now() - assignmentInfo.days * 24 * 60 * 60 * 1000
+          ), // Due date in the PAST
+          status: 'PUBLISHED',
+          lateSubmissionAllowed: true,
+          latePenaltyPercentage: 10,
+        },
+      })
+      createdAssignments.push({ assignment, priority: assignmentInfo.priority })
+    } catch {
+      // Skip if already exists
+    }
+  }
+
+  console.log(`  ✅ Created ${createdAssignments.length} assignments`)
+
+  // Create pending submissions (SUBMITTED status, not graded)
+  console.log('  📤 Creating pending submissions...')
+  let submissionCount = 0
+
+  for (const { assignment, priority } of createdAssignments) {
+    // Create 2-3 pending submissions per assignment
+    const numSubmissions =
+      priority === 'high' ? 3 : priority === 'medium' ? 2 : 1
+
+    for (let i = 0; i < Math.min(numSubmissions, students.length); i++) {
+      const student = students[i]
+
+      try {
+        await prisma.submission.create({
+          data: {
+            assignmentId: assignment.id,
+            studentId: student.id,
+            submittedAt: new Date(
+              assignment.dueDate.getTime() - 2 * 60 * 60 * 1000
+            ), // Submitted 2 hours before due date
+            status: 'SUBMITTED', // Not graded yet
+            submissionText: `Submission for ${assignment.title} by ${student.user.name}`,
+          },
+        })
+        submissionCount++
+      } catch (error) {
+        console.log(
+          `  ⚠️ Could not create submission for ${student.user.name}: ${error.message}`
+        )
+      }
+    }
+  }
+
+  console.log(`  ✅ Created ${submissionCount} pending submissions`)
+
+  // Create at-risk students data
+  console.log('  ⚠️ Creating at-risk student scenarios...')
+
+  // Scenario 1: High-risk student (missing assignments, low attendance, inactive)
+  if (students.length > 0 && classSections.length > 0) {
+    const highRiskStudent = students[0]
+
+    // Create attendance records with low attendance rate
+    for (let i = 0; i < 20; i++) {
+      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      const status = i % 3 === 0 ? 'PRESENT' : 'ABSENT' // 33% attendance
+
+      try {
+        await prisma.attendance.create({
+          data: {
+            studentId: highRiskStudent.id,
+            sectionId: classSections[0].id,
+            date: date,
+            status: status,
+            markedBy: teacher.id,
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+
+    // Create poor exam results
+    const exam = await prisma.examination.findFirst({
+      where: { createdBy: teacher.id },
+    })
+
+    if (exam) {
+      try {
+        await prisma.examResult.create({
+          data: {
+            examId: exam.id,
+            studentId: highRiskStudent.id,
+            marksObtained: 45, // 45%
+            grade: 'F',
+            remarks: 'Needs improvement',
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+
+    // Update last login to 10 days ago
+    await prisma.user.update({
+      where: { id: highRiskStudent.userId },
+      data: { lastLogin: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+    })
+
+    console.log(
+      `  🔴 Created high-risk scenario for ${highRiskStudent.user.name}`
+    )
+  }
+
+  // Scenario 2: Medium-risk student (missing some assignments, okay attendance)
+  if (students.length > 1 && classSections.length > 0) {
+    const mediumRiskStudent = students[1]
+
+    // Create attendance records with medium attendance rate
+    for (let i = 0; i < 20; i++) {
+      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      const status = i % 4 === 0 ? 'ABSENT' : 'PRESENT' // 75% attendance
+
+      try {
+        await prisma.attendance.create({
+          data: {
+            studentId: mediumRiskStudent.id,
+            sectionId: classSections[0].id,
+            date: date,
+            status: status,
+            markedBy: teacher.id,
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+
+    // Update last login to 5 days ago
+    await prisma.user.update({
+      where: { id: mediumRiskStudent.userId },
+      data: { lastLogin: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
+    })
+
+    console.log(
+      `  🟡 Created medium-risk scenario for ${mediumRiskStudent.user.name}`
+    )
+  }
+
+  // Scenario 3: Low-risk student (one missing assignment, good attendance)
+  if (students.length > 2 && classSections.length > 0) {
+    const lowRiskStudent = students[2]
+
+    // Create attendance records with good attendance rate
+    for (let i = 0; i < 20; i++) {
+      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      const status = i % 10 === 0 ? 'ABSENT' : 'PRESENT' // 90% attendance
+
+      try {
+        await prisma.attendance.create({
+          data: {
+            studentId: lowRiskStudent.id,
+            sectionId: classSections[0].id,
+            date: date,
+            status: status,
+            markedBy: teacher.id,
+          },
+        })
+      } catch {
+        // Skip if already exists
+      }
+    }
+
+    // Update last login to 2 days ago
+    await prisma.user.update({
+      where: { id: lowRiskStudent.userId },
+      data: { lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
+    })
+
+    console.log(
+      `  🟢 Created low-risk scenario for ${lowRiskStudent.user.name}`
+    )
+  }
+
+  // Scenario 4: Good students (no risk) - create good attendance for remaining students
+  if (classSections.length > 0) {
+    for (let i = 3; i < Math.min(students.length, 6); i++) {
+      const goodStudent = students[i]
+
+      for (let j = 0; j < 20; j++) {
+        const date = new Date(Date.now() - j * 24 * 60 * 60 * 1000)
+
+        try {
+          await prisma.attendance.create({
+            data: {
+              studentId: goodStudent.id,
+              sectionId: classSections[0].id,
+              date: date,
+              status: 'PRESENT',
+              markedBy: teacher.id,
+            },
+          })
+        } catch {
+          // Skip if already exists
+        }
+      }
+
+      // Create submissions for all assignments
+      for (const { assignment } of createdAssignments) {
+        try {
+          await prisma.submission.create({
+            data: {
+              assignmentId: assignment.id,
+              studentId: goodStudent.id,
+              submittedAt: new Date(
+                assignment.dueDate.getTime() - 24 * 60 * 60 * 1000
+              ),
+              status: 'GRADED',
+              submissionText: `Submission for ${assignment.title} by ${goodStudent.user.name}`,
+              marksObtained: 85 + Math.floor(Math.random() * 15), // 85-100
+              feedback: 'Excellent work!',
+            },
+          })
+        } catch {
+          // Skip if already exists
+        }
+      }
+
+      // Update last login to today
+      await prisma.user.update({
+        where: { id: goodStudent.userId },
+        data: { lastLogin: new Date() },
+      })
+    }
+  }
+
+  console.log('  ✅ Phase 1 test data created successfully!')
+  console.log('')
+  console.log('  📊 Summary:')
+  console.log(
+    `     • ${createdAssignments.length} assignments with varied due dates`
+  )
+  console.log(`     • ${submissionCount} pending submissions (need grading)`)
+  console.log(`     • 3 at-risk student scenarios (high, medium, low)`)
+  console.log(
+    `     • ${Math.min(students.length - 3, 3)} good students (no risk)`
+  )
+  console.log('')
+  console.log('  🎯 Test the APIs:')
+  console.log(`     • GET /teachers/${teacher.user.uuid}/submissions/pending`)
+  console.log(`     • GET /teachers/${teacher.user.uuid}/students/at-risk`)
 }
 
 main()

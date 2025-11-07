@@ -1,31 +1,31 @@
 {
-	"info": {
-		"_postman_id": "6b340974-2f46-44c0-8072-8ba912b8757b",
-		"name": "Ed-Verse API",
-		"description": "Complete API collection for Ed-Verse Education Management System",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "46066551"
-	},
-	"item": [
-		{
-			"name": "Authentication",
-			"item": [
-				{
+  "info": {
+    "_postman_id": "6b340974-2f46-44c0-8072-8ba912b8757b",
+    "name": "Ed-Verse API",
+    "description": "Complete API collection for Ed-Verse Education Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46066551"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
           "name": "User Registration (Self)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
               "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"SecurePass123!\",\n    \"roleId\": 3,\n    \"phoneNumber\": \"1234567890\"\n}"
-						},
-						"url": {
-							"raw": "{{api_url}}/auth/register",
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/register",
               "host": ["{{api_url}}"],
               "path": ["auth", "register"]
             }
@@ -56,55 +56,55 @@
               "body": "{\n    \"success\": true,\n    \"message\": \"User registered successfully\",\n    \"data\": {\n        \"id\": 42,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"edverseId\": \"EDV-P-2025-000001\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"phoneNumber\": \"1234567890\",\n        \"role\": {\n            \"id\": 3,\n            \"roleName\": \"parent\",\n            \"description\": \"Parent/Guardian\",\n            \"permissions\": [\"canViewOwnData\", \"canViewChildData\"]\n        },\n        \"status\": \"ACTIVE\",\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
             }
           ]
-				},
-				{
-					"name": "User Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {",
-									"    const response = pm.response.json();",
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
                   "    if (response.tokens && response.tokens.accessToken) {",
                   "        pm.environment.set('token', response.tokens.accessToken);",
                   "        console.log('Token saved:', response.tokens.accessToken);",
                   "        console.log('Token expires in:', response.tokens.expiresIn, 'seconds');",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"admin@edverse.edu\",\n  \"password\": \"admin123!\"\n}"
-						},
-						"url": {
-							"raw": "{{api_url}}/auth/login",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@edverse.edu\",\n  \"password\": \"admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/login",
               "host": ["{{api_url}}"],
               "path": ["auth", "login"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Refresh Token",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/auth/refresh",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/auth/refresh",
               "host": ["{{api_url}}"],
               "path": ["auth", "refresh"]
             }
@@ -217,31 +217,31 @@
               "raw": "{{api_url}}/auth/map-parent-child",
               "host": ["{{api_url}}"],
               "path": ["auth", "map-parent-child"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Profile",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/auth/profile",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/auth/profile",
               "host": ["{{api_url}}"],
               "path": ["auth", "profile"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Admin Management",
-			"item": [
-				{
+      "item": [
+        {
           "name": "Create Institutional User",
-					"request": {
+          "request": {
             "method": "POST",
             "header": [
               {
@@ -257,7 +257,7 @@
               "mode": "raw",
               "raw": "{\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"email\": \"jane.smith@school.edu\",\n    \"roleId\": 1,\n    \"phoneNumber\": \"9876543210\"\n}"
             },
-						"url": {
+            "url": {
               "raw": "{{api_url}}/admin/users",
               "host": ["{{api_url}}"],
               "path": ["admin", "users"]
@@ -308,19 +308,19 @@
               "raw": "{{api_url}}/admin/users?page=1&limit=10&search=&roleId=&status=&sortBy=createdAt&sortOrder=desc",
               "host": ["{{api_url}}"],
               "path": ["admin", "users"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								},
-								{
-									"key": "search",
-									"value": ""
-								},
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
                 {
                   "key": "roleId",
                   "value": ""
@@ -329,23 +329,23 @@
                   "key": "status",
                   "value": ""
                 },
-								{
-									"key": "sortBy",
-									"value": "createdAt"
-								},
-								{
-									"key": "sortOrder",
-									"value": "desc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Users Stats",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -356,14 +356,14 @@
               "raw": "{{api_url}}/admin/users/stats",
               "host": ["{{api_url}}"],
               "path": ["admin", "users", "stats"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Users by Role",
-					"request": {
-						"method": "GET",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users by Role",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -374,30 +374,30 @@
               "raw": "{{api_url}}/admin/users/role/:roleId?page=1&limit=10",
               "host": ["{{api_url}}"],
               "path": ["admin", "users", "role", ":roleId"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ],
               "variable": [
                 {
                   "key": "roleId",
                   "value": "1"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get User by UUID (Admin)",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -413,14 +413,14 @@
                   "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440001"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Update User (Admin)",
-					"request": {
+          "request": {
             "method": "PATCH",
             "header": [
               {
@@ -445,22 +445,22 @@
                   "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440001"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Delete User (Soft)",
-					"request": {
+          "request": {
             "method": "DELETE",
-						"header": [
-							{
+            "header": [
+              {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
-							}
-						],
-						"url": {
+              }
+            ],
+            "url": {
               "raw": "{{api_url}}/admin/users/:user_uuid",
               "host": ["{{api_url}}"],
               "path": ["admin", "users", ":user_uuid"],
@@ -469,22 +469,22 @@
                   "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440001"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Delete User (Hard)",
-					"request": {
+          "request": {
             "method": "DELETE",
-						"header": [
-							{
+            "header": [
+              {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
-							}
-						],
-						"url": {
+              }
+            ],
+            "url": {
               "raw": "{{api_url}}/admin/users/:user_uuid/hard",
               "host": ["{{api_url}}"],
               "path": ["admin", "users", ":user_uuid", "hard"],
@@ -493,30 +493,30 @@
                   "key": "user_uuid",
                   "value": "550e8400-e29b-41d4-a716-446655440001"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Bulk Import Users",
-					"request": {
+          "request": {
             "method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
+              }
+            ],
+            "body": {
+              "mode": "raw",
               "raw": "[\n    {\n        \"firstName\": \"Student1\",\n        \"lastName\": \"Test\",\n        \"email\": \"student1@school.edu\",\n        \"roleId\": 1,\n        \"phoneNumber\": \"1111111111\"\n    },\n    {\n        \"firstName\": \"Student2\",\n        \"lastName\": \"Test\",\n        \"email\": \"student2@school.edu\",\n        \"roleId\": 1,\n        \"phoneNumber\": \"2222222222\"\n    }\n]"
-						},
-						"url": {
+            },
+            "url": {
               "raw": "{{api_url}}/admin/users/bulk-import",
               "host": ["{{api_url}}"],
               "path": ["admin", "users", "bulk-import"]
@@ -559,17 +559,17 @@
                   "key": "sortOrder",
                   "value": "desc"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get User Statistics",
-					"request": {
+          "request": {
             "method": "GET",
-						"header": [],
-						"url": {
+            "header": [],
+            "url": {
               "raw": "{{api_url}}/users/stats",
               "host": ["{{api_url}}"],
               "path": ["users", "stats"]
@@ -595,17 +595,17 @@
                   "key": "limit",
                   "value": "10"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Current User Profile",
-					"request": {
+          "request": {
             "method": "GET",
-						"header": [],
-						"url": {
+            "header": [],
+            "url": {
               "raw": "{{api_url}}/users/profile",
               "host": ["{{api_url}}"],
               "path": ["users", "profile"]
@@ -653,85 +653,85 @@
               "raw": "{{api_url}}/users/profile",
               "host": ["{{api_url}}"],
               "path": ["users", "profile"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Teachers Management",
-			"item": [
-				{
-					"name": "Get All Teachers",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/teachers?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Teachers Management",
+      "item": [
+        {
+          "name": "Get All Teachers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/teachers?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
               "host": ["{{api_url}}"],
               "path": ["teachers"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								},
-								{
-									"key": "search",
-									"value": "",
-									"disabled": true
-								},
-								{
-									"key": "institutionId",
-									"value": "",
-									"disabled": true
-								},
-								{
-									"key": "employmentType",
-									"value": "",
-									"disabled": true
-								},
-								{
-									"key": "status",
-									"value": "RESIGNED",
-									"disabled": true
-								},
-								{
-									"key": "sortBy",
-									"value": "createdAt"
-								},
-								{
-									"key": "sortOrder",
-									"value": "desc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Teacher Statistics",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/teachers/stats",
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "institutionId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "employmentType",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "RESIGNED",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/teachers/stats",
               "host": ["{{api_url}}"],
               "path": ["teachers", "stats"]
-						}
-					},
-					"response": []
-				},
-				{
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Teacher by UUID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid"],
@@ -741,12 +741,12 @@
                   "value": "550e8400-e29b-41d4-a716-446655440000",
                   "description": "Teacher UUID"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Create New Teacher",
           "request": {
             "method": "POST",
@@ -770,8 +770,8 @@
         },
         {
           "name": "Get Teacher Dashboard Stats",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -779,7 +779,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/dashboard-stats",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid", "dashboard-stats"],
@@ -881,13 +881,13 @@
               ]
             },
             "description": "Get detailed subject-wise performance data for the Subject Performance tab including average scores, trends, and comparisons."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Get Grade Distribution",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -895,7 +895,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/grade-distribution",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid", "grade-distribution"],
@@ -961,15 +961,15 @@
               "raw": "{{api_url}}/teachers/:user_uuid/assignments?status=PUBLISHED&courseId=1",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid", "assignments"],
-							"query": [
-								{
+              "query": [
+                {
                   "key": "status",
                   "value": "PUBLISHED",
                   "description": "Filter by status (DRAFT, PUBLISHED, CLOSED)"
                 },
                 {
                   "key": "courseId",
-									"value": "1",
+                  "value": "1",
                   "description": "Filter by course ID"
                 }
               ],
@@ -982,13 +982,13 @@
               ]
             },
             "description": "Get all assignments created by the teacher with submission statistics."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Get Assignment by ID",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -999,8 +999,8 @@
             "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/assignments/:assignmentId",
               "host": ["{{api_url}}"],
-							"path": [
-								"teachers",
+              "path": [
+                "teachers",
                 ":user_uuid",
                 "assignments",
                 ":assignmentId"
@@ -1019,32 +1019,32 @@
               ]
             },
             "description": "Get detailed information about a specific assignment including all submissions."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Update Assignment",
-					"request": {
+          "request": {
             "method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}",
                 "type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
+              }
+            ],
+            "body": {
+              "mode": "raw",
               "raw": "{\n  \"title\": \"Programming Assignment 2 (Updated)\",\n  \"dueDate\": \"2025-12-20\",\n  \"status\": \"PUBLISHED\"\n}"
-						},
-						"url": {
+            },
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/assignments/:assignmentId",
               "host": ["{{api_url}}"],
-							"path": [
+              "path": [
                 "teachers",
                 ":user_uuid",
                 "assignments",
@@ -1101,29 +1101,29 @@
               ]
             },
             "description": "Delete an assignment."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Create Examination",
-					"request": {
+          "request": {
             "method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}",
                 "type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
+              }
+            ],
+            "body": {
+              "mode": "raw",
               "raw": "{\n  \"examName\": \"Final Examination - Computer Science\",\n  \"courseId\": 1,\n  \"semesterId\": 2,\n  \"examType\": \"FINAL\",\n  \"examDate\": \"2025-12-20\",\n  \"startTime\": \"10:00\",\n  \"durationMinutes\": 180,\n  \"totalMarks\": 100,\n  \"passingMarks\": 40,\n  \"venue\": \"Main Hall A\",\n  \"instructions\": \"Bring your student ID and writing materials\",\n  \"status\": \"SCHEDULED\"\n}"
-						},
-						"url": {
+            },
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/examinations",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid", "examinations"],
@@ -1192,8 +1192,8 @@
             "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examinationId",
               "host": ["{{api_url}}"],
-							"path": [
-								"teachers",
+              "path": [
+                "teachers",
                 ":user_uuid",
                 "examinations",
                 ":examinationId"
@@ -1212,33 +1212,33 @@
               ]
             },
             "description": "Get detailed information about a specific examination including all results."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Update Examination",
-					"request": {
+          "request": {
             "method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}",
                 "type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
+              }
+            ],
+            "body": {
+              "mode": "raw",
               "raw": "{\n  \"examDate\": \"2025-12-22\",\n  \"startTime\": \"14:00\",\n  \"venue\": \"Main Hall B\",\n  \"status\": \"SCHEDULED\"\n}"
-						},
-						"url": {
+            },
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examinationId",
               "host": ["{{api_url}}"],
-							"path": [
-								"teachers",
+              "path": [
+                "teachers",
                 ":user_uuid",
                 "examinations",
                 ":examinationId"
@@ -1257,13 +1257,13 @@
               ]
             },
             "description": "Update an existing examination."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Delete Examination",
-					"request": {
-						"method": "DELETE",
+          "request": {
+            "method": "DELETE",
             "header": [
               {
                 "key": "Authorization",
@@ -1271,7 +1271,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examinationId",
               "host": ["{{api_url}}"],
               "path": [
@@ -1298,7 +1298,7 @@
           "response": []
         },
         {
-          "name": "Get Pending Submissions (Phase 1)",
+          "name": "Get Pending Submissions",
           "request": {
             "method": "GET",
             "header": [
@@ -1311,12 +1311,7 @@
             "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/submissions/pending?limit=10",
               "host": ["{{api_url}}"],
-							"path": [
-								"teachers",
-                ":user_uuid",
-                "submissions",
-                "pending"
-              ],
+              "path": ["teachers", ":user_uuid", "submissions", "pending"],
               "query": [
                 {
                   "key": "limit",
@@ -1337,7 +1332,7 @@
           "response": []
         },
         {
-          "name": "Get Students At-Risk (Phase 1)",
+          "name": "Get Students At-Risk",
           "request": {
             "method": "GET",
             "header": [
@@ -1350,12 +1345,7 @@
             "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/students/at-risk?limit=20",
               "host": ["{{api_url}}"],
-              "path": [
-                "teachers",
-                ":user_uuid",
-                "students",
-                "at-risk"
-              ],
+              "path": ["teachers", ":user_uuid", "students", "at-risk"],
               "query": [
                 {
                   "key": "limit",
@@ -1372,56 +1362,56 @@
               ]
             },
             "description": "Get students who are at risk and need attention. This is a Phase 1 'medicine' API that provides actionable insights and suggested interventions.\n\n**Risk Analysis includes:**\n- Missing assignments\n- Low attendance rate\n- Inactive for extended period\n- Low performance\n\n**Risk Levels:**\n- High: Risk score >= 50 (urgent intervention needed)\n- Medium: Risk score >= 25 (attention required)\n- Low: Risk score > 0 (monitor closely)\n\n**Suggested Actions:**\n- Schedule 1-on-1 meeting\n- Send intervention message\n- Offer deadline extension\n- Share learning resources\n- Assign peer mentor"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Students Management",
-			"item": [
-				{
-					"name": "Get All Students",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/students?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Students Management",
+      "item": [
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/students?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
               "host": ["{{api_url}}"],
               "path": ["students"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								},
-								{
-									"key": "search",
-									"value": "",
-									"disabled": true
-								},
-								{
-									"key": "sortBy",
-									"value": "createdAt"
-								},
-								{
-									"key": "sortOrder",
-									"value": "desc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Student by UUID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
               "raw": "{{api_url}}/students/:user_uuid",
               "host": ["{{api_url}}"],
               "path": ["students", ":user_uuid"],
@@ -1431,39 +1421,39 @@
                   "value": "550e8400-e29b-41d4-a716-446655440001",
                   "description": "Student UUID"
                 }
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create New Student",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\", \n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\",\n  \"institutionId\": 1,\n  \"programId\": 1,\n  \"admissionNumber\": \"ADM009\",\n  \"rollNumber\": \"ROLL001\",\n  \"admissionDate\": \"2025-01-01\",\n  \"currentSemester\": 1,\n  \"currentYear\": 1,\n  \"gradeLevel\": \"Grade 1\",\n  \"section\": \"A\",\n  \"studentType\": \"REGULAR\",\n  \"residentialStatus\": \"DAY_SCHOLAR\",\n  \"transportRequired\": false,\n  \"emergencyContactName\": \"Emergency Contact\",\n  \"emergencyContactPhone\": \"+1234567890\",\n  \"bloodGroup\": \"O+\",\n  \"medicalConditions\": \"None\"\n}"
-						},
-						"url": {
-							"raw": "{{api_url}}/students",
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\", \n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\",\n  \"institutionId\": 1,\n  \"programId\": 1,\n  \"admissionNumber\": \"ADM009\",\n  \"rollNumber\": \"ROLL001\",\n  \"admissionDate\": \"2025-01-01\",\n  \"currentSemester\": 1,\n  \"currentYear\": 1,\n  \"gradeLevel\": \"Grade 1\",\n  \"section\": \"A\",\n  \"studentType\": \"REGULAR\",\n  \"residentialStatus\": \"DAY_SCHOLAR\",\n  \"transportRequired\": false,\n  \"emergencyContactName\": \"Emergency Contact\",\n  \"emergencyContactPhone\": \"+1234567890\",\n  \"bloodGroup\": \"O+\",\n  \"medicalConditions\": \"None\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/students",
               "host": ["{{api_url}}"],
               "path": ["students"]
-						}
-					},
-					"response": []
-				},
-				{
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Student Dashboard Stats",
-					"request": {
+          "request": {
             "method": "GET",
-						"header": [
-							{
+            "header": [
+              {
                 "key": "Authorization",
                 "value": "Bearer {{token}}",
                 "type": "text"
@@ -1496,7 +1486,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/students/:user_uuid/assignments?limit=10&status=pending",
               "host": ["{{api_url}}"],
               "path": ["students", ":user_uuid", "assignments"],
@@ -1521,12 +1511,12 @@
               ]
             },
             "description": "Get student's recent assignments and tests with submission status, grades, and scores."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Get Student Performance Trends",
-					"request": {
+          "request": {
             "method": "GET",
             "header": [
               {
@@ -1535,7 +1525,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/students/:user_uuid/performance-trends?startMonth=2024-01&endMonth=2024-06",
               "host": ["{{api_url}}"],
               "path": ["students", ":user_uuid", "performance-trends"],
@@ -1560,13 +1550,13 @@
               ]
             },
             "description": "Get subject-wise performance trends over time for chart visualization."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Get Student Attendance History",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -1574,7 +1564,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/students/:user_uuid/attendance-history?semesterId=1",
               "host": ["{{api_url}}"],
               "path": ["students", ":user_uuid", "attendance-history"],
@@ -1594,13 +1584,13 @@
               ]
             },
             "description": "Get monthly attendance history for bar chart visualization."
-					},
-					"response": []
-				},
-				{
+          },
+          "response": []
+        },
+        {
           "name": "Get Student Subject Performance",
-					"request": {
-						"method": "GET",
+          "request": {
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
@@ -1608,7 +1598,7 @@
                 "type": "text"
               }
             ],
-						"url": {
+            "url": {
               "raw": "{{api_url}}/students/:user_uuid/subject-performance",
               "host": ["{{api_url}}"],
               "path": ["students", ":user_uuid", "subject-performance"],
@@ -1639,8 +1629,8 @@
               "raw": "{{api_url}}/students/:user_uuid/upcoming-events?limit=10",
               "host": ["{{api_url}}"],
               "path": ["students", ":user_uuid", "upcoming-events"],
-							"query": [
-								{
+              "query": [
+                {
                   "key": "limit",
                   "value": "10",
                   "description": "Number of events to return"
@@ -1655,164 +1645,164 @@
               ]
             },
             "description": "Get upcoming tests, assignments, and events for the student."
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Error Testing",
-			"item": [
-				{
-					"name": "Invalid Login (Wrong Password)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"wrongpassword\"\n}"
-						},
-						"url": {
-							"raw": "{{api_url}}/auth/login",
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Error Testing",
+      "item": [
+        {
+          "name": "Invalid Login (Wrong Password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/login",
               "host": ["{{api_url}}"],
               "path": ["auth", "login"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Invalid Email Format",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"password123\"\n}"
-						},
-						"url": {
-							"raw": "{{api_url}}/auth/login",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Email Format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invalid-email\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/login",
               "host": ["{{api_url}}"],
               "path": ["auth", "login"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Unauthorized Access (No Token)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/users",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unauthorized Access (No Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/users",
               "host": ["{{api_url}}"],
               "path": ["users"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Invalid User ID",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api_url}}/users/999999",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid User ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/users/999999",
               "host": ["{{api_url}}"],
               "path": ["users", "999999"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Missing Required Fields",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"incomplete@example.com\"\n}"
-						},
-						"url": {
-							"raw": "{{api_url}}/auth/register",
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Missing Required Fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"incomplete@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/register",
               "host": ["{{api_url}}"],
               "path": ["auth", "register"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Health Check",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{base_url}}/health",
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
           "host": ["{{base_url}}"],
           "path": ["health"]
-				}
-			},
-			"response": []
-		}
-	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{token}}",
-				"type": "string"
-			}
-		]
-	},
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					"// Auto-set authorization header if token exists",
-					"if (pm.environment.get('token')) {",
-					"    pm.request.headers.add({",
-					"        key: 'Authorization',",
-					"        value: 'Bearer ' + pm.environment.get('token')",
-					"    });",
-					"}"
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:3000",
-			"type": "string"
-		},
-		{
-			"key": "api_url",
-			"value": "{{base_url}}/api",
-			"type": "string"
-		},
-		{
-			"key": "token",
-			"value": "",
-			"type": "string"
-		}
-	]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set authorization header if token exists",
+          "if (pm.environment.get('token')) {",
+          "    pm.request.headers.add({",
+          "        key: 'Authorization',",
+          "        value: 'Bearer ' + pm.environment.get('token')",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "api_url",
+      "value": "{{base_url}}/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
 }
