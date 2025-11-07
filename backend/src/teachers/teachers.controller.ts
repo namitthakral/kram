@@ -326,4 +326,32 @@ export class TeachersController {
       parseInt(examinationId, 10)
     )
   }
+
+  // ==================== Phase 1: Actionable Insights ====================
+
+  @Get(':user_uuid/submissions/pending')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getPendingSubmissions(
+    @Param('user_uuid') userUuid: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.teachersService.getPendingSubmissions(
+      userUuid,
+      parseInt(limit || '10', 10)
+    )
+  }
+
+  @Get(':user_uuid/students/at-risk')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getStudentsAtRisk(
+    @Param('user_uuid') userUuid: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.teachersService.getStudentsAtRisk(
+      userUuid,
+      parseInt(limit || '20', 10)
+    )
+  }
 }

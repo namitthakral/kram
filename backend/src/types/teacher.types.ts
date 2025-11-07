@@ -301,3 +301,80 @@ export interface TopPerformer {
   overallGrade: string
   subjectGrades: Record<string, string>
 }
+
+// ============================================================================
+// PHASE 1: ACTIONABLE INSIGHTS - PENDING SUBMISSIONS & AT-RISK STUDENTS
+// ============================================================================
+
+// Pending Submissions (Needs Grading)
+export interface PendingSubmission {
+  id: number
+  student: {
+    name: string
+    uuid: string
+    avatar: string
+    admissionNumber: string
+  }
+  assignment: {
+    id: number
+    title: string
+    dueDate: Date
+    maxMarks: number
+  }
+  submittedAt: Date
+  timeAgo: string
+  priority: 'high' | 'medium' | 'low'
+  daysWaiting: number
+}
+
+export interface PendingSubmissionsResponse {
+  success: boolean
+  data: {
+    submissions: PendingSubmission[]
+    totalCount: number
+    avgGradingTime: string
+    oldestSubmission: string | null
+  }
+}
+
+// Students At-Risk (Needing Attention)
+export interface StudentAtRisk {
+  id: number
+  name: string
+  uuid: string
+  avatar: string
+  admissionNumber: string
+  riskLevel: 'high' | 'medium' | 'low'
+  riskScore: number
+  reasons: string[]
+  suggestedActions: SuggestedAction[]
+  stats: {
+    missingAssignments: number
+    attendanceRate: number
+    lastActive: string
+    daysSinceLogin: number
+    currentGrade: string
+    currentPercentage: number
+  }
+}
+
+export interface SuggestedAction {
+  type: 'meeting' | 'message' | 'mentor' | 'resources' | 'extension'
+  label: string
+  action: string
+  priority: number
+}
+
+export interface StudentsAtRiskResponse {
+  success: boolean
+  data: {
+    students: StudentAtRisk[]
+    totalCount: number
+    summary: {
+      high: number
+      medium: number
+      low: number
+    }
+    lastUpdated: string
+  }
+}

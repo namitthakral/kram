@@ -2510,4 +2510,420 @@ export class TeachersService {
       message: 'Examination deleted successfully',
     }
   }
+
+  // ==================== Phase 1: Actionable Insights ====================
+
+  /**
+   * Get pending submissions that need grading
+   */
+  async getPendingSubmissions(userUuid: string, limit: number = 10) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    const submissions = await this.prisma.submission.findMany({
+      where: {
+        assignment: { teacherId: teacher.id },
+        status: 'SUBMITTED', // Not yet graded
+      },
+      include: {
+        student: {
+          select: {
+            user: { select: { name: true, uuid: true } },
+            admissionNumber: true,
+          },
+        },
+        assignment: {
+          select: { id: true, title: true, dueDate: true, maxMarks: true },
+        },
+      },
+      orderBy: { submittedAt: 'asc' }, // Oldest first (FIFO)
+      take: limit,
+    })
+
+    // Calculate statistics
+    const allPendingCount = await this.prisma.submission.count({
+      where: {
+        assignment: { teacherId: teacher.id },
+        status: 'SUBMITTED',
+      },
+    })
+
+    const oldestSubmission = submissions.length > 0 ? submissions[0] : null
+
+    return {
+      success: true,
+      data: {
+        submissions: submissions.map(s => ({
+          id: s.id,
+          student: {
+            name: s.student.user.name,
+            uuid: s.student.user.uuid,
+            avatar: this.getInitials(s.student.user.name),
+            admissionNumber: s.student.admissionNumber,
+          },
+          assignment: {
+            id: s.assignment.id,
+            title: s.assignment.title,
+            dueDate: s.assignment.dueDate,
+            maxMarks: s.assignment.maxMarks,
+          },
+          submittedAt: s.submittedAt,
+          timeAgo: this.getTimeAgo(s.submittedAt),
+          priority: this.calculateSubmissionPriority(s.submittedAt),
+          daysWaiting: this.getDaysSince(s.submittedAt),
+        })),
+        totalCount: allPendingCount,
+        avgGradingTime: this.calculateAvgGradingTime(submissions),
+        oldestSubmission: oldestSubmission
+          ? this.getTimeAgo(oldestSubmission.submittedAt)
+          : null,
+      },
+    }
+  }
+
+  /**
+   * Get students who are at risk and need attention
+   */
+  async getStudentsAtRisk(userUuid: string, limit: number = 20) {
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Get all students in teacher's classes
+    const classSections = await this.prisma.classSection.findMany({
+      where: { teacherId: teacher.id, status: 'ACTIVE' },
+      select: { id: true },
+    })
+
+    const sectionIds = classSections.map(cs => cs.id)
+
+    if (sectionIds.length === 0) {
+      return {
+        success: true,
+        data: {
+          students: [],
+          totalCount: 0,
+          summary: { high: 0, medium: 0, low: 0 },
+          lastUpdated: new Date().toISOString(),
+        },
+      }
+    }
+
+    // Get students with their activity data
+    const students = await this.prisma.student.findMany({
+      where: {
+        attendance: {
+          some: {
+            sectionId: { in: sectionIds },
+          },
+        },
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        admissionNumber: true,
+        user: {
+          select: {
+            name: true,
+            uuid: true,
+            lastLogin: true,
+          },
+        },
+        submissions: {
+          where: {
+            assignment: { teacherId: teacher.id },
+          },
+          select: {
+            id: true,
+            status: true,
+            assignment: {
+              select: { dueDate: true },
+            },
+          },
+        },
+        attendance: {
+          where: {
+            sectionId: { in: sectionIds },
+            date: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+            },
+          },
+          select: {
+            status: true,
+          },
+        },
+        examResults: {
+          where: {
+            exam: { createdBy: teacher.id },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          select: {
+            marksObtained: true,
+            exam: {
+              select: { totalMarks: true },
+            },
+          },
+        },
+      },
+      take: 100, // Analyze up to 100 students
+    })
+
+    // Analyze each student for risk
+    const atRiskStudents = students
+      .map(student => {
+        const analysis = this.analyzeStudentRisk(student, teacher.id)
+        if (analysis.riskLevel === 'none') return null
+
+        return {
+          id: student.id,
+          name: student.user.name,
+          uuid: student.user.uuid,
+          avatar: this.getInitials(student.user.name),
+          admissionNumber: student.admissionNumber,
+          riskLevel: analysis.riskLevel,
+          riskScore: analysis.riskScore,
+          reasons: analysis.reasons,
+          suggestedActions: this.getSuggestedActions(analysis),
+          stats: {
+            missingAssignments: analysis.missingAssignments,
+            attendanceRate: analysis.attendanceRate,
+            lastActive: this.getTimeAgo(student.user.lastLogin),
+            daysSinceLogin: this.getDaysSince(student.user.lastLogin),
+            currentGrade: analysis.currentGrade,
+            currentPercentage: analysis.currentPercentage,
+          },
+        }
+      })
+      .filter(s => s !== null)
+      .sort((a, b) => b.riskScore - a.riskScore)
+      .slice(0, limit)
+
+    // Calculate summary
+    const summary = {
+      high: atRiskStudents.filter(s => s.riskLevel === 'high').length,
+      medium: atRiskStudents.filter(s => s.riskLevel === 'medium').length,
+      low: atRiskStudents.filter(s => s.riskLevel === 'low').length,
+    }
+
+    return {
+      success: true,
+      data: {
+        students: atRiskStudents,
+        totalCount: atRiskStudents.length,
+        summary,
+        lastUpdated: new Date().toISOString(),
+      },
+    }
+  }
+
+  // ==================== Helper Methods ====================
+
+  private getInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2)
+  }
+
+  private getTimeAgo(date: Date | null): string {
+    if (!date) return 'Never'
+
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+
+    if (seconds < 60) return 'Just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} mins ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} days ago`
+    return `${Math.floor(seconds / 604800)} weeks ago`
+  }
+
+  private getDaysSince(date: Date | null): number {
+    if (!date) return 999
+    return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24))
+  }
+
+  private calculateSubmissionPriority(
+    submittedAt: Date
+  ): 'high' | 'medium' | 'low' {
+    const daysWaiting = this.getDaysSince(submittedAt)
+    if (daysWaiting >= 3) return 'high'
+    if (daysWaiting >= 1) return 'medium'
+    return 'low'
+  }
+
+  private calculateAvgGradingTime(submissions: any[]): string {
+    if (submissions.length === 0) return 'N/A'
+
+    const totalDays = submissions.reduce(
+      (sum, s) => sum + this.getDaysSince(s.submittedAt),
+      0
+    )
+    const avgDays = Math.floor(totalDays / submissions.length)
+
+    if (avgDays === 0) return 'Less than 1 day'
+    if (avgDays === 1) return '1 day'
+    return `${avgDays} days`
+  }
+
+  private analyzeStudentRisk(student: any, _teacherId: number) {
+    const reasons: string[] = []
+    let riskScore = 0
+
+    // Check missing assignments
+    const totalAssignments = 10 // TODO: Get actual count from DB
+    const submittedCount = student.submissions.filter(
+      s => s.status === 'SUBMITTED' || s.status === 'GRADED'
+    ).length
+    const missingAssignments = Math.max(0, totalAssignments - submittedCount)
+
+    if (missingAssignments >= 3) {
+      reasons.push(`Missing ${missingAssignments} assignments`)
+      riskScore += 30
+    } else if (missingAssignments >= 1) {
+      reasons.push(`Missing ${missingAssignments} assignment${missingAssignments > 1 ? 's' : ''}`)
+      riskScore += 15
+    }
+
+    // Check attendance
+    const totalAttendance = student.attendance.length
+    const presentCount = student.attendance.filter(
+      a => a.status === 'PRESENT' || a.status === 'LATE'
+    ).length
+    const attendanceRate =
+      totalAttendance > 0
+        ? Math.round((presentCount / totalAttendance) * 100)
+        : 100
+
+    if (attendanceRate < 70) {
+      reasons.push(`Low attendance: ${attendanceRate}%`)
+      riskScore += 25
+    } else if (attendanceRate < 85) {
+      reasons.push(`Below average attendance: ${attendanceRate}%`)
+      riskScore += 10
+    }
+
+    // Check last activity
+    const daysSinceLogin = this.getDaysSince(student.user.lastLogin)
+    if (daysSinceLogin > 7) {
+      reasons.push(`Inactive for ${daysSinceLogin} days`)
+      riskScore += 20
+    } else if (daysSinceLogin > 3) {
+      reasons.push(`Last login: ${daysSinceLogin} days ago`)
+      riskScore += 10
+    }
+
+    // Calculate current grade
+    const examResults = student.examResults
+    let currentPercentage = 0
+    let currentGrade = 'N/A'
+
+    if (examResults.length > 0) {
+      const totalMarks = examResults.reduce(
+        (sum: number, r: any) => sum + Number(r.exam.totalMarks),
+        0
+      )
+      const obtainedMarks = examResults.reduce(
+        (sum: number, r: any) => sum + Number(r.marksObtained),
+        0
+      )
+      currentPercentage =
+        totalMarks > 0 ? Math.round((obtainedMarks / totalMarks) * 100) : 0
+      currentGrade = this.getGradeFromPercentage(currentPercentage)
+
+      if (currentPercentage < 60) {
+        reasons.push(`Low performance: ${currentPercentage}%`)
+        riskScore += 25
+      }
+    }
+
+    // Determine risk level
+    let riskLevel: 'high' | 'medium' | 'low' | 'none' = 'none'
+    if (riskScore >= 50) riskLevel = 'high'
+    else if (riskScore >= 25) riskLevel = 'medium'
+    else if (riskScore > 0) riskLevel = 'low'
+
+    return {
+      riskLevel,
+      riskScore,
+      reasons,
+      missingAssignments,
+      attendanceRate,
+      currentGrade,
+      currentPercentage,
+    }
+  }
+
+  private getGradeFromPercentage(percentage: number): string {
+    if (percentage >= 90) return 'A'
+    if (percentage >= 80) return 'B'
+    if (percentage >= 70) return 'C'
+    if (percentage >= 60) return 'D'
+    return 'F'
+  }
+
+  private getSuggestedActions(analysis: any) {
+    const actions: any[] = []
+
+    if (analysis.riskLevel === 'high') {
+      actions.push({
+        type: 'meeting',
+        label: 'Schedule urgent 1-on-1 meeting',
+        action: 'schedule_meeting',
+        priority: 1,
+      })
+      actions.push({
+        type: 'message',
+        label: 'Send intervention message',
+        action: 'send_message',
+        priority: 2,
+      })
+    }
+
+    if (analysis.missingAssignments > 0) {
+      actions.push({
+        type: 'extension',
+        label: 'Offer deadline extension',
+        action: 'extend_deadline',
+        priority: 3,
+      })
+    }
+
+    if (analysis.attendanceRate < 85) {
+      actions.push({
+        type: 'message',
+        label: 'Send attendance reminder',
+        action: 'send_attendance_reminder',
+        priority: 4,
+      })
+    }
+
+    if (analysis.currentPercentage < 70) {
+      actions.push({
+        type: 'resources',
+        label: 'Share learning resources',
+        action: 'share_resources',
+        priority: 5,
+      })
+      actions.push({
+        type: 'mentor',
+        label: 'Assign peer mentor',
+        action: 'assign_mentor',
+        priority: 6,
+      })
+    }
+
+    return actions.slice(0, 3) // Return top 3 actions
+  }
 }
