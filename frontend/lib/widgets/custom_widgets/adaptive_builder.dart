@@ -73,6 +73,7 @@ class AdaptiveInfo {
   bool get isTabletLandscape => isTablet && isLandscape;
 
   /// Get a value based on current state
+  /// Note: Mobile devices ignore orientation and always return mobilePortrait value
   T when<T>({
     required T mobilePortrait,
     T? mobileLandscape,
@@ -81,13 +82,11 @@ class AdaptiveInfo {
     T? desktop,
   }) {
     if (isMobile) {
-      return isLandscape ? (mobileLandscape ?? mobilePortrait) : mobilePortrait;
+      // Mobile devices: same value for both portrait and landscape
+      return mobilePortrait;
     } else if (isTablet) {
       return isLandscape
-          ? (tabletLandscape ??
-              mobileLandscape ??
-              tabletPortrait ??
-              mobilePortrait)
+          ? (tabletLandscape ?? tabletPortrait ?? mobilePortrait)
           : (tabletPortrait ?? mobilePortrait);
     } else {
       return desktop ?? tabletLandscape ?? tabletPortrait ?? mobilePortrait;

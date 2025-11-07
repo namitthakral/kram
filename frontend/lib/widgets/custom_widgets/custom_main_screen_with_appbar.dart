@@ -33,6 +33,7 @@ class AppBarConfig {
     required String userName,
     required String grade,
     required String rollNumber,
+    String? gpa,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
   }) : type = AppBarType.profile,
@@ -44,9 +45,11 @@ class AppBarConfig {
        actions = const [],
        userInitials = userInitials,
        userName = userName,
-       userDetails = '$grade • Roll No: $rollNumber',
+       userDetails = gpa != null
+           ? '$grade • Roll No: $rollNumber • GPA: $gpa'
+           : '$grade • Roll No: $rollNumber',
        subtitle = null,
-       gpa = null,
+       gpa = gpa,
        rank = null,
        totalRank = null;
 
@@ -68,6 +71,29 @@ class AppBarConfig {
        userInitials = userInitials,
        userName = userName,
        userDetails = '$designation • ID: $employeeId',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
+  /// Creates a parent app bar configuration (shows child information)
+  const AppBarConfig.parent({
+    required String childInitials,
+    required String childName,
+    required String grade,
+    required String rollNumber,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = childInitials,
+       userName = childName,
+       userDetails = '$grade • Roll No: $rollNumber',
        subtitle = null,
        gpa = null,
        rank = null,

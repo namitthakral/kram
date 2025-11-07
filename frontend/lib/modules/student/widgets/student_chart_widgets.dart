@@ -3,422 +3,499 @@ import 'package:flutter/material.dart';
 
 /// Widget for displaying attendance history as a bar chart
 class AttendanceHistoryChart extends StatelessWidget {
-  const AttendanceHistoryChart({super.key});
+  const AttendanceHistoryChart({super.key, this.attendanceData});
+
+  final Map<String, dynamic>? attendanceData;
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: 250,
-        padding: const EdgeInsets.all(16),
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: 100,
-            barTouchData: BarTouchData(
-              enabled: true,
-              touchTooltipData: BarTouchTooltipData(
-                getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                  final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-                  return BarTooltipItem(
-                    '${months[group.x]}\nAttendance % : ${rod.toY.toInt()}',
-                    const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  );
-                },
-              ),
-            ),
-            titlesData: FlTitlesData(
-              rightTitles: const AxisTitles(),
-              topTitles: const AxisTitles(),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    const style = TextStyle(
-                      color: Color(0xFF64748b),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    );
-                    Widget text;
-                    switch (value.toInt()) {
-                      case 0:
-                        text = const Text('Jan', style: style);
-                        break;
-                      case 1:
-                        text = const Text('Feb', style: style);
-                        break;
-                      case 2:
-                        text = const Text('Mar', style: style);
-                        break;
-                      case 3:
-                        text = const Text('Apr', style: style);
-                        break;
-                      case 4:
-                        text = const Text('May', style: style);
-                        break;
-                      case 5:
-                        text = const Text('Jun', style: style);
-                        break;
-                      default:
-                        text = const Text('', style: style);
-                        break;
+  Widget build(BuildContext context) {
+    // Parse attendance data from API or use default
+    final List<Map<String, dynamic>> monthlyData =
+        _parseAttendanceData(attendanceData);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Get responsive dimensions
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 600;
+        final isTablet = screenWidth >= 600 && screenWidth < 900;
+
+        // Responsive sizing
+        final chartHeight = isMobile ? 200.0 : (isTablet ? 250.0 : 280.0);
+        final fontSize = isMobile ? 10.0 : 12.0;
+        final reservedSize = isMobile ? 28.0 : 35.0;
+        final barWidth = isMobile ? 20.0 : (isTablet ? 26.0 : 32.0);
+        final padding = isMobile ? 12.0 : 16.0;
+
+        return Container(
+          height: chartHeight,
+          padding: EdgeInsets.all(padding),
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: 100,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    if (groupIndex < monthlyData.length) {
+                      final month = monthlyData[groupIndex]['month'] ?? '';
+                      return BarTooltipItem(
+                        '$month\n${rod.toY.toInt()}%',
+                        TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: fontSize,
+                        ),
+                      );
                     }
-                    return SideTitleWidget(
-                      axisSide: meta.axisSide,
-                      space: 4,
-                      child: text,
-                    );
+                    return null;
                   },
                 ),
               ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 40,
-                  interval: 25,
-                  getTitlesWidget: (value, meta) {
-                    const style = TextStyle(
-                      color: Color(0xFF64748b),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    );
-                    return Text(value.toInt().toString(), style: style);
-                  },
+              titlesData: FlTitlesData(
+                rightTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      final style = TextStyle(
+                        color: const Color(0xFF64748b),
+                        fontWeight: FontWeight.bold,
+                        fontSize: fontSize,
+                      );
+                      final index = value.toInt();
+                      if (index >= 0 && index < monthlyData.length) {
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          space: 4,
+                          child: Text(monthlyData[index]['month'] ?? '', style: style),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: reservedSize,
+                    interval: 25,
+                    getTitlesWidget: (value, meta) {
+                      final style = TextStyle(
+                        color: const Color(0xFF64748b),
+                        fontWeight: FontWeight.bold,
+                        fontSize: fontSize,
+                      );
+                      return Text(value.toInt().toString(), style: style);
+                    },
+                  ),
+                ),
+              ),
+              borderData: FlBorderData(
+                border: Border.all(color: const Color(0xFFe2e8f0)),
+              ),
+              gridData: FlGridData(
+                drawVerticalLine: false,
+                horizontalInterval: 25,
+                getDrawingHorizontalLine: (value) => const FlLine(
+                  color: Color(0xFFe2e8f0),
+                  strokeWidth: 1,
+                ),
+              ),
+              barGroups: List.generate(
+                monthlyData.length,
+                (index) => BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: monthlyData[index]['percentage']?.toDouble() ?? 0,
+                      color: const Color(0xFF4F7CFF),
+                      width: barWidth,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(4),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            borderData: FlBorderData(
-              border: Border.all(color: const Color(0xFFe2e8f0)),
-            ),
-            gridData: FlGridData(
-              drawVerticalLine: false,
-              horizontalInterval: 25,
-              getDrawingHorizontalLine: (value) => const FlLine(
-                color: Color(0xFFe2e8f0),
-                strokeWidth: 1,
-              ),
-            ),
-            barGroups: [
-              BarChartGroupData(
-                x: 0,
-                barRods: [
-                  BarChartRodData(
-                    toY: 98,
-                    color: const Color(0xFF4F7CFF),
-                    width: 32,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-              BarChartGroupData(
-                x: 1,
-                barRods: [
-                  BarChartRodData(
-                    toY: 94,
-                    color: const Color(0xFF4F7CFF),
-                    width: 32,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-              BarChartGroupData(
-                x: 2,
-                barRods: [
-                  BarChartRodData(
-                    toY: 97,
-                    color: const Color(0xFF4F7CFF),
-                    width: 32,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-              BarChartGroupData(
-                x: 3,
-                barRods: [
-                  BarChartRodData(
-                    toY: 93,
-                    color: const Color(0xFF4F7CFF),
-                    width: 32,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-              BarChartGroupData(
-                x: 4,
-                barRods: [
-                  BarChartRodData(
-                    toY: 95,
-                    color: const Color(0xFF4F7CFF),
-                    width: 32,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-              BarChartGroupData(
-                x: 5,
-                barRods: [
-                  BarChartRodData(
-                    toY: 96,
-                    color: const Color(0xFF4F7CFF),
-                    width: 32,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ),
-        ),
-      );
+        );
+      },
+    );
+  }
+
+  List<Map<String, dynamic>> _parseAttendanceData(Map<String, dynamic>? data) {
+    // Backend returns: { success: true, data: { attendanceHistory: [...], overallPercentage: ... } }
+
+    debugPrint('📊 Attendance History - Raw data received: $data');
+
+    if (data == null) {
+      debugPrint('⚠️ Attendance History - No data received, using default');
+      return [
+        {'month': 'Jan', 'percentage': 98},
+        {'month': 'Feb', 'percentage': 94},
+        {'month': 'Mar', 'percentage': 97},
+        {'month': 'Apr', 'percentage': 93},
+        {'month': 'May', 'percentage': 95},
+        {'month': 'Jun', 'percentage': 96},
+      ];
+    }
+
+    try {
+      // Check if data has nested structure with 'data' key
+      final responseData = data['data'] ?? data;
+      debugPrint('📊 Attendance History - Response data: $responseData');
+
+      final history = responseData['attendanceHistory'] as List<dynamic>?;
+      debugPrint('📊 Attendance History - History array: $history');
+
+      if (history == null || history.isEmpty) {
+        debugPrint('⚠️ Attendance History - No history data, using default');
+        return [
+          {'month': 'Jan', 'percentage': 98},
+          {'month': 'Feb', 'percentage': 94},
+          {'month': 'Mar', 'percentage': 97},
+          {'month': 'Apr', 'percentage': 93},
+          {'month': 'May', 'percentage': 95},
+          {'month': 'Jun', 'percentage': 96},
+        ];
+      }
+
+      final parsedData = history
+          .map((item) => {
+                'month': item['month'] ?? '',
+                'percentage': item['percentage'] ?? 0,
+              })
+          .toList();
+
+      debugPrint('✅ Attendance History - Successfully parsed ${parsedData.length} months');
+      return parsedData;
+    } on Exception catch (e) {
+      debugPrint('❌ Attendance History - Error parsing: $e');
+      // Return default on error
+      return [
+        {'month': 'Jan', 'percentage': 98},
+        {'month': 'Feb', 'percentage': 94},
+        {'month': 'Mar', 'percentage': 97},
+        {'month': 'Apr', 'percentage': 93},
+        {'month': 'May', 'percentage': 95},
+        {'month': 'Jun', 'percentage': 96},
+      ];
+    }
+  }
 }
 
 /// Widget for displaying performance trends as a line chart
 class PerformanceTrendsChart extends StatelessWidget {
-  const PerformanceTrendsChart({super.key});
+  const PerformanceTrendsChart({super.key, this.trendsData});
+
+  final Map<String, dynamic>? trendsData;
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: 300,
-        padding: const EdgeInsets.all(16),
-        child: LineChart(
-          LineChartData(
-            gridData: FlGridData(
-              drawVerticalLine: false,
-              horizontalInterval: 25,
-              getDrawingHorizontalLine: (value) => const FlLine(
-                color: Color(0xFFe2e8f0),
-                strokeWidth: 1,
-              ),
-            ),
-            titlesData: FlTitlesData(
-              rightTitles: const AxisTitles(),
-              topTitles: const AxisTitles(),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  interval: 1,
-                  getTitlesWidget: (value, meta) {
-                    const style = TextStyle(
-                      color: Color(0xFF64748b),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    );
-                    Widget text;
-                    switch (value.toInt()) {
-                      case 0:
-                        text = const Text('Jan', style: style);
-                        break;
-                      case 1:
-                        text = const Text('Feb', style: style);
-                        break;
-                      case 2:
-                        text = const Text('Mar', style: style);
-                        break;
-                      case 3:
-                        text = const Text('Apr', style: style);
-                        break;
-                      case 4:
-                        text = const Text('May', style: style);
-                        break;
-                      case 5:
-                        text = const Text('Jun', style: style);
-                        break;
-                      default:
-                        text = const Text('', style: style);
-                        break;
-                    }
-                    return SideTitleWidget(
-                      axisSide: meta.axisSide,
-                      child: text,
-                    );
-                  },
+  Widget build(BuildContext context) {
+    // Parse trends data from API or use default
+    final parsedData = _parseTrendsData(trendsData);
+    final months = parsedData['months'] as List<String>;
+    final subjects = parsedData['subjects'] as List<Map<String, dynamic>>;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Get responsive dimensions
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isMobile = screenWidth < 600;
+        final isTablet = screenWidth >= 600 && screenWidth < 900;
+
+        // Responsive sizing
+        final chartHeight = isMobile ? 220.0 : (isTablet ? 280.0 : 320.0);
+        final fontSize = isMobile ? 10.0 : 12.0;
+        final reservedSize = isMobile ? 28.0 : 35.0;
+        final dotRadius = isMobile ? 3.0 : 4.0;
+        final lineWidth = isMobile ? 2.5 : 3.0;
+        final padding = isMobile ? 12.0 : 16.0;
+
+        return Container(
+          height: chartHeight,
+          padding: EdgeInsets.all(padding),
+          child: LineChart(
+            LineChartData(
+              gridData: FlGridData(
+                drawVerticalLine: false,
+                horizontalInterval: 25,
+                getDrawingHorizontalLine: (value) => const FlLine(
+                  color: Color(0xFFe2e8f0),
+                  strokeWidth: 1,
                 ),
               ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 40,
-                  interval: 25,
-                  getTitlesWidget: (value, meta) {
-                    const style = TextStyle(
-                      color: Color(0xFF64748b),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    );
-                    return Text(value.toInt().toString(), style: style);
-                  },
-                ),
-              ),
-            ),
-            borderData: FlBorderData(
-              border: Border.all(color: const Color(0xFFe2e8f0)),
-            ),
-            minX: 0,
-            maxX: 5,
-            minY: 50,
-            maxY: 100,
-            lineBarsData: [
-              // Chemistry
-              LineChartBarData(
-                spots: const [
-                  FlSpot(0, 85),
-                  FlSpot(1, 87),
-                  FlSpot(2, 86),
-                  FlSpot(3, 88),
-                  FlSpot(4, 87),
-                  FlSpot(5, 89),
-                ],
-                isCurved: true,
-                color: const Color(0xFF8B5CF6),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  getDotPainter: (spot, percent, barData, index) =>
-                      FlDotCirclePainter(
-                    radius: 4,
-                    color: const Color(0xFF8B5CF6),
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
+              titlesData: FlTitlesData(
+                rightTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    getTitlesWidget: (value, meta) {
+                      final style = TextStyle(
+                        color: const Color(0xFF64748b),
+                        fontWeight: FontWeight.bold,
+                        fontSize: fontSize,
+                      );
+                      final index = value.toInt();
+                      if (index >= 0 && index < months.length) {
+                        return SideTitleWidget(
+                          axisSide: meta.axisSide,
+                          child: Text(months[index], style: style),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
                 ),
-                belowBarData: BarAreaData(),
-              ),
-              // English
-              LineChartBarData(
-                spots: const [
-                  FlSpot(0, 92),
-                  FlSpot(1, 93),
-                  FlSpot(2, 94),
-                  FlSpot(3, 94),
-                  FlSpot(4, 95),
-                  FlSpot(5, 95),
-                ],
-                isCurved: true,
-                color: const Color(0xFFf59e0b),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  getDotPainter: (spot, percent, barData, index) =>
-                      FlDotCirclePainter(
-                    radius: 4,
-                    color: const Color(0xFFf59e0b),
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: reservedSize,
+                    interval: 25,
+                    getTitlesWidget: (value, meta) {
+                      final style = TextStyle(
+                        color: const Color(0xFF64748b),
+                        fontWeight: FontWeight.bold,
+                        fontSize: fontSize,
+                      );
+                      return Text(value.toInt().toString(), style: style);
+                    },
                   ),
                 ),
-                belowBarData: BarAreaData(),
               ),
-              // History
-              LineChartBarData(
-                spots: const [
-                  FlSpot(0, 80),
-                  FlSpot(1, 82),
-                  FlSpot(2, 81),
-                  FlSpot(3, 83),
-                  FlSpot(4, 83),
-                  FlSpot(5, 84),
-                ],
-                isCurved: true,
-                color: const Color(0xFFef4444),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  getDotPainter: (spot, percent, barData, index) =>
-                      FlDotCirclePainter(
-                    radius: 4,
-                    color: const Color(0xFFef4444),
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
+              borderData: FlBorderData(
+                border: Border.all(color: const Color(0xFFe2e8f0)),
+              ),
+              minX: 0,
+              maxX: (months.length - 1).toDouble(),
+              minY: 50,
+              maxY: 100,
+              lineBarsData: subjects.map((subject) {
+                final spots = subject['data'] as List<FlSpot>;
+                final color = _parseColor(subject['color'] ?? '#4F7CFF');
+
+                return LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: color,
+                  barWidth: lineWidth,
+                  isStrokeCapRound: true,
+                  dotData: FlDotData(
+                    getDotPainter: (spot, percent, barData, index) =>
+                        FlDotCirclePainter(
+                      radius: dotRadius,
+                      color: color,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white,
+                    ),
                   ),
+                  belowBarData: BarAreaData(),
+                );
+              }).toList(),
+              lineTouchData: LineTouchData(
+                touchTooltipData: LineTouchTooltipData(
+                  getTooltipItems: (touchedSpots) => touchedSpots
+                      .map(
+                        (LineBarSpot touchedSpot) => LineTooltipItem(
+                          '${touchedSpot.y.toInt()}%',
+                          TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: fontSize,
+                          ),
+                        ),
+                      )
+                      .toList(),
                 ),
-                belowBarData: BarAreaData(),
-              ),
-              // Mathematics
-              LineChartBarData(
-                spots: const [
-                  FlSpot(0, 90),
-                  FlSpot(1, 90),
-                  FlSpot(2, 91),
-                  FlSpot(3, 90),
-                  FlSpot(4, 91),
-                  FlSpot(5, 92),
-                ],
-                isCurved: true,
-                color: const Color(0xFF4F7CFF),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  getDotPainter: (spot, percent, barData, index) =>
-                      FlDotCirclePainter(
-                    radius: 4,
-                    color: const Color(0xFF4F7CFF),
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
-                  ),
-                ),
-                belowBarData: BarAreaData(),
-              ),
-              // Physics
-              LineChartBarData(
-                spots: const [
-                  FlSpot(0, 88),
-                  FlSpot(1, 88),
-                  FlSpot(2, 89),
-                  FlSpot(3, 88),
-                  FlSpot(4, 89),
-                  FlSpot(5, 89),
-                ],
-                isCurved: true,
-                color: const Color(0xFF10b981),
-                barWidth: 3,
-                isStrokeCapRound: true,
-                dotData: FlDotData(
-                  getDotPainter: (spot, percent, barData, index) =>
-                      FlDotCirclePainter(
-                    radius: 4,
-                    color: const Color(0xFF10b981),
-                    strokeWidth: 2,
-                    strokeColor: Colors.white,
-                  ),
-                ),
-                belowBarData: BarAreaData(),
-              ),
-            ],
-            lineTouchData: LineTouchData(
-              touchTooltipData: LineTouchTooltipData(
-                getTooltipItems: (touchedSpots) => touchedSpots.map((LineBarSpot touchedSpot) {
-                    const textStyle = TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    );
-                    return LineTooltipItem(
-                      '${touchedSpot.y.toInt()}%',
-                      textStyle,
-                    );
-                  }).toList(),
               ),
             ),
           ),
-        ),
-      );
+        );
+      },
+    );
+  }
+
+  Map<String, dynamic> _parseTrendsData(Map<String, dynamic>? data) {
+    // Backend returns: { success: true, data: { trends: [...], period: {...} } }
+    // trends structure: [{ subject: "Math", subjectCode: "MTH101", dataPoints: [{month: "Jan", score: 90}] }]
+
+    debugPrint('📊 Performance Trends - Raw data received: $data');
+
+    if (data == null) {
+      debugPrint('⚠️ Performance Trends - No data received, using default');
+      return _getDefaultTrendsData();
+    }
+
+    try {
+      // Check if data has nested structure with 'data' key
+      final responseData = data['data'] ?? data;
+      debugPrint('📊 Performance Trends - Response data: $responseData');
+
+      final trends = responseData['trends'] as List<dynamic>?;
+      debugPrint('📊 Performance Trends - Trends array: $trends');
+
+      if (trends == null || trends.isEmpty) {
+        debugPrint('⚠️ Performance Trends - No trends data available, using default');
+        return _getDefaultTrendsData();
+      }
+
+      final months = <String>[];
+      final subjectsMap = <String, Map<String, dynamic>>{};
+
+      // Backend format: [{ subject: "Math", dataPoints: [{month: "Jan", score: 90}] }]
+      for (final trendItem in trends) {
+        final subjectName = trendItem['subject'] ?? '';
+        final dataPoints = trendItem['dataPoints'] as List<dynamic>?;
+
+        if (dataPoints == null || dataPoints.isEmpty) {
+          continue;
+        }
+
+        final spots = <FlSpot>[];
+
+        for (final point in dataPoints) {
+          final month = point['month'] ?? '';
+          final score = (point['score'] ?? 0).toDouble();
+
+          // Add month if not already in list
+          if (!months.contains(month)) {
+            months.add(month);
+          }
+
+          // Add data point
+          final monthIndex = months.indexOf(month).toDouble();
+          spots.add(FlSpot(monthIndex, score));
+        }
+
+        // Generate a color for this subject if not specified
+        final color = _getSubjectColor(subjectName);
+
+        subjectsMap[subjectName] = {
+          'name': subjectName,
+          'color': color,
+          'data': spots,
+        };
+      }
+
+      if (subjectsMap.isEmpty) {
+        debugPrint('⚠️ Performance Trends - No subject data parsed, using default');
+        return _getDefaultTrendsData();
+      }
+
+      debugPrint('✅ Performance Trends - Successfully parsed ${subjectsMap.length} subjects with ${months.length} months');
+
+      return {
+        'months': months,
+        'subjects': subjectsMap.values.toList(),
+      };
+    } on Exception catch (e) {
+      debugPrint('❌ Performance Trends - Error parsing: $e');
+      return _getDefaultTrendsData();
+    }
+  }
+
+  Map<String, dynamic> _getDefaultTrendsData() => {
+        'months': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        'subjects': [
+          {
+            'name': 'Chemistry',
+            'color': '#8B5CF6',
+            'data': const [
+              FlSpot(0, 85),
+              FlSpot(1, 87),
+              FlSpot(2, 86),
+              FlSpot(3, 88),
+              FlSpot(4, 87),
+              FlSpot(5, 89),
+            ],
+          },
+          {
+            'name': 'English',
+            'color': '#f59e0b',
+            'data': const [
+              FlSpot(0, 92),
+              FlSpot(1, 93),
+              FlSpot(2, 94),
+              FlSpot(3, 94),
+              FlSpot(4, 95),
+              FlSpot(5, 95),
+            ],
+          },
+          {
+            'name': 'History',
+            'color': '#ef4444',
+            'data': const [
+              FlSpot(0, 80),
+              FlSpot(1, 82),
+              FlSpot(2, 81),
+              FlSpot(3, 83),
+              FlSpot(4, 83),
+              FlSpot(5, 84),
+            ],
+          },
+          {
+            'name': 'Mathematics',
+            'color': '#4F7CFF',
+            'data': const [
+              FlSpot(0, 90),
+              FlSpot(1, 90),
+              FlSpot(2, 91),
+              FlSpot(3, 90),
+              FlSpot(4, 91),
+              FlSpot(5, 92),
+            ],
+          },
+          {
+            'name': 'Physics',
+            'color': '#10b981',
+            'data': const [
+              FlSpot(0, 88),
+              FlSpot(1, 88),
+              FlSpot(2, 89),
+              FlSpot(3, 88),
+              FlSpot(4, 89),
+              FlSpot(5, 89),
+            ],
+          },
+        ],
+      };
+
+  String _getSubjectColor(String subjectName) {
+    final colors = {
+      'mathematics': '#4F7CFF',
+      'math': '#4F7CFF',
+      'physics': '#10b981',
+      'chemistry': '#8B5CF6',
+      'english': '#f59e0b',
+      'history': '#ef4444',
+      'biology': '#06b6d4',
+      'computer': '#8b5cf6',
+      'science': '#10b981',
+    };
+
+    final key = subjectName.toLowerCase();
+    for (final entry in colors.entries) {
+      if (key.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return '#4F7CFF'; // Default color
+  }
+
+  Color _parseColor(String hexColor) {
+    try {
+      final hex = hexColor.replaceAll('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } on Exception catch (_) {
+      return const Color(0xFF4F7CFF); // Default blue
+    }
+  }
 }

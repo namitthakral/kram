@@ -16,7 +16,6 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
   }) : _builder = null;
 
   /// Creates a segmented control with its own provider scoped to the builder
-  /// This is the recommended approach for sharing state across multiple components
   const CustomSlidingSegmentedControl.withProvider({
     required this.segments,
     required Widget Function(BuildContext context, Widget? child) builder,
@@ -34,7 +33,7 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mode 1: With auto-scoped provider using builder
+    // Mode 1: Scoped provider (recommended)
     if (_builder != null) {
       return ChangeNotifierProvider(
         create:
@@ -44,7 +43,7 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
             ),
         child: Builder(
           builder:
-              (context) => _builder(
+              (context) => _builder!(
                 context,
                 Consumer<SegmentedControlProvider<T>>(
                   builder:
@@ -62,7 +61,7 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
       );
     }
 
-    // Mode 2: Using external provider
+    // Mode 2: External provider
     if (useExternalProvider) {
       return Consumer<SegmentedControlProvider<T>>(
         builder:
@@ -77,7 +76,7 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
       );
     }
 
-    // Mode 3: Local state without provider
+    // Mode 3: Local state
     return _StatefulSegmentedControl<T>(
       segments: segments,
       initialValue: initialValue,
@@ -94,102 +93,120 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
     final segmentCount = segmentKeys.length;
     final isMobile = context.isMobile;
 
-    return Container(
-      height: 44,
-      padding: EdgeInsets.zero,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
-        borderRadius: BorderRadius.circular(40),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final segmentWidth = constraints.maxWidth / segmentCount;
-          final selectedIndex = segmentKeys.indexOf(selectedValue);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F9FC),
+          borderRadius: BorderRadius.circular(40),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final segmentWidth = constraints.maxWidth / segmentCount;
+            final selectedIndex = segmentKeys.indexOf(selectedValue);
 
-          return Stack(
-            children: [
-              // Sliding thumb
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeInOut,
-                left: selectedIndex * segmentWidth,
-                child: Container(
-                  width: segmentWidth,
-                  height: constraints.maxHeight - 12,
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 6,
-                    horizontal: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: CustomAppColors.white,
-                    borderRadius: BorderRadius.circular(40),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CustomAppColors.black01.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+            // Add padding for edges and vertical breathing space
+            const verticalPadding = 5.0;
+            const horizontalPadding = 6.0;
+
+            var leftOffset = selectedIndex * segmentWidth;
+            var thumbWidth = segmentWidth;
+
+            // Add extra padding at left/right edges
+            if (selectedIndex == 0) {
+              leftOffset += horizontalPadding;
+              thumbWidth -= horizontalPadding;
+            } else if (selectedIndex == segmentCount - 1) {
+              thumbWidth -= horizontalPadding;
+            }
+
+            return Stack(
+              children: [
+                // Sliding thumb
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  left: leftOffset,
+                  top: verticalPadding,
+                  bottom: verticalPadding,
+                  child: Container(
+                    width: thumbWidth,
+                    decoration: BoxDecoration(
+                      color: CustomAppColors.white,
+                      borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Labels
-              Row(
-                children:
-                    segmentKeys.map((key) {
-                      final label = segments[key]!;
-                      final isSelected = selectedValue == key;
+                // Segment labels
+                Row(
+                  children:
+                      segmentKeys.map((key) {
+                        final label = segments[key]!;
+                        final isSelected = selectedValue == key;
 
-                      return Expanded(
-                        child: GestureDetector(
-                          onTap: () => onChanged(key),
-                          behavior: HitTestBehavior.translucent,
-                          child: Container(
-                            height: double.infinity,
-                            alignment: Alignment.center,
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isMobile ? 2 : 8,
-                            ),
-                            child: AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 200),
-                              style: context.textTheme.bodyBase.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: isMobile ? 11 : 14,
-                                height: 1.0,
-                                color:
-                                    isSelected
-                                        ? CustomAppColors.primary
-                                        : CustomAppColors.slate600,
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => onChanged(key),
+                            behavior: HitTestBehavior.translucent,
+                            child: Container(
+                              alignment: Alignment.center,
+                              height: double.infinity,
+                              padding: EdgeInsets.fromLTRB(
+                                isMobile ? 2 : 8,
+                                0,
+                                isMobile ? 2 : 8,
+                                3,
                               ),
-                              child: Text(
-                                label,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              child: AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 200),
+                                style: context.textTheme.bodyBase.copyWith(
+                                  height: 0,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: isMobile ? 11 : 14,
+                                  color:
+                                      isSelected
+                                          ? CustomAppColors.primary
+                                          : CustomAppColors.slate600,
+                                ),
+                                child: Text(
+                                  label,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ],
-          );
-        },
+                        );
+                      }).toList(),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 }
 
-// Private StatefulWidget wrapper for local state management
+/// Local state fallback (no Provider)
 class _StatefulSegmentedControl<T extends Object> extends StatefulWidget {
   const _StatefulSegmentedControl({
     required this.segments,

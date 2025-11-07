@@ -7,7 +7,10 @@ import 'package:provider/provider.dart';
 
 import 'core/services/api_service.dart';
 import 'core/services/app_lifecycle_service.dart';
+import 'modules/parent/providers/parent_dashboard_provider.dart';
+import 'modules/parent/providers/parent_tab_provider.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
+import 'modules/student/providers/student_dashboard_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/providers/teacher_dashboard_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
@@ -65,6 +68,13 @@ void main() async {
         ChangeNotifierProvider<TeacherDashboardProvider>(
           create: (_) => TeacherDashboardProvider(),
         ),
+        ChangeNotifierProvider<ParentDashboardProvider>(
+          create: (_) => ParentDashboardProvider(),
+        ),
+        ChangeNotifierProvider<ParentTabProvider>(
+          create: (_) => ParentTabProvider(),
+        ),
+        ChangeNotifierProvider(create: (_) => StudentDashboardProvider()),
       ],
       child: const EdVerseApp(),
     ),

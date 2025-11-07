@@ -150,12 +150,14 @@ class ResponsiveUtils {
   }
 
   /// Get number of columns for grid based on screen size AND orientation
+  /// Note: Mobile devices keep the same column count regardless of orientation
   static int getGridColumnsWithOrientation(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isLandscapeMode = isLandscape(context);
 
     if (width < mobileBreakpoint) {
-      return isLandscapeMode ? 2 : 1;
+      // Mobile devices: same layout for both portrait and landscape
+      return 1;
     } else if (width < tabletBreakpoint) {
       return isLandscapeMode ? 3 : 2;
     } else if (width < desktopBreakpoint) {
@@ -174,6 +176,7 @@ class ResponsiveUtils {
       MediaQuery.of(context).orientation == Orientation.portrait;
 
   /// Get responsive value based on device type AND orientation
+  /// Note: Mobile devices ignore orientation and always return mobilePortrait value
   static T responsiveWithOrientation<T>({
     required BuildContext context,
     required T mobilePortrait,
@@ -188,22 +191,17 @@ class ResponsiveUtils {
 
     switch (deviceType) {
       case DeviceType.mobile:
-        return isLandscapeMode
-            ? (mobileLandscape ?? mobilePortrait)
-            : mobilePortrait;
+        // Mobile devices: same value for both portrait and landscape
+        return mobilePortrait;
       case DeviceType.tablet:
         return isLandscapeMode
-            ? (tabletLandscape ??
-                mobileLandscape ??
-                tabletPortrait ??
-                mobilePortrait)
+            ? (tabletLandscape ?? tabletPortrait ?? mobilePortrait)
             : (tabletPortrait ?? mobilePortrait);
       case DeviceType.desktop:
       case DeviceType.largeDesktop:
         return isLandscapeMode
             ? (desktopLandscape ??
                 tabletLandscape ??
-                mobileLandscape ??
                 desktopPortrait ??
                 tabletPortrait ??
                 mobilePortrait)
@@ -222,13 +220,13 @@ class ResponsiveUtils {
   }) => isLandscape(context) ? landscape : portrait;
 
   /// Get responsive padding based on orientation
+  /// Note: Mobile devices keep the same padding regardless of orientation
   static EdgeInsets responsivePaddingWithOrientation(BuildContext context) {
     final isLandscapeMode = isLandscape(context);
 
     if (isMobile(context)) {
-      return isLandscapeMode
-          ? const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0)
-          : const EdgeInsets.all(16.0);
+      // Mobile devices: same padding for both portrait and landscape
+      return const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 4.0);
     } else if (isTablet(context)) {
       return isLandscapeMode
           ? const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0)

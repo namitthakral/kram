@@ -9,20 +9,50 @@ import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../teacher/widgets/stat_card.dart';
-import '../models/student_dashboard_models.dart';
 import '../providers/dashboard_tab_provider.dart';
+import '../providers/student_dashboard_provider.dart';
 import '../widgets/assignment_card.dart';
 import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
 import '../widgets/subject_performance_card.dart';
 
-class StudentDashboardScreen extends StatelessWidget {
+class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
+
+  @override
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
+}
+
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load dashboard data when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDashboardData();
+    });
+  }
+
+  void _loadDashboardData() {
+    final loginProvider = context.read<LoginProvider>();
+    final user = loginProvider.currentUser;
+
+    debugPrint('🔄 _loadDashboardData called');
+    debugPrint('👤 Current user: ${user?.name}, UUID: ${user?.uuid}');
+
+    if (user?.uuid != null) {
+      debugPrint('✅ Loading dashboard data for UUID: ${user!.uuid}');
+      context.read<StudentDashboardProvider>().loadAllDashboardData(user.uuid!);
+    } else {
+      debugPrint('❌ Cannot load dashboard data - user UUID is null');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
     final loginProvider = context.watch<LoginProvider>();
+    final dashboardProvider = context.watch<StudentDashboardProvider>();
     final user = loginProvider.currentUser;
     final student = user?.student;
 
@@ -32,9 +62,7 @@ class StudentDashboardScreen extends StatelessWidget {
           context.router.goToLogin();
         }
       });
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     // Use real user data
@@ -43,169 +71,363 @@ class StudentDashboardScreen extends StatelessWidget {
     const grade = 'Grade 10B'; // To be fetched from API when available
     final rollNumber = student?.rollNumber ?? 'N/A';
 
+    // Get GPA from dashboard stats
+    // Backend returns: { success: true, data: { currentGpa: 3.8, maxGpa: 4.0, ... } }
+    final statsData = dashboardProvider.dashboardStats;
+    final dataObject = statsData?['data'] ?? statsData;
+    final gpa = dataObject?['currentGpa'] ?? dataObject?['gpa'];
+    final gpaString = gpa != null ? gpa.toString() : null;
+
+    // Debug: Print dashboard stats to see what we're getting
+    debugPrint('Dashboard Stats Full: ${dashboardProvider.dashboardStats}');
+    debugPrint('Data Object: $dataObject');
+    debugPrint('GPA Value: $gpa, GPA String: $gpaString');
+
     return CustomMainScreenWithAppbar(
-          title: context.translate('Student Dashboard'),
-          appBarConfig: AppBarConfig.student(
-            userInitials: userInitials,
-            userName: userName,
-            grade: grade,
-            rollNumber: rollNumber,
-            onNotificationIconPressed: () {
-              // Notification handler to be implemented
-            },
+      title: context.translate('Student Dashboard'),
+      appBarConfig: AppBarConfig.student(
+        userInitials: userInitials,
+        userName: userName,
+        grade: grade,
+        rollNumber: rollNumber,
+        gpa: gpaString,
+        onNotificationIconPressed: () {
+          // Notification handler to be implemented
+        },
+      ),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          if (user.uuid != null) {
+            await dashboardProvider.refresh(user.uuid!);
+          }
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Statistics Cards
+              _buildStatsSection(isMobile, dashboardProvider),
+              const SizedBox(height: 24),
+
+              // Main Content - Responsive Layout
+              if (isMobile)
+                _buildMobileLayout(dashboardProvider)
+              else
+                _buildDesktopLayout(dashboardProvider),
+
+              const SizedBox(height: 24),
+
+              // Charts Section with Tabs
+              _buildChartsSection(isMobile, dashboardProvider),
+            ],
           ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // // Header with Student Info
-                // _buildHeader(isMobile),
-                // const SizedBox(height: 24),
-
-                // Statistics Cards
-                _buildStatsSection(isMobile),
-                const SizedBox(height: 24),
-
-                // Main Content - Responsive Layout
-                if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
-
-                const SizedBox(height: 24),
-
-                // Charts Section with Tabs
-                _buildChartsSection(isMobile),
-              ],
-            ),
-          ),
-        );
+        ),
+      ),
+    );
   }
 
   // Mobile Layout: Stack vertically
-  Widget _buildMobileLayout() => Column(
-    children: [
-      _buildSubjectPerformanceSection(isMobile: true),
-      const SizedBox(height: 16),
-      _buildUpcomingEventsSection(isMobile: true),
-    ],
-  );
+  Widget _buildMobileLayout(StudentDashboardProvider dashboardProvider) =>
+      Column(
+        children: [
+          _buildSubjectPerformanceSection(
+            dashboardProvider: dashboardProvider,
+            isMobile: true,
+          ),
+          const SizedBox(height: 16),
+          _buildUpcomingEventsSection(
+            dashboardProvider: dashboardProvider,
+            isMobile: true,
+          ),
+        ],
+      );
 
   // Desktop Layout: Side by side
-  Widget _buildDesktopLayout() => Row(
+  Widget _buildDesktopLayout(StudentDashboardProvider dashboardProvider) => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       // Left Column - Subject Performance
-      Expanded(flex: 2, child: _buildSubjectPerformanceSection()),
+      Expanded(
+        flex: 2,
+        child: _buildSubjectPerformanceSection(
+          dashboardProvider: dashboardProvider,
+        ),
+      ),
       const SizedBox(width: 24),
 
       // Right Column - Upcoming Events
-      Expanded(child: _buildUpcomingEventsSection()),
-    ],
-  );
-
-  Widget _buildStatsSection(bool isMobile) => GridView.count(
-    crossAxisCount: isMobile ? 2 : 4,
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    crossAxisSpacing: isMobile ? 12 : 16,
-    mainAxisSpacing: isMobile ? 12 : 16,
-    childAspectRatio: isMobile ? 1.3 : 1.5,
-    children: const [
-      StatCard(
-        title: 'Current GPA',
-        value: '3.8',
-        subtitle: 'Out of 4.0\n+0.2',
-        backgroundColor: Color(0xFF7f22fe),
-        iconColor: Color(0xFF7f22fe),
-        icon: Icons.school,
-      ),
-      StatCard(
-        title: 'Attendance',
-        value: '96.2%',
-        subtitle: 'This semester\n+1.5%',
-        backgroundColor: Color(0xFF4f39f6),
-        iconColor: Color(0xFF4f39f6),
-        icon: Icons.calendar_today,
-      ),
-      StatCard(
-        title: 'Class Rank',
-        value: '#5',
-        subtitle: 'Out of 45 students\n↑2',
-        backgroundColor: Color(
-          0xFFe7000b,
-        ), //TODO: WIll change acording to increase/descrease of rank
-        iconColor: Color(
-          0xFFe7000b,
-        ), //TODO: WIll change acording to increase/descrease of rank
-        icon: Icons.trending_up,
-      ),
-      StatCard(
-        title: 'Assignments Due',
-        value: '3',
-        subtitle: 'This week',
-        backgroundColor: Color(0xFFfe9a00),
-        iconColor: Color(0xFFfe9a00),
-        icon: Icons.assignment,
-      ),
-    ],
-  );
-
-  Widget _buildSubjectPerformanceSection({bool isMobile = false}) =>
-      DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+      Expanded(
+        child: _buildUpcomingEventsSection(
+          dashboardProvider: dashboardProvider,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Subject Performance',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b),
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Your current grades and progress',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-            ),
-            const SizedBox(height: 20),
-            ..._getMockSubjects().map(
-              (subject) => SubjectPerformanceCard(subject: subject),
-            ),
-          ],
+      ),
+    ],
+  );
+
+  Widget _buildStatsSection(
+    bool isMobile,
+    StudentDashboardProvider dashboardProvider,
+  ) {
+    if (dashboardProvider.isLoadingStats) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(),
         ),
       );
+    }
 
-  Widget _buildUpcomingEventsSection({bool isMobile = false}) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Upcoming Events',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1e293b),
+    if (dashboardProvider.statsError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('Error loading stats'),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () {
+                  final user = context.read<LoginProvider>().currentUser;
+                  if (user?.uuid != null) {
+                    dashboardProvider.loadDashboardStats(user!.uuid!);
+                  }
+                },
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Tests, assignments & events',
-          style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-        ),
-        const SizedBox(height: 20),
-        ..._getMockEvents().map((event) => EventCard(event: event)),
-      ],
-    ),
-  );
+      );
+    }
 
-  Widget _buildChartsSection(bool isMobile) => DecoratedBox(
+    // Get stats safely from API
+    // Backend returns: { success: true, data: { currentGpa, attendance, classRank, ... } }
+    final stats = dashboardProvider.dashboardStats;
+    final data = stats?['data'] ?? stats;
+
+    final gpa = data?['currentGpa'] ?? data?['gpa'] ?? 0.0;
+    final attendance =
+        data?['attendance'] ?? data?['attendancePercentage'] ?? 0.0;
+    final classRank = data?['classRank'] ?? 'N/A';
+    final assignmentsDue = data?['assignmentsDue'] ?? 0;
+
+    // Debug: Print individual stat values
+    debugPrint('Stats Data Object: $data');
+    debugPrint(
+      'Stats - GPA: $gpa, Attendance: $attendance, Rank: $classRank, Assignments: $assignmentsDue',
+    );
+
+    // Get screen dimensions for better control
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isLandscapeMode = context.isLandscape;
+    final isMobileScreen = screenWidth < 600;
+    final isTabletScreen = screenWidth >= 600 && screenWidth < 900;
+    final isDesktopScreen = screenWidth >= 900;
+
+    // Desktop: 4 columns (1 row), Mobile & Tablet: 2 columns (2x2 grid)
+    final crossAxisCount = isDesktopScreen ? 4 : 2;
+
+    // Adjust spacing based on device and orientation
+    final crossAxisSpacing =
+        isDesktopScreen ? 16.0 : (isMobileScreen ? 10.0 : 12.0);
+    final mainAxisSpacing =
+        isDesktopScreen ? 16.0 : (isMobileScreen ? 10.0 : 12.0);
+
+    // Increase aspect ratio (makes cards shorter/smaller) for landscape and tablet
+    // Higher ratio = shorter cards
+    final childAspectRatio =
+        isDesktopScreen
+            ? 1.5
+            : (isMobileScreen && isLandscapeMode)
+            ? 1.7 // Mobile landscape: taller ratio for smaller cards
+            : isTabletScreen && isLandscapeMode
+            ? 1.8 // Tablet landscape: 2x2 grid with smaller cards
+            : isTabletScreen
+            ? 1.6 // Tablet portrait: smaller cards
+            : 1.3; // Mobile portrait: default
+
+    return GridView.count(
+      crossAxisCount: crossAxisCount,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: crossAxisSpacing,
+      mainAxisSpacing: mainAxisSpacing,
+      childAspectRatio: childAspectRatio,
+      children: [
+        StatCard(
+          title: 'Current GPA',
+          value: gpa.toString(),
+          subtitle: 'Out of 4.0',
+          backgroundColor: const Color(0xFF7f22fe),
+          iconColor: const Color(0xFF7f22fe),
+          icon: Icons.school,
+        ),
+        StatCard(
+          title: 'Attendance',
+          value: '${attendance.toStringAsFixed(1)}%',
+          subtitle: 'This semester',
+          backgroundColor: const Color(0xFF4f39f6),
+          iconColor: const Color(0xFF4f39f6),
+          icon: Icons.calendar_today,
+        ),
+        StatCard(
+          title: 'Class Rank',
+          value: classRank.toString(),
+          subtitle: 'Current ranking',
+          backgroundColor: const Color(0xFFe7000b),
+          iconColor: const Color(0xFFe7000b),
+          icon: Icons.trending_up,
+        ),
+        StatCard(
+          title: 'Assignments Due',
+          value: assignmentsDue.toString(),
+          subtitle: 'This week',
+          backgroundColor: const Color(0xFFfe9a00),
+          iconColor: const Color(0xFFfe9a00),
+          icon: Icons.assignment,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubjectPerformanceSection({
+    required StudentDashboardProvider dashboardProvider,
+    bool isMobile = false,
+  }) {
+    if (dashboardProvider.isLoadingSubjectPerformance) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
+    if (dashboardProvider.subjectPerformanceError != null) {
+      return DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text('Error: ${dashboardProvider.subjectPerformanceError}'),
+          ),
+        ),
+      );
+    }
+
+    final subjects = dashboardProvider.getSubjectPerformanceList();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Subject Performance',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1e293b),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Your current grades and progress',
+            style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+          ),
+          const SizedBox(height: 20),
+          if (subjects.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('No subject data available'),
+              ),
+            )
+          else
+            ...subjects.map(
+              (subject) => SubjectPerformanceCard(subject: subject),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEventsSection({
+    required StudentDashboardProvider dashboardProvider,
+    bool isMobile = false,
+  }) {
+    if (dashboardProvider.isLoadingUpcomingEvents) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
+    final events = dashboardProvider.getUpcomingEventsList();
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Upcoming Events',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1e293b),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Tests, assignments & events',
+            style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+          ),
+          const SizedBox(height: 20),
+          if (events.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('No upcoming events'),
+              ),
+            )
+          else
+            ...events.map((event) => EventCard(event: event)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartsSection(
+    bool isMobile,
+    StudentDashboardProvider dashboardProvider,
+  ) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
@@ -237,35 +459,51 @@ class StudentDashboardScreen extends StatelessWidget {
 
         // Content based on selected segment from Provider
         Consumer<DashboardTabProvider>(
-          builder:
-              (context, provider, child) => SizedBox(
-                height: 400,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder:
-                      (child, animation) =>
-                          FadeTransition(opacity: animation, child: child),
-                  child: KeyedSubtree(
-                    key: ValueKey<DashboardTab>(provider.selectedTab),
-                    child: SingleChildScrollView(
-                      child: switch (provider.selectedTab) {
-                        DashboardTab.recentAssignments =>
-                          _buildRecentAssignmentsTab(),
-                        DashboardTab.performanceTrends =>
-                          _buildPerformanceTrendsTab(),
-                        DashboardTab.attendanceHistory =>
-                          _buildAttendanceHistoryTab(),
-                      },
-                    ),
+          builder: (context, provider, child) {
+            // Responsive height based on screen size
+            final screenWidth = MediaQuery.of(context).size.width;
+            final isMobileScreen = screenWidth < 600;
+            final isTabletScreen = screenWidth >= 600 && screenWidth < 900;
+            final containerHeight =
+                isMobileScreen ? 350.0 : (isTabletScreen ? 420.0 : 450.0);
+
+            return SizedBox(
+              height: containerHeight,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder:
+                    (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
+                child: KeyedSubtree(
+                  key: ValueKey<DashboardTab>(provider.selectedTab),
+                  child: SingleChildScrollView(
+                    child: switch (provider.selectedTab) {
+                      DashboardTab.recentAssignments =>
+                        _buildRecentAssignmentsTab(dashboardProvider),
+                      DashboardTab.performanceTrends =>
+                        _buildPerformanceTrendsTab(dashboardProvider),
+                      DashboardTab.attendanceHistory =>
+                        _buildAttendanceHistoryTab(dashboardProvider),
+                    },
                   ),
                 ),
               ),
+            );
+          },
         ),
       ],
     ),
   );
 
-  Widget _buildRecentAssignmentsTab() {
+  Widget _buildRecentAssignmentsTab(
+    StudentDashboardProvider dashboardProvider,
+  ) {
+    if (dashboardProvider.isLoadingAssignments) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final assignments = dashboardProvider.getAssignmentsList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = context.isMobile;
@@ -297,112 +535,121 @@ class StudentDashboardScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: 900, // Fixed width for horizontal scrolling
-                  child: Column(
-                    children: [
-                      // Table Header
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF8FAFC),
-                          border: Border(
-                            bottom: BorderSide(
-                              color: Color(0xFFe2e8f0),
-                              width: 2,
+              if (assignments.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('No assignments available'),
+                  ),
+                )
+              else
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: 900, // Fixed width for horizontal scrolling
+                    child: Column(
+                      children: [
+                        // Table Header
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF8FAFC),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Color(0xFFe2e8f0),
+                                width: 2,
+                              ),
                             ),
                           ),
+                          child: const Row(
+                            children: [
+                              SizedBox(
+                                width: 200,
+                                child: Text(
+                                  'Assignment',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              SizedBox(
+                                width: 150,
+                                child: Text(
+                                  'Subject',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              SizedBox(
+                                width: 120,
+                                child: Text(
+                                  'Due Date',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Status',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              SizedBox(
+                                width: 60,
+                                child: Text(
+                                  'Grade',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Score',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: const Row(
-                          children: [
-                            SizedBox(
-                              width: 200,
-                              child: Text(
-                                'Assignment',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            SizedBox(
-                              width: 150,
-                              child: Text(
-                                'Subject',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            SizedBox(
-                              width: 120,
-                              child: Text(
-                                'Due Date',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                'Status',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            SizedBox(
-                              width: 60,
-                              child: Text(
-                                'Grade',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                'Score',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF475569),
-                                ),
-                              ),
-                            ),
-                          ],
+                        // Table Rows
+                        ...assignments.map(
+                          (assignment) =>
+                              AssignmentCard(assignment: assignment),
                         ),
-                      ),
-                      // Table Rows
-                      ..._getMockAssignments().map(
-                        (assignment) => AssignmentCard(assignment: assignment),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
             ],
           );
         }
@@ -425,256 +672,202 @@ class StudentDashboardScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             ),
             const SizedBox(height: 20),
-            // Table Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF8FAFC),
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFe2e8f0), width: 2),
+            if (assignments.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text('No assignments available'),
                 ),
-              ),
-              child: const Row(
+              )
+            else
+              Column(
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      'Assignment',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
+                  // Table Header
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      border: Border(
+                        bottom: BorderSide(color: Color(0xFFe2e8f0), width: 2),
                       ),
+                    ),
+                    child: const Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Assignment',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Subject',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'Due Date',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 80,
+                          child: Text(
+                            'Status',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        SizedBox(
+                          width: 50,
+                          child: Text(
+                            'Grade',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        SizedBox(
+                          width: 100,
+                          child: Text(
+                            'Score',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Subject',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Due Date',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 80,
-                    child: Text(
-                      'Status',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  SizedBox(
-                    width: 50,
-                    child: Text(
-                      'Grade',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  SizedBox(
-                    width: 100,
-                    child: Text(
-                      'Score',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
+                  // Table Rows
+                  ...assignments.map(
+                    (assignment) => AssignmentCard(assignment: assignment),
                   ),
                 ],
               ),
-            ),
-            // Table Rows
-            ..._getMockAssignments().map(
-              (assignment) => AssignmentCard(assignment: assignment),
-            ),
           ],
         );
       },
     );
   }
 
-  Widget _buildPerformanceTrendsTab() => const Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Academic Performance Trends',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1e293b),
+  Widget _buildPerformanceTrendsTab(
+    StudentDashboardProvider dashboardProvider,
+  ) {
+    if (dashboardProvider.isLoadingPerformanceTrends) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Academic Performance Trends',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
+          ),
         ),
-      ),
-      SizedBox(height: 4),
-      Text(
-        'Your progress across all subjects over time',
-        style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-      ),
-      SizedBox(height: 20),
-      PerformanceTrendsChart(),
-      SizedBox(height: 16),
-      // Legend
-      Wrap(
-        spacing: 24,
-        runSpacing: 12,
-        children: [
-          _LegendItem(color: Color(0xFF8B5CF6), label: 'Chemistry'),
-          _LegendItem(color: Color(0xFFf59e0b), label: 'English'),
-          _LegendItem(color: Color(0xFFef4444), label: 'History'),
-          _LegendItem(color: Color(0xFF4F7CFF), label: 'Mathematics'),
-          _LegendItem(color: Color(0xFF10b981), label: 'Physics'),
-        ],
-      ),
-    ],
-  );
-
-  Widget _buildAttendanceHistoryTab() => const Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        'Attendance History',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF1e293b),
+        const SizedBox(height: 4),
+        const Text(
+          'Your progress across all subjects over time',
+          style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
-      ),
-      SizedBox(height: 4),
-      Text(
-        'Your attendance percentage over the semester',
-        style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-      ),
-      SizedBox(height: 20),
-      AttendanceHistoryChart(),
-    ],
-  );
+        const SizedBox(height: 20),
+        Builder(
+          builder: (context) {
+            debugPrint(
+              '🎯 Passing to PerformanceTrendsChart: ${dashboardProvider.performanceTrends}',
+            );
+            return PerformanceTrendsChart(
+              trendsData: dashboardProvider.performanceTrends,
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        // Legend - dynamic based on data
+        const Wrap(
+          spacing: 24,
+          runSpacing: 12,
+          children: [
+            _LegendItem(color: Color(0xFF8B5CF6), label: 'Chemistry'),
+            _LegendItem(color: Color(0xFFf59e0b), label: 'English'),
+            _LegendItem(color: Color(0xFFef4444), label: 'History'),
+            _LegendItem(color: Color(0xFF4F7CFF), label: 'Mathematics'),
+            _LegendItem(color: Color(0xFF10b981), label: 'Physics'),
+          ],
+        ),
+      ],
+    );
+  }
 
-  List<SubjectPerformance> _getMockSubjects() => const [
-    SubjectPerformance(
-      subject: 'Mathematics',
-      teacher: 'Mr. Smith',
-      nextTest: 'Oct 25',
-      grade: 'A',
-      percentage: 92,
-      color: '#4F7CFF',
-    ),
-    SubjectPerformance(
-      subject: 'Physics',
-      teacher: 'Dr. Johnson',
-      nextTest: 'Oct 28',
-      grade: 'A-',
-      percentage: 89,
-      color: '#10b981',
-    ),
-    SubjectPerformance(
-      subject: 'Chemistry',
-      teacher: 'Ms. Davis',
-      nextTest: 'Nov 2',
-      grade: 'B+',
-      percentage: 85,
-      color: '#8B5CF6',
-    ),
-    SubjectPerformance(
-      subject: 'English',
-      teacher: 'Mrs. Wilson',
-      nextTest: 'Nov 5',
-      grade: 'A',
-      percentage: 94,
-      color: '#f59e0b',
-    ),
-    SubjectPerformance(
-      subject: 'History',
-      teacher: 'Mr. Brown',
-      nextTest: 'Nov 8',
-      grade: 'B',
-      percentage: 82,
-      color: '#ef4444',
-    ),
-  ];
+  Widget _buildAttendanceHistoryTab(
+    StudentDashboardProvider dashboardProvider,
+  ) {
+    if (dashboardProvider.isLoadingAttendanceHistory) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  List<UpcomingEvent> _getMockEvents() => const [
-    UpcomingEvent(
-      title: 'Mathematics Test',
-      date: 'Oct 25, 2024',
-      time: '10:00 AM',
-      type: EventType.test,
-    ),
-    UpcomingEvent(
-      title: 'Science Fair Project Due',
-      date: 'Oct 30, 2024',
-      time: '11:59 PM',
-      type: EventType.assignment,
-    ),
-    UpcomingEvent(
-      title: 'Parent-Teacher Conference',
-      date: 'Nov 5, 2024',
-      time: '2:00 PM',
-      type: EventType.event,
-    ),
-    UpcomingEvent(
-      title: 'Sports Day',
-      date: 'Nov 12, 2024',
-      time: '9:00 AM',
-      type: EventType.event,
-    ),
-  ];
-
-  List<Assignment> _getMockAssignments() => const [
-    Assignment(
-      title: 'Calculus Problem Set',
-      subject: 'Mathematics',
-      dueDate: '2024-09-22',
-      status: AssignmentStatus.submitted,
-      grade: 'A',
-      score: '45/50',
-    ),
-    Assignment(
-      title: 'Lab Report - Momentum',
-      subject: 'Physics',
-      dueDate: '2024-09-20',
-      status: AssignmentStatus.graded,
-      grade: 'B+',
-      score: '38/40',
-    ),
-    Assignment(
-      title: 'Essay - Climate Change',
-      subject: 'English',
-      dueDate: '2024-09-25',
-      status: AssignmentStatus.pending,
-    ),
-    Assignment(
-      title: 'Organic Compounds Quiz',
-      subject: 'Chemistry',
-      dueDate: '2024-09-18',
-      status: AssignmentStatus.graded,
-      grade: 'A-',
-      score: '28/30',
-    ),
-  ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Attendance History',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Your attendance percentage over the semester',
+          style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+        ),
+        const SizedBox(height: 20),
+        Builder(
+          builder: (context) {
+            debugPrint(
+              '🎯 Passing to AttendanceHistoryChart: ${dashboardProvider.attendanceHistory}',
+            );
+            return AttendanceHistoryChart(
+              attendanceData: dashboardProvider.attendanceHistory,
+            );
+          },
+        ),
+      ],
+    );
+  }
 }
 
 // Legend Item Widget

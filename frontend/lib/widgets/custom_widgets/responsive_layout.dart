@@ -138,15 +138,30 @@ class ResponsiveGrid extends StatelessWidget {
 }
 
 /// A widget that provides different layouts for portrait and landscape orientations
+/// Note: By default, mobile devices use the same layout regardless of orientation
 class OrientationLayout extends StatelessWidget {
-  const OrientationLayout({required this.portrait, super.key, this.landscape});
+  const OrientationLayout({
+    required this.portrait,
+    super.key,
+    this.landscape,
+    this.respectMobileOrientation = false,
+  });
 
   final Widget portrait;
   final Widget? landscape;
 
+  /// If false (default), mobile devices will use portrait layout regardless of orientation
+  /// If true, mobile devices will use landscape layout when in landscape mode
+  final bool respectMobileOrientation;
+
   @override
   Widget build(BuildContext context) => OrientationBuilder(
     builder: (context, orientation) {
+      // For mobile devices, ignore orientation unless explicitly enabled
+      if (!respectMobileOrientation && context.isMobile) {
+        return portrait;
+      }
+
       if (orientation == Orientation.landscape && landscape != null) {
         return landscape!;
       }
