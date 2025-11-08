@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/navigation_item_model.dart';
 import '../../provider/bottom_nav_provider.dart';
 import '../../provider/theme_provider.dart';
 import '../../utils/custom_colors.dart';
@@ -23,31 +22,32 @@ class CustomBottomNavBar extends StatelessWidget {
       children: [
         Divider(height: 0.5, thickness: 0.5, color: theme.dividerTheme.color),
         Consumer<BottomNavProvider>(
-          builder:
-              (context, navProvider, child) => NavigationBar(
-                labelPadding: EdgeInsets.zero,
-                selectedIndex: navProvider.currentIndex,
-                onDestinationSelected: (index) => navProvider.setIndex(index),
-                height: 60,
-                destinations: _buildNavigationDestinations(context),
-              ),
+          builder: (context, navProvider, child) {
+            // Check if navigation is initialized
+            if (navProvider.navigationItems.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return NavigationBar(
+              labelPadding: EdgeInsets.zero,
+              selectedIndex: navProvider.currentIndex,
+              onDestinationSelected: (index) => navProvider.setIndex(index),
+              height: 60,
+              destinations: navProvider.navigationItems
+                  .map(
+                    (item) => NavigationDestination(
+                      icon: _buildIcon(item.iconUrl),
+                      selectedIcon: _buildIcon(item.iconFilledUrl, isSelected: true),
+                      label: context.translate(item.labelKey),
+                    ),
+                  )
+                  .toList(),
+            );
+          },
         ),
       ],
     );
   }
-
-  List<NavigationDestination> _buildNavigationDestinations(
-    BuildContext context,
-  ) =>
-      NavigationItems.items
-          .map(
-            (item) => NavigationDestination(
-              icon: _buildIcon(item.iconUrl),
-              selectedIcon: _buildIcon(item.iconFilledUrl, isSelected: true),
-              label: context.translate(item.labelKey),
-            ),
-          )
-          .toList();
 
   // Helper method to build icon widgets
   Widget _buildIcon(String iconUrl, {bool isSelected = false}) => BaseImage(

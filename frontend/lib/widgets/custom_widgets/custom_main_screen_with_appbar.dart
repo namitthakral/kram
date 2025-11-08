@@ -99,6 +99,94 @@ class AppBarConfig {
        rank = null,
        totalRank = null;
 
+  /// Creates an admin app bar configuration
+  const AppBarConfig.admin({
+    required String userInitials,
+    required String userName,
+    required String institutionName,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = userInitials,
+       userName = userName,
+       userDetails = 'Administrator • $institutionName',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
+  /// Creates a librarian app bar configuration
+  const AppBarConfig.librarian({
+    required String userInitials,
+    required String userName,
+    required String libraryName,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = userInitials,
+       userName = userName,
+       userDetails = 'Librarian • $libraryName',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
+  /// Creates a staff app bar configuration
+  const AppBarConfig.staff({
+    required String userInitials,
+    required String userName,
+    required String department,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = userInitials,
+       userName = userName,
+       userDetails = 'Staff • $department',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
+  /// Creates a super admin app bar configuration
+  const AppBarConfig.superAdmin({
+    required String userInitials,
+    required String userName,
+    required String systemName,
+    this.onNotificationIconPressed,
+    this.elevation = 5.0,
+  }) : type = AppBarType.profile,
+       profileIcon = null,
+       iconBackgroundColor = CustomAppColors.primary,
+       showBackButton = false,
+       showCircularBackButton = false,
+       onBackButtonTapped = null,
+       actions = const [],
+       userInitials = userInitials,
+       userName = userName,
+       userDetails = 'Super Administrator • $systemName',
+       subtitle = null,
+       gpa = null,
+       rank = null,
+       totalRank = null;
+
   /// Creates a profile-style app bar configuration with user data
   const AppBarConfig.profile({
     required Color backgroundColor,

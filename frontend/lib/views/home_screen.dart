@@ -5,27 +5,52 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../modules/parent/screens/parent_dashboard_screen.dart';
-import '../modules/student/screens/student_dashboard_screen.dart';
-import '../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../provider/bottom_nav_provider.dart';
+import '../provider/login_signup/login_provider.dart';
+import '../utils/router_service.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
 import '../widgets/custom_widgets/custom_navigation_rail.dart';
-import 'profile/profile_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
-  static final List<Widget> _pages = [
-    const StudentDashboardScreen(),
-    const TeacherDashboardScreen(),
-    const ParentDashboardScreen(),
-    const Center(child: Text('Screen 4')),
-    // const Center(child: Text('Screen 5')),
-    // StoreMain(),
-    // Center(child: Text('Message Screen')),
-    const ProfileScreen(),
-  ];
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize navigation based on user role
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeNavigation();
+    });
+  }
+
+  void _initializeNavigation() {
+    final loginProvider = context.read<LoginProvider>();
+    final navProvider = context.read<BottomNavProvider>();
+    final user = loginProvider.currentUser;
+
+    if (user?.role?.id != null) {
+      navProvider.initializeForRole(user!.role!.id);
+    } else {
+      // If no role found, redirect to login
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.router.goToLogin();
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _HomeScreenContent();
+}
+
+class _HomeScreenContent extends StatelessWidget {
+  const _HomeScreenContent();
 
   /// Check if should use bottom bar (mobile platforms or mobile screen sizes)
   bool _shouldUseBottomBar(BuildContext context) {
@@ -47,10 +72,17 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
     builder: (context, navProvider, child) {
+      // Check if navigation is initialized
+      if (navProvider.pages.isEmpty) {
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      }
+
       // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
       if (_shouldUseBottomBar(context)) {
         return Scaffold(
-          body: _pages[navProvider.currentIndex],
+          body: navProvider.pages[navProvider.currentIndex],
           bottomNavigationBar: const CustomBottomNavBar(),
         );
       }
@@ -75,13 +107,19 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
     builder:
-        (context, navProvider, child) => Stack(
-          children: [
-            // Main content with left padding to avoid rail overlap
-            Padding(
-              padding: const EdgeInsets.only(left: 80),
-              child: HomeScreen._pages[navProvider.currentIndex],
-            ),
+        (context, navProvider, child) {
+          // Check if navigation is initialized
+          if (navProvider.pages.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return Stack(
+            children: [
+              // Main content with left padding to avoid rail overlap
+              Padding(
+                padding: const EdgeInsets.only(left: 80),
+                child: navProvider.pages[navProvider.currentIndex],
+              ),
             // Backdrop overlay when rail is extended
             if (_isRailExtended)
               Positioned.fill(
@@ -124,6 +162,7 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
               ),
             ),
           ],
-        ),
+        );
+      },
   );
 }

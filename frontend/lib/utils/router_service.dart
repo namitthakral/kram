@@ -73,7 +73,7 @@ class RouterService {
       name: 'home',
       pageBuilder:
           (context, state) =>
-              _buildPageWithTransition(key: state.pageKey, child: HomeScreen()),
+              _buildPageWithTransition(key: state.pageKey, child: const HomeScreen()),
     ),
     GoRoute(
       path: '/login',

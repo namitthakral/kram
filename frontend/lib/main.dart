@@ -122,7 +122,8 @@ class _EdVerseAppState extends State<EdVerseApp> {
       child: Consumer<LanguageProvider>(
         builder:
             (context, languageProvider, child) => MaterialApp.router(
-              title: context.translate('app_name'),
+              title: 'EdVerse',
+              // title: context.translate('app_name'),
               scaffoldMessengerKey: GlobalConstants.snackbarKey,
               debugShowCheckedModeBanner: false,
               themeMode: themeProvider.themeMode,
