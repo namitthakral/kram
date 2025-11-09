@@ -459,7 +459,7 @@ class AccountSettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-      Container(
+      DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
