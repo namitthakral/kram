@@ -63,7 +63,7 @@ class LibrarianDashboardScreen extends StatelessWidget {
       crossAxisSpacing: isMobile ? 12 : 16,
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
-      children: [
+      children: const [
         StatCard(
           title: 'Total Books',
           value: '5,432',
@@ -77,24 +77,24 @@ class LibrarianDashboardScreen extends StatelessWidget {
           value: '234',
           subtitle: 'Currently issued',
           icon: Icons.library_books,
-          backgroundColor: const Color(0xFF10b981),
-          iconColor: const Color(0xFF10b981),
+          backgroundColor: Color(0xFF10b981),
+          iconColor: Color(0xFF10b981),
         ),
         StatCard(
           title: 'Overdue',
           value: '12',
           subtitle: 'Need follow-up',
           icon: Icons.warning,
-          backgroundColor: const Color(0xFFef4444),
-          iconColor: const Color(0xFFef4444),
+          backgroundColor: Color(0xFFef4444),
+          iconColor: Color(0xFFef4444),
         ),
         StatCard(
           title: 'Available',
           value: '5,198',
           subtitle: 'Ready to issue',
           icon: Icons.check_circle,
-          backgroundColor: const Color(0xFF8B5CF6),
-          iconColor: const Color(0xFF8B5CF6),
+          backgroundColor: Color(0xFF8B5CF6),
+          iconColor: Color(0xFF8B5CF6),
         ),
       ],
     );
@@ -140,81 +140,80 @@ class LibrarianDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: CustomAppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: CustomAppColors.primary.withOpacity(0.2)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: CustomAppColors.primary, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1e293b),
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: CustomAppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: CustomAppColors.primary.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: CustomAppColors.primary, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _buildRecentIssuesSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Recent Issues',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1e293b),
-            ),
+  Widget _buildRecentIssuesSection(BuildContext context) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Recent Issues',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
           ),
-          const SizedBox(height: 16),
-          _buildIssueItem(
-            'The Great Gatsby',
-            'John Doe - Grade 10',
-            'Due: Nov 15, 2025',
-            Icons.book,
-            false,
-          ),
-          _buildIssueItem(
-            'Physics Fundamentals',
-            'Jane Smith - Grade 12',
-            'Due: Nov 10, 2025',
-            Icons.book,
-            true,
-          ),
-          _buildIssueItem(
-            'World History',
-            'Bob Johnson - Grade 11',
-            'Due: Nov 20, 2025',
-            Icons.book,
-            false,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 16),
+        _buildIssueItem(
+          'The Great Gatsby',
+          'John Doe - Grade 10',
+          'Due: Nov 15, 2025',
+          Icons.book,
+          false,
+        ),
+        _buildIssueItem(
+          'Physics Fundamentals',
+          'Jane Smith - Grade 12',
+          'Due: Nov 10, 2025',
+          Icons.book,
+          true,
+        ),
+        _buildIssueItem(
+          'World History',
+          'Bob Johnson - Grade 11',
+          'Due: Nov 20, 2025',
+          Icons.book,
+          false,
+        ),
+      ],
+    ),
+  );
 
   Widget _buildIssueItem(
     String bookTitle,
@@ -222,78 +221,73 @@ class LibrarianDashboardScreen extends StatelessWidget {
     String dueDate,
     IconData icon,
     bool isOverdue,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (isOverdue
-                      ? const Color(0xFFef4444)
-                      : CustomAppColors.primary)
-                  .withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color:
-                  isOverdue ? const Color(0xFFef4444) : CustomAppColors.primary,
-              size: 24,
-            ),
+  ) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: (isOverdue
+                    ? const Color(0xFFef4444)
+                    : CustomAppColors.primary)
+                .withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  bookTitle,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1e293b),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  studentInfo,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748b),
-                  ),
-                ),
-              ],
-            ),
+          child: Icon(
+            icon,
+            color:
+                isOverdue ? const Color(0xFFef4444) : CustomAppColors.primary,
+            size: 24,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                dueDate,
-                style: TextStyle(
-                  fontSize: 12,
-                  color:
-                      isOverdue
-                          ? const Color(0xFFef4444)
-                          : const Color(0xFF94a3b8),
-                  fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
+                bookTitle,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
                 ),
               ),
-              if (isOverdue)
-                const Text(
-                  'OVERDUE',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFFef4444),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              const SizedBox(height: 2),
+              Text(
+                studentInfo,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748b)),
+              ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              dueDate,
+              style: TextStyle(
+                fontSize: 12,
+                color:
+                    isOverdue
+                        ? const Color(0xFFef4444)
+                        : const Color(0xFF94a3b8),
+                fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            if (isOverdue)
+              const Text(
+                'OVERDUE',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFFef4444),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
 }

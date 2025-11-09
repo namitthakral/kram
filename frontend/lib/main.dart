@@ -7,6 +7,11 @@ import 'package:provider/provider.dart';
 
 import 'core/services/api_service.dart';
 import 'core/services/app_lifecycle_service.dart';
+import 'modules/admin/providers/admin_analytics_tab_provider.dart';
+import 'modules/admin/providers/admin_dashboard_provider.dart';
+import 'modules/library/providers/library_dashboard_provider.dart';
+import 'modules/library/providers/library_filter_provider.dart';
+import 'modules/library/providers/library_tab_provider.dart';
 import 'modules/parent/providers/parent_dashboard_provider.dart';
 import 'modules/parent/providers/parent_tab_provider.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
@@ -23,7 +28,6 @@ import 'provider/onboarding_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
 import 'provider/theme_provider.dart';
-import 'utils/extensions.dart';
 import 'utils/global_constants.dart';
 import 'utils/localization/app_localizations.dart';
 import 'utils/router_service.dart';
@@ -75,6 +79,24 @@ void main() async {
           create: (_) => ParentTabProvider(),
         ),
         ChangeNotifierProvider(create: (_) => StudentDashboardProvider()),
+        ChangeNotifierProvider<LibraryDashboardProvider>(
+          create: (_) => LibraryDashboardProvider(),
+        ),
+        ChangeNotifierProvider<LibraryTabProvider>(
+          create: (_) => LibraryTabProvider(),
+        ),
+        ChangeNotifierProvider<LibraryFilterProvider>(
+          create: (_) => LibraryFilterProvider(),
+        ),
+        ChangeNotifierProvider<AdminDashboardProvider>(
+          create: (_) => AdminDashboardProvider(),
+        ),
+        ChangeNotifierProvider<AdminAnalyticsTabProvider>(
+          create: (_) => AdminAnalyticsTabProvider(),
+        ),
+        ChangeNotifierProvider<SegmentedControlProvider<AdminAnalyticsTab>>(
+          create: (_) => AdminAnalyticsTabProvider(),
+        ),
       ],
       child: const EdVerseApp(),
     ),

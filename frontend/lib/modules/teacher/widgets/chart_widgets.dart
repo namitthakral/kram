@@ -22,7 +22,9 @@ class AttendanceTrendsChart extends StatelessWidget {
       return 10;
     }
     final maxValue = data.map((e) => e.total).reduce((a, b) => a > b ? a : b);
-    if (maxValue == 0) return 10;
+    if (maxValue == 0) {
+      return 10;
+    }
     return (maxValue * 1.2).ceilToDouble();
   }
 

@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart';
-
 /// Mock service for student API - Use this for testing when backend is not ready
 ///
 /// To use: In student_dashboard_provider.dart, change:
@@ -285,12 +283,7 @@ class StudentServiceMock {
   }) async {
     await _delay();
 
-    return {
-      'overall': 96.2,
-      'present': 145,
-      'absent': 5,
-      'total': 150,
-    };
+    return {'overall': 96.2, 'present': 145, 'absent': 5, 'total': 150};
   }
 
   /// Get all students (admin/teacher only)
@@ -300,11 +293,6 @@ class StudentServiceMock {
   }) async {
     await _delay();
 
-    return {
-      'students': [],
-      'total': 0,
-      'page': page,
-      'limit': limit,
-    };
+    return {'students': [], 'total': 0, 'page': page, 'limit': limit};
   }
 }

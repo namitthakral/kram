@@ -43,7 +43,7 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
             ),
         child: Builder(
           builder:
-              (context) => _builder!(
+              (context) => _builder(
                 context,
                 Consumer<SegmentedControlProvider<T>>(
                   builder:
@@ -172,7 +172,7 @@ class CustomSlidingSegmentedControl<T extends Object> extends StatelessWidget {
                                 isMobile ? 2 : 8,
                                 0,
                                 isMobile ? 2 : 8,
-                                3,
+                                0,
                               ),
                               child: AnimatedDefaultTextStyle(
                                 duration: const Duration(milliseconds: 200),

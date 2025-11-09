@@ -63,7 +63,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
       crossAxisSpacing: isMobile ? 12 : 16,
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
-      children: [
+      children: const [
         StatCard(
           title: 'Total Institutions',
           value: '48',
@@ -77,24 +77,24 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           value: '12.5K',
           subtitle: 'Across all institutions',
           icon: Icons.people,
-          backgroundColor: const Color(0xFF10b981),
-          iconColor: const Color(0xFF10b981),
+          backgroundColor: Color(0xFF10b981),
+          iconColor: Color(0xFF10b981),
         ),
         StatCard(
           title: 'Active Sessions',
           value: '1,234',
           subtitle: 'Currently online',
           icon: Icons.online_prediction,
-          backgroundColor: const Color(0xFF8B5CF6),
-          iconColor: const Color(0xFF8B5CF6),
+          backgroundColor: Color(0xFF8B5CF6),
+          iconColor: Color(0xFF8B5CF6),
         ),
         StatCard(
           title: 'System Health',
           value: '99.9%',
           subtitle: 'Uptime',
           icon: Icons.health_and_safety,
-          backgroundColor: const Color(0xFF00a63e),
-          iconColor: const Color(0xFF00a63e),
+          backgroundColor: Color(0xFF00a63e),
+          iconColor: Color(0xFF00a63e),
         ),
       ],
     );
@@ -136,7 +136,11 @@ class SuperAdminDashboardScreen extends StatelessWidget {
               ),
               _buildActionButton('View Analytics', Icons.analytics, () {}),
               _buildActionButton('System Settings', Icons.settings, () {}),
-              _buildActionButton('User Management', Icons.supervised_user_circle, () {}),
+              _buildActionButton(
+                'User Management',
+                Icons.supervised_user_circle,
+                () {},
+              ),
             ],
           ),
         ],
@@ -144,159 +148,148 @@ class SuperAdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: CustomAppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: CustomAppColors.primary.withOpacity(0.2),
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: CustomAppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: CustomAppColors.primary.withValues(alpha: 0.2),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: CustomAppColors.primary, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1e293b),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: CustomAppColors.primary, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _buildRecentInstitutionsSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Recent Institutions',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1e293b),
-            ),
+  Widget _buildRecentInstitutionsSection(BuildContext context) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Recent Institutions',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
           ),
-          const SizedBox(height: 16),
-          _buildInstitutionItem(
-            'Springfield High School',
-            '1,234 students • 56 teachers',
-            'Active',
-            true,
-          ),
-          _buildInstitutionItem(
-            'Tech Valley Academy',
-            '890 students • 42 teachers',
-            'Active',
-            true,
-          ),
-          _buildInstitutionItem(
-            'Riverside College',
-            '2,145 students • 98 teachers',
-            'Active',
-            true,
-          ),
-          _buildInstitutionItem(
-            'Sunset Elementary',
-            '456 students • 23 teachers',
-            'Inactive',
-            false,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 16),
+        _buildInstitutionItem(
+          'Springfield High School',
+          '1,234 students • 56 teachers',
+          'Active',
+          true,
+        ),
+        _buildInstitutionItem(
+          'Tech Valley Academy',
+          '890 students • 42 teachers',
+          'Active',
+          true,
+        ),
+        _buildInstitutionItem(
+          'Riverside College',
+          '2,145 students • 98 teachers',
+          'Active',
+          true,
+        ),
+        _buildInstitutionItem(
+          'Sunset Elementary',
+          '456 students • 23 teachers',
+          'Inactive',
+          false,
+        ),
+      ],
+    ),
+  );
 
   Widget _buildInstitutionItem(
     String name,
     String stats,
     String status,
     bool isActive,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (isActive
-                      ? CustomAppColors.primary
-                      : Colors.grey.shade400)
-                  .withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.business,
-              color: isActive ? CustomAppColors.primary : Colors.grey.shade400,
-              size: 24,
-            ),
+  ) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: (isActive ? CustomAppColors.primary : Colors.grey.shade400)
+                .withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1e293b),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  stats,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748b),
-                  ),
-                ),
-              ],
-            ),
+          child: Icon(
+            Icons.business,
+            color: isActive ? CustomAppColors.primary : Colors.grey.shade400,
+            size: 24,
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                stats,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748b)),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: (isActive ? const Color(0xFF10b981) : Colors.grey.shade400)
+                .withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
               color: (isActive ? const Color(0xFF10b981) : Colors.grey.shade400)
-                  .withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: (isActive ? const Color(0xFF10b981) : Colors.grey.shade400)
-                    .withOpacity(0.3),
-              ),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isActive ? const Color(0xFF10b981) : Colors.grey.shade600,
-              ),
+                  .withValues(alpha: 0.3),
             ),
           ),
-        ],
-      ),
-    );
-  }
+          child: Text(
+            status,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isActive ? const Color(0xFF10b981) : Colors.grey.shade600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
-

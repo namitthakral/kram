@@ -156,7 +156,7 @@ class SignUpProvider extends ChangeNotifier {
       _setSuccess(response.message);
 
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       var errorMessage = 'Registration failed. Please try again.';
 
       if (e.toString().contains('already exists')) {
@@ -175,7 +175,8 @@ class SignUpProvider extends ChangeNotifier {
     }
   }
 
-  bool _isValidEmail(String email) => RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  bool _isValidEmail(String email) =>
+      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
 
   @override
   void dispose() {

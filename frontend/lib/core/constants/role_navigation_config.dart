@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../models/navigation_item_model.dart';
+import '../../modules/admin/screens/admin_dashboard_screen.dart';
+import '../../modules/library/screens/library_dashboard_screen.dart';
 import '../../modules/parent/screens/parent_dashboard_screen.dart';
 import '../../modules/student/screens/student_dashboard_screen.dart';
 import '../../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../../utils/custom_images.dart';
-import '../../views/dashboard/admin_dashboard_screen.dart';
-import '../../views/dashboard/librarian_dashboard_screen.dart';
 import '../../views/dashboard/staff_dashboard_screen.dart';
 import '../../views/dashboard/super_admin_dashboard_screen.dart';
 import '../../views/profile/profile_screen.dart';
@@ -159,7 +159,7 @@ class RoleNavigationConfig {
   ];
 
   static final List<Widget> _librarianPages = [
-    const LibrarianDashboardScreen(),
+    const LibraryDashboardScreen(),
     const Center(child: Text('Books Management Screen')), // TODO: Implement
     const Center(child: Text('Issued Books Screen')), // TODO: Implement
     const ProfileScreen(),

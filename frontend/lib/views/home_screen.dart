@@ -74,9 +74,7 @@ class _HomeScreenContent extends StatelessWidget {
     builder: (context, navProvider, child) {
       // Check if navigation is initialized
       if (navProvider.pages.isEmpty) {
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
       // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
@@ -106,63 +104,60 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
 
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
-    builder:
-        (context, navProvider, child) {
-          // Check if navigation is initialized
-          if (navProvider.pages.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    builder: (context, navProvider, child) {
+      // Check if navigation is initialized
+      if (navProvider.pages.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-          return Stack(
-            children: [
-              // Main content with left padding to avoid rail overlap
-              Padding(
-                padding: const EdgeInsets.only(left: 80),
-                child: navProvider.pages[navProvider.currentIndex],
-              ),
-            // Backdrop overlay when rail is extended
-            if (_isRailExtended)
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: () {
-                    // Collapse the rail by calling its method
-                    _railKey.currentState?.setExtended(false);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.black.withOpacity(0.5),
-                          Colors.black.withOpacity(0.2),
-                        ],
-                      ),
+      return Stack(
+        children: [
+          // Main content with left padding to avoid rail overlap
+          Padding(
+            padding: const EdgeInsets.only(left: 80),
+            child: navProvider.pages[navProvider.currentIndex],
+          ),
+          // Backdrop overlay when rail is extended
+          if (_isRailExtended)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  // Collapse the rail by calling its method
+                  _railKey.currentState?.setExtended(false);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withValues(alpha: 0.5),
+                        Colors.black.withValues(alpha: 0.2),
+                      ],
                     ),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                      child: Container(color: Colors.transparent),
-                    ),
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                    child: Container(color: Colors.transparent),
                   ),
                 ),
               ),
-            // Navigation rail overlay
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: CustomNavigationRail(
-                key: _railKey,
-                onExtendedChanged: (isExtended) {
-                  setState(() {
-                    _isRailExtended = isExtended;
-                  });
-                },
-              ),
             ),
-          ],
-        );
-      },
+          // Navigation rail overlay
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: CustomNavigationRail(
+              key: _railKey,
+              onExtendedChanged: (isExtended) {
+                setState(() {
+                  _isRailExtended = isExtended;
+                });
+              },
+            ),
+          ),
+        ],
+      );
+    },
   );
 }

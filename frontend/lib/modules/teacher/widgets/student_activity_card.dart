@@ -18,9 +18,15 @@ class StudentActivityCard extends StatelessWidget {
   }
 
   Color _getGradeColor(String grade) {
-    if (grade.startsWith('A')) return const Color(0xFF10b981);
-    if (grade.startsWith('B')) return const Color(0xFF3b82f6);
-    if (grade.startsWith('C')) return const Color(0xFF64748b);
+    if (grade.startsWith('A')) {
+      return const Color(0xFF10b981);
+    }
+    if (grade.startsWith('B')) {
+      return const Color(0xFF3b82f6);
+    }
+    if (grade.startsWith('C')) {
+      return const Color(0xFF64748b);
+    }
     return const Color(0xFF64748b);
   }
 

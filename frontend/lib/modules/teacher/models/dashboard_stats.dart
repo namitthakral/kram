@@ -57,7 +57,7 @@ class StudentActivity {
 
   factory StudentActivity.fromJson(Map<String, dynamic> json) {
     // Generate initials from firstName and lastName or use provided initials
-    String initials = '';
+    var initials = '';
     if (json['firstName'] != null && json['lastName'] != null) {
       final firstName = json['firstName'] as String;
       final lastName = json['lastName'] as String;

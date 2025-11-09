@@ -10,8 +10,7 @@ class AttendanceHistoryChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Parse attendance data from API or use default
-    final List<Map<String, dynamic>> monthlyData =
-        _parseAttendanceData(attendanceData);
+    final monthlyData = _parseAttendanceData(attendanceData);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -70,7 +69,10 @@ class AttendanceHistoryChart extends StatelessWidget {
                         return SideTitleWidget(
                           axisSide: meta.axisSide,
                           space: 4,
-                          child: Text(monthlyData[index]['month'] ?? '', style: style),
+                          child: Text(
+                            monthlyData[index]['month'] ?? '',
+                            style: style,
+                          ),
                         );
                       }
                       return const SizedBox.shrink();
@@ -99,10 +101,9 @@ class AttendanceHistoryChart extends StatelessWidget {
               gridData: FlGridData(
                 drawVerticalLine: false,
                 horizontalInterval: 25,
-                getDrawingHorizontalLine: (value) => const FlLine(
-                  color: Color(0xFFe2e8f0),
-                  strokeWidth: 1,
-                ),
+                getDrawingHorizontalLine:
+                    (value) =>
+                        const FlLine(color: Color(0xFFe2e8f0), strokeWidth: 1),
               ),
               barGroups: List.generate(
                 monthlyData.length,
@@ -165,14 +166,19 @@ class AttendanceHistoryChart extends StatelessWidget {
         ];
       }
 
-      final parsedData = history
-          .map((item) => {
-                'month': item['month'] ?? '',
-                'percentage': item['percentage'] ?? 0,
-              })
-          .toList();
+      final parsedData =
+          history
+              .map(
+                (item) => {
+                  'month': item['month'] ?? '',
+                  'percentage': item['percentage'] ?? 0,
+                },
+              )
+              .toList();
 
-      debugPrint('✅ Attendance History - Successfully parsed ${parsedData.length} months');
+      debugPrint(
+        '✅ Attendance History - Successfully parsed ${parsedData.length} months',
+      );
       return parsedData;
     } on Exception catch (e) {
       debugPrint('❌ Attendance History - Error parsing: $e');
@@ -225,10 +231,9 @@ class PerformanceTrendsChart extends StatelessWidget {
               gridData: FlGridData(
                 drawVerticalLine: false,
                 horizontalInterval: 25,
-                getDrawingHorizontalLine: (value) => const FlLine(
-                  color: Color(0xFFe2e8f0),
-                  strokeWidth: 1,
-                ),
+                getDrawingHorizontalLine:
+                    (value) =>
+                        const FlLine(color: Color(0xFFe2e8f0), strokeWidth: 1),
               ),
               titlesData: FlTitlesData(
                 rightTitles: const AxisTitles(),
@@ -277,42 +282,46 @@ class PerformanceTrendsChart extends StatelessWidget {
               maxX: (months.length - 1).toDouble(),
               minY: 50,
               maxY: 100,
-              lineBarsData: subjects.map((subject) {
-                final spots = subject['data'] as List<FlSpot>;
-                final color = _parseColor(subject['color'] ?? '#4F7CFF');
+              lineBarsData:
+                  subjects.map((subject) {
+                    final spots = subject['data'] as List<FlSpot>;
+                    final color = _parseColor(subject['color'] ?? '#4F7CFF');
 
-                return LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  color: color,
-                  barWidth: lineWidth,
-                  isStrokeCapRound: true,
-                  dotData: FlDotData(
-                    getDotPainter: (spot, percent, barData, index) =>
-                        FlDotCirclePainter(
-                      radius: dotRadius,
+                    return LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
                       color: color,
-                      strokeWidth: 2,
-                      strokeColor: Colors.white,
-                    ),
-                  ),
-                  belowBarData: BarAreaData(),
-                );
-              }).toList(),
+                      barWidth: lineWidth,
+                      isStrokeCapRound: true,
+                      dotData: FlDotData(
+                        getDotPainter:
+                            (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                  radius: dotRadius,
+                                  color: color,
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                ),
+                      ),
+                      belowBarData: BarAreaData(),
+                    );
+                  }).toList(),
               lineTouchData: LineTouchData(
                 touchTooltipData: LineTouchTooltipData(
-                  getTooltipItems: (touchedSpots) => touchedSpots
-                      .map(
-                        (LineBarSpot touchedSpot) => LineTooltipItem(
-                          '${touchedSpot.y.toInt()}%',
-                          TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: fontSize,
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  getTooltipItems:
+                      (touchedSpots) =>
+                          touchedSpots
+                              .map(
+                                (LineBarSpot touchedSpot) => LineTooltipItem(
+                                  '${touchedSpot.y.toInt()}%',
+                                  TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: fontSize,
+                                  ),
+                                ),
+                              )
+                              .toList(),
                 ),
               ),
             ),
@@ -342,7 +351,9 @@ class PerformanceTrendsChart extends StatelessWidget {
       debugPrint('📊 Performance Trends - Trends array: $trends');
 
       if (trends == null || trends.isEmpty) {
-        debugPrint('⚠️ Performance Trends - No trends data available, using default');
+        debugPrint(
+          '⚠️ Performance Trends - No trends data available, using default',
+        );
         return _getDefaultTrendsData();
       }
 
@@ -385,16 +396,17 @@ class PerformanceTrendsChart extends StatelessWidget {
       }
 
       if (subjectsMap.isEmpty) {
-        debugPrint('⚠️ Performance Trends - No subject data parsed, using default');
+        debugPrint(
+          '⚠️ Performance Trends - No subject data parsed, using default',
+        );
         return _getDefaultTrendsData();
       }
 
-      debugPrint('✅ Performance Trends - Successfully parsed ${subjectsMap.length} subjects with ${months.length} months');
+      debugPrint(
+        '✅ Performance Trends - Successfully parsed ${subjectsMap.length} subjects with ${months.length} months',
+      );
 
-      return {
-        'months': months,
-        'subjects': subjectsMap.values.toList(),
-      };
+      return {'months': months, 'subjects': subjectsMap.values.toList()};
     } on Exception catch (e) {
       debugPrint('❌ Performance Trends - Error parsing: $e');
       return _getDefaultTrendsData();
@@ -402,70 +414,70 @@ class PerformanceTrendsChart extends StatelessWidget {
   }
 
   Map<String, dynamic> _getDefaultTrendsData() => {
-        'months': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        'subjects': [
-          {
-            'name': 'Chemistry',
-            'color': '#8B5CF6',
-            'data': const [
-              FlSpot(0, 85),
-              FlSpot(1, 87),
-              FlSpot(2, 86),
-              FlSpot(3, 88),
-              FlSpot(4, 87),
-              FlSpot(5, 89),
-            ],
-          },
-          {
-            'name': 'English',
-            'color': '#f59e0b',
-            'data': const [
-              FlSpot(0, 92),
-              FlSpot(1, 93),
-              FlSpot(2, 94),
-              FlSpot(3, 94),
-              FlSpot(4, 95),
-              FlSpot(5, 95),
-            ],
-          },
-          {
-            'name': 'History',
-            'color': '#ef4444',
-            'data': const [
-              FlSpot(0, 80),
-              FlSpot(1, 82),
-              FlSpot(2, 81),
-              FlSpot(3, 83),
-              FlSpot(4, 83),
-              FlSpot(5, 84),
-            ],
-          },
-          {
-            'name': 'Mathematics',
-            'color': '#4F7CFF',
-            'data': const [
-              FlSpot(0, 90),
-              FlSpot(1, 90),
-              FlSpot(2, 91),
-              FlSpot(3, 90),
-              FlSpot(4, 91),
-              FlSpot(5, 92),
-            ],
-          },
-          {
-            'name': 'Physics',
-            'color': '#10b981',
-            'data': const [
-              FlSpot(0, 88),
-              FlSpot(1, 88),
-              FlSpot(2, 89),
-              FlSpot(3, 88),
-              FlSpot(4, 89),
-              FlSpot(5, 89),
-            ],
-          },
+    'months': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    'subjects': [
+      {
+        'name': 'Chemistry',
+        'color': '#8B5CF6',
+        'data': const [
+          FlSpot(0, 85),
+          FlSpot(1, 87),
+          FlSpot(2, 86),
+          FlSpot(3, 88),
+          FlSpot(4, 87),
+          FlSpot(5, 89),
         ],
-      };
+      },
+      {
+        'name': 'English',
+        'color': '#f59e0b',
+        'data': const [
+          FlSpot(0, 92),
+          FlSpot(1, 93),
+          FlSpot(2, 94),
+          FlSpot(3, 94),
+          FlSpot(4, 95),
+          FlSpot(5, 95),
+        ],
+      },
+      {
+        'name': 'History',
+        'color': '#ef4444',
+        'data': const [
+          FlSpot(0, 80),
+          FlSpot(1, 82),
+          FlSpot(2, 81),
+          FlSpot(3, 83),
+          FlSpot(4, 83),
+          FlSpot(5, 84),
+        ],
+      },
+      {
+        'name': 'Mathematics',
+        'color': '#4F7CFF',
+        'data': const [
+          FlSpot(0, 90),
+          FlSpot(1, 90),
+          FlSpot(2, 91),
+          FlSpot(3, 90),
+          FlSpot(4, 91),
+          FlSpot(5, 92),
+        ],
+      },
+      {
+        'name': 'Physics',
+        'color': '#10b981',
+        'data': const [
+          FlSpot(0, 88),
+          FlSpot(1, 88),
+          FlSpot(2, 89),
+          FlSpot(3, 88),
+          FlSpot(4, 89),
+          FlSpot(5, 89),
+        ],
+      },
+    ],
+  };
 
   String _getSubjectColor(String subjectName) {
     final colors = {

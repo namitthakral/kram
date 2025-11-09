@@ -30,7 +30,9 @@ class BottomNavProvider extends ChangeNotifier {
 
   /// Set current navigation index
   void setIndex(int index) {
-    if (index < 0 || index >= _pages.length) return;
+    if (index < 0 || index >= _pages.length) {
+      return;
+    }
     _currentIndex = index;
     notifyListeners();
   }

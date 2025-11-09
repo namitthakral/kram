@@ -63,7 +63,7 @@ class AdminDashboardScreen extends StatelessWidget {
       crossAxisSpacing: isMobile ? 12 : 16,
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
-      children: [
+      children: const [
         StatCard(
           title: 'Total Students',
           value: '1,234',
@@ -77,24 +77,24 @@ class AdminDashboardScreen extends StatelessWidget {
           value: '156',
           subtitle: 'Active faculty',
           icon: Icons.people,
-          backgroundColor: const Color(0xFF10b981),
-          iconColor: const Color(0xFF10b981),
+          backgroundColor: Color(0xFF10b981),
+          iconColor: Color(0xFF10b981),
         ),
         StatCard(
           title: 'Courses',
           value: '45',
           subtitle: 'Active courses',
           icon: Icons.book,
-          backgroundColor: const Color(0xFFf59e0b),
-          iconColor: const Color(0xFFf59e0b),
+          backgroundColor: Color(0xFFf59e0b),
+          iconColor: Color(0xFFf59e0b),
         ),
         StatCard(
           title: 'Revenue',
-          value: '\$125K',
+          value: r'$125K',
           subtitle: 'This month',
           icon: Icons.attach_money,
-          backgroundColor: const Color(0xFF8B5CF6),
-          iconColor: const Color(0xFF8B5CF6),
+          backgroundColor: Color(0xFF8B5CF6),
+          iconColor: Color(0xFF8B5CF6),
         ),
       ],
     );
@@ -140,133 +140,121 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: CustomAppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: CustomAppColors.primary.withOpacity(0.2),
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onTap) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: CustomAppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: CustomAppColors.primary.withValues(alpha: 0.2),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: CustomAppColors.primary, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1e293b),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: CustomAppColors.primary, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
 
-  Widget _buildRecentActivitiesSection(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Recent Activities',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1e293b),
-            ),
+  Widget _buildRecentActivitiesSection(BuildContext context) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Recent Activities',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
           ),
-          const SizedBox(height: 16),
-          _buildActivityItem(
-            'New student enrollment',
-            'John Doe enrolled in Grade 10',
-            '2 hours ago',
-            Icons.person_add,
-          ),
-          _buildActivityItem(
-            'Teacher assignment',
-            'Ms. Smith assigned to Physics',
-            '5 hours ago',
-            Icons.assignment_ind,
-          ),
-          _buildActivityItem(
-            'Course updated',
-            'Mathematics syllabus updated',
-            'Yesterday',
-            Icons.book,
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 16),
+        _buildActivityItem(
+          'New student enrollment',
+          'John Doe enrolled in Grade 10',
+          '2 hours ago',
+          Icons.person_add,
+        ),
+        _buildActivityItem(
+          'Teacher assignment',
+          'Ms. Smith assigned to Physics',
+          '5 hours ago',
+          Icons.assignment_ind,
+        ),
+        _buildActivityItem(
+          'Course updated',
+          'Mathematics syllabus updated',
+          'Yesterday',
+          Icons.book,
+        ),
+      ],
+    ),
+  );
 
   Widget _buildActivityItem(
     String title,
     String description,
     String time,
     IconData icon,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: CustomAppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: CustomAppColors.primary, size: 24),
+  ) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: CustomAppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1e293b),
-                  ),
+          child: Icon(icon, color: CustomAppColors.primary, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1e293b),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF64748b),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748b)),
+              ),
+            ],
           ),
-          Text(
-            time,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF94a3b8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        Text(
+          time,
+          style: const TextStyle(fontSize: 12, color: Color(0xFF94a3b8)),
+        ),
+      ],
+    ),
+  );
 }
-

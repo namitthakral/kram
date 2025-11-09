@@ -76,7 +76,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final statsData = dashboardProvider.dashboardStats;
     final dataObject = statsData?['data'] ?? statsData;
     final gpa = dataObject?['currentGpa'] ?? dataObject?['gpa'];
-    final gpaString = gpa != null ? gpa.toString() : null;
+    final gpaString = gpa?.toString();
 
     // Debug: Print dashboard stats to see what we're getting
     debugPrint('Dashboard Stats Full: ${dashboardProvider.dashboardStats}');

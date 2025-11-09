@@ -53,7 +53,7 @@ class ParentDashboardProvider extends ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -105,7 +105,8 @@ class ParentDashboardProvider extends ChangeNotifier {
     ),
     SchoolAnnouncement(
       title: 'Mid-term Exam Schedule',
-      description: 'Exam schedule has been updated. Check student portal for details.',
+      description:
+          'Exam schedule has been updated. Check student portal for details.',
       date: '2024-10-15',
       priority: AnnouncementPriority.high,
     ),
@@ -202,4 +203,3 @@ class ParentDashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

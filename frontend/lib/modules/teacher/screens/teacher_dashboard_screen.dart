@@ -188,8 +188,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
           // Show loading indicator overlay if loading
           if (dashboardProvider.isLoading)
-            Container(
-              color: Colors.white.withOpacity(0.8),
+            ColoredBox(
+              color: Colors.white.withValues(alpha: 0.8),
               child: const Center(child: CircularProgressIndicator()),
             ),
 

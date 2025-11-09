@@ -6,10 +6,7 @@ import '../models/parent_dashboard_models.dart';
 
 /// Performance Trends Chart
 class ParentPerformanceTrendsChart extends StatelessWidget {
-  const ParentPerformanceTrendsChart({
-    required this.trendsData,
-    super.key,
-  });
+  const ParentPerformanceTrendsChart({required this.trendsData, super.key});
 
   final List<PerformanceTrendPoint> trendsData;
 
@@ -18,9 +15,7 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
     final isMobile = context.isMobile;
 
     if (trendsData.isEmpty) {
-      return const Center(
-        child: Text('No performance data available'),
-      );
+      return const Center(child: Text('No performance data available'));
     }
 
     return LayoutBuilder(
@@ -31,7 +26,8 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
         final isTabletScreen = screenWidth >= 600 && screenWidth < 900;
 
         // Responsive sizing
-        final chartHeight = isMobileScreen ? 220.0 : (isTabletScreen ? 280.0 : 320.0);
+        final chartHeight =
+            isMobileScreen ? 220.0 : (isTabletScreen ? 280.0 : 320.0);
         final fontSize = isMobileScreen ? 10.0 : 12.0;
         final reservedSize = isMobileScreen ? 28.0 : 35.0;
         final dotRadius = isMobileScreen ? 3.0 : 4.0;
@@ -62,14 +58,14 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
               child: LineChart(
                 LineChartData(
                   gridData: FlGridData(
-                    show: true,
                     drawVerticalLine: false,
                     horizontalInterval: 25,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: const Color(0xFFe2e8f0),
-                      strokeWidth: 1,
-                      dashArray: [5, 5],
-                    ),
+                    getDrawingHorizontalLine:
+                        (value) => const FlLine(
+                          color: Color(0xFFe2e8f0),
+                          strokeWidth: 1,
+                          dashArray: [5, 5],
+                        ),
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -77,21 +73,18 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
                         showTitles: true,
                         interval: 25,
                         reservedSize: reservedSize,
-                        getTitlesWidget: (value, meta) => Text(
-                          value.toInt().toString(),
-                          style: TextStyle(
-                            color: const Color(0xFF64748b),
-                            fontSize: fontSize,
-                          ),
-                        ),
+                        getTitlesWidget:
+                            (value, meta) => Text(
+                              value.toInt().toString(),
+                              style: TextStyle(
+                                color: const Color(0xFF64748b),
+                                fontSize: fontSize,
+                              ),
+                            ),
                       ),
                     ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
+                    rightTitles: const AxisTitles(),
+                    topTitles: const AxisTitles(),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -121,108 +114,114 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
                   lineBarsData: [
                     // English line
                     LineChartBarData(
-                      spots: trendsData
-                          .asMap()
-                          .entries
-                          .map((e) => FlSpot(
-                            e.key.toDouble(),
-                            e.value.english,
-                          ))
-                          .toList(),
+                      spots:
+                          trendsData
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) =>
+                                    FlSpot(e.key.toDouble(), e.value.english),
+                              )
+                              .toList(),
                       isCurved: true,
                       color: const Color(0xFFf59e0b),
                       barWidth: lineWidth,
                       isStrokeCapRound: true,
                       dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) =>
-                            FlDotCirclePainter(
-                          radius: dotRadius,
-                          color: const Color(0xFFf59e0b),
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        ),
+                        getDotPainter:
+                            (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                  radius: dotRadius,
+                                  color: const Color(0xFFf59e0b),
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                ),
                       ),
-                      belowBarData: BarAreaData(show: false),
+                      belowBarData: BarAreaData(),
                     ),
                     // Mathematics line
                     LineChartBarData(
-                      spots: trendsData
-                          .asMap()
-                          .entries
-                          .map((e) => FlSpot(
-                            e.key.toDouble(),
-                            e.value.mathematics,
-                          ))
-                          .toList(),
+                      spots:
+                          trendsData
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) => FlSpot(
+                                  e.key.toDouble(),
+                                  e.value.mathematics,
+                                ),
+                              )
+                              .toList(),
                       isCurved: true,
                       color: const Color(0xFF4F7CFF),
                       barWidth: lineWidth,
                       isStrokeCapRound: true,
                       dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) =>
-                            FlDotCirclePainter(
-                          radius: dotRadius,
-                          color: const Color(0xFF4F7CFF),
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        ),
+                        getDotPainter:
+                            (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                  radius: dotRadius,
+                                  color: const Color(0xFF4F7CFF),
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                ),
                       ),
-                      belowBarData: BarAreaData(show: false),
+                      belowBarData: BarAreaData(),
                     ),
                     // Science line
                     LineChartBarData(
-                      spots: trendsData
-                          .asMap()
-                          .entries
-                          .map((e) => FlSpot(
-                            e.key.toDouble(),
-                            e.value.science,
-                          ))
-                          .toList(),
+                      spots:
+                          trendsData
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) =>
+                                    FlSpot(e.key.toDouble(), e.value.science),
+                              )
+                              .toList(),
                       isCurved: true,
                       color: const Color(0xFF10b981),
                       barWidth: lineWidth,
                       isStrokeCapRound: true,
                       dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, percent, barData, index) =>
-                            FlDotCirclePainter(
-                          radius: dotRadius,
-                          color: const Color(0xFF10b981),
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        ),
+                        getDotPainter:
+                            (spot, percent, barData, index) =>
+                                FlDotCirclePainter(
+                                  radius: dotRadius,
+                                  color: const Color(0xFF10b981),
+                                  strokeWidth: 2,
+                                  strokeColor: Colors.white,
+                                ),
                       ),
-                      belowBarData: BarAreaData(show: false),
+                      belowBarData: BarAreaData(),
                     ),
                   ],
                   lineTouchData: LineTouchData(
                     touchTooltipData: LineTouchTooltipData(
-                      getTooltipItems: (touchedSpots) =>
-                          touchedSpots.map((spot) {
-                            String subject = '';
-                            Color color = Colors.black;
-                            if (spot.barIndex == 0) {
-                              subject = 'English';
-                              color = const Color(0xFFf59e0b);
-                            } else if (spot.barIndex == 1) {
-                              subject = 'Mathematics';
-                              color = const Color(0xFF4F7CFF);
-                            } else {
-                              subject = 'Science';
-                              color = const Color(0xFF10b981);
-                            }
-                            return LineTooltipItem(
-                              '$subject: ${spot.y.toInt()}%',
-                              TextStyle(
-                                color: color,
-                                fontWeight: FontWeight.bold,
-                                fontSize: fontSize,
-                              ),
-                            );
-                          }).toList(),
+                      getTooltipItems:
+                          (touchedSpots) =>
+                              touchedSpots.map((spot) {
+                                var subject = '';
+                                var color = Colors.black;
+                                if (spot.barIndex == 0) {
+                                  subject = 'English';
+                                  color = const Color(0xFFf59e0b);
+                                } else if (spot.barIndex == 1) {
+                                  subject = 'Mathematics';
+                                  color = const Color(0xFF4F7CFF);
+                                } else {
+                                  subject = 'Science';
+                                  color = const Color(0xFF10b981);
+                                }
+                                return LineTooltipItem(
+                                  '$subject: ${spot.y.toInt()}%',
+                                  TextStyle(
+                                    color: color,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: fontSize,
+                                  ),
+                                );
+                              }).toList(),
                     ),
                   ),
                 ),
@@ -230,10 +229,10 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             // Legend
-            Wrap(
+            const Wrap(
               spacing: 24,
               runSpacing: 12,
-              children: const [
+              children: [
                 _LegendItem(color: Color(0xFFf59e0b), label: 'English'),
                 _LegendItem(color: Color(0xFF4F7CFF), label: 'Mathematics'),
                 _LegendItem(color: Color(0xFF10b981), label: 'Science'),
@@ -248,10 +247,7 @@ class ParentPerformanceTrendsChart extends StatelessWidget {
 
 /// Attendance Trends Chart
 class ParentAttendanceTrendsChart extends StatelessWidget {
-  const ParentAttendanceTrendsChart({
-    required this.trendsData,
-    super.key,
-  });
+  const ParentAttendanceTrendsChart({required this.trendsData, super.key});
 
   final List<AttendanceTrendPoint> trendsData;
 
@@ -260,9 +256,7 @@ class ParentAttendanceTrendsChart extends StatelessWidget {
     final isMobile = context.isMobile;
 
     if (trendsData.isEmpty) {
-      return const Center(
-        child: Text('No attendance data available'),
-      );
+      return const Center(child: Text('No attendance data available'));
     }
 
     return LayoutBuilder(
@@ -273,7 +267,8 @@ class ParentAttendanceTrendsChart extends StatelessWidget {
         final isTabletScreen = screenWidth >= 600 && screenWidth < 900;
 
         // Responsive sizing
-        final chartHeight = isMobileScreen ? 200.0 : (isTabletScreen ? 250.0 : 280.0);
+        final chartHeight =
+            isMobileScreen ? 200.0 : (isTabletScreen ? 250.0 : 280.0);
         final fontSize = isMobileScreen ? 10.0 : 12.0;
         final reservedSize = isMobileScreen ? 32.0 : 40.0;
         final barWidth = isMobileScreen ? 20.0 : (isTabletScreen ? 26.0 : 32.0);
@@ -303,14 +298,14 @@ class ParentAttendanceTrendsChart extends StatelessWidget {
               child: BarChart(
                 BarChartData(
                   gridData: FlGridData(
-                    show: true,
                     drawVerticalLine: false,
                     horizontalInterval: 25,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: const Color(0xFFe2e8f0),
-                      strokeWidth: 1,
-                      dashArray: [5, 5],
-                    ),
+                    getDrawingHorizontalLine:
+                        (value) => const FlLine(
+                          color: Color(0xFFe2e8f0),
+                          strokeWidth: 1,
+                          dashArray: [5, 5],
+                        ),
                   ),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
@@ -318,21 +313,18 @@ class ParentAttendanceTrendsChart extends StatelessWidget {
                         showTitles: true,
                         interval: 25,
                         reservedSize: reservedSize,
-                        getTitlesWidget: (value, meta) => Text(
-                          '${value.toInt()}%',
-                          style: TextStyle(
-                            color: const Color(0xFF64748b),
-                            fontSize: fontSize,
-                          ),
-                        ),
+                        getTitlesWidget:
+                            (value, meta) => Text(
+                              '${value.toInt()}%',
+                              style: TextStyle(
+                                color: const Color(0xFF64748b),
+                                fontSize: fontSize,
+                              ),
+                            ),
                       ),
                     ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
+                    rightTitles: const AxisTitles(),
+                    topTitles: const AxisTitles(),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -358,29 +350,30 @@ class ParentAttendanceTrendsChart extends StatelessWidget {
                   borderData: FlBorderData(show: false),
                   minY: 0,
                   maxY: 100,
-                  barGroups: trendsData
-                      .asMap()
-                      .entries
-                      .map(
-                        (e) => BarChartGroupData(
-                          x: e.key,
-                          barRods: [
-                            BarChartRodData(
-                              toY: e.value.percentage,
-                              color: const Color(0xFF10b981),
-                              width: barWidth,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4),
-                              ),
+                  barGroups:
+                      trendsData
+                          .asMap()
+                          .entries
+                          .map(
+                            (e) => BarChartGroupData(
+                              x: e.key,
+                              barRods: [
+                                BarChartRodData(
+                                  toY: e.value.percentage,
+                                  color: const Color(0xFF10b981),
+                                  width: barWidth,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(4),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      )
-                      .toList(),
+                          )
+                          .toList(),
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) =>
-                          BarTooltipItem(
+                      getTooltipItem:
+                          (group, groupIndex, rod, rodIndex) => BarTooltipItem(
                             '${rod.toY.toInt()}%',
                             TextStyle(
                               color: Colors.white,
@@ -431,4 +424,3 @@ class _LegendItem extends StatelessWidget {
     ],
   );
 }
-

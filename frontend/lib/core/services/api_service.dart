@@ -44,7 +44,6 @@ class ApiService {
       LogInterceptor(
         requestBody: kDebugMode,
         responseBody: kDebugMode,
-        error: true,
         logPrint: (obj) => log(obj.toString()),
       ),
     );

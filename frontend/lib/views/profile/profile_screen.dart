@@ -10,6 +10,7 @@ import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
 import '../../utils/router_service.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
+import 'account_settings_screen.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/profile_info_card.dart';
 
@@ -63,6 +64,14 @@ class ProfileScreen extends StatelessWidget {
                           child: ProfileInfoCard(user: user),
                         ),
                         const SizedBox(height: 24),
+
+                        // Profile Links Section
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: _buildProfileLinksSection(context),
+                        ),
+                        const SizedBox(height: 24),
+
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: _buildLogoutButton(context),
@@ -340,28 +349,14 @@ class ProfileScreen extends StatelessWidget {
         const SizedBox(height: 20),
         _buildActionButton(
           context,
-          icon: Icons.edit_outlined,
-          label: 'Edit Profile',
-          onTap: () {
-            // TODO: Navigate to edit profile
-          },
-        ),
-        const SizedBox(height: 12),
-        _buildActionButton(
-          context,
-          icon: Icons.lock_outline,
-          label: 'Change Password',
-          onTap: () {
-            // TODO: Navigate to change password
-          },
-        ),
-        const SizedBox(height: 12),
-        _buildActionButton(
-          context,
           icon: Icons.settings_outlined,
           label: 'Account Settings',
           onTap: () {
-            // TODO: Navigate to settings
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => const AccountSettingsScreen(),
+              ),
+            );
           },
         ),
       ],
@@ -395,6 +390,93 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.slate500),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  // Mobile Profile Links Section
+  Widget _buildProfileLinksSection(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppTheme.slate100),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: _buildProfileLinkTile(
+      context,
+      icon: Icons.settings_outlined,
+      title: 'Account Settings',
+      subtitle: 'Manage your profile, security, and preferences',
+      color: AppTheme.blue500,
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (context) => const AccountSettingsScreen(),
+          ),
+        );
+      },
+    ),
+  );
+
+  Widget _buildProfileLinkTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 22, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: context.textTheme.bodyBase.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.slate800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: context.textTheme.bodySm.copyWith(
+                      color: AppTheme.slate500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: AppTheme.slate500,
+            ),
           ],
         ),
       ),
