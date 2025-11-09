@@ -188,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'View and manage your account information',
+                context.translate('view_and_manage_account'),
                 style: context.textTheme.bodyBase.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
@@ -220,7 +220,7 @@ class ProfileScreen extends StatelessWidget {
       Expanded(
         child: _buildStatCard(
           context,
-          'Account Status',
+          context.translate('account_status'),
           user.status,
           Icons.check_circle_outline,
           AppTheme.success,
@@ -230,7 +230,7 @@ class ProfileScreen extends StatelessWidget {
       Expanded(
         child: _buildStatCard(
           context,
-          'Role',
+          context.translate('role'),
           user.role?.roleName ?? 'N/A',
           Icons.work_outline,
           AppTheme.blue500,
@@ -240,8 +240,8 @@ class ProfileScreen extends StatelessWidget {
       Expanded(
         child: _buildStatCard(
           context,
-          'Member Since',
-          _getMemberSince(user.createdAt),
+          context.translate('member_since'),
+          _getMemberSince(context, user.createdAt),
           Icons.calendar_today_outlined,
           AppTheme.info,
         ),
@@ -338,7 +338,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              'Quick Actions',
+              context.translate('quick_actions'),
               style: context.textTheme.titleBase.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppTheme.slate800,
@@ -350,7 +350,7 @@ class ProfileScreen extends StatelessWidget {
         _buildActionButton(
           context,
           icon: Icons.settings_outlined,
-          label: 'Account Settings',
+          label: context.translate('account_settings'),
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -389,7 +389,11 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.slate500),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: AppTheme.slate500,
+            ),
           ],
         ),
       ),
@@ -397,7 +401,7 @@ class ProfileScreen extends StatelessWidget {
   );
 
   // Mobile Profile Links Section
-  Widget _buildProfileLinksSection(BuildContext context) => Container(
+  Widget _buildProfileLinksSection(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12),
@@ -413,8 +417,8 @@ class ProfileScreen extends StatelessWidget {
     child: _buildProfileLinkTile(
       context,
       icon: Icons.settings_outlined,
-      title: 'Account Settings',
-      subtitle: 'Manage your profile, security, and preferences',
+      title: context.translate('account_settings'),
+      subtitle: context.translate('manage_profile_security_preferences'),
       color: AppTheme.blue500,
       onTap: () {
         Navigator.of(context).push(
@@ -472,7 +476,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
+            const Icon(
               Icons.arrow_forward_ios,
               size: 16,
               color: AppTheme.slate500,
@@ -517,7 +521,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              'Account Status',
+              context.translate('account_status'),
               style: context.textTheme.titleBase.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppTheme.slate800,
@@ -526,14 +530,25 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _buildStatusRow(Icons.check_circle, 'Email Verified', Colors.green),
+        _buildStatusRow(
+          context,
+          Icons.check_circle,
+          context.translate('email_verified'),
+          Colors.green,
+        ),
         const SizedBox(height: 8),
-        _buildStatusRow(Icons.check_circle, 'Account Active', Colors.green),
+        _buildStatusRow(
+          context,
+          Icons.check_circle,
+          context.translate('account_active'),
+          Colors.green,
+        ),
         if (user.edverseId != null) ...[
           const SizedBox(height: 8),
           _buildStatusRow(
+            context,
             Icons.badge,
-            'EdVerse ID: ${user.edverseId}',
+            '${context.translate('edverse_id')}: ${user.edverseId}',
             AppTheme.blue500,
           ),
         ],
@@ -541,7 +556,12 @@ class ProfileScreen extends StatelessWidget {
     ),
   );
 
-  Widget _buildStatusRow(IconData icon, String text, Color color) => Row(
+  Widget _buildStatusRow(
+    BuildContext context,
+    IconData icon,
+    String text,
+    Color color,
+  ) => Row(
     children: [
       Icon(icon, size: 18, color: color),
       const SizedBox(width: 8),
@@ -558,16 +578,16 @@ class ProfileScreen extends StatelessWidget {
     ],
   );
 
-  String _getMemberSince(DateTime date) {
+  String _getMemberSince(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays < 30) {
-      return '${difference.inDays} days';
+      return '${difference.inDays} ${context.translate('days')}';
     } else if (difference.inDays < 365) {
-      return '${(difference.inDays / 30).floor()} months';
+      return '${(difference.inDays / 30).floor()} ${context.translate('months')}';
     } else {
-      return '${(difference.inDays / 365).floor()} years';
+      return '${(difference.inDays / 365).floor()} ${context.translate('years')}';
     }
   }
 

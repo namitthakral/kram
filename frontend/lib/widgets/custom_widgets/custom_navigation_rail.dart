@@ -70,7 +70,6 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                 color: CustomAppColors.primary.withValues(alpha: 0.05),
                 blurRadius: 24,
                 offset: const Offset(0, 4),
-                spreadRadius: 0,
               ),
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),
@@ -141,7 +140,6 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: CustomAppColors.primary.withValues(alpha: 0.2),
-                        width: 1,
                       ),
                     ),
                     child: Material(
@@ -172,11 +170,15 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
   }
 
   String _capitalizeRole(String role) {
-    if (role.isEmpty) return role;
+    if (role.isEmpty) {
+      return role;
+    }
     return role
         .split(' ')
         .map((word) {
-          if (word.isEmpty) return word;
+          if (word.isEmpty) {
+            return word;
+          }
           return word[0].toUpperCase() + word.substring(1).toLowerCase();
         })
         .join(' ');
@@ -206,7 +208,6 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
           borderRadius: BorderRadius.circular(_isExtended ? 20 : 16),
           border: Border.all(
             color: CustomAppColors.primary.withValues(alpha: 0.15),
-            width: 1,
           ),
           boxShadow: [
             BoxShadow(
@@ -287,7 +288,6 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: CustomAppColors.primary.withValues(alpha: 0.25),
-                      width: 1,
                     ),
                   ),
                   child: Column(
@@ -381,7 +381,6 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
       borderRadius: BorderRadius.circular(16),
       border: Border.all(
         color: AppTheme.danger.withValues(alpha: 0.25),
-        width: 1,
       ),
       boxShadow: [
         BoxShadow(
@@ -415,7 +414,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                   shape: BoxShape.circle,
                   color: AppTheme.danger.withValues(alpha: 0.15),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.logout_rounded,
                   color: AppTheme.danger,
                   size: 20,
@@ -426,7 +425,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                 Expanded(
                   child: Text(
                     context.translate('logout'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.danger,
@@ -605,7 +604,6 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                   : _isHovered
                   ? Border.all(
                     color: CustomAppColors.primary.withValues(alpha: 0.15),
-                    width: 1,
                   )
                   : null,
           boxShadow:

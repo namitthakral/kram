@@ -76,16 +76,17 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
             _buildSectionHeader(
               context,
               icon: Icons.contact_mail,
-              title: 'Contact Information',
-              subtitle: 'Manage your contact details',
+              title: context.translate('contact_information'),
+              subtitle: context.translate('manage_contact_details'),
             ),
             const SizedBox(height: 24),
             _buildInfoCard(
               context,
-              title: 'Primary Contact',
+              title: context.translate('primary_contact'),
               children: [
                 _buildTextField(
-                  label: 'Email Address',
+                  context,
+                  label: context.translate('email_address'),
                   controller: _emailController,
                   icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
@@ -95,7 +96,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
                   children: [
                     Expanded(
                       child: _buildTextField(
-                        label: 'Phone Number',
+                        context,
+                        label: context.translate('phone_number'),
                         controller: _phoneController,
                         icon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
@@ -104,7 +106,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTextField(
-                        label: 'Alternate Phone',
+                        context,
+                        label: context.translate('alternate_phone'),
                         controller: _alternatePhoneController,
                         icon: Icons.phone_android_outlined,
                         keyboardType: TextInputType.phone,
@@ -117,10 +120,11 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
             const SizedBox(height: 24),
             _buildInfoCard(
               context,
-              title: 'Address Details',
+              title: context.translate('address_details'),
               children: [
                 _buildTextField(
-                  label: 'Street Address',
+                  context,
+                  label: context.translate('street_address'),
                   controller: _addressController,
                   icon: Icons.home_outlined,
                   maxLines: 2,
@@ -130,7 +134,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
                   children: [
                     Expanded(
                       child: _buildTextField(
-                        label: 'City',
+                        context,
+                        label: context.translate('city'),
                         controller: _cityController,
                         icon: Icons.location_city_outlined,
                       ),
@@ -138,7 +143,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTextField(
-                        label: 'State/Province',
+                        context,
+                        label: context.translate('state_province'),
                         controller: _stateController,
                         icon: Icons.map_outlined,
                       ),
@@ -150,7 +156,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
                   children: [
                     Expanded(
                       child: _buildTextField(
-                        label: 'Postal Code',
+                        context,
+                        label: context.translate('postal_code'),
                         controller: _postalCodeController,
                         icon: Icons.markunread_mailbox_outlined,
                         keyboardType: TextInputType.number,
@@ -159,7 +166,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTextField(
-                        label: 'Country',
+                        context,
+                        label: context.translate('country'),
                         controller: _countryController,
                         icon: Icons.public_outlined,
                       ),
@@ -172,16 +180,18 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
               const SizedBox(height: 24),
               _buildInfoCard(
                 context,
-                title: 'Emergency Contact',
+                title: context.translate('emergency_contact'),
                 children: [
                   _buildTextField(
-                    label: 'Emergency Contact Name',
+                    context,
+                    label: context.translate('emergency_contact_name'),
                     controller: _emergencyContactNameController,
                     icon: Icons.person_outline,
                   ),
                   const SizedBox(height: 20),
                   _buildTextField(
-                    label: 'Emergency Contact Phone',
+                    context,
+                    label: context.translate('emergency_contact_phone'),
                     controller: _emergencyContactPhoneController,
                     icon: Icons.phone_in_talk_outlined,
                     keyboardType: TextInputType.phone,
@@ -270,7 +280,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
     ),
   );
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required String label,
     required TextEditingController controller,
     required IconData icon,
@@ -298,11 +309,11 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
           fillColor: AppTheme.slate100,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppTheme.slate100),
+            borderSide: const BorderSide(color: AppTheme.slate100),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: AppTheme.slate100),
+            borderSide: const BorderSide(color: AppTheme.slate100),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),

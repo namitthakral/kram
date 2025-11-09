@@ -12,10 +12,10 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CustomMainScreenWithAppbar(
     title: context.translate('dashboard_greeting', params: {'name': 'Deepak'}),
-    appBarConfig: const AppBarConfig.profile(
+    appBarConfig: AppBarConfig.profile(
       icon: Icons.dashboard_outlined,
       backgroundColor: CustomAppColors.primary,
-      subtitle: 'Welcome to your dashboard',
+      subtitle: context.translate('welcome_to_dashboard'),
     ),
     child: ResponsiveLayout(
       mobile: _buildMobileLayout(context),
@@ -25,11 +25,11 @@ class DashboardScreen extends StatelessWidget {
   );
 
   Widget _buildMobileLayout(BuildContext context) =>
-      const SingleChildScrollView(
+      SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Mobile Dashboard Layout'),
+            Text(context.translate('mobile_dashboard_layout')),
             // Add your mobile-specific widgets here
           ],
         ),
@@ -39,7 +39,7 @@ class DashboardScreen extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Tablet Dashboard Layout'),
+        Text(context.translate('tablet_dashboard_layout')),
         const SizedBox(height: 16),
         // Use ResponsiveGrid for better tablet layout
         GridView.builder(
@@ -53,7 +53,7 @@ class DashboardScreen extends StatelessWidget {
           itemCount: 4,
           itemBuilder:
               (context, index) =>
-                  Card(child: Center(child: Text('Card $index'))),
+                  Card(child: Center(child: Text('${context.translate("card")} $index'))),
         ),
       ],
     ),
@@ -63,7 +63,7 @@ class DashboardScreen extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Desktop Dashboard Layout'),
+        Text(context.translate('desktop_dashboard_layout')),
         const SizedBox(height: 24),
         // Use grid with more columns for desktop
         GridView.builder(
@@ -77,7 +77,7 @@ class DashboardScreen extends StatelessWidget {
           itemCount: 6,
           itemBuilder:
               (context, index) =>
-                  Card(child: Center(child: Text('Card $index'))),
+                  Card(child: Center(child: Text('${context.translate("card")} $index'))),
         ),
       ],
     ),

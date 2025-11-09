@@ -52,7 +52,7 @@ class AccountSettingsScreen extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
-              'Account Settings',
+              context.translate('account_settings'),
               style: context.textTheme.h3.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppTheme.slate800,
@@ -67,12 +67,12 @@ class AccountSettingsScreen extends StatelessWidget {
                 children: [
                   _buildSettingsSection(
                     context,
-                    title: 'Profile',
+                    title: context.translate('profile'),
                     items: [
                       _SettingsItem(
                         icon: Icons.edit_outlined,
-                        title: 'Edit Profile',
-                        subtitle: 'Update your personal information',
+                        title: context.translate('edit_profile'),
+                        subtitle: context.translate('update_personal_information'),
                         color: AppTheme.blue500,
                         onTap: () {
                           Navigator.of(context).push(
@@ -87,12 +87,12 @@ class AccountSettingsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildSettingsSection(
                     context,
-                    title: 'Security & Privacy',
+                    title: context.translate('security_and_privacy'),
                     items: [
                       _SettingsItem(
                         icon: Icons.lock_outline,
-                        title: 'Change Password',
-                        subtitle: 'Update your account password',
+                        title: context.translate('change_password'),
+                        subtitle: context.translate('update_account_password'),
                         color: AppTheme.danger,
                         onTap: () {
                           Navigator.of(context).push(
@@ -104,8 +104,8 @@ class AccountSettingsScreen extends StatelessWidget {
                       ),
                       _SettingsItem(
                         icon: Icons.security_outlined,
-                        title: 'Security',
-                        subtitle: 'Privacy and security settings',
+                        title: context.translate('security'),
+                        subtitle: context.translate('privacy_and_security_settings'),
                         color: AppTheme.success,
                         onTap: () {
                           Navigator.of(context).push(
@@ -120,12 +120,12 @@ class AccountSettingsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildSettingsSection(
                     context,
-                    title: 'Preferences',
+                    title: context.translate('preferences'),
                     items: [
                       _SettingsItem(
                         icon: Icons.notifications_outlined,
-                        title: 'Notifications',
-                        subtitle: 'Manage notification preferences',
+                        title: context.translate('notifications'),
+                        subtitle: context.translate('manage_notification_preferences'),
                         color: AppTheme.warning,
                         onTap: () {
                           Navigator.of(context).push(
@@ -138,8 +138,8 @@ class AccountSettingsScreen extends StatelessWidget {
                       ),
                       _SettingsItem(
                         icon: Icons.language_outlined,
-                        title: 'Language',
-                        subtitle: 'Change app language',
+                        title: context.translate('language'),
+                        subtitle: context.translate('change_app_language'),
                         color: AppTheme.info,
                         onTap: () {
                           Navigator.of(context).push(
@@ -154,12 +154,12 @@ class AccountSettingsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildSettingsSection(
                     context,
-                    title: 'Support',
+                    title: context.translate('support'),
                     items: [
                       _SettingsItem(
                         icon: Icons.help_outline,
-                        title: 'Help & Support',
-                        subtitle: 'Get help and FAQs',
+                        title: context.translate('help_and_support'),
+                        subtitle: context.translate('get_help_and_faqs'),
                         color: AppTheme.blue500,
                         onTap: () {
                           Navigator.of(context).push(
@@ -171,8 +171,8 @@ class AccountSettingsScreen extends StatelessWidget {
                       ),
                       _SettingsItem(
                         icon: Icons.description_outlined,
-                        title: 'Legal & Policies',
-                        subtitle: 'Terms and privacy policy',
+                        title: context.translate('legal_and_policies'),
+                        subtitle: context.translate('terms_and_privacy_policy'),
                         color: AppTheme.slate600,
                         onTap: () {
                           Navigator.of(context).push(
@@ -202,7 +202,7 @@ class AccountSettingsScreen extends StatelessWidget {
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
-        'Account Settings',
+        context.translate('account_settings'),
         style: context.textTheme.h3.copyWith(
           fontWeight: FontWeight.bold,
           color: AppTheme.slate800,
@@ -233,12 +233,12 @@ class AccountSettingsScreen extends StatelessWidget {
                         children: [
                           _buildSettingsSection(
                             context,
-                            title: 'Profile',
+                            title: context.translate('profile'),
                             items: [
                               _SettingsItem(
                                 icon: Icons.edit_outlined,
-                                title: 'Edit Profile',
-                                subtitle: 'Update your personal information',
+                                title: context.translate('edit_profile'),
+                                subtitle: context.translate('update_personal_information'),
                                 color: AppTheme.blue500,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -254,12 +254,12 @@ class AccountSettingsScreen extends StatelessWidget {
                           const SizedBox(height: 24),
                           _buildSettingsSection(
                             context,
-                            title: 'Security & Privacy',
+                            title: context.translate('security_and_privacy'),
                             items: [
                               _SettingsItem(
                                 icon: Icons.lock_outline,
-                                title: 'Change Password',
-                                subtitle: 'Update your account password',
+                                title: context.translate('change_password'),
+                                subtitle: context.translate('update_account_password'),
                                 color: AppTheme.danger,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -272,8 +272,8 @@ class AccountSettingsScreen extends StatelessWidget {
                               ),
                               _SettingsItem(
                                 icon: Icons.security_outlined,
-                                title: 'Security',
-                                subtitle: 'Privacy and security settings',
+                                title: context.translate('security'),
+                                subtitle: context.translate('privacy_and_security_settings'),
                                 color: AppTheme.success,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -297,12 +297,12 @@ class AccountSettingsScreen extends StatelessWidget {
                         children: [
                           _buildSettingsSection(
                             context,
-                            title: 'Preferences',
+                            title: context.translate('preferences'),
                             items: [
                               _SettingsItem(
                                 icon: Icons.notifications_outlined,
-                                title: 'Notifications',
-                                subtitle: 'Manage notification preferences',
+                                title: context.translate('notifications'),
+                                subtitle: context.translate('manage_notification_preferences'),
                                 color: AppTheme.warning,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -315,8 +315,8 @@ class AccountSettingsScreen extends StatelessWidget {
                               ),
                               _SettingsItem(
                                 icon: Icons.language_outlined,
-                                title: 'Language',
-                                subtitle: 'Change app language',
+                                title: context.translate('language'),
+                                subtitle: context.translate('change_app_language'),
                                 color: AppTheme.info,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -332,12 +332,12 @@ class AccountSettingsScreen extends StatelessWidget {
                           const SizedBox(height: 24),
                           _buildSettingsSection(
                             context,
-                            title: 'Support',
+                            title: context.translate('support'),
                             items: [
                               _SettingsItem(
                                 icon: Icons.help_outline,
-                                title: 'Help & Support',
-                                subtitle: 'Get help and FAQs',
+                                title: context.translate('help_and_support'),
+                                subtitle: context.translate('get_help_and_faqs'),
                                 color: AppTheme.blue500,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -350,8 +350,8 @@ class AccountSettingsScreen extends StatelessWidget {
                               ),
                               _SettingsItem(
                                 icon: Icons.description_outlined,
-                                title: 'Legal & Policies',
-                                subtitle: 'Terms and privacy policy',
+                                title: context.translate('legal_and_policies'),
+                                subtitle: context.translate('terms_and_privacy_policy'),
                                 color: AppTheme.slate600,
                                 onTap: () {
                                   Navigator.of(context).push(
@@ -410,7 +410,7 @@ class AccountSettingsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Account Settings',
+                context.translate('account_settings'),
                 style: context.textTheme.h2.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -418,7 +418,7 @@ class AccountSettingsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Manage your profile, security, and preferences',
+                context.translate('manage_profile_security_preferences'),
                 style: context.textTheme.bodyBase.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),

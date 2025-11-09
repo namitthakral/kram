@@ -63,8 +63,8 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
           _buildSectionHeader(
             context,
             icon: Icons.person,
-            title: 'Personal Information',
-            subtitle: 'Update your personal details',
+            title: context.translate('personal_information'),
+            subtitle: context.translate('update_personal_details'),
           ),
           const SizedBox(height: 24),
           _buildInfoCard(
@@ -74,7 +74,8 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'First Name',
+                      context,
+                      label: context.translate('first_name'),
                       controller: _firstNameController,
                       icon: Icons.person_outline,
                     ),
@@ -82,7 +83,8 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Last Name',
+                      context,
+                      label: context.translate('last_name'),
                       controller: _lastNameController,
                       icon: Icons.person_outline,
                     ),
@@ -91,7 +93,8 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                label: 'Date of Birth',
+                context,
+                label: context.translate('date_of_birth'),
                 controller: _dateOfBirthController,
                 icon: Icons.calendar_today_outlined,
                 readOnly: true,
@@ -99,11 +102,18 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
               ),
               const SizedBox(height: 20),
               _buildDropdownField(
-                label: 'Gender',
-                value: _genderController.text.isEmpty
-                    ? null
-                    : _genderController.text,
-                items: const ['Male', 'Female', 'Other', 'Prefer not to say'],
+                context,
+                label: context.translate('gender'),
+                value:
+                    _genderController.text.isEmpty
+                        ? null
+                        : _genderController.text,
+                items: [
+                  context.translate('male'),
+                  context.translate('female'),
+                  context.translate('other'),
+                  context.translate('prefer_not_to_say'),
+                ],
                 onChanged: (value) {
                   setState(() {
                     _genderController.text = value ?? '';
@@ -113,16 +123,19 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                label: 'Nationality',
+                context,
+                label: context.translate('nationality'),
                 controller: _nationalityController,
                 icon: Icons.flag_outlined,
               ),
               const SizedBox(height: 20),
               _buildDropdownField(
-                label: 'Blood Group',
-                value: _bloodGroupController.text.isEmpty
-                    ? null
-                    : _bloodGroupController.text,
+                context,
+                label: context.translate('blood_group'),
+                value:
+                    _bloodGroupController.text.isEmpty
+                        ? null
+                        : _bloodGroupController.text,
                 items: const ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
                 onChanged: (value) {
                   setState(() {
@@ -178,28 +191,31 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
     ],
   );
 
-  Widget _buildInfoCard(BuildContext context, {required List<Widget> children}) =>
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.slate100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
+  Widget _buildInfoCard(
+    BuildContext context, {
+    required List<Widget> children,
+  }) => Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppTheme.slate100),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
-        ),
-      );
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    ),
+  );
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required String label,
     required TextEditingController controller,
     required IconData icon,
@@ -237,13 +253,17 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.blue500, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     ],
   );
 
-  Widget _buildDropdownField({
+  Widget _buildDropdownField(
+    BuildContext context, {
     required String label,
     required String? value,
     required List<String> items,
@@ -262,7 +282,7 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
       ),
       const SizedBox(height: 8),
       DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         onChanged: onChanged,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, size: 20, color: AppTheme.slate500),
@@ -280,12 +300,15 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.blue500, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
-        items: items.map((item) => DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        )).toList(),
+        items:
+            items
+                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .toList(),
       ),
     ],
   );
@@ -296,17 +319,16 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppTheme.blue500,
-            onPrimary: Colors.white,
-            surface: Colors.white,
-            onSurface: AppTheme.slate800,
+      builder:
+          (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: AppTheme.blue500,
+                onSurface: AppTheme.slate800,
+              ),
+            ),
+            child: child!,
           ),
-        ),
-        child: child!,
-      ),
     );
 
     if (picked != null) {

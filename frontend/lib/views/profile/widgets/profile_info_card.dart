@@ -231,7 +231,7 @@ class _InfoRow extends StatelessWidget {
       ),
       if (canCopy)
         IconButton(
-          icon: Icon(Icons.copy_outlined, size: 20, color: AppTheme.slate500),
+          icon: const Icon(Icons.copy_outlined, size: 20, color: AppTheme.slate500),
           onPressed: () {
             Clipboard.setData(ClipboardData(text: value));
             showCustomSnackbar(

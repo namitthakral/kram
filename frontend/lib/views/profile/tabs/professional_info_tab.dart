@@ -30,8 +30,12 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
     super.initState();
     final teacher = context.read<LoginProvider>().currentUser?.teacher;
 
-    _employeeIdController = TextEditingController(text: teacher?.employeeId ?? '');
-    _designationController = TextEditingController(text: teacher?.designation ?? '');
+    _employeeIdController = TextEditingController(
+      text: teacher?.employeeId ?? '',
+    );
+    _designationController = TextEditingController(
+      text: teacher?.designation ?? '',
+    );
     _specializationController = TextEditingController(
       text: teacher?.specialization ?? '',
     );
@@ -50,7 +54,9 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
     _officeLocationController = TextEditingController(
       text: teacher?.officeLocation ?? '',
     );
-    _officeHoursController = TextEditingController(text: teacher?.officeHours ?? '');
+    _officeHoursController = TextEditingController(
+      text: teacher?.officeHours ?? '',
+    );
     _researchInterestsController = TextEditingController(
       text: teacher?.researchInterests ?? '',
     );
@@ -82,19 +88,20 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
           _buildSectionHeader(
             context,
             icon: Icons.work,
-            title: 'Professional Information',
-            subtitle: 'Manage your professional details',
+            title: context.translate('professional_information'),
+            subtitle: context.translate('manage_professional_details'),
           ),
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Employment Details',
+            title: context.translate('employment_details'),
             children: [
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'Employee ID',
+                      context,
+                      label: context.translate('employee_id'),
                       controller: _employeeIdController,
                       icon: Icons.badge_outlined,
                     ),
@@ -102,7 +109,8 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Designation',
+                      context,
+                      label: context.translate('designation'),
                       controller: _designationController,
                       icon: Icons.work_outline,
                     ),
@@ -114,15 +122,17 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
                 children: [
                   Expanded(
                     child: _buildDropdownField(
-                      label: 'Employment Type',
-                      value: _employmentTypeController.text.isEmpty
-                          ? null
-                          : _employmentTypeController.text,
-                      items: const [
-                        'Full-time',
-                        'Part-time',
-                        'Contract',
-                        'Temporary',
+                      context,
+                      label: context.translate('employment_type'),
+                      value:
+                          _employmentTypeController.text.isEmpty
+                              ? null
+                              : _employmentTypeController.text,
+                      items: [
+                        context.translate('full_time'),
+                        context.translate('part_time'),
+                        context.translate('contract'),
+                        context.translate('temporary'),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -135,7 +145,8 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Join Date',
+                      context,
+                      label: context.translate('join_date'),
                       controller: _joinDateController,
                       icon: Icons.calendar_today_outlined,
                       readOnly: true,
@@ -149,10 +160,11 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Academic Credentials',
+            title: context.translate('academic_credentials'),
             children: [
               _buildTextField(
-                label: 'Qualification',
+                context,
+                label: context.translate('qualification'),
                 controller: _qualificationController,
                 icon: Icons.school_outlined,
               ),
@@ -161,7 +173,8 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'Specialization',
+                      context,
+                      label: context.translate('specialization'),
                       controller: _specializationController,
                       icon: Icons.stars_outlined,
                     ),
@@ -169,7 +182,9 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Experience (Years)',
+                      context,
+                      label:
+                          '${context.translate('experience')} (${context.translate('years')})',
                       controller: _experienceYearsController,
                       icon: Icons.work_history_outlined,
                       keyboardType: TextInputType.number,
@@ -182,13 +197,14 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Office Information',
+            title: context.translate('office_information'),
             children: [
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'Office Location',
+                      context,
+                      label: context.translate('office_location'),
                       controller: _officeLocationController,
                       icon: Icons.location_on_outlined,
                     ),
@@ -196,7 +212,8 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Office Hours',
+                      context,
+                      label: context.translate('office_hours'),
                       controller: _officeHoursController,
                       icon: Icons.access_time_outlined,
                     ),
@@ -208,10 +225,11 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Research & Interests',
+            title: context.translate('research_and_interests'),
             children: [
               _buildTextField(
-                label: 'Research Interests',
+                context,
+                label: context.translate('research_interests'),
                 controller: _researchInterestsController,
                 icon: Icons.science_outlined,
                 maxLines: 4,
@@ -298,7 +316,8 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
     ),
   );
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required String label,
     required TextEditingController controller,
     required IconData icon,
@@ -349,7 +368,8 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
     ],
   );
 
-  Widget _buildDropdownField({
+  Widget _buildDropdownField(
+    BuildContext context, {
     required String label,
     required String? value,
     required List<String> items,
@@ -368,7 +388,7 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
       ),
       const SizedBox(height: 8),
       DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         onChanged: onChanged,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, size: 20, color: AppTheme.slate500),
@@ -386,12 +406,15 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.blue500, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
-        items: items.map((item) => DropdownMenuItem(
-          value: item,
-          child: Text(item),
-        )).toList(),
+        items:
+            items
+                .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                .toList(),
       ),
     ],
   );
@@ -402,17 +425,16 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppTheme.blue500,
-            onPrimary: Colors.white,
-            surface: Colors.white,
-            onSurface: AppTheme.slate800,
+      builder:
+          (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: AppTheme.blue500,
+                onSurface: AppTheme.slate800,
+              ),
+            ),
+            child: child!,
           ),
-        ),
-        child: child!,
-      ),
     );
 
     if (picked != null) {

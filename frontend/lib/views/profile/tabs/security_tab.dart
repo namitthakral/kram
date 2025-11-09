@@ -319,8 +319,7 @@ class _SecurityTabState extends State<SecurityTab> {
       ),
       const SizedBox(height: 8),
       Row(
-        children: List.generate(4, (index) {
-          return Expanded(
+        children: List.generate(4, (index) => Expanded(
             child: Container(
               height: 4,
               margin: EdgeInsets.only(right: index < 3 ? 4 : 0),
@@ -329,8 +328,7 @@ class _SecurityTabState extends State<SecurityTab> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-          );
-        }),
+          )),
       ),
       const SizedBox(height: 8),
       const Text(
@@ -383,7 +381,7 @@ class _SecurityTabState extends State<SecurityTab> {
           value: value,
           onChanged: onChanged,
           activeTrackColor: AppTheme.blue500,
-          activeColor: Colors.white,
+          activeThumbColor: Colors.white,
         ),
       ],
     ),

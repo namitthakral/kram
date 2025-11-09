@@ -61,11 +61,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final userName = user.name;
 
     return CustomMainScreenWithAppbar(
-      title: context.translate('Admin Dashboard'),
+      title: context.translate('admin_dashboard'),
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: 'EdVerse Institution',
+        institutionName: context.translate('edverse_institution'),
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(
@@ -125,33 +125,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             childAspectRatio: isMobile ? 1.3 : 1.5,
             children: [
               StatCard(
-                title: 'Total Students',
+                title: context.translate('total_students'),
                 value: '$totalStudents',
-                subtitle: 'Across all grades',
+                subtitle: context.translate('across_all_grades'),
                 backgroundColor: const Color(0xFF3b82f6),
                 iconColor: const Color(0xFF3b82f6),
                 icon: Icons.groups,
               ),
               StatCard(
-                title: 'Teachers',
+                title: context.translate('teachers'),
                 value: '$totalTeachers',
-                subtitle: 'Active faculty',
+                subtitle: context.translate('active_faculty'),
                 backgroundColor: const Color(0xFF10b981),
                 iconColor: const Color(0xFF10b981),
                 icon: Icons.school,
               ),
               StatCard(
-                title: 'Classes',
+                title: context.translate('classes'),
                 value: '$totalClasses',
-                subtitle: 'Total sections',
+                subtitle: context.translate('total_sections'),
                 backgroundColor: const Color(0xFF8B5CF6),
                 iconColor: const Color(0xFF8B5CF6),
                 icon: Icons.class_,
               ),
               StatCard(
-                title: 'Attendance',
+                title: context.translate('attendance'),
                 value: '${attendanceRate.toStringAsFixed(1)}%',
-                subtitle: 'School average',
+                subtitle: context.translate('school_average'),
                 backgroundColor: const Color(0xFF10b981),
                 iconColor: const Color(0xFF10b981),
                 icon: Icons.check_circle,
@@ -186,7 +186,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Failed to load dashboard stats',
+                        context.translate('failed_to_load_dashboard_stats'),
                         style: TextStyle(
                           color: Colors.red.shade700,
                           fontSize: 14,
@@ -195,7 +195,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                     TextButton(
                       onPressed: _loadDashboardData,
-                      child: const Text('Retry'),
+                      child: Text(context.translate('retry')),
                     ),
                   ],
                 ),
@@ -222,17 +222,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(
+            const Icon(
               Icons.warning_amber_rounded,
               color: Color(0xFFf59e0b),
               size: 24,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              'System Alerts & Notifications',
-              style: TextStyle(
+              context.translate('system_alerts_notifications'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1e293b),
@@ -241,9 +241,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Important items requiring immediate attention',
-          style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+        Text(
+          context.translate('important_items_requiring_attention'),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
         const SizedBox(height: 20),
         Consumer<AdminDashboardProvider>(
@@ -252,9 +252,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
             if (alerts.isEmpty) {
               return _buildAlertItem(
-                'Attendance',
-                'Grade 4B has 78% attendance this week',
-                'high',
+                context.translate('attendance'),
+                context.translate('grade_4b_attendance'),
+                context.translate('high'),
               );
             }
 
@@ -361,18 +361,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           return Column(
             children: [
               _buildQuickStatCard(
-                'Pending Fees',
+                context.translate('pending_fees'),
                 '\$${(pendingFees / 1000).toStringAsFixed(1)}K',
-                'Needs follow-up',
+                context.translate('needs_follow_up'),
                 Icons.warning_amber_rounded,
                 const Color(0xFFfee2e2),
                 const Color(0xFFef4444),
               ),
               const SizedBox(height: 16),
               _buildQuickStatCard(
-                'Fee Collection',
+                context.translate('fee_collection'),
                 '\$${(feeCollection / 1000).toStringAsFixed(0)}K',
-                'This month',
+                context.translate('this_month'),
                 Icons.attach_money,
                 const Color(0xFFdbeafe),
                 const Color(0xFF3b82f6),
@@ -460,9 +460,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Analytics Overview',
-          style: TextStyle(
+        Text(
+          context.translate('analytics_overview'),
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1e293b),
@@ -508,36 +508,36 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         (context, provider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Grade Distribution',
-              style: TextStyle(
+            Text(
+              context.translate('grade_distribution'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF64748b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Overall academic performance across school',
-              style: TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
+            Text(
+              context.translate('overall_academic_performance'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
             ),
             const SizedBox(height: 16),
             AdminGradeDistributionChart(
               distributionData: provider.gradeDistribution,
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Class Performance Overview',
-              style: TextStyle(
+            Text(
+              context.translate('class_performance_overview'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF64748b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Average grades and attendance by class',
-              style: TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
+            Text(
+              context.translate('average_grades_by_class'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
             ),
             const SizedBox(height: 16),
             AdminClassPerformanceList(classData: provider.classPerformance),
@@ -550,18 +550,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         (context, provider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'School-wide Attendance Trends',
-              style: TextStyle(
+            Text(
+              context.translate('school_wide_attendance_trends'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF64748b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Monthly attendance vs target (95%)',
-              style: TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
+            Text(
+              context.translate('monthly_attendance_vs_target'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
             ),
             AdminAttendanceTrendsChart(trendsData: provider.attendanceTrends),
           ],
@@ -573,18 +573,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         (context, provider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Financial Overview',
-              style: TextStyle(
+            Text(
+              context.translate('financial_overview'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF64748b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Monthly revenue, expenses, and profit analysis',
-              style: TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
+            Text(
+              context.translate('monthly_revenue_expenses'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
             ),
             AdminFinancialOverviewChart(
               financialData: provider.financialOverview,
@@ -598,18 +598,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         (context, provider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Teacher Performance Dashboard',
-              style: TextStyle(
+            Text(
+              context.translate('teacher_performance_dashboard'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF64748b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Faculty performance metrics and ratings',
-              style: TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
+            Text(
+              context.translate('faculty_performance_metrics'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
             ),
             const SizedBox(height: 16),
             AdminTeacherPerformanceTable(
@@ -619,26 +619,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
   );
 
-  Widget _buildReviewsTab() => const Center(
+  Widget _buildReviewsTab() => Center(
     child: Padding(
-      padding: EdgeInsets.all(32.0),
+      padding: const EdgeInsets.all(32.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.rate_review_outlined, size: 64, color: Color(0xFF94a3b8)),
-          SizedBox(height: 16),
+          const Icon(Icons.rate_review_outlined, size: 64, color: Color(0xFF94a3b8)),
+          const SizedBox(height: 16),
           Text(
-            'Performance Reviews',
-            style: TextStyle(
+            context.translate('performance_reviews'),
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Color(0xFF64748b),
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            'Annual performance review section',
-            style: TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
+            context.translate('annual_performance_review'),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF94a3b8)),
           ),
         ],
       ),

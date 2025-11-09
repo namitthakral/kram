@@ -29,11 +29,11 @@ class AppBarConfig {
 
   /// Creates a student app bar configuration
   const AppBarConfig.student({
-    required String userInitials,
-    required String userName,
+    required String this.userInitials,
+    required String this.userName,
     required String grade,
     required String rollNumber,
-    String? gpa,
+    this.gpa,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
   }) : type = AppBarType.profile,
@@ -43,20 +43,18 @@ class AppBarConfig {
        showCircularBackButton = false,
        onBackButtonTapped = null,
        actions = const [],
-       userInitials = userInitials,
-       userName = userName,
-       userDetails = gpa != null
-           ? '$grade • Roll No: $rollNumber • GPA: $gpa'
-           : '$grade • Roll No: $rollNumber',
+       userDetails =
+           gpa != null
+               ? '$grade • Roll No: $rollNumber • GPA: $gpa'
+               : '$grade • Roll No: $rollNumber',
        subtitle = null,
-       gpa = gpa,
        rank = null,
        totalRank = null;
 
   /// Creates a teacher app bar configuration
   const AppBarConfig.teacher({
-    required String userInitials,
-    required String userName,
+    required String this.userInitials,
+    required String this.userName,
     required String designation,
     required String employeeId,
     this.onNotificationIconPressed,
@@ -68,8 +66,6 @@ class AppBarConfig {
        showCircularBackButton = false,
        onBackButtonTapped = null,
        actions = const [],
-       userInitials = userInitials,
-       userName = userName,
        userDetails = '$designation • ID: $employeeId',
        subtitle = null,
        gpa = null,
@@ -101,8 +97,8 @@ class AppBarConfig {
 
   /// Creates an admin app bar configuration
   const AppBarConfig.admin({
-    required String userInitials,
-    required String userName,
+    required String this.userInitials,
+    required String this.userName,
     required String institutionName,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
@@ -113,8 +109,6 @@ class AppBarConfig {
        showCircularBackButton = false,
        onBackButtonTapped = null,
        actions = const [],
-       userInitials = userInitials,
-       userName = userName,
        userDetails = 'Administrator • $institutionName',
        subtitle = null,
        gpa = null,
@@ -123,8 +117,8 @@ class AppBarConfig {
 
   /// Creates a librarian app bar configuration
   const AppBarConfig.librarian({
-    required String userInitials,
-    required String userName,
+    required String this.userInitials,
+    required String this.userName,
     required String libraryName,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
@@ -135,8 +129,6 @@ class AppBarConfig {
        showCircularBackButton = false,
        onBackButtonTapped = null,
        actions = const [],
-       userInitials = userInitials,
-       userName = userName,
        userDetails = 'Librarian • $libraryName',
        subtitle = null,
        gpa = null,
@@ -145,8 +137,8 @@ class AppBarConfig {
 
   /// Creates a staff app bar configuration
   const AppBarConfig.staff({
-    required String userInitials,
-    required String userName,
+    required String this.userInitials,
+    required String this.userName,
     required String department,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
@@ -157,8 +149,6 @@ class AppBarConfig {
        showCircularBackButton = false,
        onBackButtonTapped = null,
        actions = const [],
-       userInitials = userInitials,
-       userName = userName,
        userDetails = 'Staff • $department',
        subtitle = null,
        gpa = null,
@@ -167,8 +157,8 @@ class AppBarConfig {
 
   /// Creates a super admin app bar configuration
   const AppBarConfig.superAdmin({
-    required String userInitials,
-    required String userName,
+    required String this.userInitials,
+    required String this.userName,
     required String systemName,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
@@ -179,8 +169,6 @@ class AppBarConfig {
        showCircularBackButton = false,
        onBackButtonTapped = null,
        actions = const [],
-       userInitials = userInitials,
-       userName = userName,
        userDetails = 'Super Administrator • $systemName',
        subtitle = null,
        gpa = null,
@@ -360,22 +348,23 @@ class _CustomAppBar extends StatelessWidget {
                           config.iconBackgroundColor ?? CustomAppColors.primary,
                       borderRadius: BorderRadius.circular(22.0),
                     ),
-                    child: config.userInitials != null
-                        ? Center(
-                          child: Text(
-                            config.userInitials!,
-                            style: const TextStyle(
+                    child:
+                        config.userInitials != null
+                            ? Center(
+                              child: Text(
+                                config.userInitials!,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                            : Icon(
+                              config.profileIcon ?? Icons.people_outline,
                               color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              size: 32,
                             ),
-                          ),
-                        )
-                        : Icon(
-                          config.profileIcon ?? Icons.people_outline,
-                          color: Colors.white,
-                          size: 32,
-                        ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -401,7 +390,7 @@ class _CustomAppBar extends StatelessWidget {
                           )
                         else
                           Text(
-                            config.subtitle ?? 'Dashboard',
+                            config.subtitle ?? context.translate('dashboard'),
                             style: context.textTheme.bodyXs.copyWith(
                               color: const Color(0xFF666666),
                               fontSize: 14,

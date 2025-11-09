@@ -84,7 +84,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     debugPrint('GPA Value: $gpa, GPA String: $gpaString');
 
     return CustomMainScreenWithAppbar(
-      title: context.translate('Student Dashboard'),
+      title: context.translate('student_dashboard'),
       appBarConfig: AppBarConfig.student(
         userInitials: userInitials,
         userName: userName,
@@ -186,7 +186,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 16),
-              const Text('Error loading stats'),
+              Text(context.translate('error_loading_stats')),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
@@ -195,7 +195,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     dashboardProvider.loadDashboardStats(user!.uuid!);
                   }
                 },
-                child: const Text('Retry'),
+                child: Text(context.translate('retry')),
               ),
             ],
           ),
@@ -258,33 +258,33 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       childAspectRatio: childAspectRatio,
       children: [
         StatCard(
-          title: 'Current GPA',
+          title: context.translate('current_gpa'),
           value: gpa.toString(),
-          subtitle: 'Out of 4.0',
+          subtitle: context.translate('out_of_4'),
           backgroundColor: const Color(0xFF7f22fe),
           iconColor: const Color(0xFF7f22fe),
           icon: Icons.school,
         ),
         StatCard(
-          title: 'Attendance',
+          title: context.translate('attendance'),
           value: '${attendance.toStringAsFixed(1)}%',
-          subtitle: 'This semester',
+          subtitle: context.translate('this_semester'),
           backgroundColor: const Color(0xFF4f39f6),
           iconColor: const Color(0xFF4f39f6),
           icon: Icons.calendar_today,
         ),
         StatCard(
-          title: 'Class Rank',
+          title: context.translate('class_rank'),
           value: classRank.toString(),
-          subtitle: 'Current ranking',
+          subtitle: context.translate('current_ranking'),
           backgroundColor: const Color(0xFFe7000b),
           iconColor: const Color(0xFFe7000b),
           icon: Icons.trending_up,
         ),
         StatCard(
-          title: 'Assignments Due',
+          title: context.translate('assignments_due'),
           value: assignmentsDue.toString(),
-          subtitle: 'This week',
+          subtitle: context.translate('this_week'),
           backgroundColor: const Color(0xFFfe9a00),
           iconColor: const Color(0xFFfe9a00),
           icon: Icons.assignment,
@@ -337,25 +337,25 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Subject Performance',
-            style: TextStyle(
+          Text(
+            context.translate('subject_performance'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1e293b),
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Your current grades and progress',
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+          Text(
+            context.translate('your_current_grades'),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
           ),
           const SizedBox(height: 20),
           if (subjects.isEmpty)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No subject data available'),
+                padding: const EdgeInsets.all(24),
+                child: Text(context.translate('no_subject_data')),
               ),
             )
           else
@@ -396,25 +396,25 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Upcoming Events',
-            style: TextStyle(
+          Text(
+            context.translate('upcoming_events'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1e293b),
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Tests, assignments & events',
-            style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+          Text(
+            context.translate('tests_assignments_events'),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
           ),
           const SizedBox(height: 20),
           if (events.isEmpty)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No upcoming events'),
+                padding: const EdgeInsets.all(24),
+                child: Text(context.translate('no_upcoming_events')),
               ),
             )
           else
@@ -442,10 +442,10 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             builder:
                 (context, provider, child) =>
                     CustomSlidingSegmentedControl<DashboardTab>(
-                      segments: const {
-                        DashboardTab.recentAssignments: 'Recent Assignments',
-                        DashboardTab.performanceTrends: 'Performance Trends',
-                        DashboardTab.attendanceHistory: 'Attendance History',
+                      segments: {
+                        DashboardTab.recentAssignments: context.translate('recent_assignments'),
+                        DashboardTab.performanceTrends: context.translate('performance_trends'),
+                        DashboardTab.attendanceHistory: context.translate('attendance_history'),
                       },
                       initialValue: provider.selectedTab,
                       onValueChanged: (value) {

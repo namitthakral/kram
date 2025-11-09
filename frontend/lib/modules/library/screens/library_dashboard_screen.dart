@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../modules/teacher/widgets/stat_card.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
+import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
@@ -44,17 +45,16 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
     // Extract user information
     final userInitials = user != null ? UserUtils.getInitials(user.name) : 'LI';
     final userName = user?.name ?? 'Librarian';
-    const libraryName =
-        'Central Library'; // This would come from institution data
+    // This would come from institution data
 
     return Stack(
       children: [
         CustomMainScreenWithAppbar(
-          title: 'Library Management',
+          title: context.translate('library_management'),
           appBarConfig: AppBarConfig.librarian(
             userInitials: userInitials,
             userName: userName,
-            libraryName: libraryName,
+            libraryName: context.translate('central_library'),
             onNotificationIconPressed: () {
               // Notification handler
             },
@@ -127,8 +127,8 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
                       color: CustomAppColors.primary,
                     ),
                   ),
-                  title: const Text('Add New Book'),
-                  subtitle: const Text('Add a book to the library inventory'),
+                  title: Text(context.translate('add_new_book')),
+                  subtitle: Text(context.translate('add_book_to_inventory')),
                   onTap: () {
                     Navigator.pop(context);
                     _showAddBookDialog(context);
@@ -147,8 +147,8 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
                       color: Color(0xFF3B82F6),
                     ),
                   ),
-                  title: const Text('Generate Report'),
-                  subtitle: const Text('Export library data'),
+                  title: Text(context.translate('generate_report')),
+                  subtitle: Text(context.translate('export_library_data')),
                   onTap: () {
                     Navigator.pop(context);
                     _showGenerateReportDialog(context);
@@ -183,9 +183,10 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
             child: StatCard(
-              title: 'Total Books',
+              title: context.translate('total_books'),
               value: stats.totalBooks.toString(),
-              subtitle: '${stats.addedThisMonth} added this month',
+              subtitle:
+                  '${stats.addedThisMonth} ${context.translate("added_this_month")}',
               backgroundColor: const Color(0xFF8B5CF6),
               iconColor: const Color(0xFF8B5CF6),
               icon: Icons.menu_book_rounded,
@@ -194,10 +195,10 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
             child: StatCard(
-              title: 'Available Books',
+              title: context.translate('available_books'),
               value: stats.availableBooks.toString(),
               subtitle:
-                  '${stats.availablePercentage.toStringAsFixed(1)}% available',
+                  '${stats.availablePercentage.toStringAsFixed(1)}% ${context.translate("available")}',
               backgroundColor: const Color(0xFF10B981),
               iconColor: const Color(0xFF10B981),
               icon: Icons.check_circle_outline,
@@ -206,9 +207,12 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
             child: StatCard(
-              title: 'Books Issued',
+              title: context.translate('books_issued'),
               value: stats.booksIssued.toString(),
-              subtitle: 'To ${stats.membersCount} members',
+              subtitle: context.translate(
+                'to_members',
+                params: {'count': stats.membersCount.toString()},
+              ),
               backgroundColor: const Color(0xFF3B82F6),
               iconColor: const Color(0xFF3B82F6),
               icon: Icons.library_books_outlined,
@@ -217,9 +221,9 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
             child: StatCard(
-              title: 'Overdue Books',
+              title: context.translate('overdue_books'),
               value: stats.overdueBooks.toString(),
-              subtitle: 'Require immediate action',
+              subtitle: context.translate('require_immediate_action'),
               backgroundColor: const Color(0xFFEF4444),
               iconColor: const Color(0xFFEF4444),
               icon: Icons.warning_amber_rounded,
@@ -234,9 +238,10 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
       children: [
         Expanded(
           child: StatCard(
-            title: 'Total Books',
+            title: context.translate('total_books'),
             value: stats.totalBooks.toString(),
-            subtitle: '${stats.addedThisMonth} added this month',
+            subtitle:
+                '${stats.addedThisMonth} ${context.translate("added_this_month")}',
             backgroundColor: const Color(0xFF8B5CF6),
             iconColor: const Color(0xFF8B5CF6),
             icon: Icons.menu_book_rounded,
@@ -245,10 +250,10 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: StatCard(
-            title: 'Available Books',
+            title: context.translate('available_books'),
             value: stats.availableBooks.toString(),
             subtitle:
-                '${stats.availablePercentage.toStringAsFixed(1)}% available',
+                '${stats.availablePercentage.toStringAsFixed(1)}% ${context.translate("available")}',
             backgroundColor: const Color(0xFF10B981),
             iconColor: const Color(0xFF10B981),
             icon: Icons.check_circle_outline,
@@ -257,9 +262,12 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: StatCard(
-            title: 'Books Issued',
+            title: context.translate('books_issued'),
             value: stats.booksIssued.toString(),
-            subtitle: 'To ${stats.membersCount} members',
+            subtitle: context.translate(
+              'to_members',
+              params: {'count': stats.membersCount.toString()},
+            ),
             backgroundColor: const Color(0xFF3B82F6),
             iconColor: const Color(0xFF3B82F6),
             icon: Icons.library_books_outlined,
@@ -268,9 +276,9 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
         const SizedBox(width: 16),
         Expanded(
           child: StatCard(
-            title: 'Overdue Books',
+            title: context.translate('overdue_books'),
             value: stats.overdueBooks.toString(),
-            subtitle: 'Require immediate action',
+            subtitle: context.translate('require_immediate_action'),
             backgroundColor: const Color(0xFFEF4444),
             iconColor: const Color(0xFFEF4444),
             icon: Icons.warning_amber_rounded,
@@ -326,11 +334,15 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
             builder:
                 (context, tabProvider, child) =>
                     CustomSlidingSegmentedControl<LibraryTab>(
-                      segments: const {
-                        LibraryTab.issuedBooks: 'Issued Books',
-                        LibraryTab.bookInventory: 'Book Inventory',
-                        LibraryTab.analytics: 'Analytics',
-                        LibraryTab.overdue: 'Overdue',
+                      segments: {
+                        LibraryTab.issuedBooks: context.translate(
+                          'issued_books',
+                        ),
+                        LibraryTab.bookInventory: context.translate(
+                          'book_inventory',
+                        ),
+                        LibraryTab.analytics: context.translate('analytics'),
+                        LibraryTab.overdue: context.translate('overdue'),
                       },
                       initialValue: tabProvider.selectedTab,
                       onValueChanged: (value) {
@@ -369,7 +381,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
       ElevatedButton.icon(
         onPressed: () => _showAddBookDialog(context),
         icon: const Icon(Icons.add, size: 18),
-        label: const Text('Add Book'),
+        label: Text(context.translate('add_book')),
         style: ElevatedButton.styleFrom(
           backgroundColor: CustomAppColors.primary,
           foregroundColor: Colors.white,
@@ -382,7 +394,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
       OutlinedButton.icon(
         onPressed: () => _showGenerateReportDialog(context),
         icon: const Icon(Icons.download_outlined, size: 18),
-        label: const Text('Library Report'),
+        label: Text(context.translate('library_report')),
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFF64748B),
           backgroundColor: Colors.white,

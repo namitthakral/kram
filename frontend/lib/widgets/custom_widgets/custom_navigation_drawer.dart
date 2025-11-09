@@ -234,7 +234,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     child: Column(
       children: [
         // Logout Button
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             color: AppTheme.danger.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),

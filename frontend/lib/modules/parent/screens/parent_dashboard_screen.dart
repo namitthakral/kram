@@ -73,7 +73,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         final rollNumber = childInfo?.rollNumber ?? 'N/A';
 
         return CustomMainScreenWithAppbar(
-          title: context.translate('Parent Dashboard'),
+          title: context.translate('parent_dashboard'),
           appBarConfig: AppBarConfig.parent(
             childInitials: childInitials,
             childName: childName,
@@ -157,33 +157,33 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       childAspectRatio: childAspectRatio,
       children: [
         StatCard(
-          title: 'Overall Grade',
+          title: context.translate('overall_grade'),
           value: provider.childInfo?.overallGrade ?? 'A',
-          subtitle: 'Excellent performance',
+          subtitle: context.translate('excellent_performance'),
           backgroundColor: const Color(0xFFf59e0b),
           iconColor: const Color(0xFFf59e0b),
           icon: Icons.school,
         ),
         StatCard(
-          title: 'Attendance',
+          title: context.translate('attendance'),
           value: '${provider.childInfo?.attendance ?? 94.5}%',
-          subtitle: 'Above average',
+          subtitle: context.translate('above_average'),
           backgroundColor: const Color(0xFF10b981),
           iconColor: const Color(0xFF10b981),
           icon: Icons.calendar_today,
         ),
         StatCard(
-          title: 'Test Average',
+          title: context.translate('test_average'),
           value: '${provider.testAverage.toInt()}%',
-          subtitle: 'Last 5 tests',
+          subtitle: context.translate('last_5_tests'),
           backgroundColor: const Color(0xFF4F7CFF),
           iconColor: const Color(0xFF4F7CFF),
           icon: Icons.analytics,
         ),
         StatCard(
-          title: 'Improvement',
+          title: context.translate('improvement'),
           value: '+${provider.semesterImprovement}%',
-          subtitle: 'This semester',
+          subtitle: context.translate('this_semester'),
           backgroundColor: const Color(0xFF8B5CF6),
           iconColor: const Color(0xFF8B5CF6),
           icon: Icons.trending_up,
@@ -221,8 +221,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Recent Academic Activities',
+                Text(
+              context.translate('recent_academic_activities'),
               style: TextStyle(
                 fontSize: isDesktop ? 18 : 17,
                 fontWeight: FontWeight.bold,
@@ -231,7 +231,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Latest tests, assignments, and projects',
+              context.translate('latest_tests_assignments'),
               style: TextStyle(
                 fontSize: isDesktop ? 14 : 13,
                 color: const Color(0xFF64748b),
@@ -260,7 +260,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'School Announcements',
+              context.translate('school_announcements'),
               style: TextStyle(
                 fontSize: isDesktop ? 18 : 17,
                 fontWeight: FontWeight.bold,
@@ -269,7 +269,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Important updates and events',
+              context.translate('important_updates_events'),
               style: TextStyle(
                 fontSize: isDesktop ? 14 : 13,
                 color: const Color(0xFF64748b),
@@ -302,11 +302,11 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   provider,
                   child,
                 ) => CustomSlidingSegmentedControl<ParentDashboardTab>(
-                  segments: const {
+                  segments: {
                     ParentDashboardTab.academicPerformance:
-                        'Academic Performance',
-                    ParentDashboardTab.attendanceHistory: 'Attendance History',
-                    ParentDashboardTab.subjectBreakdown: 'Subject Breakdown',
+                        context.translate('academic_performance'),
+                    ParentDashboardTab.attendanceHistory: context.translate('attendance_history'),
+                    ParentDashboardTab.subjectBreakdown: context.translate('subject_breakdown'),
                   },
                   initialValue: provider.selectedTab,
                   onValueChanged: (value) {
@@ -371,18 +371,18 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         (context, provider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Subject-wise Performance',
-              style: TextStyle(
+            Text(
+              context.translate('subject_wise_performance'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1e293b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Current grades and recent improvements',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            Text(
+              context.translate('current_grades_improvements'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             ),
             const SizedBox(height: 20),
             ...provider.subjectBreakdowns.map(

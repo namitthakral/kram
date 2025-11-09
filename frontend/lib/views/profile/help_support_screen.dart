@@ -17,20 +17,9 @@ class HelpSupportScreen extends StatelessWidget {
       child: Column(
         children: [
           _CustomExpansionTile(
-            title: 'Hello world 1',
+            title: context.translate('help_and_support'),
             description: [
-              Text('test', style: descriptionStyle),
-              Text('hello', style: descriptionStyle),
-              Text('qwe', style: descriptionStyle),
-            ],
-          ),
-          const Divider(),
-          _CustomExpansionTile(
-            title: 'Hello world 2',
-            description: [
-              Text('test', style: descriptionStyle),
-              Text('hello', style: descriptionStyle),
-              Text('qwe', style: descriptionStyle),
+              Text(context.translate('help_and_support'), style: descriptionStyle),
             ],
           ),
           const Divider(),

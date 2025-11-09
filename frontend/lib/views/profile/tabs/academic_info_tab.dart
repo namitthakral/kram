@@ -31,8 +31,12 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
     _admissionNumberController = TextEditingController(
       text: student?.admissionNumber ?? '',
     );
-    _rollNumberController = TextEditingController(text: student?.rollNumber ?? '');
-    _gradeLevelController = TextEditingController(text: student?.gradeLevel ?? '');
+    _rollNumberController = TextEditingController(
+      text: student?.rollNumber ?? '',
+    );
+    _gradeLevelController = TextEditingController(
+      text: student?.gradeLevel ?? '',
+    );
     _sectionController = TextEditingController(text: student?.section ?? '');
     _admissionDateController = TextEditingController(
       text: student?.admissionDate?.toString().split(' ')[0] ?? '',
@@ -69,19 +73,20 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
           _buildSectionHeader(
             context,
             icon: Icons.school,
-            title: 'Academic Information',
-            subtitle: 'Manage your academic details',
+            title: context.translate('academic_information'),
+            subtitle: context.translate('manage_academic_details'),
           ),
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Enrollment Details',
+            title: context.translate('enrollment_details'),
             children: [
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'Admission Number',
+                      context,
+                      label: context.translate('admission_number'),
                       controller: _admissionNumberController,
                       icon: Icons.confirmation_number_outlined,
                     ),
@@ -89,7 +94,8 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Roll Number',
+                      context,
+                      label: context.translate('roll_number'),
                       controller: _rollNumberController,
                       icon: Icons.numbers_outlined,
                     ),
@@ -101,7 +107,8 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'Grade Level',
+                      context,
+                      label: context.translate('grade_level'),
                       controller: _gradeLevelController,
                       icon: Icons.grade_outlined,
                     ),
@@ -109,7 +116,8 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Section',
+                      context,
+                      label: context.translate('section'),
                       controller: _sectionController,
                       icon: Icons.class_outlined,
                     ),
@@ -118,7 +126,8 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                label: 'Admission Date',
+                context,
+                label: context.translate('admission_date'),
                 controller: _admissionDateController,
                 icon: Icons.calendar_today_outlined,
                 readOnly: true,
@@ -129,13 +138,14 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Current Academic Status',
+            title: context.translate('current_academic_status'),
             children: [
               Row(
                 children: [
                   Expanded(
                     child: _buildTextField(
-                      label: 'Current Year',
+                      context,
+                      label: context.translate('current_year'),
                       controller: _currentYearController,
                       icon: Icons.calendar_view_month_outlined,
                       keyboardType: TextInputType.number,
@@ -144,7 +154,8 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
-                      label: 'Current Semester',
+                      context,
+                      label: context.translate('current_semester'),
                       controller: _currentSemesterController,
                       icon: Icons.calendar_view_week_outlined,
                       keyboardType: TextInputType.number,
@@ -157,11 +168,12 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
           const SizedBox(height: 24),
           _buildInfoCard(
             context,
-            title: 'Additional Information',
+            title: context.translate('additional_information'),
             children: [
               _buildSwitchTile(
-                title: 'Transport Required',
-                subtitle: 'Do you require school transport?',
+                context,
+                title: context.translate('transport_required'),
+                subtitle: context.translate('require_school_transport'),
                 value: _transportRequired,
                 onChanged: (value) {
                   setState(() {
@@ -251,7 +263,8 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
     ),
   );
 
-  Widget _buildTextField({
+  Widget _buildTextField(
+    BuildContext context, {
     required String label,
     required TextEditingController controller,
     required IconData icon,
@@ -291,13 +304,17 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.blue500, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     ],
   );
 
-  Widget _buildSwitchTile({
+  Widget _buildSwitchTile(
+    BuildContext context, {
     required String title,
     required String subtitle,
     required bool value,
@@ -325,10 +342,7 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.slate500,
-                ),
+                style: const TextStyle(fontSize: 12, color: AppTheme.slate500),
               ),
             ],
           ),
@@ -336,7 +350,7 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: AppTheme.blue500,
+          activeThumbColor: AppTheme.blue500,
         ),
       ],
     ),
@@ -348,17 +362,16 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppTheme.blue500,
-            onPrimary: Colors.white,
-            surface: Colors.white,
-            onSurface: AppTheme.slate800,
+      builder:
+          (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: AppTheme.blue500,
+                onSurface: AppTheme.slate800,
+              ),
+            ),
+            child: child!,
           ),
-        ),
-        child: child!,
-      ),
     );
 
     if (picked != null) {

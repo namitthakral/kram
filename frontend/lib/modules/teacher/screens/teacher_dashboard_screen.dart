@@ -71,7 +71,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     final employeeId = teacher?.employeeId ?? 'N/A';
 
     return CustomMainScreenWithAppbar(
-      title: context.translate('Teacher Dashboard'),
+      title: context.translate('teacher_dashboard'),
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
         userName: userName,
@@ -151,34 +151,33 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             childAspectRatio: isMobile ? 1.3 : 1.5,
             children: [
               StatCard(
-                title: 'Total Students',
+                title: context.translate('total_students'),
                 value: '$totalStudents',
-                subtitle: 'Active in your classes',
+                subtitle: context.translate('active_in_classes'),
                 backgroundColor: const Color(0xFF155dfc),
                 iconColor: const Color(0xFF155dfc),
                 icon: Icons.groups,
               ),
               StatCard(
-                title: 'Present Today',
+                title: context.translate('present_today'),
                 value: '$presentToday',
-                subtitle:
-                    '${attendancePercentageToday.toStringAsFixed(1)}% attendance',
+                subtitle: context.translate('attendance_percentage', params: {'percentage': attendancePercentageToday.toStringAsFixed(1)}),
                 backgroundColor: const Color(0xFF00a63e),
                 iconColor: const Color(0xFF00a63e),
                 icon: Icons.check_circle,
               ),
               StatCard(
-                title: 'Absent Today',
+                title: context.translate('absent_today'),
                 value: '$absentToday',
-                subtitle: 'Requires follow-up',
+                subtitle: context.translate('requires_follow_up'),
                 backgroundColor: const Color(0xFFe7000b),
                 iconColor: const Color(0xFFe7000b),
                 icon: Icons.cancel,
               ),
               StatCard(
-                title: 'Avg. Attendance',
+                title: context.translate('avg_attendance'),
                 value: '${avgAttendance.toStringAsFixed(1)}%',
-                subtitle: 'This month',
+                subtitle: context.translate('this_month'),
                 backgroundColor: const Color(0xFFfe9a00),
                 iconColor: const Color(0xFFfe9a00),
                 icon: Icons.trending_up,
@@ -217,7 +216,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Failed to load stats',
+                        context.translate('failed_to_load_stats'),
                         style: TextStyle(
                           color: Colors.red.shade700,
                           fontSize: 14,
@@ -226,7 +225,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                     ),
                     TextButton(
                       onPressed: _loadDashboardData,
-                      child: const Text('Retry'),
+                      child: Text(context.translate('retry')),
                     ),
                   ],
                 ),
@@ -245,18 +244,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Recent Student Activity',
-          style: TextStyle(
+        Text(
+          context.translate('recent_student_activity'),
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1e293b),
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Students in your classes with recent updates',
-          style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+        Text(
+          context.translate('students_with_recent_updates'),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
         const SizedBox(height: 20),
         ..._getMockStudents().map(
@@ -274,43 +273,43 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
+        Text(
+          context.translate('quick_actions'),
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Color(0xFF1e293b),
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Common tasks and shortcuts',
-          style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+        Text(
+          context.translate('common_tasks_shortcuts'),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
         const SizedBox(height: 20),
         QuickActionButton(
-          title: 'Mark Attendance',
+          title: context.translate('mark_attendance'),
           icon: Icons.calendar_today,
           backgroundColor: const Color(0xFF4F7CFF),
           onTap: () {},
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: 'Enter Marks',
+          title: context.translate('enter_marks'),
           icon: Icons.book,
           backgroundColor: const Color(0xFF10b981),
           onTap: () {},
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: 'Generate Report Cards',
+          title: context.translate('generate_report_cards'),
           icon: Icons.star,
           backgroundColor: const Color(0xFFf59e0b),
           onTap: () {},
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: 'Send Absence Alerts',
+          title: context.translate('send_absence_alerts'),
           icon: Icons.warning,
           backgroundColor: const Color(0xFFef4444),
           onTap: () {},
@@ -334,10 +333,10 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             builder:
                 (context, provider, child) =>
                     CustomSlidingSegmentedControl<PerformanceTab>(
-                      segments: const {
-                        PerformanceTab.attendance: 'Attendance Trends',
-                        PerformanceTab.subject: 'Subject Performance',
-                        PerformanceTab.grade: 'Grade Distribution',
+                      segments: {
+                        PerformanceTab.attendance: context.translate('attendance_trends'),
+                        PerformanceTab.subject: context.translate('subject_performance'),
+                        PerformanceTab.grade: context.translate('grade_distribution'),
                       },
                       initialValue: provider.selectedValue,
                       onValueChanged: (value) {
@@ -383,18 +382,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         (context, dashboardProvider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Weekly Attendance Overview',
-              style: TextStyle(
+            Text(
+              context.translate('weekly_attendance_overview'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1e293b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Daily attendance for this week',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            Text(
+              context.translate('daily_attendance_this_week'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             ),
             const SizedBox(height: 20),
             AttendanceTrendsChart(
@@ -414,9 +413,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Present',
-                  style: TextStyle(
+                Text(
+                  context.translate('present'),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF1e293b),
@@ -432,9 +431,9 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Absent',
-                  style: TextStyle(
+                Text(
+                  context.translate('absent'),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF1e293b),
@@ -451,18 +450,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         (context, dashboardProvider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Subject Performance Overview',
-              style: TextStyle(
+            Text(
+              context.translate('subject_performance_overview'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1e293b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Average scores across different subjects',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            Text(
+              context.translate('average_scores_across_subjects'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             ),
             const SizedBox(height: 20),
             SubjectPerformanceChart(
@@ -477,18 +476,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         (context, dashboardProvider, child) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Grade Distribution',
-              style: TextStyle(
+            Text(
+              context.translate('grade_distribution'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF1e293b),
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Current grade distribution across all students',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+            Text(
+              context.translate('current_grade_distribution'),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             ),
             const SizedBox(height: 20),
             GradeDistributionChart(
