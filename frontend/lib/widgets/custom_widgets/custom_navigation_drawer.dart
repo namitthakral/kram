@@ -124,7 +124,7 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             // User Role or Email
             Text(
-              user?.role?.roleName ?? user?.email ?? 'No role assigned',
+              user?.role?.roleName.capitalize ?? user?.email ?? 'No role assigned',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
               ),

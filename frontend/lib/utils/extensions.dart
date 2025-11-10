@@ -180,3 +180,19 @@ extension CustomTextTheme on TextTheme {
 extension ContextExtension on BuildContext {
   TextTheme get textTheme => Theme.of(this).textTheme;
 }
+
+extension StringExtension on String {
+  String get capitalize {
+    if (isEmpty) {
+      return this;
+    }
+    return split(' ')
+        .map((word) {
+          if (word.isEmpty) {
+            return word;
+          }
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
+  }
+}

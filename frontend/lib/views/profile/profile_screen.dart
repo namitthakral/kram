@@ -231,7 +231,7 @@ class ProfileScreen extends StatelessWidget {
         child: _buildStatCard(
           context,
           context.translate('role'),
-          user.role?.roleName ?? 'N/A',
+          _capitalizeRole(user.role?.roleName),
           Icons.work_outline,
           AppTheme.blue500,
         ),
@@ -589,6 +589,19 @@ class ProfileScreen extends StatelessWidget {
     } else {
       return '${(difference.inDays / 365).floor()} ${context.translate('years')}';
     }
+  }
+
+  String _capitalizeRole(String? roleName) {
+    if (roleName == null || roleName.isEmpty) {
+      return 'N/A';
+    }
+    return roleName
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 
   Widget _buildLogoutButton(BuildContext context) => DecoratedBox(
