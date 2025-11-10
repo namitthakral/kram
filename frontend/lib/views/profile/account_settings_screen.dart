@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
+import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
-import 'change_password_screen.dart';
-import 'edit_profile_screen.dart';
-import 'help_support_screen.dart';
-import 'language_screen.dart';
-import 'legal_policies_screen.dart';
-import 'notifications_settings_screen.dart';
-import 'security/security_screen.dart';
+import 'tabs/academic_info_tab.dart';
+import 'tabs/contact_info_tab.dart';
+import 'tabs/language_tab.dart';
+import 'tabs/notifications_tab.dart';
+import 'tabs/personal_info_tab.dart';
+import 'tabs/professional_info_tab.dart';
+import 'tabs/security_tab.dart';
 
-class AccountSettingsScreen extends StatelessWidget {
+class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
+
+  @override
+  State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
+}
+
+class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  int _selectedTabIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -31,353 +38,239 @@ class AccountSettingsScreen extends StatelessWidget {
       return const SizedBox();
     }
 
-    return ResponsiveLayout(
-      mobile: _buildMobileLayout(context, user),
-      tablet: _buildDesktopLayout(context, user),
-      desktop: _buildDesktopLayout(context, user),
+    // Determine which tabs to show based on role
+    final tabs = _getTabsForRole(user.role?.id ?? 0);
+    final tabNames = tabs.map((t) => t.label).toList();
+
+    return Scaffold(
+      backgroundColor: CustomAppColors.backgroundColor,
+      body: ResponsiveLayout(
+        mobile: _buildMobileLayout(tabs, tabNames),
+        tablet: _buildDesktopLayout(tabs, tabNames),
+        desktop: _buildDesktopLayout(tabs, tabNames),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // TODO: Implement save changes
+        },
+        icon: const Icon(Icons.save_outlined),
+        label: const Text('Save Changes'),
+        backgroundColor: AppTheme.blue500,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      ),
     );
   }
 
-  // Mobile Layout
-  Widget _buildMobileLayout(BuildContext context, user) =>
-      AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark,
-        child: Scaffold(
-          backgroundColor: AppTheme.backgroundColor,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppTheme.slate800),
-              onPressed: () => Navigator.of(context).pop(),
+  List<ProfileTab> _getTabsForRole(int roleId) {
+    final baseTabs = [
+      const ProfileTab(label: 'Personal', icon: Icons.person_outline),
+      const ProfileTab(label: 'Contact', icon: Icons.contact_mail_outlined),
+    ];
+
+    // Add role-specific tabs
+    switch (roleId) {
+      case 2: // Student
+        return [
+          ...baseTabs,
+          const ProfileTab(label: 'Academic', icon: Icons.school_outlined),
+          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
+          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
+          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+        ];
+      case 4: // Teacher
+        return [
+          ...baseTabs,
+          const ProfileTab(label: 'Professional', icon: Icons.work_outline),
+          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
+          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
+          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+        ];
+      case 3: // Librarian
+      case 5: // Admin
+      case 6: // Staff
+      case 7: // Super Admin
+        return [
+          ...baseTabs,
+          const ProfileTab(label: 'Professional', icon: Icons.work_outline),
+          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
+          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
+          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+        ];
+      default:
+        return [
+          ...baseTabs,
+          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
+          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
+          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+        ];
+    }
+  }
+
+  Widget _buildMobileLayout(List<ProfileTab> tabs, List<String> tabNames) => Column(
+      children: [
+        // Profile-style Gradient Header
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppTheme.blue500, AppTheme.blue600],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            title: Text(
-              context.translate('account_settings'),
-              style: context.textTheme.h3.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.slate800,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.blue600.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-            ),
+            ],
           ),
-          body: SingleChildScrollView(
+          child: SafeArea(
+            bottom: false,
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildSettingsSection(
-                    context,
-                    title: context.translate('profile'),
-                    items: [
-                      _SettingsItem(
-                        icon: Icons.edit_outlined,
-                        title: context.translate('edit_profile'),
-                        subtitle: context.translate('update_personal_information'),
+                  // Back button row
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Settings Icon
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const CircleAvatar(
+                      radius: 36,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.settings,
+                        size: 36,
                         color: AppTheme.blue500,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const EditProfileScreen(),
-                            ),
-                          );
-                        },
                       ),
-                    ],
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildSettingsSection(
-                    context,
-                    title: context.translate('security_and_privacy'),
-                    items: [
-                      _SettingsItem(
-                        icon: Icons.lock_outline,
-                        title: context.translate('change_password'),
-                        subtitle: context.translate('update_account_password'),
-                        color: AppTheme.danger,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const ChangePasswordScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      _SettingsItem(
-                        icon: Icons.security_outlined,
-                        title: context.translate('security'),
-                        subtitle: context.translate('privacy_and_security_settings'),
-                        color: AppTheme.success,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const SecurityScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+
+                  const SizedBox(height: 12),
+
+                  // Title
+                  Text(
+                    'Account Settings',
+                    style: context.textTheme.h3.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  _buildSettingsSection(
-                    context,
-                    title: context.translate('preferences'),
-                    items: [
-                      _SettingsItem(
-                        icon: Icons.notifications_outlined,
-                        title: context.translate('notifications'),
-                        subtitle: context.translate('manage_notification_preferences'),
-                        color: AppTheme.warning,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) =>
-                                  const NotificationsSettingsScreen(),
-                            ),
-                          );
-                        },
+
+                  const SizedBox(height: 6),
+
+                  // Subtitle badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      'Manage Your Profile',
+                      style: context.textTheme.labelSm.copyWith(
+                        color: AppTheme.blue600,
+                        fontWeight: FontWeight.w600,
                       ),
-                      _SettingsItem(
-                        icon: Icons.language_outlined,
-                        title: context.translate('language'),
-                        subtitle: context.translate('change_app_language'),
-                        color: AppTheme.info,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const LanguageScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSettingsSection(
-                    context,
-                    title: context.translate('support'),
-                    items: [
-                      _SettingsItem(
-                        icon: Icons.help_outline,
-                        title: context.translate('help_and_support'),
-                        subtitle: context.translate('get_help_and_faqs'),
-                        color: AppTheme.blue500,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const HelpSupportScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                      _SettingsItem(
-                        icon: Icons.description_outlined,
-                        title: context.translate('legal_and_policies'),
-                        subtitle: context.translate('terms_and_privacy_policy'),
-                        color: AppTheme.slate600,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (context) => const LegalAndPolicies(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
           ),
         ),
-      );
 
-  // Desktop/Tablet Layout
-  Widget _buildDesktopLayout(BuildContext context, user) => Scaffold(
-    backgroundColor: AppTheme.backgroundColor,
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppTheme.slate800),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: Text(
-        context.translate('account_settings'),
-        style: context.textTheme.h3.copyWith(
-          fontWeight: FontWeight.bold,
-          color: AppTheme.slate800,
+        // Horizontal Scrollable Tabs
+        _HorizontalTabBar(
+          tabs: tabs,
+          selectedIndex: _selectedTabIndex,
+          onTabSelected: (index) {
+            setState(() {
+              _selectedTabIndex = index;
+            });
+          },
         ),
-      ),
-    ),
-    body: SafeArea(
-      child: SingleChildScrollView(
+
+        Expanded(child: _buildTabContent(tabs[_selectedTabIndex])),
+      ],
+    );
+
+  Widget _buildDesktopLayout(List<ProfileTab> tabs, List<String> tabNames) =>
+      SafeArea(
         child: ResponsivePadding(
           desktop: const EdgeInsets.all(32),
           tablet: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
-              _buildDesktopHeader(context),
+              // Modern header with gradient
+              _buildModernHeader(context),
               const SizedBox(height: 32),
 
-              // Content
-              ResponsiveCenter(
-                maxWidth: 1200,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Left column
-                    Expanded(
-                      child: Column(
-                        children: [
-                          _buildSettingsSection(
-                            context,
-                            title: context.translate('profile'),
-                            items: [
-                              _SettingsItem(
-                                icon: Icons.edit_outlined,
-                                title: context.translate('edit_profile'),
-                                subtitle: context.translate('update_personal_information'),
-                                color: AppTheme.blue500,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const EditProfileScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          _buildSettingsSection(
-                            context,
-                            title: context.translate('security_and_privacy'),
-                            items: [
-                              _SettingsItem(
-                                icon: Icons.lock_outline,
-                                title: context.translate('change_password'),
-                                subtitle: context.translate('update_account_password'),
-                                color: AppTheme.danger,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const ChangePasswordScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              _SettingsItem(
-                                icon: Icons.security_outlined,
-                                title: context.translate('security'),
-                                subtitle: context.translate('privacy_and_security_settings'),
-                                color: AppTheme.success,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const SecurityScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-
-                    // Right column
-                    Expanded(
-                      child: Column(
-                        children: [
-                          _buildSettingsSection(
-                            context,
-                            title: context.translate('preferences'),
-                            items: [
-                              _SettingsItem(
-                                icon: Icons.notifications_outlined,
-                                title: context.translate('notifications'),
-                                subtitle: context.translate('manage_notification_preferences'),
-                                color: AppTheme.warning,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const NotificationsSettingsScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              _SettingsItem(
-                                icon: Icons.language_outlined,
-                                title: context.translate('language'),
-                                subtitle: context.translate('change_app_language'),
-                                color: AppTheme.info,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const LanguageScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          _buildSettingsSection(
-                            context,
-                            title: context.translate('support'),
-                            items: [
-                              _SettingsItem(
-                                icon: Icons.help_outline,
-                                title: context.translate('help_and_support'),
-                                subtitle: context.translate('get_help_and_faqs'),
-                                color: AppTheme.blue500,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const HelpSupportScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                              _SettingsItem(
-                                icon: Icons.description_outlined,
-                                title: context.translate('legal_and_policies'),
-                                subtitle: context.translate('terms_and_privacy_policy'),
-                                color: AppTheme.slate600,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (context) =>
-                                          const LegalAndPolicies(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              // Horizontal Scrollable Tabs
+              Container(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: _HorizontalTabBar(
+                  tabs: tabs,
+                  selectedIndex: _selectedTabIndex,
+                  onTabSelected: (index) {
+                    setState(() {
+                      _selectedTabIndex = index;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: ResponsiveCenter(
+                  maxWidth: 1200,
+                  child: _buildTabContent(tabs[_selectedTabIndex]),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    ),
-  );
+      );
 
-  Widget _buildDesktopHeader(BuildContext context) => Container(
+  Widget _buildModernHeader(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
     decoration: BoxDecoration(
       gradient: const LinearGradient(
@@ -394,178 +287,177 @@ class AccountSettingsScreen extends StatelessWidget {
         ),
       ],
     ),
-    child: Row(
+    child: Stack(
       children: [
-        Container(
-          width: 4,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(2),
+        // Back button positioned absolutely
+        Positioned(
+          left: 0,
+          top: 0,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        const SizedBox(width: 24),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+
+        // Main content
+        Padding(
+          padding: const EdgeInsets.only(left: 48),
+          child: Row(
             children: [
-              Text(
-                context.translate('account_settings'),
-                style: context.textTheme.h2.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              // Decorative element
+              Container(
+                width: 4,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                context.translate('manage_profile_security_preferences'),
-                style: context.textTheme.bodyBase.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
+              const SizedBox(width: 24),
+
+              // Text content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Account Settings',
+                      style: context.textTheme.h2.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Manage your profile, security, and preferences',
+                      style: context.textTheme.bodyBase.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 32,
                 ),
               ),
             ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.settings_outlined,
-            color: Colors.white,
-            size: 32,
           ),
         ),
       ],
     ),
   );
 
-  Widget _buildSettingsSection(
-    BuildContext context, {
-    required String title,
-    required List<_SettingsItem> items,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(left: 4, bottom: 12),
-        child: Text(
-          title,
-          style: context.textTheme.titleBase.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.slate800,
-          ),
-        ),
-      ),
-      DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.slate100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            for (int i = 0; i < items.length; i++) ...[
-              _buildSettingsTile(
-                context,
-                icon: items[i].icon,
-                title: items[i].title,
-                subtitle: items[i].subtitle,
-                color: items[i].color,
-                onTap: items[i].onTap,
-              ),
-              if (i < items.length - 1)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Divider(height: 1, color: AppTheme.slate100),
-                ),
-            ],
-          ],
-        ),
-      ),
-    ],
-  );
+  Widget _buildTabContent(ProfileTab tab) {
+    switch (tab.label) {
+      case 'Personal':
+        return const PersonalInfoTab();
+      case 'Contact':
+        return const ContactInfoTab();
+      case 'Academic':
+        return const AcademicInfoTab();
+      case 'Professional':
+        return const ProfessionalInfoTab();
+      case 'Security':
+        return const SecurityTab();
+      case 'Notifications':
+        return const NotificationsTab();
+      case 'Language':
+        return const LanguageTab();
+      default:
+        return const Center(child: Text('Tab not implemented'));
+    }
+  }
+}
 
-  Widget _buildSettingsTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) => Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 22, color: color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: context.textTheme.bodyBase.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.slate800,
-                    ),
+class ProfileTab {
+  const ProfileTab({required this.label, required this.icon});
+  final String label;
+  final IconData icon;
+}
+
+class _HorizontalTabBar extends StatelessWidget {
+  const _HorizontalTabBar({
+    required this.tabs,
+    required this.selectedIndex,
+    required this.onTabSelected,
+  });
+
+  final List<ProfileTab> tabs;
+  final int selectedIndex;
+  final ValueChanged<int> onTabSelected;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: Colors.white,
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: SizedBox(
+      height: 40,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: tabs.length,
+        itemBuilder: (context, index) {
+          final tab = tabs[index];
+          final isSelected = index == selectedIndex;
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: Material(
+              color: isSelected
+                  ? AppTheme.blue500
+                  : AppTheme.slate100,
+              borderRadius: BorderRadius.circular(20),
+              elevation: isSelected ? 2 : 0,
+              child: InkWell(
+                onTap: () => onTabSelected(index),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: context.textTheme.bodySm.copyWith(
-                      color: AppTheme.slate500,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        tab.icon,
+                        size: 18,
+                        color: isSelected
+                            ? Colors.white
+                            : AppTheme.slate600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        tab.label,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.white
+                              : AppTheme.slate800,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: AppTheme.slate500,
-            ),
-          ],
-        ),
+          );
+        },
       ),
     ),
   );
-}
-
-class _SettingsItem {
-  const _SettingsItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
 }

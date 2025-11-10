@@ -70,13 +70,6 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(
-            context,
-            icon: Icons.school,
-            title: context.translate('academic_information'),
-            subtitle: context.translate('manage_academic_details'),
-          ),
-          const SizedBox(height: 24),
           _buildInfoCard(
             context,
             title: context.translate('enrollment_details'),
@@ -186,46 +179,6 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
         ],
       ),
     ),
-  );
-
-  Widget _buildSectionHeader(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) => Row(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.blue50,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: AppTheme.blue500, size: 24),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: context.textTheme.titleLg.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.slate800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: context.textTheme.bodySm.copyWith(
-                color: AppTheme.slate500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
   );
 
   Widget _buildInfoCard(

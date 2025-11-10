@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../utils/extensions.dart';
 
 class SecurityTab extends StatefulWidget {
   const SecurityTab({super.key});
@@ -36,13 +35,6 @@ class _SecurityTabState extends State<SecurityTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(
-            context,
-            icon: Icons.security,
-            title: 'Security Settings',
-            subtitle: 'Manage your account security',
-          ),
-          const SizedBox(height: 24),
           _buildInfoCard(
             context,
             title: 'Change Password',
@@ -179,46 +171,6 @@ class _SecurityTabState extends State<SecurityTab> {
         ],
       ),
     ),
-  );
-
-  Widget _buildSectionHeader(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) => Row(
-    children: [
-      Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.blue50,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: AppTheme.blue500, size: 24),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: context.textTheme.titleLg.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.slate800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: context.textTheme.bodySm.copyWith(
-                color: AppTheme.slate500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
   );
 
   Widget _buildInfoCard(
