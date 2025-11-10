@@ -15,8 +15,10 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      /^http:\/\/localhost:\d+$/,  // Allow any localhost port
-      /^http:\/\/127\.0\.0\.1:\d+$/,  // Allow any 127.0.0.1 port
+      /^http:\/\/localhost:\d+$/, // Allow any localhost port
+      /^http:\/\/127\.0\.0\.1:\d+$/, // Allow any 127.0.0.1 port
+      /^http:\/\/10\.0\.2\.2:\d+$/, // Allow Android emulator
+      /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // Allow local network IPs
     ],
     credentials: true,
   })

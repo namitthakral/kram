@@ -13,35 +13,37 @@ import '../../views/profile/profile_screen.dart';
 
 /// Role-based navigation configuration
 /// Maps each role ID to its navigation items and pages
+/// ⚠️ CRITICAL: NEVER CHANGE THESE ROLE IDs - They match the database schema
+/// 1 = super_admin, 2 = admin, 3 = student, 4 = parent, 5 = teacher, 6 = librarian, 7 = staff
 class RoleNavigationConfig {
   RoleNavigationConfig._();
 
   /// Get navigation items for a specific role
   static List<NavigationItemModel> getNavigationItems(int roleId) =>
       switch (roleId) {
-        1 => _parentNavigationItems, // Parent
-        2 => _studentNavigationItems, // Student
-        3 => _librarianNavigationItems, // Librarian
-        4 => _teacherNavigationItems, // Teacher
-        5 => _adminNavigationItems, // Admin
-        6 => _staffNavigationItems, // Staff
-        7 => _superAdminNavigationItems, // Super Admin
+        1 => _superAdminNavigationItems, // Super Admin
+        2 => _adminNavigationItems, // Admin
+        3 => _studentNavigationItems, // Student
+        4 => _parentNavigationItems, // Parent
+        5 => _teacherNavigationItems, // Teacher
+        6 => _librarianNavigationItems, // Librarian
+        7 => _staffNavigationItems, // Staff
         _ => _defaultNavigationItems, // Default fallback
       };
 
   /// Get pages for a specific role
   static List<Widget> getPages(int roleId) => switch (roleId) {
-    1 => _parentPages, // Parent
-    2 => _studentPages, // Student
-    3 => _librarianPages, // Librarian
-    4 => _teacherPages, // Teacher
-    5 => _adminPages, // Admin
-    6 => _staffPages, // Staff
-    7 => _superAdminPages, // Super Admin
+    1 => _superAdminPages, // Super Admin
+    2 => _adminPages, // Admin
+    3 => _studentPages, // Student
+    4 => _parentPages, // Parent
+    5 => _teacherPages, // Teacher
+    6 => _librarianPages, // Librarian
+    7 => _staffPages, // Staff
     _ => _defaultPages, // Default fallback
   };
 
-  // ========== STUDENT (Role ID: 2) ==========
+  // ========== STUDENT (Role ID: 3) ==========
   static const List<NavigationItemModel> _studentNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -72,7 +74,7 @@ class RoleNavigationConfig {
     const ProfileScreen(),
   ];
 
-  // ========== PARENT (Role ID: 1) ==========
+  // ========== PARENT (Role ID: 4) ==========
   static const List<NavigationItemModel> _parentNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -103,7 +105,7 @@ class RoleNavigationConfig {
     const ProfileScreen(),
   ];
 
-  // ========== TEACHER (Role ID: 4) ==========
+  // ========== TEACHER (Role ID: 5) ==========
   static const List<NavigationItemModel> _teacherNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -134,7 +136,7 @@ class RoleNavigationConfig {
     const ProfileScreen(),
   ];
 
-  // ========== LIBRARIAN (Role ID: 3) ==========
+  // ========== LIBRARIAN (Role ID: 6) ==========
   static const List<NavigationItemModel> _librarianNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -165,7 +167,7 @@ class RoleNavigationConfig {
     const ProfileScreen(),
   ];
 
-  // ========== ADMIN (Role ID: 5) ==========
+  // ========== ADMIN (Role ID: 2) ==========
   static const List<NavigationItemModel> _adminNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -196,7 +198,7 @@ class RoleNavigationConfig {
     const ProfileScreen(),
   ];
 
-  // ========== STAFF (Role ID: 6) ==========
+  // ========== STAFF (Role ID: 7) ==========
   static const List<NavigationItemModel> _staffNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -227,7 +229,7 @@ class RoleNavigationConfig {
     const ProfileScreen(),
   ];
 
-  // ========== SUPER ADMIN (Role ID: 7) ==========
+  // ========== SUPER ADMIN (Role ID: 1) ==========
   static const List<NavigationItemModel> _superAdminNavigationItems = [
     NavigationItemModel(
       iconUrl: CustomImages.iconHome,
@@ -279,13 +281,13 @@ class RoleNavigationConfig {
 
   /// Get the dashboard name for a specific role
   static String getDashboardName(int roleId) => switch (roleId) {
-    1 => 'Parent Dashboard',
-    2 => 'Student Dashboard',
-    3 => 'Library Dashboard',
-    4 => 'Teacher Dashboard',
-    5 => 'Admin Dashboard',
-    6 => 'Staff Dashboard',
-    7 => 'Super Admin Dashboard',
+    1 => 'Super Admin Dashboard',
+    2 => 'Admin Dashboard',
+    3 => 'Student Dashboard',
+    4 => 'Parent Dashboard',
+    5 => 'Teacher Dashboard',
+    6 => 'Library Dashboard',
+    7 => 'Staff Dashboard',
     _ => 'Dashboard',
   };
 
@@ -293,33 +295,33 @@ class RoleNavigationConfig {
   static bool hasFeatureAccess(int roleId, String featureName) {
     // Define feature access per role
     final roleFeatures = <int, List<String>>{
-      1: ['view_child_data', 'approve_gatepass', 'view_fees'],
-      2: [
-        'view_own_data',
-        'submit_assignments',
-        'view_grades',
-        'request_gatepass',
-      ],
-      3: ['manage_books', 'manage_issues', 'view_library_reports'],
-      4: [
-        'view_students',
-        'manage_courses',
-        'mark_attendance',
-        'grade_assignments',
-      ],
-      5: [
-        'manage_users',
-        'manage_students',
-        'manage_teachers',
-        'access_reports',
-      ],
-      6: ['view_own_data', 'mark_attendance', 'view_notices'],
-      7: [
+      1: [
         'manage_institutions',
         'manage_all_data',
         'access_reports',
         'system_settings',
       ],
+      2: [
+        'manage_users',
+        'manage_students',
+        'manage_teachers',
+        'access_reports',
+      ],
+      3: [
+        'view_own_data',
+        'submit_assignments',
+        'view_grades',
+        'request_gatepass',
+      ],
+      4: ['view_child_data', 'approve_gatepass', 'view_fees'],
+      5: [
+        'view_students',
+        'manage_courses',
+        'mark_attendance',
+        'grade_assignments',
+      ],
+      6: ['manage_books', 'manage_issues', 'view_library_reports'],
+      7: ['view_own_data', 'mark_attendance', 'view_notices'],
     };
 
     return roleFeatures[roleId]?.contains(featureName) ?? false;

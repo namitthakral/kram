@@ -16,66 +16,28 @@ class RoleDefinition {
 }
 
 /// Role constants for the EdVerse application
+/// ⚠️ CRITICAL: NEVER CHANGE THESE ROLE IDs - They match the database schema
+/// 1 = super_admin, 2 = admin, 3 = student, 4 = parent, 5 = teacher, 6 = librarian, 7 = staff
 class RoleConstants {
-  // Role Definitions
-  static const RoleDefinition parent = RoleDefinition(
+  // Role Definitions (in order of ID: 1-7)
+  
+  // ID 1: Super Admin
+  static const RoleDefinition superAdmin = RoleDefinition(
     id: 1,
-    name: 'parent',
-    description: 'Parent/Guardian',
+    name: 'super_admin',
+    description: 'System Super Administrator',
     permissions: [
-      'canViewChildData',
-      'canViewChildGrades',
-      'canViewChildAttendance',
-      'canViewNotices',
-      'canApproveGatePass',
-      'canViewFees',
-    ],
-    usesLocalDatabase: true,
-  );
-
-  static const RoleDefinition student = RoleDefinition(
-    id: 2,
-    name: 'student',
-    description: 'Student',
-    permissions: [
-      'canViewOwnData',
-      'canSubmitAssignments',
-      'canViewGrades',
-      'canViewTimetable',
-      'canViewNotices',
-      'canRequestGatePass',
-    ],
-    usesLocalDatabase: true,
-  );
-
-  static const RoleDefinition librarian = RoleDefinition(
-    id: 3,
-    name: 'librarian',
-    description: 'Library Staff',
-    permissions: [
-      'canManageBooks',
-      'canManageBookIssues',
-      'canViewLibraryReports',
-      'canManageLibrarySettings',
+      'canManageUsers',
+      'canManageInstitutions',
+      'canManageAllData',
+      'canAccessReports',
+      'canManageSystemSettings',
     ],
   );
 
-  static const RoleDefinition teacher = RoleDefinition(
-    id: 4,
-    name: 'teacher',
-    description: 'Teaching Faculty',
-    permissions: [
-      'canViewStudents',
-      'canManageCourses',
-      'canMarkAttendance',
-      'canGradeAssignments',
-      'canCreateAssignments',
-      'canViewTimetable',
-    ],
-  );
-
+  // ID 2: Admin
   static const RoleDefinition admin = RoleDefinition(
-    id: 5,
+    id: 2,
     name: 'admin',
     description: 'Institution Administrator',
     permissions: [
@@ -89,8 +51,69 @@ class RoleConstants {
     ],
   );
 
-  static const RoleDefinition staff = RoleDefinition(
+  // ID 3: Student
+  static const RoleDefinition student = RoleDefinition(
+    id: 3,
+    name: 'student',
+    description: 'Student',
+    permissions: [
+      'canViewOwnData',
+      'canSubmitAssignments',
+      'canViewGrades',
+      'canViewTimetable',
+      'canViewNotices',
+      'canRequestGatePass',
+    ],
+    usesLocalDatabase: true,
+  );
+
+  // ID 4: Parent
+  static const RoleDefinition parent = RoleDefinition(
+    id: 4,
+    name: 'parent',
+    description: 'Parent/Guardian',
+    permissions: [
+      'canViewChildData',
+      'canViewChildGrades',
+      'canViewChildAttendance',
+      'canViewNotices',
+      'canApproveGatePass',
+      'canViewFees',
+    ],
+    usesLocalDatabase: true,
+  );
+
+  // ID 5: Teacher
+  static const RoleDefinition teacher = RoleDefinition(
+    id: 5,
+    name: 'teacher',
+    description: 'Teaching Faculty',
+    permissions: [
+      'canViewStudents',
+      'canManageCourses',
+      'canMarkAttendance',
+      'canGradeAssignments',
+      'canCreateAssignments',
+      'canViewTimetable',
+    ],
+  );
+
+  // ID 6: Librarian
+  static const RoleDefinition librarian = RoleDefinition(
     id: 6,
+    name: 'librarian',
+    description: 'Library Staff',
+    permissions: [
+      'canManageBooks',
+      'canManageBookIssues',
+      'canViewLibraryReports',
+      'canManageLibrarySettings',
+    ],
+  );
+
+  // ID 7: Staff
+  static const RoleDefinition staff = RoleDefinition(
+    id: 7,
     name: 'staff',
     description: 'Support Staff',
     permissions: [
@@ -100,28 +123,15 @@ class RoleConstants {
     ],
   );
 
-  static const RoleDefinition superAdmin = RoleDefinition(
-    id: 7,
-    name: 'super_admin',
-    description: 'System Super Administrator',
-    permissions: [
-      'canManageUsers',
-      'canManageInstitutions',
-      'canManageAllData',
-      'canAccessReports',
-      'canManageSystemSettings',
-    ],
-  );
-
-  // All roles list for easy iteration
+  // All roles list for easy iteration (in order of ID: 1-7)
   static const List<RoleDefinition> allRoles = [
-    parent,
-    student,
-    librarian,
-    teacher,
-    admin,
-    staff,
     superAdmin,
+    admin,
+    student,
+    parent,
+    teacher,
+    librarian,
+    staff,
   ];
 
   // Helper methods

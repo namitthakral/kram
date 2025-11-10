@@ -138,12 +138,26 @@ async function main() {
   printSummary(students.length, parents.length)
 }
 
+/**
+ * Creates roles with fixed IDs (1-7)
+ * IMPORTANT: NEVER CHANGE THIS ORDER OR IDs
+ * 1 = super_admin
+ * 2 = admin
+ * 3 = student
+ * 4 = parent
+ * 5 = teacher
+ * 6 = librarian
+ * 7 = staff
+ */
 async function createRoles() {
-  return await Promise.all([
-    prisma.role.upsert({
-      where: { roleName: 'super_admin' },
-      update: {},
-      create: {
+  // Create roles sequentially to ensure correct IDs
+  const roles = []
+
+  // ID 1: Super Admin
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 1 },
+      update: {
         roleName: 'super_admin',
         description: 'System Super Administrator',
         permissions: [
@@ -154,11 +168,26 @@ async function createRoles() {
           'canManageSystemSettings',
         ],
       },
-    }),
-    prisma.role.upsert({
-      where: { roleName: 'admin' },
-      update: {},
       create: {
+        id: 1,
+        roleName: 'super_admin',
+        description: 'System Super Administrator',
+        permissions: [
+          'canManageUsers',
+          'canManageInstitutions',
+          'canManageAllData',
+          'canAccessReports',
+          'canManageSystemSettings',
+        ],
+      },
+    })
+  )
+
+  // ID 2: Admin
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 2 },
+      update: {
         roleName: 'admin',
         description: 'Institution Administrator',
         permissions: [
@@ -171,27 +200,28 @@ async function createRoles() {
           'canManageLibrary',
         ],
       },
-    }),
-    prisma.role.upsert({
-      where: { roleName: 'teacher' },
-      update: {},
       create: {
-        roleName: 'teacher',
-        description: 'Teaching Faculty',
+        id: 2,
+        roleName: 'admin',
+        description: 'Institution Administrator',
         permissions: [
-          'canViewStudents',
+          'canManageUsers',
+          'canManageStudents',
+          'canManageTeachers',
           'canManageCourses',
-          'canMarkAttendance',
-          'canGradeAssignments',
-          'canCreateAssignments',
-          'canViewTimetable',
+          'canAccessReports',
+          'canManageFees',
+          'canManageLibrary',
         ],
       },
-    }),
-    prisma.role.upsert({
-      where: { roleName: 'student' },
-      update: {},
-      create: {
+    })
+  )
+
+  // ID 3: Student
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 3 },
+      update: {
         roleName: 'student',
         description: 'Student',
         permissions: [
@@ -203,11 +233,27 @@ async function createRoles() {
           'canRequestGatePass',
         ],
       },
-    }),
-    prisma.role.upsert({
-      where: { roleName: 'parent' },
-      update: {},
       create: {
+        id: 3,
+        roleName: 'student',
+        description: 'Student',
+        permissions: [
+          'canViewOwnData',
+          'canSubmitAssignments',
+          'canViewGrades',
+          'canViewTimetable',
+          'canViewNotices',
+          'canRequestGatePass',
+        ],
+      },
+    })
+  )
+
+  // ID 4: Parent
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 4 },
+      update: {
         roleName: 'parent',
         description: 'Parent/Guardian',
         permissions: [
@@ -219,11 +265,59 @@ async function createRoles() {
           'canViewFees',
         ],
       },
-    }),
-    prisma.role.upsert({
-      where: { roleName: 'librarian' },
-      update: {},
       create: {
+        id: 4,
+        roleName: 'parent',
+        description: 'Parent/Guardian',
+        permissions: [
+          'canViewChildData',
+          'canViewChildGrades',
+          'canViewChildAttendance',
+          'canViewNotices',
+          'canApproveGatePass',
+          'canViewFees',
+        ],
+      },
+    })
+  )
+
+  // ID 5: Teacher
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 5 },
+      update: {
+        roleName: 'teacher',
+        description: 'Teaching Faculty',
+        permissions: [
+          'canViewStudents',
+          'canManageCourses',
+          'canMarkAttendance',
+          'canGradeAssignments',
+          'canCreateAssignments',
+          'canViewTimetable',
+        ],
+      },
+      create: {
+        id: 5,
+        roleName: 'teacher',
+        description: 'Teaching Faculty',
+        permissions: [
+          'canViewStudents',
+          'canManageCourses',
+          'canMarkAttendance',
+          'canGradeAssignments',
+          'canCreateAssignments',
+          'canViewTimetable',
+        ],
+      },
+    })
+  )
+
+  // ID 6: Librarian
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 6 },
+      update: {
         roleName: 'librarian',
         description: 'Library Staff',
         permissions: [
@@ -233,17 +327,39 @@ async function createRoles() {
           'canManageLibrarySettings',
         ],
       },
-    }),
-    prisma.role.upsert({
-      where: { roleName: 'staff' },
-      update: {},
       create: {
+        id: 6,
+        roleName: 'librarian',
+        description: 'Library Staff',
+        permissions: [
+          'canManageBooks',
+          'canManageBookIssues',
+          'canViewLibraryReports',
+          'canManageLibrarySettings',
+        ],
+      },
+    })
+  )
+
+  // ID 7: Staff
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 7 },
+      update: {
         roleName: 'staff',
         description: 'Support Staff',
         permissions: ['canViewOwnData', 'canMarkAttendance', 'canViewNotices'],
       },
-    }),
-  ])
+      create: {
+        id: 7,
+        roleName: 'staff',
+        description: 'Support Staff',
+        permissions: ['canViewOwnData', 'canMarkAttendance', 'canViewNotices'],
+      },
+    })
+  )
+
+  return roles
 }
 
 async function createInstitution() {
