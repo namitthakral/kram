@@ -1304,6 +1304,30 @@ async function createTeacherDashboardData(
   semester: any,
   academicYear: any
 ) {
+  // 0. Assign teacher as class teacher (homeroom teacher)
+  console.log('  → Assigning teacher as class teacher...')
+  await prisma.classTeacher.upsert({
+    where: {
+      unique_class_teacher: {
+        programId: 1,
+        classLevel: 'Year 1',
+        section: 'A',
+        academicYearId: academicYear.id,
+      },
+    },
+    update: {
+      teacherId: teacher.id,
+    },
+    create: {
+      teacherId: teacher.id,
+      programId: 1,
+      classLevel: 'Year 1',
+      section: 'A',
+      academicYearId: academicYear.id,
+      assignedDate: new Date(),
+    },
+  })
+
   // 1. Assign subjects to teacher
   console.log('  → Assigning subjects to teacher...')
   for (const subject of subjects) {
@@ -1378,15 +1402,14 @@ async function createTeacherDashboardData(
 
   // 3. Create student progress records with varied grades
   console.log('  → Creating student progress records...')
+  // Grading Scale: A+ (93+), A (85-92), B+ (77-84), B (70-76), C (60-69), D (<60)
   const gradePoints = {
     'A+': 4.0,
     A: 3.7,
-    'A-': 3.3,
-    'B+': 3.0,
-    B: 2.7,
-    'B-': 2.3,
-    'C+': 2.0,
-    C: 1.7,
+    'B+': 3.3,
+    B: 3.0,
+    C: 2.0,
+    D: 1.0,
   }
 
   for (const student of students) {
@@ -1409,17 +1432,15 @@ async function createTeacherDashboardData(
       const participationScore = 80 + Math.random() * 15
       const attendancePercentage = 85 + Math.random() * 12
 
-      // Determine grade based on average
+      // Determine grade based on average (A+, A, B+, B, C, D)
       const avgScore = (assignmentScore + examScore) / 2
       let grade = 'B'
       if (avgScore >= 93) grade = 'A+'
-      else if (avgScore >= 90) grade = 'A'
-      else if (avgScore >= 87) grade = 'A-'
-      else if (avgScore >= 83) grade = 'B+'
-      else if (avgScore >= 80) grade = 'B'
-      else if (avgScore >= 77) grade = 'B-'
-      else if (avgScore >= 73) grade = 'C+'
-      else grade = 'C'
+      else if (avgScore >= 85) grade = 'A'
+      else if (avgScore >= 77) grade = 'B+'
+      else if (avgScore >= 70) grade = 'B'
+      else if (avgScore >= 60) grade = 'C'
+      else grade = 'D'
 
       const status =
         attendancePercentage < 75
@@ -1554,13 +1575,11 @@ async function createTeacherDashboardData(
 
           let grade = 'B'
           if (avgScore >= 93) grade = 'A+'
-          else if (avgScore >= 90) grade = 'A'
-          else if (avgScore >= 87) grade = 'A-'
-          else if (avgScore >= 83) grade = 'B+'
-          else if (avgScore >= 80) grade = 'B'
-          else if (avgScore >= 77) grade = 'B-'
-          else if (avgScore >= 73) grade = 'C+'
-          else grade = 'C'
+          else if (avgScore >= 85) grade = 'A'
+          else if (avgScore >= 77) grade = 'B+'
+          else if (avgScore >= 70) grade = 'B'
+          else if (avgScore >= 60) grade = 'C'
+          else grade = 'D'
 
           try {
             await prisma.studentProgress.create({
@@ -1664,15 +1683,17 @@ async function createStudentDashboardData() {
               semesterId: activeSemester.id,
               academicYearId: activeAcademicYear.id,
               overallGrade:
-                monthScore >= 3.7
-                  ? 'A'
-                  : monthScore >= 3.3
-                    ? 'B+'
-                    : monthScore >= 3.0
-                      ? 'B'
-                      : monthScore >= 2.7
-                        ? 'C+'
-                        : 'C',
+                monthScore >= 4.0
+                  ? 'A+'
+                  : monthScore >= 3.7
+                    ? 'A'
+                    : monthScore >= 3.3
+                      ? 'B+'
+                      : monthScore >= 3.0
+                        ? 'B'
+                        : monthScore >= 2.0
+                          ? 'C'
+                          : 'D',
               gradePoints: monthScore,
               attendancePercentage: 85 + Math.random() * 12,
               assignmentScore: monthScore * 25, // Convert to percentage
@@ -1721,13 +1742,17 @@ async function createStudentDashboardData() {
             marksObtained: gradePoints * 25, // Convert to percentage
             maxMarks: 100,
             grade:
-              gradePoints >= 3.7
-                ? 'A'
-                : gradePoints >= 3.3
-                  ? 'B+'
-                  : gradePoints >= 3.0
-                    ? 'B'
-                    : 'C',
+              gradePoints >= 4.0
+                ? 'A+'
+                : gradePoints >= 3.7
+                  ? 'A'
+                  : gradePoints >= 3.3
+                    ? 'B+'
+                    : gradePoints >= 3.0
+                      ? 'B'
+                      : gradePoints >= 2.0
+                        ? 'C'
+                        : 'D',
             gradePoints: gradePoints,
             creditsEarned: credits,
             status: 'PASSED',

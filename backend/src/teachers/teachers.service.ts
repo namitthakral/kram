@@ -1,6 +1,7 @@
 import { Prisma } from '.prisma/client'
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
@@ -608,14 +609,62 @@ export class TeachersService {
     }
   }
 
-  async getDashboardStats(teacherId: number): Promise<TeacherDashboardStats> {
-    // Check if teacher exists
+  /**
+   * Check if teacher has access to attendance statistics
+   * Returns access status and reason if denied
+   */
+  private async checkAttendanceAccess(
+    teacherId: number
+  ): Promise<{ hasAccess: boolean; reason?: string }> {
+    // Check if teacher exists and get their employment status
     const teacher = await this.prisma.teacher.findUnique({
       where: { id: teacherId },
     })
 
     if (!teacher) {
       throw new NotFoundException(`Teacher with ID ${teacherId} not found`)
+    }
+
+    // Check if teacher is currently employed (not resigned/retired/on leave)
+    if (teacher.status !== 'ACTIVE') {
+      return {
+        hasAccess: false,
+        reason: `Not an active teacher (Status: ${teacher.status})`,
+      }
+    }
+
+    // Check if teacher is a class teacher for the CURRENT academic year
+    const classTeacherAssignment = await this.prisma.classTeacher.findFirst({
+      where: {
+        teacherId,
+        academicYear: {
+          status: 'CURRENT', // Only current academic year
+        },
+      },
+      include: {
+        academicYear: true,
+        program: true,
+      },
+    })
+
+    if (!classTeacherAssignment) {
+      return {
+        hasAccess: false,
+        reason: 'Not a class teacher for the current academic year',
+      }
+    }
+
+    return { hasAccess: true }
+  }
+
+  async getDashboardStats(teacherId: number): Promise<TeacherDashboardStats> {
+    // Check if teacher has access
+    const accessCheck = await this.checkAttendanceAccess(teacherId)
+
+    if (!accessCheck.hasAccess) {
+      throw new ForbiddenException(
+        `Dashboard attendance stats are only available for active class teachers. Reason: ${accessCheck.reason}`
+      )
     }
 
     const today = new Date()
@@ -626,31 +675,44 @@ export class TeachersService {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
 
-    const [totalStudents, todayAttendance, monthlyAttendanceStats] =
-      await Promise.all([
-        // Get total students across all teacher's active classes
-        this.prisma.classSection.aggregate({
-          where: {
-            teacherId,
-            status: 'ACTIVE',
-          },
-          _sum: { currentEnrollment: true },
-        }),
+    // Get section IDs for this teacher
+    const classSections = await this.prisma.classSection.findMany({
+      where: {
+        teacherId,
+        status: 'ACTIVE',
+      },
+      select: { id: true },
+    })
+    const sectionIds = classSections.map(cs => cs.id)
 
-        // Today's attendance for teacher's classes
-        this.prisma.attendance.groupBy({
-          by: ['status'],
+    const [uniqueStudents, todayAttendance, monthlyAttendanceStats] =
+      await Promise.all([
+        // Get unique students who have attendance today in teacher's sections
+        this.prisma.attendance.findMany({
           where: {
-            section: {
-              teacherId,
-              status: 'ACTIVE',
-            },
+            sectionId: { in: sectionIds },
             date: {
               gte: today,
               lt: tomorrow,
             },
           },
-          _count: {
+          select: {
+            studentId: true,
+          },
+          distinct: ['studentId'],
+        }),
+
+        // Today's attendance for teacher's classes
+        this.prisma.attendance.findMany({
+          where: {
+            sectionId: { in: sectionIds },
+            date: {
+              gte: today,
+              lt: tomorrow,
+            },
+          },
+          select: {
+            studentId: true,
             status: true,
           },
         }),
@@ -658,10 +720,7 @@ export class TeachersService {
         // Monthly attendance statistics
         this.prisma.attendance.findMany({
           where: {
-            section: {
-              teacherId,
-              status: 'ACTIVE',
-            },
+            sectionId: { in: sectionIds },
             date: {
               gte: startOfMonth,
               lte: endOfMonth,
@@ -674,13 +733,38 @@ export class TeachersService {
       ])
 
     // Calculate attendance statistics
-    const totalStudentsCount = totalStudents._sum.currentEnrollment || 0
-    const presentToday =
-      todayAttendance.find(a => a.status === 'PRESENT')?._count.status || 0
-    const absentToday =
-      todayAttendance.find(a => a.status === 'ABSENT')?._count.status || 0
-    const lateToday =
-      todayAttendance.find(a => a.status === 'LATE')?._count.status || 0
+    const totalStudentsCount = uniqueStudents.length
+
+    // Group today's attendance by student (to handle students with multiple sections)
+    // Priority: PRESENT > LATE > EXCUSED > ABSENT
+    const studentAttendanceMap = new Map<number, string>()
+    const statusPriority = { PRESENT: 4, LATE: 3, EXCUSED: 2, ABSENT: 1 }
+
+    todayAttendance.forEach(record => {
+      const currentStatus = studentAttendanceMap.get(record.studentId)
+      const currentPriority = currentStatus
+        ? statusPriority[currentStatus as keyof typeof statusPriority] || 0
+        : 0
+      const newPriority =
+        statusPriority[record.status as keyof typeof statusPriority] || 0
+
+      // Keep the "best" status if student has multiple attendance records
+      if (newPriority > currentPriority) {
+        studentAttendanceMap.set(record.studentId, record.status)
+      }
+    })
+
+    // Count unique students by their final status
+    const statusCounts = { PRESENT: 0, ABSENT: 0, LATE: 0, EXCUSED: 0 }
+    studentAttendanceMap.forEach(status => {
+      if (status in statusCounts) {
+        statusCounts[status as keyof typeof statusCounts]++
+      }
+    })
+
+    const presentToday = statusCounts.PRESENT
+    const absentToday = statusCounts.ABSENT
+    const lateToday = statusCounts.LATE
 
     // Calculate monthly average
     const totalMonthlyRecords = monthlyAttendanceStats.length
@@ -850,16 +934,13 @@ export class TeachersService {
         if (totalPossible > 0) {
           averagePercentage = Math.round((totalMarks / totalPossible) * 100)
 
-          // Assign letter grade
-          if (averagePercentage >= 90) averageGrade = 'A'
-          else if (averagePercentage >= 80) averageGrade = 'A-'
-          else if (averagePercentage >= 75) averageGrade = 'B+'
+          // Assign letter grade (A+, A, B+, B, C, D)
+          if (averagePercentage >= 93) averageGrade = 'A+'
+          else if (averagePercentage >= 85) averageGrade = 'A'
+          else if (averagePercentage >= 77) averageGrade = 'B+'
           else if (averagePercentage >= 70) averageGrade = 'B'
-          else if (averagePercentage >= 65) averageGrade = 'B-'
-          else if (averagePercentage >= 60) averageGrade = 'C+'
-          else if (averagePercentage >= 55) averageGrade = 'C'
-          else if (averagePercentage >= 50) averageGrade = 'D'
-          else averageGrade = 'F'
+          else if (averagePercentage >= 60) averageGrade = 'C'
+          else averageGrade = 'D'
         }
       }
 
@@ -1199,31 +1280,52 @@ export class TeachersService {
   async getEnhancedDashboardStats(
     teacherId: number
   ): Promise<EnhancedTeacherDashboardStats> {
-    // Get basic dashboard stats (existing method)
-    const basicStats = await this.getDashboardStats(teacherId)
+    // Check if teacher has access to attendance stats
+    const accessCheck = await this.checkAttendanceAccess(teacherId)
 
-    // Get additional metrics
-    const [
-      subjectCount,
-      subjectPerformanceSummary,
-      gradeDistSummary,
-      weeklyPreview,
-    ] = await Promise.all([
-      this.getTeacherSubjectCount(teacherId),
-      this.getSubjectPerformanceSummary(teacherId),
-      this.getGradeDistributionSummary(teacherId),
-      this.getWeeklyAttendancePreview(teacherId),
-    ])
+    let basicStats: TeacherDashboardStats
+    let weeklyPreview: DailyAttendancePreview[]
+
+    if (accessCheck.hasAccess) {
+      // Get basic dashboard stats (existing method)
+      basicStats = await this.getDashboardStats(teacherId)
+      weeklyPreview = await this.getWeeklyAttendancePreview(teacherId)
+    } else {
+      // Return empty/zero stats if no access
+      basicStats = {
+        totalStudents: 0,
+        presentToday: 0,
+        absentToday: 0,
+        lateToday: 0,
+        attendancePercentageToday: 0,
+        avgAttendanceThisMonth: 0,
+      }
+      weeklyPreview = []
+    }
+
+    // Get additional metrics (these are available to all teachers)
+    const [subjectCount, subjectPerformanceSummary, gradeDistSummary] =
+      await Promise.all([
+        this.getTeacherSubjectCount(teacherId),
+        this.getSubjectPerformanceSummary(teacherId),
+        this.getGradeDistributionSummary(teacherId),
+      ])
 
     return {
       ...basicStats,
       totalSubjects: subjectCount,
       overallClassAverage: subjectPerformanceSummary.overallAverage,
       studentsAtRisk: subjectPerformanceSummary.studentsAtRisk,
+      hasAttendanceAccess: accessCheck.hasAccess,
+      attendanceAccessReason: accessCheck.reason,
       tabSummaries: {
         attendanceTrends: {
-          weeklyAverage: Math.round(basicStats.avgAttendanceThisMonth),
-          trend: await this.getAttendanceTrend(teacherId),
+          weeklyAverage: accessCheck.hasAccess
+            ? Math.round(basicStats.avgAttendanceThisMonth)
+            : 0,
+          trend: accessCheck.hasAccess
+            ? await this.getAttendanceTrend(teacherId)
+            : 'stable',
           dailyPreview: weeklyPreview,
           lastUpdated: new Date().toISOString(),
         },
@@ -1244,7 +1346,19 @@ export class TeachersService {
   async getEnhancedDashboardStatsByUuid(
     uuid: string
   ): Promise<EnhancedTeacherDashboardStats> {
-    const teacher = await this.findByUuid(uuid)
+    // Find teacher without status filter so we can provide specific error messages
+    const teacher = await this.prisma.teacher.findFirst({
+      where: {
+        user: {
+          uuid,
+        },
+      },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
+    }
+
     return this.getEnhancedDashboardStats(teacher.id)
   }
 
@@ -1763,9 +1877,7 @@ export class TeachersService {
 
     // Top performers
     const topPerformers = studentProgress
-      .filter(
-        sp => sp.overallGrade && ['A+', 'A', 'A-'].includes(sp.overallGrade)
-      )
+      .filter(sp => sp.overallGrade && ['A+', 'A'].includes(sp.overallGrade))
       .slice(0, 10)
       .map(sp => ({
         studentId: sp.student.user.uuid!,
@@ -2015,7 +2127,7 @@ export class TeachersService {
         ...rest,
         teacherId: teacher.id,
         dueDate: new Date(dueDate),
-        status: (status as any) || 'DRAFT',
+        status: (status as 'DRAFT' | 'PUBLISHED' | 'CLOSED') || 'DRAFT',
       },
       include: {
         course: { select: { courseName: true, courseCode: true } },
@@ -2051,7 +2163,7 @@ export class TeachersService {
     const where: Prisma.AssignmentWhereInput = { teacherId: teacher.id }
 
     if (status) {
-      where.status = status as any
+      where.status = status as 'DRAFT' | 'PUBLISHED' | 'CLOSED'
     }
 
     if (courseId) {
@@ -2180,14 +2292,14 @@ export class TeachersService {
     }
 
     const { dueDate: dueDateStr, status, ...updateRest } = updateAssignmentDto
-    const updateData: any = { ...updateRest }
+    const updateData: Prisma.AssignmentUpdateInput = { ...updateRest }
 
     if (dueDateStr) {
       updateData.dueDate = new Date(dueDateStr)
     }
 
     if (status) {
-      updateData.status = status
+      updateData.status = status as 'DRAFT' | 'PUBLISHED' | 'CLOSED'
     }
 
     const updatedAssignment = await this.prisma.assignment.update({
@@ -2279,22 +2391,34 @@ export class TeachersService {
       )
     }
 
-    const { examDate, startTime, examType, status, ...examinationRest } =
-      createExaminationDto
-
-    const examinationData: any = {
-      ...examinationRest,
-      courseId: createExaminationDto.courseId,
-      semesterId: createExaminationDto.semesterId,
-      createdBy: teacher.id,
-      examDate: new Date(examDate),
-      examType: examType,
-      status: status || 'SCHEDULED',
-      startTime: startTime ? new Date(`2024-01-01T${startTime}`) : undefined,
-    }
+    const {
+      examDate,
+      startTime,
+      examType,
+      status,
+      courseId,
+      semesterId,
+      ...examinationRest
+    } = createExaminationDto
 
     const examination = await this.prisma.examination.create({
-      data: examinationData,
+      data: {
+        ...examinationRest,
+        course: { connect: { id: courseId } },
+        semester: { connect: { id: semesterId } },
+        creator: { connect: { id: teacher.id } },
+        examDate: new Date(examDate),
+        examType: examType as
+          | 'QUIZ'
+          | 'MIDTERM'
+          | 'FINAL'
+          | 'ASSIGNMENT'
+          | 'PROJECT',
+        status:
+          (status as 'SCHEDULED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED') ||
+          'SCHEDULED',
+        startTime: startTime ? new Date(`2024-01-01T${startTime}`) : undefined,
+      } as Prisma.ExaminationCreateInput,
       include: {
         course: { select: { courseName: true, courseCode: true } },
         semester: { select: { semesterName: true } },
@@ -2324,7 +2448,11 @@ export class TeachersService {
     const where: Prisma.ExaminationWhereInput = { createdBy: teacher.id }
 
     if (status) {
-      where.status = status as any
+      where.status = status as
+        | 'SCHEDULED'
+        | 'ONGOING'
+        | 'COMPLETED'
+        | 'CANCELLED'
     }
 
     if (courseId) {
@@ -2448,8 +2576,9 @@ export class TeachersService {
       )
     }
 
-    const { examDate, startTime, ...updateRest } = updateExaminationDto
-    const updateData: any = { ...updateRest }
+    const { examDate, startTime, examType, status, ...updateRest } =
+      updateExaminationDto
+    const updateData: Prisma.ExaminationUpdateInput = { ...updateRest }
 
     if (examDate) {
       updateData.examDate = new Date(examDate)
@@ -2457,6 +2586,23 @@ export class TeachersService {
 
     if (startTime) {
       updateData.startTime = new Date(`2024-01-01T${startTime}`)
+    }
+
+    if (examType) {
+      updateData.examType = examType as
+        | 'QUIZ'
+        | 'MIDTERM'
+        | 'FINAL'
+        | 'ASSIGNMENT'
+        | 'PROJECT'
+    }
+
+    if (status) {
+      updateData.status = status as
+        | 'SCHEDULED'
+        | 'ONGOING'
+        | 'COMPLETED'
+        | 'CANCELLED'
     }
 
     const updatedExamination = await this.prisma.examination.update({
@@ -2763,11 +2909,13 @@ export class TeachersService {
     return 'low'
   }
 
-  private calculateAvgGradingTime(submissions: any[]): string {
+  private calculateAvgGradingTime(
+    submissions: Array<{ submittedAt: Date | null }>
+  ): string {
     if (submissions.length === 0) return 'N/A'
 
     const totalDays = submissions.reduce(
-      (sum, s) => sum + this.getDaysSince(s.submittedAt),
+      (sum, s) => sum + (s.submittedAt ? this.getDaysSince(s.submittedAt) : 0),
       0
     )
     const avgDays = Math.floor(totalDays / submissions.length)
@@ -2777,15 +2925,33 @@ export class TeachersService {
     return `${avgDays} days`
   }
 
-  private analyzeStudentRisk(student: any, _teacherId: number) {
+  private analyzeStudentRisk(
+    student: {
+      id: number
+      name?: string
+      user?: { lastLogin: Date | null }
+      missingAssignments?: number
+      attendancePercentage?: number
+      lastActivityDate?: Date | null
+      attendance?: Array<{ status: string }>
+      submissions?: Array<unknown>
+      examResults: Array<{
+        exam: { totalMarks: number | Prisma.Decimal }
+        marksObtained: number | Prisma.Decimal
+      }>
+    },
+    _teacherId: number
+  ) {
     const reasons: string[] = []
     let riskScore = 0
 
     // Check missing assignments
     const totalAssignments = 10 // TODO: Get actual count from DB
-    const submittedCount = student.submissions.filter(
-      s => s.status === 'SUBMITTED' || s.status === 'GRADED'
-    ).length
+    const submittedCount =
+      student.submissions?.filter(
+        (s: { status?: string }) =>
+          s.status === 'SUBMITTED' || s.status === 'GRADED'
+      ).length || 0
     const missingAssignments = Math.max(0, totalAssignments - submittedCount)
 
     if (missingAssignments >= 3) {
@@ -2799,10 +2965,11 @@ export class TeachersService {
     }
 
     // Check attendance
-    const totalAttendance = student.attendance.length
-    const presentCount = student.attendance.filter(
-      a => a.status === 'PRESENT' || a.status === 'LATE'
-    ).length
+    const totalAttendance = student.attendance?.length || 0
+    const presentCount =
+      student.attendance?.filter(
+        a => a.status === 'PRESENT' || a.status === 'LATE'
+      ).length || 0
     const attendanceRate =
       totalAttendance > 0
         ? Math.round((presentCount / totalAttendance) * 100)
@@ -2817,7 +2984,7 @@ export class TeachersService {
     }
 
     // Check last activity
-    const daysSinceLogin = this.getDaysSince(student.user.lastLogin)
+    const daysSinceLogin = this.getDaysSince(student.user?.lastLogin || null)
     if (daysSinceLogin > 7) {
       reasons.push(`Inactive for ${daysSinceLogin} days`)
       riskScore += 20
@@ -2833,11 +3000,11 @@ export class TeachersService {
 
     if (examResults.length > 0) {
       const totalMarks = examResults.reduce(
-        (sum: number, r: any) => sum + Number(r.exam.totalMarks),
+        (sum: number, r) => sum + Number(r.exam.totalMarks),
         0
       )
       const obtainedMarks = examResults.reduce(
-        (sum: number, r: any) => sum + Number(r.marksObtained),
+        (sum: number, r) => sum + Number(r.marksObtained),
         0
       )
       currentPercentage =
@@ -2867,16 +3034,32 @@ export class TeachersService {
     }
   }
 
+  /**
+   * Convert percentage to letter grade
+   * Grading Scale: A+ (93+), A (85-92), B+ (77-84), B (70-76), C (60-69), D (<60)
+   */
   private getGradeFromPercentage(percentage: number): string {
-    if (percentage >= 90) return 'A'
-    if (percentage >= 80) return 'B'
-    if (percentage >= 70) return 'C'
-    if (percentage >= 60) return 'D'
-    return 'F'
+    if (percentage >= 93) return 'A+'
+    if (percentage >= 85) return 'A'
+    if (percentage >= 77) return 'B+'
+    if (percentage >= 70) return 'B'
+    if (percentage >= 60) return 'C'
+    return 'D'
   }
 
-  private getSuggestedActions(analysis: any) {
-    const actions: any[] = []
+  private getSuggestedActions(analysis: {
+    riskLevel: string
+    reasons: string[]
+    missingAssignments?: number
+    attendanceRate?: number
+    currentPercentage?: number
+  }) {
+    const actions: Array<{
+      type: string
+      label: string
+      action: string
+      priority: number
+    }> = []
 
     if (analysis.riskLevel === 'high') {
       actions.push({

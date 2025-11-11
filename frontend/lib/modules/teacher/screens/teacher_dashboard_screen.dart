@@ -82,24 +82,33 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         },
       ),
       child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header (hide on mobile to save space)
-            // if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
+        child: Consumer<TeacherDashboardProvider>(
+          builder: (context, dashboardProvider, child) {
+            final stats = dashboardProvider.dashboardStats;
+            final hasAttendanceAccess = stats?.hasAttendanceAccess ?? true;
 
-            // Statistics Cards
-            _buildStatsSection(isMobile),
-            const SizedBox(height: 24),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header (hide on mobile to save space)
+                // if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
 
-            // Main Content - Responsive Layout
-            if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+                // Statistics Cards - only show if teacher has access
+                if (hasAttendanceAccess) ...[
+                  _buildStatsSection(isMobile),
+                  const SizedBox(height: 24),
+                ],
 
-            const SizedBox(height: 24),
+                // Main Content - Responsive Layout
+                if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
 
-            // Charts Section with Tabs
-            _buildChartsSection(isMobile),
-          ],
+                const SizedBox(height: 24),
+
+                // Charts Section with Tabs
+                _buildChartsSection(isMobile),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -161,7 +170,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
               StatCard(
                 title: context.translate('present_today'),
                 value: '$presentToday',
-                subtitle: context.translate('attendance_percentage', params: {'percentage': attendancePercentageToday.toStringAsFixed(1)}),
+                subtitle: context.translate(
+                  'attendance_percentage',
+                  params: {
+                    'percentage': attendancePercentageToday.toStringAsFixed(1),
+                  },
+                ),
                 backgroundColor: const Color(0xFF00a63e),
                 iconColor: const Color(0xFF00a63e),
                 icon: Icons.check_circle,
@@ -334,9 +348,15 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 (context, provider, child) =>
                     CustomSlidingSegmentedControl<PerformanceTab>(
                       segments: {
-                        PerformanceTab.attendance: context.translate('attendance_trends'),
-                        PerformanceTab.subject: context.translate('subject_performance'),
-                        PerformanceTab.grade: context.translate('grade_distribution'),
+                        PerformanceTab.attendance: context.translate(
+                          'attendance_trends',
+                        ),
+                        PerformanceTab.subject: context.translate(
+                          'subject_performance',
+                        ),
+                        PerformanceTab.grade: context.translate(
+                          'grade_distribution',
+                        ),
                       },
                       initialValue: provider.selectedValue,
                       onValueChanged: (value) {

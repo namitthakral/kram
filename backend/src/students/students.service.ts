@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { UserWithRelations } from '../types/auth.types'
@@ -830,7 +831,7 @@ export class StudentsService {
     const courseIds = enrollments.map(e => e.courseId)
 
     // Build where clause
-    const where: any = {
+    const where: Prisma.AssignmentWhereInput = {
       courseId: { in: courseIds },
       status: 'PUBLISHED',
     }
@@ -865,11 +866,13 @@ export class StudentsService {
               (parseFloat(submission.marksObtained.toString()) /
                 assignment.maxMarks) *
               100
-            if (percentage >= 90) grade = 'A'
-            else if (percentage >= 80) grade = 'B+'
-            else if (percentage >= 70) grade = 'A-'
-            else if (percentage >= 60) grade = 'B'
-            else grade = 'C'
+            // Grading Scale: A+ (93+), A (85-92), B+ (77-84), B (70-76), C (60-69), D (<60)
+            if (percentage >= 93) grade = 'A+'
+            else if (percentage >= 85) grade = 'A'
+            else if (percentage >= 77) grade = 'B+'
+            else if (percentage >= 70) grade = 'B'
+            else if (percentage >= 60) grade = 'C'
+            else grade = 'D'
           }
         } else {
           assignmentStatus = 'submitted'
@@ -1297,7 +1300,15 @@ export class StudentsService {
     }
 
     const now = new Date()
-    const events: any[] = []
+    const events: Array<{
+      id: number
+      title: string
+      type: 'test' | 'assignment'
+      date: string
+      time: string
+      subject: string
+      description: string
+    }> = []
 
     // Get student's enrolled courses
     const enrollments = await this.prisma.enrollment.findMany({

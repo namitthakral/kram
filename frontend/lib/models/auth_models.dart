@@ -407,7 +407,7 @@ class Teacher {
     designation: json['designation'],
     specialization: json['specialization'],
     qualification: json['qualification'],
-    experienceYears: json['experienceYears'],
+    experienceYears: json['experienceYears'] ?? 0,
     joinDate:
         json['joinDate'] != null ? DateTime.parse(json['joinDate']) : null,
     salary: json['salary'],
@@ -425,7 +425,7 @@ class Teacher {
   final int userId;
   final int institutionId;
   final String employeeId;
-  final String designation;
+  final String? designation;
   final String? specialization;
   final String? qualification;
   final int experienceYears;

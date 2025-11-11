@@ -142,12 +142,14 @@ class ProfileInfoCard extends StatelessWidget {
         value: teacher.employeeId,
         canCopy: true,
       ),
-      const Divider(height: 24),
-      _InfoRow(
-        icon: Icons.business_center_outlined,
-        label: context.translate('designation'),
-        value: teacher.designation,
-      ),
+      if (teacher.designation != null) ...[
+        const Divider(height: 24),
+        _InfoRow(
+          icon: Icons.business_center_outlined,
+          label: context.translate('designation'),
+          value: teacher.designation!,
+        ),
+      ],
       if (teacher.specialization != null) ...[
         const Divider(height: 24),
         _InfoRow(
@@ -231,7 +233,11 @@ class _InfoRow extends StatelessWidget {
       ),
       if (canCopy)
         IconButton(
-          icon: const Icon(Icons.copy_outlined, size: 20, color: AppTheme.slate500),
+          icon: const Icon(
+            Icons.copy_outlined,
+            size: 20,
+            color: AppTheme.slate500,
+          ),
           onPressed: () {
             Clipboard.setData(ClipboardData(text: value));
             showCustomSnackbar(

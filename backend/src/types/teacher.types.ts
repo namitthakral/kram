@@ -132,6 +132,8 @@ export interface EnhancedTeacherDashboardStats extends TeacherDashboardStats {
   totalSubjects: number
   overallClassAverage: number
   studentsAtRisk: number
+  hasAttendanceAccess: boolean // Indicates if teacher can view attendance stats
+  attendanceAccessReason?: string // Optional reason if access is denied
   tabSummaries: {
     attendanceTrends: AttendanceTrendsSummary
     subjectPerformance: SubjectPerformanceSummary

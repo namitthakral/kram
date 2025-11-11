@@ -6,6 +6,8 @@ class DashboardStats {
     required this.avgAttendance,
     this.lateToday = 0,
     this.attendancePercentageToday = 0.0,
+    this.hasAttendanceAccess = true,
+    this.attendanceAccessReason,
   });
 
   factory DashboardStats.fromJson(Map<String, dynamic> json) => DashboardStats(
@@ -16,6 +18,8 @@ class DashboardStats {
     attendancePercentageToday:
         (json['attendancePercentageToday'] ?? 0.0).toDouble(),
     avgAttendance: (json['avgAttendanceThisMonth'] ?? 0.0).toDouble(),
+    hasAttendanceAccess: json['hasAttendanceAccess'] ?? true,
+    attendanceAccessReason: json['attendanceAccessReason'],
   );
 
   final int totalStudents;
@@ -24,6 +28,8 @@ class DashboardStats {
   final int lateToday;
   final double attendancePercentageToday;
   final double avgAttendance;
+  final bool hasAttendanceAccess;
+  final String? attendanceAccessReason;
 
   int get activeStudents => totalStudents;
   double get attendancePercentage =>
@@ -36,6 +42,9 @@ class DashboardStats {
     'lateToday': lateToday,
     'attendancePercentageToday': attendancePercentageToday,
     'avgAttendanceThisMonth': avgAttendance,
+    'hasAttendanceAccess': hasAttendanceAccess,
+    if (attendanceAccessReason != null)
+      'attendanceAccessReason': attendanceAccessReason,
   };
 }
 
