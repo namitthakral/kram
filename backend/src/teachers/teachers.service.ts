@@ -1,5 +1,6 @@
 import { Prisma } from '.prisma/client'
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -3564,6 +3565,664 @@ export class TeachersService {
     return {
       success: true,
       message: 'Attendance record deleted successfully',
+    }
+  }
+
+  // ============================================================================
+  // EXAM RESULT MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Enter or update exam result for a single student
+   */
+  async enterExamResult(
+    userUuid: string,
+    examId: number,
+    enterExamResultDto: {
+      studentId: number
+      marksObtained?: number
+      isAbsent?: boolean
+      remarks?: string
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the examination and verify teacher created it
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examId },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(`Examination with ID ${examId} not found`)
+    }
+
+    if (examination.createdBy !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to enter results for this examination'
+      )
+    }
+
+    // Verify student is enrolled in the course
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: {
+        studentId: enterExamResultDto.studentId,
+        courseId: examination.courseId,
+        semesterId: examination.semesterId,
+        enrollmentStatus: 'ENROLLED',
+      },
+    })
+
+    if (!enrollment) {
+      throw new NotFoundException(
+        'Student is not enrolled in this course/semester'
+      )
+    }
+
+    // Validate marks if provided
+    if (
+      enterExamResultDto.marksObtained !== undefined &&
+      enterExamResultDto.marksObtained > examination.totalMarks
+    ) {
+      throw new BadRequestException(
+        `Marks obtained (${enterExamResultDto.marksObtained}) cannot exceed total marks (${examination.totalMarks})`
+      )
+    }
+
+    // Calculate grade if marks are provided and student is not absent
+    let grade: string | null = null
+    if (
+      enterExamResultDto.marksObtained !== undefined &&
+      !enterExamResultDto.isAbsent
+    ) {
+      const percentage =
+        (enterExamResultDto.marksObtained / examination.totalMarks) * 100
+      grade = this.getGradeFromPercentage(percentage)
+    }
+
+    // Check if result already exists
+    const existingResult = await this.prisma.examResult.findUnique({
+      where: {
+        unique_result: {
+          examId: examId,
+          studentId: enterExamResultDto.studentId,
+        },
+      },
+    })
+
+    if (existingResult) {
+      // Update existing result
+      const updatedResult = await this.prisma.examResult.update({
+        where: { id: existingResult.id },
+        data: {
+          marksObtained: enterExamResultDto.marksObtained,
+          grade: grade,
+          isAbsent: enterExamResultDto.isAbsent ?? false,
+          remarks: enterExamResultDto.remarks,
+          evaluatedBy: teacher.id,
+          evaluatedAt: new Date(),
+        },
+        include: {
+          student: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          exam: {
+            select: {
+              examName: true,
+              totalMarks: true,
+              passingMarks: true,
+            },
+          },
+        },
+      })
+
+      return {
+        success: true,
+        message: 'Exam result updated successfully',
+        data: updatedResult,
+      }
+    }
+
+    // Create new result
+    const result = await this.prisma.examResult.create({
+      data: {
+        examId: examId,
+        studentId: enterExamResultDto.studentId,
+        marksObtained: enterExamResultDto.marksObtained,
+        grade: grade,
+        isAbsent: enterExamResultDto.isAbsent ?? false,
+        remarks: enterExamResultDto.remarks,
+        evaluatedBy: teacher.id,
+        evaluatedAt: new Date(),
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        exam: {
+          select: {
+            examName: true,
+            totalMarks: true,
+            passingMarks: true,
+          },
+        },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Exam result entered successfully',
+      data: result,
+    }
+  }
+
+  /**
+   * Bulk enter exam results for multiple students
+   */
+  async bulkEnterExamResults(
+    userUuid: string,
+    examId: number,
+    bulkEnterExamResultDto: {
+      results: Array<{
+        studentId: number
+        marksObtained?: number
+        isAbsent?: boolean
+        remarks?: string
+      }>
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the examination and verify teacher created it
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examId },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(`Examination with ID ${examId} not found`)
+    }
+
+    if (examination.createdBy !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to enter results for this examination'
+      )
+    }
+
+    const results = []
+    const errors = []
+
+    // Process each result
+    for (const resultDto of bulkEnterExamResultDto.results) {
+      try {
+        // Verify student is enrolled in the course
+        const enrollment = await this.prisma.enrollment.findFirst({
+          where: {
+            studentId: resultDto.studentId,
+            courseId: examination.courseId,
+            semesterId: examination.semesterId,
+            enrollmentStatus: 'ENROLLED',
+          },
+        })
+
+        if (!enrollment) {
+          errors.push({
+            studentId: resultDto.studentId,
+            error: 'Student is not enrolled in this course/semester',
+          })
+          continue
+        }
+
+        // Validate marks if provided
+        if (
+          resultDto.marksObtained !== undefined &&
+          resultDto.marksObtained > examination.totalMarks
+        ) {
+          errors.push({
+            studentId: resultDto.studentId,
+            error: `Marks obtained (${resultDto.marksObtained}) cannot exceed total marks (${examination.totalMarks})`,
+          })
+          continue
+        }
+
+        // Calculate grade if marks are provided and student is not absent
+        let grade: string | null = null
+        if (resultDto.marksObtained !== undefined && !resultDto.isAbsent) {
+          const percentage =
+            (resultDto.marksObtained / examination.totalMarks) * 100
+          grade = this.getGradeFromPercentage(percentage)
+        }
+
+        // Check if result already exists
+        const existingResult = await this.prisma.examResult.findUnique({
+          where: {
+            unique_result: {
+              examId: examId,
+              studentId: resultDto.studentId,
+            },
+          },
+        })
+
+        if (existingResult) {
+          // Update existing result
+          const updated = await this.prisma.examResult.update({
+            where: { id: existingResult.id },
+            data: {
+              marksObtained: resultDto.marksObtained,
+              grade: grade,
+              isAbsent: resultDto.isAbsent ?? false,
+              remarks: resultDto.remarks,
+              evaluatedBy: teacher.id,
+              evaluatedAt: new Date(),
+            },
+            include: {
+              student: {
+                include: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+          results.push(updated)
+        } else {
+          // Create new result
+          const created = await this.prisma.examResult.create({
+            data: {
+              examId: examId,
+              studentId: resultDto.studentId,
+              marksObtained: resultDto.marksObtained,
+              grade: grade,
+              isAbsent: resultDto.isAbsent ?? false,
+              remarks: resultDto.remarks,
+              evaluatedBy: teacher.id,
+              evaluatedAt: new Date(),
+            },
+            include: {
+              student: {
+                include: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+          results.push(created)
+        }
+      } catch (error) {
+        errors.push({
+          studentId: resultDto.studentId,
+          error: error.message,
+        })
+      }
+    }
+
+    return {
+      success: true,
+      message: `Results entered for ${results.length} student(s)`,
+      data: {
+        examination: {
+          id: examination.id,
+          examName: examination.examName,
+          totalMarks: examination.totalMarks,
+        },
+        totalRecords: bulkEnterExamResultDto.results.length,
+        successCount: results.length,
+        errorCount: errors.length,
+        results,
+        errors: errors.length > 0 ? errors : undefined,
+      },
+    }
+  }
+
+  /**
+   * Get all results for an examination
+   */
+  async getExamResults(userUuid: string, examId: number) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the examination and verify teacher created it
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examId },
+      include: {
+        course: {
+          select: {
+            courseName: true,
+            courseCode: true,
+          },
+        },
+      },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(`Examination with ID ${examId} not found`)
+    }
+
+    if (examination.createdBy !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to view results for this examination'
+      )
+    }
+
+    // Get all results
+    const results = await this.prisma.examResult.findMany({
+      where: { examId: examId },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        evaluator: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ isAbsent: 'asc' }, { marksObtained: 'desc' }],
+    })
+
+    // Calculate statistics
+    const totalStudents = results.length
+    const evaluated = results.filter(
+      r => r.marksObtained !== null || r.isAbsent
+    ).length
+    const pending = totalStudents - evaluated
+    const absent = results.filter(r => r.isAbsent).length
+    const present = totalStudents - absent
+
+    let avgMarks = 0
+    let highestMarks = 0
+    let lowestMarks = examination.totalMarks
+    let passed = 0
+
+    const presentResults = results.filter(
+      r => !r.isAbsent && r.marksObtained !== null
+    )
+
+    if (presentResults.length > 0) {
+      const totalMarks = presentResults.reduce(
+        (sum, r) => sum + (r.marksObtained?.toNumber() || 0),
+        0
+      )
+      avgMarks = totalMarks / presentResults.length
+
+      highestMarks = Math.max(
+        ...presentResults.map(r => r.marksObtained?.toNumber() || 0)
+      )
+      lowestMarks = Math.min(
+        ...presentResults.map(r => r.marksObtained?.toNumber() || 0)
+      )
+
+      if (examination.passingMarks) {
+        passed = presentResults.filter(
+          r =>
+            r.marksObtained &&
+            r.marksObtained.toNumber() >= examination.passingMarks!
+        ).length
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        examination: {
+          id: examination.id,
+          examName: examination.examName,
+          examType: examination.examType,
+          examDate: examination.examDate,
+          totalMarks: examination.totalMarks,
+          passingMarks: examination.passingMarks,
+          course: examination.course,
+        },
+        statistics: {
+          totalStudents,
+          evaluated,
+          pending,
+          absent,
+          present,
+          avgMarks: Math.round(avgMarks * 100) / 100,
+          highestMarks,
+          lowestMarks: present > 0 ? lowestMarks : 0,
+          passed,
+          passPercentage:
+            present > 0 ? Math.round((passed / present) * 100) : 0,
+        },
+        results: results.map(r => ({
+          id: r.id,
+          studentId: r.studentId,
+          studentName: r.student.user.name,
+          studentEmail: r.student.user.email,
+          marksObtained: r.marksObtained?.toNumber() || null,
+          grade: r.grade,
+          isAbsent: r.isAbsent,
+          remarks: r.remarks,
+          evaluatedBy: r.evaluator?.user.name || null,
+          evaluatedAt: r.evaluatedAt,
+        })),
+      },
+    }
+  }
+
+  /**
+   * Update an existing exam result
+   */
+  async updateExamResult(
+    userUuid: string,
+    examId: number,
+    resultId: number,
+    updateExamResultDto: {
+      marksObtained?: number
+      isAbsent?: boolean
+      remarks?: string
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the examination
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examId },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(`Examination with ID ${examId} not found`)
+    }
+
+    if (examination.createdBy !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to update results for this examination'
+      )
+    }
+
+    // Find the result
+    const result = await this.prisma.examResult.findUnique({
+      where: { id: resultId },
+    })
+
+    if (!result) {
+      throw new NotFoundException(`Result with ID ${resultId} not found`)
+    }
+
+    if (result.examId !== examId) {
+      throw new BadRequestException(
+        'Result does not belong to this examination'
+      )
+    }
+
+    // Validate marks if provided
+    if (
+      updateExamResultDto.marksObtained !== undefined &&
+      updateExamResultDto.marksObtained > examination.totalMarks
+    ) {
+      throw new BadRequestException(
+        `Marks obtained (${updateExamResultDto.marksObtained}) cannot exceed total marks (${examination.totalMarks})`
+      )
+    }
+
+    // Calculate grade if marks are provided and student is not absent
+    let grade: string | null = result.grade
+    if (
+      updateExamResultDto.marksObtained !== undefined &&
+      !updateExamResultDto.isAbsent
+    ) {
+      const percentage =
+        (updateExamResultDto.marksObtained / examination.totalMarks) * 100
+      grade = this.getGradeFromPercentage(percentage)
+    } else if (updateExamResultDto.isAbsent) {
+      grade = null
+    }
+
+    // Update the result
+    const updatedResult = await this.prisma.examResult.update({
+      where: { id: resultId },
+      data: {
+        ...(updateExamResultDto.marksObtained !== undefined && {
+          marksObtained: updateExamResultDto.marksObtained,
+        }),
+        ...(updateExamResultDto.isAbsent !== undefined && {
+          isAbsent: updateExamResultDto.isAbsent,
+        }),
+        ...(updateExamResultDto.remarks !== undefined && {
+          remarks: updateExamResultDto.remarks,
+        }),
+        grade: grade,
+        evaluatedBy: teacher.id,
+        evaluatedAt: new Date(),
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        exam: {
+          select: {
+            examName: true,
+            totalMarks: true,
+            passingMarks: true,
+          },
+        },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Exam result updated successfully',
+      data: updatedResult,
+    }
+  }
+
+  /**
+   * Delete an exam result
+   */
+  async deleteExamResult(userUuid: string, examId: number, resultId: number) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the examination
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examId },
+    })
+
+    if (!examination) {
+      throw new NotFoundException(`Examination with ID ${examId} not found`)
+    }
+
+    if (examination.createdBy !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to delete results for this examination'
+      )
+    }
+
+    // Find the result
+    const result = await this.prisma.examResult.findUnique({
+      where: { id: resultId },
+    })
+
+    if (!result) {
+      throw new NotFoundException(`Result with ID ${resultId} not found`)
+    }
+
+    if (result.examId !== examId) {
+      throw new BadRequestException(
+        'Result does not belong to this examination'
+      )
+    }
+
+    // Delete the result
+    await this.prisma.examResult.delete({
+      where: { id: resultId },
+    })
+
+    return {
+      success: true,
+      message: 'Exam result deleted successfully',
     }
   }
 }

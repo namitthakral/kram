@@ -1298,6 +1298,233 @@
           "response": []
         },
         {
+          "name": "Enter Exam Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": 1,\n  \"marksObtained\": 85,\n  \"isAbsent\": false,\n  \"remarks\": \"Good performance\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                }
+              ]
+            },
+            "description": "Enter or update exam result for a single student.\n\n**Features:**\n- Automatically calculates grade based on marks\n- Validates marks don't exceed total marks\n- Verifies student enrollment in course\n- Updates existing result if already present\n\n**Fields:**\n- `studentId` (required): Student ID\n- `marksObtained` (optional): Marks scored (0 to totalMarks)\n- `isAbsent` (optional): Mark student as absent\n- `remarks` (optional): Additional comments"
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Enter Exam Results",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"results\": [\n    {\n      \"studentId\": 1,\n      \"marksObtained\": 85,\n      \"remarks\": \"Excellent\"\n    },\n    {\n      \"studentId\": 2,\n      \"marksObtained\": 92,\n      \"remarks\": \"Outstanding\"\n    },\n    {\n      \"studentId\": 3,\n      \"isAbsent\": true,\n      \"remarks\": \"Medical leave\"\n    },\n    {\n      \"studentId\": 4,\n      \"marksObtained\": 78\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results/bulk",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results",
+                "bulk"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                }
+              ]
+            },
+            "description": "Enter exam results for multiple students at once. This is useful for entering marks for an entire class after grading.\n\n**Features:**\n- Process multiple students in one request\n- Automatically updates existing results\n- Returns success and error counts\n- Validates each student's enrollment\n- Calculates grades automatically\n\n**Response includes:**\n- Total records processed\n- Success count\n- Error count (if any)\n- Detailed results for each student\n- Error details for failed records"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Exam Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                }
+              ]
+            },
+            "description": "Get all results for an examination with comprehensive statistics.\n\n**Response includes:**\n- Examination details\n- Statistics:\n  - Total students\n  - Evaluated/Pending counts\n  - Absent/Present counts\n  - Average marks\n  - Highest/Lowest marks\n  - Pass count and percentage\n- List of all student results with:\n  - Student name and email\n  - Marks obtained\n  - Grade\n  - Absent status\n  - Remarks\n  - Evaluator name\n  - Evaluation timestamp"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Exam Result",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marksObtained\": 90,\n  \"remarks\": \"Revised after re-evaluation\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results/:resultId",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results",
+                ":resultId"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                },
+                {
+                  "key": "resultId",
+                  "value": "1",
+                  "description": "Result ID"
+                }
+              ]
+            },
+            "description": "Update an existing exam result. Useful for corrections or re-evaluations.\n\n**Updatable Fields:**\n- `marksObtained`: Update marks\n- `isAbsent`: Change absent status\n- `remarks`: Update or add comments\n\n**Features:**\n- Automatically recalculates grade\n- Updates evaluator and timestamp\n- Validates marks against total marks"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Exam Result",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results/:resultId",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results",
+                ":resultId"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                },
+                {
+                  "key": "resultId",
+                  "value": "1",
+                  "description": "Result ID"
+                }
+              ]
+            },
+            "description": "Delete an exam result. Use with caution as this action is permanent.\n\n**Authorization:**\n- Only the teacher who created the exam can delete results\n\n**Note:**\n- This action cannot be undone\n- Consider updating the result instead of deleting when possible"
+          },
+          "response": []
+        },
+        {
           "name": "Get Pending Submissions",
           "request": {
             "method": "GET",

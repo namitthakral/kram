@@ -16,6 +16,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { CreateAssignmentDto, UpdateAssignmentDto } from './dto/assignment.dto'
 import {
+  BulkEnterExamResultDto,
+  EnterExamResultDto,
+  UpdateExamResultDto,
+} from './dto/exam-result.dto'
+import {
   CreateExaminationDto,
   UpdateExaminationDto,
 } from './dto/examination.dto'
@@ -408,6 +413,83 @@ export class TeachersController {
     return this.teachersService.deleteAttendance(
       userUuid,
       parseInt(attendanceId, 10)
+    )
+  }
+
+  // ==================== Exam Result Management ====================
+
+  @Post(':user_uuid/examinations/:examId/results')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  @HttpCode(HttpStatus.CREATED)
+  enterExamResult(
+    @Param('user_uuid') userUuid: string,
+    @Param('examId') examId: string,
+    @Body() enterExamResultDto: EnterExamResultDto
+  ) {
+    return this.teachersService.enterExamResult(
+      userUuid,
+      parseInt(examId, 10),
+      enterExamResultDto
+    )
+  }
+
+  @Post(':user_uuid/examinations/:examId/results/bulk')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  @HttpCode(HttpStatus.CREATED)
+  bulkEnterExamResults(
+    @Param('user_uuid') userUuid: string,
+    @Param('examId') examId: string,
+    @Body() bulkEnterExamResultDto: BulkEnterExamResultDto
+  ) {
+    return this.teachersService.bulkEnterExamResults(
+      userUuid,
+      parseInt(examId, 10),
+      bulkEnterExamResultDto
+    )
+  }
+
+  @Get(':user_uuid/examinations/:examId/results')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getExamResults(
+    @Param('user_uuid') userUuid: string,
+    @Param('examId') examId: string
+  ) {
+    return this.teachersService.getExamResults(userUuid, parseInt(examId, 10))
+  }
+
+  @Patch(':user_uuid/examinations/:examId/results/:resultId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  updateExamResult(
+    @Param('user_uuid') userUuid: string,
+    @Param('examId') examId: string,
+    @Param('resultId') resultId: string,
+    @Body() updateExamResultDto: UpdateExamResultDto
+  ) {
+    return this.teachersService.updateExamResult(
+      userUuid,
+      parseInt(examId, 10),
+      parseInt(resultId, 10),
+      updateExamResultDto
+    )
+  }
+
+  @Delete(':user_uuid/examinations/:examId/results/:resultId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  deleteExamResult(
+    @Param('user_uuid') userUuid: string,
+    @Param('examId') examId: string,
+    @Param('resultId') resultId: string
+  ) {
+    return this.teachersService.deleteExamResult(
+      userUuid,
+      parseInt(examId, 10),
+      parseInt(resultId, 10)
     )
   }
 }
