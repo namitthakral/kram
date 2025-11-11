@@ -354,4 +354,60 @@ export class TeachersController {
       parseInt(limit || '20', 10)
     )
   }
+
+  // ==================== Attendance Management ====================
+
+  @Post(':user_uuid/attendance')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  @HttpCode(HttpStatus.CREATED)
+  markAttendance(
+    @Param('user_uuid') userUuid: string,
+    @Body() markAttendanceDto: any
+  ) {
+    return this.teachersService.markAttendance(userUuid, markAttendanceDto)
+  }
+
+  @Post(':user_uuid/attendance/bulk')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  @HttpCode(HttpStatus.CREATED)
+  bulkMarkAttendance(
+    @Param('user_uuid') userUuid: string,
+    @Body() bulkMarkAttendanceDto: any
+  ) {
+    return this.teachersService.bulkMarkAttendance(
+      userUuid,
+      bulkMarkAttendanceDto
+    )
+  }
+
+  @Patch(':user_uuid/attendance/:attendanceId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  updateAttendance(
+    @Param('user_uuid') userUuid: string,
+    @Param('attendanceId') attendanceId: string,
+    @Body() updateAttendanceDto: any
+  ) {
+    return this.teachersService.updateAttendance(
+      userUuid,
+      parseInt(attendanceId, 10),
+      updateAttendanceDto
+    )
+  }
+
+  @Delete(':user_uuid/attendance/:attendanceId')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  deleteAttendance(
+    @Param('user_uuid') userUuid: string,
+    @Param('attendanceId') attendanceId: string
+  ) {
+    return this.teachersService.deleteAttendance(
+      userUuid,
+      parseInt(attendanceId, 10)
+    )
+  }
 }

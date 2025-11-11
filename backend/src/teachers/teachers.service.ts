@@ -3111,4 +3111,459 @@ export class TeachersService {
 
     return actions.slice(0, 3) // Return top 3 actions
   }
+
+  // ============================================================================
+  // ATTENDANCE MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Mark attendance for a single student
+   */
+  async markAttendance(
+    userUuid: string,
+    markAttendanceDto: {
+      studentId: number
+      sectionId: number
+      date: string
+      status: string
+      remarks?: string
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Verify the section belongs to this teacher
+    const section = await this.prisma.classSection.findFirst({
+      where: {
+        id: markAttendanceDto.sectionId,
+        teacherId: teacher.id,
+      },
+    })
+
+    if (!section) {
+      throw new ForbiddenException(
+        'You do not have permission to mark attendance for this section'
+      )
+    }
+
+    // Verify the student is enrolled in the course for this section
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: {
+        studentId: markAttendanceDto.studentId,
+        courseId: section.courseId,
+        semesterId: section.semesterId,
+        enrollmentStatus: 'ENROLLED',
+      },
+    })
+
+    if (!enrollment) {
+      throw new NotFoundException(
+        'Student is not enrolled in this course/section'
+      )
+    }
+
+    // Parse date string and create UTC date at midnight
+    const [year, month, day] = markAttendanceDto.date.split('-').map(Number)
+    const attendanceDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+
+    // Check if attendance already exists for this student on this date
+    // Using exact date match since Prisma @db.Date only stores date portion
+    const existingAttendance = await this.prisma.attendance.findFirst({
+      where: {
+        studentId: markAttendanceDto.studentId,
+        sectionId: markAttendanceDto.sectionId,
+        date: attendanceDate,
+      },
+    })
+
+    if (existingAttendance) {
+      // Update existing attendance
+      const updatedAttendance = await this.prisma.attendance.update({
+        where: { id: existingAttendance.id },
+        data: {
+          status: markAttendanceDto.status as
+            | 'PRESENT'
+            | 'ABSENT'
+            | 'LATE'
+            | 'EXCUSED',
+          remarks: markAttendanceDto.remarks,
+        },
+        include: {
+          student: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          section: {
+            include: {
+              course: {
+                select: {
+                  courseName: true,
+                  courseCode: true,
+                },
+              },
+            },
+          },
+        },
+      })
+
+      return {
+        success: true,
+        message: 'Attendance updated successfully',
+        data: updatedAttendance,
+      }
+    }
+
+    // Create new attendance record
+    const attendance = await this.prisma.attendance.create({
+      data: {
+        studentId: markAttendanceDto.studentId,
+        sectionId: markAttendanceDto.sectionId,
+        date: attendanceDate,
+        status: markAttendanceDto.status as
+          | 'PRESENT'
+          | 'ABSENT'
+          | 'LATE'
+          | 'EXCUSED',
+        remarks: markAttendanceDto.remarks,
+        markedBy: teacher.id,
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        section: {
+          include: {
+            course: {
+              select: {
+                courseName: true,
+                courseCode: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Attendance marked successfully',
+      data: attendance,
+    }
+  }
+
+  /**
+   * Bulk mark attendance for multiple students in a section
+   */
+  async bulkMarkAttendance(
+    userUuid: string,
+    bulkMarkAttendanceDto: {
+      sectionId: number
+      date: string
+      attendanceRecords: Array<{
+        studentId: number
+        status: string
+        remarks?: string
+      }>
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Verify the section belongs to this teacher
+    const section = await this.prisma.classSection.findFirst({
+      where: {
+        id: bulkMarkAttendanceDto.sectionId,
+        teacherId: teacher.id,
+      },
+      include: {
+        course: {
+          select: {
+            courseName: true,
+            courseCode: true,
+          },
+        },
+      },
+    })
+
+    if (!section) {
+      throw new ForbiddenException(
+        'You do not have permission to mark attendance for this section'
+      )
+    }
+
+    // Parse date string and create UTC date at midnight
+    const [year, month, day] = bulkMarkAttendanceDto.date.split('-').map(Number)
+    const attendanceDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+
+    const results = []
+    const errors = []
+
+    // Process each attendance record
+    for (const record of bulkMarkAttendanceDto.attendanceRecords) {
+      try {
+        // Verify the student is enrolled in the course for this section
+        const enrollment = await this.prisma.enrollment.findFirst({
+          where: {
+            studentId: record.studentId,
+            courseId: section.courseId,
+            semesterId: section.semesterId,
+            enrollmentStatus: 'ENROLLED',
+          },
+        })
+
+        if (!enrollment) {
+          errors.push({
+            studentId: record.studentId,
+            error: 'Student is not enrolled in this course/section',
+          })
+          continue
+        }
+
+        // Check if attendance already exists
+        // Using exact date match since Prisma @db.Date only stores date portion
+        const existingAttendance = await this.prisma.attendance.findFirst({
+          where: {
+            studentId: record.studentId,
+            sectionId: bulkMarkAttendanceDto.sectionId,
+            date: attendanceDate,
+          },
+        })
+
+        if (existingAttendance) {
+          // Update existing attendance
+          const updated = await this.prisma.attendance.update({
+            where: { id: existingAttendance.id },
+            data: {
+              status: record.status as
+                | 'PRESENT'
+                | 'ABSENT'
+                | 'LATE'
+                | 'EXCUSED',
+              remarks: record.remarks,
+            },
+            include: {
+              student: {
+                include: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+          results.push(updated)
+        } else {
+          // Create new attendance record
+          const created = await this.prisma.attendance.create({
+            data: {
+              studentId: record.studentId,
+              sectionId: bulkMarkAttendanceDto.sectionId,
+              date: attendanceDate,
+              status: record.status as
+                | 'PRESENT'
+                | 'ABSENT'
+                | 'LATE'
+                | 'EXCUSED',
+              remarks: record.remarks,
+              markedBy: teacher.id,
+            },
+            include: {
+              student: {
+                include: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          })
+          results.push(created)
+        }
+      } catch (error) {
+        errors.push({
+          studentId: record.studentId,
+          error: error.message,
+        })
+      }
+    }
+
+    return {
+      success: true,
+      message: `Attendance marked for ${results.length} student(s)`,
+      data: {
+        section: {
+          id: section.id,
+          sectionName: section.sectionName,
+          course: section.course,
+        },
+        date: bulkMarkAttendanceDto.date,
+        totalRecords: bulkMarkAttendanceDto.attendanceRecords.length,
+        successCount: results.length,
+        errorCount: errors.length,
+        results,
+        errors: errors.length > 0 ? errors : undefined,
+      },
+    }
+  }
+
+  /**
+   * Update an existing attendance record
+   */
+  async updateAttendance(
+    userUuid: string,
+    attendanceId: number,
+    updateAttendanceDto: {
+      status?: string
+      remarks?: string
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the attendance record
+    const attendance = await this.prisma.attendance.findUnique({
+      where: { id: attendanceId },
+      include: {
+        section: true,
+      },
+    })
+
+    if (!attendance) {
+      throw new NotFoundException(
+        `Attendance record with ID ${attendanceId} not found`
+      )
+    }
+
+    // Verify the section belongs to this teacher
+    if (attendance.section.teacherId !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to update this attendance record'
+      )
+    }
+
+    // Update the attendance record
+    const updatedAttendance = await this.prisma.attendance.update({
+      where: { id: attendanceId },
+      data: {
+        ...(updateAttendanceDto.status && {
+          status: updateAttendanceDto.status as
+            | 'PRESENT'
+            | 'ABSENT'
+            | 'LATE'
+            | 'EXCUSED',
+        }),
+        ...(updateAttendanceDto.remarks !== undefined && {
+          remarks: updateAttendanceDto.remarks,
+        }),
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        section: {
+          include: {
+            course: {
+              select: {
+                courseName: true,
+                courseCode: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Attendance updated successfully',
+      data: updatedAttendance,
+    }
+  }
+
+  /**
+   * Delete an attendance record
+   */
+  async deleteAttendance(userUuid: string, attendanceId: number) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Find the attendance record
+    const attendance = await this.prisma.attendance.findUnique({
+      where: { id: attendanceId },
+      include: {
+        section: true,
+      },
+    })
+
+    if (!attendance) {
+      throw new NotFoundException(
+        `Attendance record with ID ${attendanceId} not found`
+      )
+    }
+
+    // Verify the section belongs to this teacher
+    if (attendance.section.teacherId !== teacher.id) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this attendance record'
+      )
+    }
+
+    // Delete the attendance record
+    await this.prisma.attendance.delete({
+      where: { id: attendanceId },
+    })
+
+    return {
+      success: true,
+      message: 'Attendance record deleted successfully',
+    }
+  }
 }
