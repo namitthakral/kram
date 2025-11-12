@@ -82,7 +82,16 @@ export class AuthService {
     const user = await this.validateUser(loginDto)
 
     if (!user) {
+      // Handle failed login attempt - increment loginAttempts
+      await this.handleFailedLogin(loginDto)
       throw new UnauthorizedException('Invalid credentials')
+    }
+
+    // Check if account is locked
+    if (user.accountLocked) {
+      throw new UnauthorizedException(
+        'Account is locked due to too many failed login attempts. Please contact support to unlock your account.'
+      )
     }
 
     // Allow login even if INACTIVE (for users with temporary passwords)
@@ -106,10 +115,13 @@ export class AuthService {
       expiresIn: '7d',
     })
 
-    // Update last login
+    // Update last login and reset login attempts on successful login
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { lastLogin: new Date() },
+      data: {
+        lastLogin: new Date(),
+        loginAttempts: 0, // Reset failed attempts counter
+      },
     })
 
     return {
@@ -135,6 +147,50 @@ export class AuthService {
         refreshToken,
         expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
       },
+    }
+  }
+
+  /**
+   * Handle failed login attempt - increment loginAttempts and lock account if threshold reached
+   */
+  private async handleFailedLogin(loginDto: LoginDto) {
+    const MAX_LOGIN_ATTEMPTS = 5
+
+    // Find user by email, phone, or edverseId
+    let userToUpdate = null
+
+    if (loginDto.email) {
+      userToUpdate = await this.prisma.user.findUnique({
+        where: { email: loginDto.email },
+      })
+    } else if (loginDto.phone) {
+      userToUpdate = await this.prisma.user.findFirst({
+        where: { phone: loginDto.phone },
+      })
+    } else if (loginDto.edverseId) {
+      userToUpdate = await this.prisma.user.findUnique({
+        where: { edverseId: loginDto.edverseId },
+      })
+    }
+
+    // If user exists, increment login attempts
+    if (userToUpdate) {
+      const newAttempts = userToUpdate.loginAttempts + 1
+      const shouldLock = newAttempts >= MAX_LOGIN_ATTEMPTS
+
+      await this.prisma.user.update({
+        where: { id: userToUpdate.id },
+        data: {
+          loginAttempts: newAttempts,
+          accountLocked: shouldLock,
+        },
+      })
+
+      // Log the failed attempt for security monitoring
+      console.warn(
+        `Failed login attempt for user ${userToUpdate.email || userToUpdate.phone || userToUpdate.edverseId}. ` +
+          `Attempts: ${newAttempts}/${MAX_LOGIN_ATTEMPTS}${shouldLock ? ' - Account LOCKED' : ''}`
+      )
     }
   }
 

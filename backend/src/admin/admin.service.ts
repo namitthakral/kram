@@ -430,4 +430,37 @@ export class AdminService {
       data: results,
     }
   }
+
+  /**
+   * Unlock a user account that was locked due to failed login attempts
+   */
+  async unlockAccount(userUuid: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { uuid: userUuid },
+    })
+
+    if (!user) {
+      throw new NotFoundException(`User with UUID ${userUuid} not found`)
+    }
+
+    // Reset login attempts and unlock account
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        loginAttempts: 0,
+        accountLocked: false,
+      },
+    })
+
+    return {
+      success: true,
+      message: `Account for ${user.email} has been unlocked successfully`,
+      data: {
+        email: user.email,
+        name: user.name,
+        loginAttempts: 0,
+        accountLocked: false,
+      },
+    }
+  }
 }

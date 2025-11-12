@@ -80,4 +80,10 @@ export class AdminController {
   bulkImportUsers(@Body() users: CreateUserDto[]) {
     return this.adminService.bulkImportUsers(users)
   }
+
+  @Post('users/:user_uuid/unlock')
+  @HttpCode(HttpStatus.OK)
+  unlockAccount(@Param('user_uuid') userUuid: string) {
+    return this.adminService.unlockAccount(userUuid)
+  }
 }
