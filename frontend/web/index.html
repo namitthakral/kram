@@ -14,7 +14,7 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-    <base href="$FLUTTER_BASE_HREF" />
+    <base href="/" />
 
     <meta charset="UTF-8" />
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
@@ -96,6 +96,10 @@
       <div class="loading-spinner"></div>
     </div>
 
-    <script src="flutter_bootstrap.js" async></script>
+    <!-- Load Flutter engine -->
+    <script src="flutter.js" defer></script>
+
+    <!-- Load bootstrap configuration -->
+    <script src="flutter_bootstrap.js" defer></script>
   </body>
 </html>

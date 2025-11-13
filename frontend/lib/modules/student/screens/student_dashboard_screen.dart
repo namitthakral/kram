@@ -443,9 +443,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 (context, provider, child) =>
                     CustomSlidingSegmentedControl<DashboardTab>(
                       segments: {
-                        DashboardTab.recentAssignments: context.translate('recent_assignments'),
-                        DashboardTab.performanceTrends: context.translate('performance_trends'),
-                        DashboardTab.attendanceHistory: context.translate('attendance_history'),
+                        DashboardTab.recentAssignments: context.translate(
+                          'recent_assignments',
+                        ),
+                        DashboardTab.performanceTrends: context.translate(
+                          'performance_trends',
+                        ),
+                        DashboardTab.attendanceHistory: context.translate(
+                          'attendance_history',
+                        ),
                       },
                       initialValue: provider.selectedTab,
                       onValueChanged: (value) {
@@ -519,7 +525,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Recent Assignments & Tests',
+                      'Recent Assignments & Exams',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -659,7 +665,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Recent Assignments & Tests',
+              'Recent Assignments & Exams',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -787,6 +793,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Check if there's actual performance data
+    final trendsData = dashboardProvider.performanceTrends;
+    final hasData = trendsData != null &&
+        trendsData['data'] != null &&
+        (trendsData['data']['trends'] as List<dynamic>?)?.isNotEmpty == true;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -804,30 +816,123 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
         const SizedBox(height: 20),
-        Builder(
-          builder: (context) {
-            debugPrint(
-              '🎯 Passing to PerformanceTrendsChart: ${dashboardProvider.performanceTrends}',
-            );
-            return PerformanceTrendsChart(
-              trendsData: dashboardProvider.performanceTrends,
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-        // Legend - dynamic based on data
-        const Wrap(
-          spacing: 24,
-          runSpacing: 12,
-          children: [
-            _LegendItem(color: Color(0xFF8B5CF6), label: 'Chemistry'),
-            _LegendItem(color: Color(0xFFf59e0b), label: 'English'),
-            _LegendItem(color: Color(0xFFef4444), label: 'History'),
-            _LegendItem(color: Color(0xFF4F7CFF), label: 'Mathematics'),
-            _LegendItem(color: Color(0xFF10b981), label: 'Physics'),
-          ],
-        ),
+        if (!hasData)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.show_chart,
+                    size: 64,
+                    color: Color(0xFFCBD5E1),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Performance Data Available',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Performance trends will appear here once you have academic records',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else ...[
+          Builder(
+            builder: (context) {
+              debugPrint(
+                '🎯 Passing to PerformanceTrendsChart: ${dashboardProvider.performanceTrends}',
+              );
+              return PerformanceTrendsChart(
+                trendsData: dashboardProvider.performanceTrends,
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          // Dynamic legend based on actual data
+          _buildDynamicLegend(trendsData),
+        ],
       ],
+    );
+  }
+
+  Widget _buildDynamicLegend(Map<String, dynamic>? trendsData) {
+    if (trendsData == null) {
+      return const SizedBox.shrink();
+    }
+
+    final data = trendsData['data'];
+    if (data == null) {
+      return const SizedBox.shrink();
+    }
+
+    final trends = data['trends'] as List<dynamic>?;
+    if (trends == null || trends.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Extract subject names and colors for legend
+    final legendItems = <Widget>[];
+    final subjectColors = <String, String>{
+      'mathematics': '#4F7CFF',
+      'math': '#4F7CFF',
+      'physics': '#10b981',
+      'chemistry': '#8B5CF6',
+      'english': '#f59e0b',
+      'history': '#ef4444',
+      'biology': '#06b6d4',
+      'computer': '#8b5cf6',
+      'science': '#10b981',
+    };
+
+    for (final trend in trends) {
+      final subjectName = trend['subject'] ?? '';
+      if (subjectName.isEmpty) {
+        continue;
+      }
+
+      // Get color for subject
+      var colorHex = '#4F7CFF'; // default
+      final lowerName = subjectName.toLowerCase();
+      for (final entry in subjectColors.entries) {
+        if (lowerName.contains(entry.key)) {
+          colorHex = entry.value;
+          break;
+        }
+      }
+
+      // Parse color
+      Color color;
+      try {
+        final hex = colorHex.replaceAll('#', '');
+        color = Color(int.parse('FF$hex', radix: 16));
+      } on Exception catch (_) {
+        color = const Color(0xFF4F7CFF);
+      }
+
+      legendItems.add(_LegendItem(color: color, label: subjectName));
+    }
+
+    if (legendItems.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Wrap(
+      spacing: 24,
+      runSpacing: 12,
+      children: legendItems,
     );
   }
 

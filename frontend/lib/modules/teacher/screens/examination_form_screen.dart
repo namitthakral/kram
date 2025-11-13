@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../utils/extensions.dart';
+import '../../../utils/responsive_utils.dart';
+import '../../../widgets/custom_widgets/custom_date_picker_field.dart';
+import '../../../widgets/custom_widgets/custom_dropdown_field.dart';
+import '../../../widgets/custom_widgets/custom_form_section.dart';
+import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/custom_text_field.dart';
+import '../../../widgets/custom_widgets/custom_time_picker_field.dart';
 import '../models/assignment_models.dart';
 import '../models/examination_models.dart';
 import '../providers/assignment_provider.dart';
@@ -47,12 +54,14 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
     final uuid = user?.uuid;
-    if (uuid == null) return;
+    if (uuid == null) {
+      return;
+    }
 
     final assignmentProvider = context.read<AssignmentProvider>();
-    await assignmentProvider.loadCourses(uuid);
-
     final examProvider = context.read<ExaminationProvider>();
+
+    await assignmentProvider.loadCourses(uuid);
     await examProvider.loadSemesters();
 
     // TODO: If editing, load examination data
@@ -73,80 +82,137 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(
-        widget.examinationId == null
-            ? 'Create Examination'
-            : 'Edit Examination',
-      ),
-    ),
-    body: Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildExamNameField(),
-          const SizedBox(height: 16),
-          _buildExamTypeDropdown(),
-          const SizedBox(height: 16),
-          _buildCourseDropdown(),
-          const SizedBox(height: 16),
-          _buildSemesterDropdown(),
-          const SizedBox(height: 16),
-          _buildMarksFields(),
-          const SizedBox(height: 16),
-          _buildDurationField(),
-          const SizedBox(height: 16),
-          _buildExamDateField(),
-          const SizedBox(height: 16),
-          _buildTimeFields(),
-          const SizedBox(height: 16),
-          _buildVenueField(),
-          const SizedBox(height: 16),
-          _buildInstructionsField(),
-          const SizedBox(height: 16),
-          _buildStatusDropdown(),
-          const SizedBox(height: 24),
-          _buildSubmitButton(),
-        ],
-      ),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final isMobile = context.isMobile;
 
-  Widget _buildExamNameField() => TextFormField(
+    return CustomMainScreenWithAppbar(
+      title:
+          widget.examinationId == null
+              ? context.translate('create_examination')
+              : context.translate('edit_examination'),
+      appBarConfig: const AppBarConfig.standard(),
+      bottomWidget: _buildSubmitButton(),
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          padding: EdgeInsets.only(bottom: isMobile ? 16 : 24),
+          children: [
+            // Basic Information Section
+            CustomFormSection(
+              title: context.translate('basic_information'),
+              subtitle: context.translate('enter_exam_basic_info'),
+              icon: Icons.quiz_outlined,
+              children: [
+                _buildExamNameField(),
+                const SizedBox(height: 16),
+                _buildExamTypeDropdown(),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Course & Semester Section
+            CustomFormSection(
+              title: context.translate('course_semester'),
+              subtitle: context.translate('select_course_semester'),
+              icon: Icons.school_outlined,
+              children: [
+                _buildCourseDropdown(),
+                const SizedBox(height: 16),
+                _buildSemesterDropdown(),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Marks & Duration Section
+            CustomFormSection(
+              title: context.translate('marks_duration'),
+              subtitle: context.translate('set_marks_duration'),
+              icon: Icons.grade_outlined,
+              children: [
+                _buildMarksFields(),
+                const SizedBox(height: 16),
+                _buildDurationField(),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Schedule Section
+            CustomFormSection(
+              title: context.translate('schedule'),
+              subtitle: context.translate('set_exam_schedule'),
+              icon: Icons.calendar_today_outlined,
+              children: [
+                _buildExamDateField(),
+                const SizedBox(height: 16),
+                _buildTimeFields(),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Venue & Instructions Section
+            CustomFormSection(
+              title: context.translate('venue_instructions'),
+              subtitle: context.translate('add_venue_instructions'),
+              icon: Icons.location_on_outlined,
+              children: [
+                _buildVenueField(),
+                const SizedBox(height: 16),
+                _buildInstructionsField(),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Status Section
+            CustomFormSection(
+              title: context.translate('status'),
+              subtitle: context.translate('set_exam_status'),
+              icon: Icons.info_outline,
+              children: [_buildStatusDropdown()],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExamNameField() => CustomTextField(
+    label: context.translate('exam_name_required'),
     controller: _examNameController,
-    decoration: const InputDecoration(
-      labelText: 'Exam Name *',
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.quiz),
-      hintText: 'e.g., Midterm Examination',
-    ),
+    hintText: context.translate('exam_name_hint'),
+    //prefixIcon: const Icon(Icons.quiz),
     validator: (value) {
       if (value == null || value.trim().isEmpty) {
-        return 'Please enter exam name';
+        return context.translate('please_enter_exam_name');
       }
       if (value.length < 3) {
-        return 'Exam name must be at least 3 characters';
+        return context.translate('exam_name_min_3_chars');
       }
       return null;
     },
   );
 
-  Widget _buildExamTypeDropdown() => DropdownButtonFormField<String>(
-    initialValue: _examType,
-    decoration: const InputDecoration(
-      labelText: 'Exam Type *',
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.category),
-    ),
-    items: const [
-      DropdownMenuItem(value: 'QUIZ', child: Text('Quiz')),
-      DropdownMenuItem(value: 'MIDTERM', child: Text('Midterm')),
-      DropdownMenuItem(value: 'FINAL', child: Text('Final')),
-      DropdownMenuItem(value: 'PRACTICAL', child: Text('Practical')),
-      DropdownMenuItem(value: 'OTHER', child: Text('Other')),
-    ],
+  Widget _buildExamTypeDropdown() => DropDownFormField<String>(
+    label: context.translate('exam_type_required'),
+    value: _examType,
+    hintText: context.translate('select_exam_type'),
+    //prefixIcon: const Icon(Icons.category),
+    items: const ['QUIZ', 'MIDTERM', 'FINAL', 'PRACTICAL', 'OTHER'],
+    displayText: (value) {
+      switch (value) {
+        case 'QUIZ':
+          return context.translate('quiz');
+        case 'MIDTERM':
+          return context.translate('midterm');
+        case 'FINAL':
+          return context.translate('final_exam');
+        case 'PRACTICAL':
+          return context.translate('practical');
+        case 'OTHER':
+          return context.translate('exam_type_other');
+        default:
+          return value;
+      }
+    },
     onChanged: (value) {
       if (value != null) {
         setState(() {
@@ -158,24 +224,14 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
 
   Widget _buildCourseDropdown() => Consumer<AssignmentProvider>(
     builder:
-        (context, provider, child) => DropdownButtonFormField<Course>(
-          initialValue: _selectedCourse,
-          decoration: const InputDecoration(
-            labelText: 'Course *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.book),
-          ),
-          items:
-              provider.courses
-                  .map(
-                    (course) => DropdownMenuItem(
-                      value: course,
-                      child: Text(
-                        '${course.courseCode} - ${course.courseName}',
-                      ),
-                    ),
-                  )
-                  .toList(),
+        (context, provider, child) => DropDownFormField<Course>(
+          label: context.translate('course_required'),
+          value: _selectedCourse,
+          hintText: context.translate('select_course'),
+          //prefixIcon: const Icon(Icons.book),
+          items: provider.courses,
+          displayText:
+              (course) => '${course.courseCode} - ${course.courseName}',
           onChanged: (course) {
             setState(() {
               _selectedCourse = course;
@@ -183,7 +239,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
           },
           validator: (value) {
             if (value == null) {
-              return 'Please select a course';
+              return context.translate('please_select_course');
             }
             return null;
           },
@@ -191,53 +247,53 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   );
 
   Widget _buildSemesterDropdown() => Consumer<ExaminationProvider>(
-    builder: (context, provider, child) {
-      // For now, hardcode semester ID 1 since we don't have semester API
-      return DropdownButtonFormField<int>(
-        initialValue: _selectedSemesterId ?? 1,
-        decoration: const InputDecoration(
-          labelText: 'Semester *',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.calendar_month),
+    builder:
+        (context, provider, child) => DropDownFormField<int>(
+          label: context.translate('semester_required'),
+          value: _selectedSemesterId ?? 1,
+          hintText: context.translate('select_semester'),
+          //prefixIcon: const Icon(Icons.calendar_month),
+          items: const [1, 2],
+          displayText: (value) {
+            switch (value) {
+              case 1:
+                return 'Spring 2025';
+              case 2:
+                return 'Fall 2024';
+              default:
+                return 'Semester $value';
+            }
+          },
+          onChanged: (semesterId) {
+            setState(() {
+              _selectedSemesterId = semesterId;
+            });
+          },
+          validator: (value) {
+            if (value == null) {
+              return context.translate('please_select_semester');
+            }
+            return null;
+          },
         ),
-        items: const [
-          DropdownMenuItem(value: 1, child: Text('Spring 2025')),
-          DropdownMenuItem(value: 2, child: Text('Fall 2024')),
-        ],
-        onChanged: (semesterId) {
-          setState(() {
-            _selectedSemesterId = semesterId;
-          });
-        },
-        validator: (value) {
-          if (value == null) {
-            return 'Please select a semester';
-          }
-          return null;
-        },
-      );
-    },
   );
 
   Widget _buildMarksFields() => Row(
     children: [
       Expanded(
-        child: TextFormField(
+        child: CustomTextField(
+          label: context.translate('total_marks_required'),
           controller: _totalMarksController,
-          decoration: const InputDecoration(
-            labelText: 'Total Marks *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.grade),
-            hintText: 'e.g., 100',
-          ),
+          hintText: context.translate('marks_hint'),
+          //prefixIcon: const Icon(Icons.grade),
           keyboardType: TextInputType.number,
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Required';
+              return context.translate('required');
             }
             final marks = int.tryParse(value);
             if (marks == null || marks <= 0) {
-              return 'Invalid';
+              return context.translate('invalid');
             }
             return null;
           },
@@ -245,26 +301,23 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
       ),
       const SizedBox(width: 16),
       Expanded(
-        child: TextFormField(
+        child: CustomTextField(
+          label: context.translate('passing_marks_required'),
           controller: _passingMarksController,
-          decoration: const InputDecoration(
-            labelText: 'Passing Marks *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.check_circle),
-            hintText: 'e.g., 40',
-          ),
+          hintText: context.translate('passing_marks_hint'),
+          //prefixIcon: const Icon(Icons.check_circle),
           keyboardType: TextInputType.number,
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return 'Required';
+              return context.translate('required');
             }
             final marks = int.tryParse(value);
             if (marks == null || marks <= 0) {
-              return 'Invalid';
+              return context.translate('invalid');
             }
             final totalMarks = int.tryParse(_totalMarksController.text);
             if (totalMarks != null && marks > totalMarks) {
-              return 'Too high';
+              return context.translate('too_high');
             }
             return null;
           },
@@ -273,116 +326,102 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     ],
   );
 
-  Widget _buildDurationField() => TextFormField(
+  Widget _buildDurationField() => CustomTextField(
+    label: context.translate('duration_minutes_required'),
     controller: _durationController,
-    decoration: const InputDecoration(
-      labelText: 'Duration (minutes) *',
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.timer),
-      hintText: 'e.g., 60',
-    ),
+    hintText: context.translate('duration_hint'),
+    //prefixIcon: const Icon(Icons.timer),
     keyboardType: TextInputType.number,
     validator: (value) {
       if (value == null || value.trim().isEmpty) {
-        return 'Please enter duration';
+        return context.translate('please_enter_duration');
       }
       final duration = int.tryParse(value);
       if (duration == null || duration <= 0) {
-        return 'Please enter a valid duration';
+        return context.translate('enter_valid_duration');
       }
       return null;
     },
   );
 
-  Widget _buildExamDateField() => InkWell(
-    onTap: () => _selectExamDate(context),
-    child: InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Exam Date *',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.calendar_today),
-      ),
-      child: Text(
-        _examDate != null
-            ? DateFormat('MMM dd, yyyy').format(_examDate!)
-            : 'Select exam date',
-        style: TextStyle(color: _examDate != null ? null : Colors.grey),
-      ),
-    ),
+  Widget _buildExamDateField() => CustomDatePickerField(
+    label: context.translate('exam_date_required'),
+    selectedDate: _examDate,
+    hintText: context.translate('select_exam_date'),
+    onDateSelected: (date) {
+      setState(() {
+        _examDate = date;
+      });
+    },
+    firstDate: DateTime.now(),
+    lastDate: DateTime.now().add(const Duration(days: 365)),
   );
 
   Widget _buildTimeFields() => Row(
     children: [
       Expanded(
-        child: InkWell(
-          onTap: () => _selectTime(context, isStartTime: true),
-          child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Start Time',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.access_time),
-            ),
-            child: Text(
-              _startTime != null ? _startTime!.format(context) : 'Select time',
-              style: TextStyle(color: _startTime != null ? null : Colors.grey),
-            ),
-          ),
+        child: CustomTimePickerField(
+          label: context.translate('start_time'),
+          selectedTime: _startTime,
+          hintText: context.translate('select_time'),
+          onTimeSelected: (time) {
+            setState(() {
+              _startTime = time;
+            });
+          },
         ),
       ),
       const SizedBox(width: 16),
       Expanded(
-        child: InkWell(
-          onTap: () => _selectTime(context, isStartTime: false),
-          child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'End Time',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.access_time),
-            ),
-            child: Text(
-              _endTime != null ? _endTime!.format(context) : 'Select time',
-              style: TextStyle(color: _endTime != null ? null : Colors.grey),
-            ),
-          ),
+        child: CustomTimePickerField(
+          label: context.translate('end_time'),
+          selectedTime: _endTime,
+          hintText: context.translate('select_time'),
+          onTimeSelected: (time) {
+            setState(() {
+              _endTime = time;
+            });
+          },
         ),
       ),
     ],
   );
 
-  Widget _buildVenueField() => TextFormField(
+  Widget _buildVenueField() => CustomTextField(
+    label: context.translate('venue_optional'),
     controller: _venueController,
-    decoration: const InputDecoration(
-      labelText: 'Venue (Optional)',
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.location_on),
-      hintText: 'e.g., Room 101',
-    ),
+    hintText: context.translate('venue_hint'),
+    //prefixIcon: const Icon(Icons.location_on),
   );
 
-  Widget _buildInstructionsField() => TextFormField(
+  Widget _buildInstructionsField() => CustomTextField(
+    label: context.translate('instructions_optional'),
     controller: _instructionsController,
-    decoration: const InputDecoration(
-      labelText: 'Instructions (Optional)',
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.list),
-      hintText: 'Special instructions for students',
-    ),
+    hintText: context.translate('special_instructions_hint'),
+    // //prefixIcon: const Icon(Icons.list),
     maxLines: 3,
   );
 
-  Widget _buildStatusDropdown() => DropdownButtonFormField<String>(
-    initialValue: _status,
-    decoration: const InputDecoration(
-      labelText: 'Status *',
-      border: OutlineInputBorder(),
-      prefixIcon: Icon(Icons.info),
-    ),
-    items: const [
-      DropdownMenuItem(value: 'SCHEDULED', child: Text('Scheduled')),
-      DropdownMenuItem(value: 'ONGOING', child: Text('Ongoing')),
-      DropdownMenuItem(value: 'COMPLETED', child: Text('Completed')),
-      DropdownMenuItem(value: 'CANCELLED', child: Text('Cancelled')),
-    ],
+  Widget _buildStatusDropdown() => DropDownFormField<String>(
+    label: context.translate('status_required'),
+    value: _status,
+    hintText: context.translate('select_status'),
+    //prefixIcon: const Icon(Icons.info),
+    items: const ['SCHEDULED', 'ONGOING', 'COMPLETED', 'CANCELLED'],
+    displayText: (value) {
+      switch (value) {
+        case 'SCHEDULED':
+          return context.translate('scheduled');
+        case 'ONGOING':
+          return context.translate('ongoing');
+        case 'COMPLETED':
+          return context.translate('completed');
+        case 'CANCELLED':
+          return context.translate('cancelled');
+        default:
+          return value;
+      }
+    },
     onChanged: (value) {
       if (value != null) {
         setState(() {
@@ -392,62 +431,37 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     },
   );
 
-  Widget _buildSubmitButton() => ElevatedButton(
-    onPressed: _isLoading ? null : _submitForm,
-    style: ElevatedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-    ),
-    child:
-        _isLoading
-            ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-            : Text(
-              widget.examinationId == null
-                  ? 'Create Examination'
-                  : 'Update Examination',
-              style: const TextStyle(fontSize: 16),
-            ),
-  );
+  Widget _buildSubmitButton() {
+    final isMobile = context.isMobile;
 
-  Future<void> _selectExamDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _examDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _submitForm,
+        style: ElevatedButton.styleFrom(
+          padding: EdgeInsets.symmetric(
+            vertical: isMobile ? 14 : 16,
+            horizontal: 24,
+          ),
+        ),
+        child:
+            _isLoading
+                ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                : Text(
+                  widget.examinationId == null
+                      ? context.translate('create_examination')
+                      : context.translate('update_examination'),
+                  style: TextStyle(fontSize: isMobile ? 14 : 16),
+                ),
+      ),
     );
-
-    if (picked != null) {
-      setState(() {
-        _examDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(
-    BuildContext context, {
-    required bool isStartTime,
-  }) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime:
-          isStartTime
-              ? (_startTime ?? TimeOfDay.now())
-              : (_endTime ?? TimeOfDay.now()),
-    );
-
-    if (picked != null) {
-      setState(() {
-        if (isStartTime) {
-          _startTime = picked;
-        } else {
-          _endTime = picked;
-        }
-      });
-    }
   }
 
   Future<void> _submitForm() async {
@@ -457,7 +471,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
 
     if (_examDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an exam date')),
+        SnackBar(content: Text(context.translate('please_select_exam_date'))),
       );
       return;
     }
@@ -561,8 +575,8 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
           SnackBar(
             content: Text(
               widget.examinationId == null
-                  ? 'Examination created successfully'
-                  : 'Examination updated successfully',
+                  ? context.translate('examination_created_success')
+                  : context.translate('examination_updated_success'),
             ),
             backgroundColor: Colors.green,
           ),
@@ -571,7 +585,9 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(provider.error ?? 'An error occurred'),
+            content: Text(
+              provider.error ?? context.translate('error_occurred'),
+            ),
             backgroundColor: Colors.red,
           ),
         );

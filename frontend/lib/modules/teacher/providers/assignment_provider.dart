@@ -39,7 +39,7 @@ class AssignmentProvider with ChangeNotifier {
         status: _selectedStatusFilter,
       );
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _assignments = [];
     } finally {
@@ -53,7 +53,7 @@ class AssignmentProvider with ChangeNotifier {
     try {
       _courses = await _teacherService.getTeacherCourses(userUuid);
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading courses: $e');
     }
   }
@@ -66,7 +66,7 @@ class AssignmentProvider with ChangeNotifier {
         courseId,
       );
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading sections: $e');
     }
   }
@@ -90,7 +90,7 @@ class AssignmentProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -122,7 +122,7 @@ class AssignmentProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -143,7 +143,7 @@ class AssignmentProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();

@@ -338,8 +338,8 @@ class PerformanceTrendsChart extends StatelessWidget {
     debugPrint('📊 Performance Trends - Raw data received: $data');
 
     if (data == null) {
-      debugPrint('⚠️ Performance Trends - No data received, using default');
-      return _getDefaultTrendsData();
+      debugPrint('⚠️ Performance Trends - No data received from API');
+      return _getEmptyTrendsData();
     }
 
     try {
@@ -352,9 +352,9 @@ class PerformanceTrendsChart extends StatelessWidget {
 
       if (trends == null || trends.isEmpty) {
         debugPrint(
-          '⚠️ Performance Trends - No trends data available, using default',
+          '⚠️ Performance Trends - No trends data available from backend',
         );
-        return _getDefaultTrendsData();
+        return _getEmptyTrendsData();
       }
 
       final months = <String>[];
@@ -397,9 +397,9 @@ class PerformanceTrendsChart extends StatelessWidget {
 
       if (subjectsMap.isEmpty) {
         debugPrint(
-          '⚠️ Performance Trends - No subject data parsed, using default',
+          '⚠️ Performance Trends - No subject data parsed from API',
         );
-        return _getDefaultTrendsData();
+        return _getEmptyTrendsData();
       }
 
       debugPrint(
@@ -409,74 +409,15 @@ class PerformanceTrendsChart extends StatelessWidget {
       return {'months': months, 'subjects': subjectsMap.values.toList()};
     } on Exception catch (e) {
       debugPrint('❌ Performance Trends - Error parsing: $e');
-      return _getDefaultTrendsData();
+      return _getEmptyTrendsData();
     }
   }
 
-  Map<String, dynamic> _getDefaultTrendsData() => {
+  /// Returns empty data structure when no real data is available
+  /// This will show minimal chart with a message about no data
+  Map<String, dynamic> _getEmptyTrendsData() => {
     'months': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    'subjects': [
-      {
-        'name': 'Chemistry',
-        'color': '#8B5CF6',
-        'data': const [
-          FlSpot(0, 85),
-          FlSpot(1, 87),
-          FlSpot(2, 86),
-          FlSpot(3, 88),
-          FlSpot(4, 87),
-          FlSpot(5, 89),
-        ],
-      },
-      {
-        'name': 'English',
-        'color': '#f59e0b',
-        'data': const [
-          FlSpot(0, 92),
-          FlSpot(1, 93),
-          FlSpot(2, 94),
-          FlSpot(3, 94),
-          FlSpot(4, 95),
-          FlSpot(5, 95),
-        ],
-      },
-      {
-        'name': 'History',
-        'color': '#ef4444',
-        'data': const [
-          FlSpot(0, 80),
-          FlSpot(1, 82),
-          FlSpot(2, 81),
-          FlSpot(3, 83),
-          FlSpot(4, 83),
-          FlSpot(5, 84),
-        ],
-      },
-      {
-        'name': 'Mathematics',
-        'color': '#4F7CFF',
-        'data': const [
-          FlSpot(0, 90),
-          FlSpot(1, 90),
-          FlSpot(2, 91),
-          FlSpot(3, 90),
-          FlSpot(4, 91),
-          FlSpot(5, 92),
-        ],
-      },
-      {
-        'name': 'Physics',
-        'color': '#10b981',
-        'data': const [
-          FlSpot(0, 88),
-          FlSpot(1, 88),
-          FlSpot(2, 89),
-          FlSpot(3, 88),
-          FlSpot(4, 89),
-          FlSpot(5, 89),
-        ],
-      },
-    ],
+    'subjects': <Map<String, dynamic>>[],
   };
 
   String _getSubjectColor(String subjectName) {

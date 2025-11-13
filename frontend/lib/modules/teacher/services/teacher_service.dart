@@ -421,8 +421,12 @@ class TeacherService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (courseId != null) queryParams['courseId'] = courseId.toString();
-      if (status != null) queryParams['status'] = status;
+      if (courseId != null) {
+        queryParams['courseId'] = courseId.toString();
+      }
+      if (status != null) {
+        queryParams['status'] = status;
+      }
 
       final response = await _apiService.dio.get(
         '/teachers/$userUuid/assignments',
@@ -430,7 +434,44 @@ class TeacherService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'];
+        // Handle different response formats
+        final responseData = response.data;
+        List<dynamic> data;
+
+        if (responseData is List) {
+          // Direct list response
+          data = responseData;
+        } else if (responseData is Map<String, dynamic>) {
+          // Response wrapped in 'data' key
+          final dataField = responseData['data'];
+          if (dataField is List) {
+            // data field is directly a list
+            data = dataField;
+          } else if (dataField == null) {
+            // Empty response
+            data = [];
+          } else if (dataField is Map<String, dynamic>) {
+            // Nested structure - check for assignments/items array
+            if (dataField['assignments'] is List) {
+              data = dataField['assignments'] as List<dynamic>;
+            } else if (dataField['items'] is List) {
+              data = dataField['items'] as List<dynamic>;
+            } else {
+              // Single object, wrap it in a list
+              data = [dataField];
+            }
+          } else {
+            // Unknown format
+            throw Exception(
+              'Unexpected response format: data field type is ${dataField.runtimeType}',
+            );
+          }
+        } else {
+          throw Exception(
+            'Unexpected response format: response type is ${responseData.runtimeType}',
+          );
+        }
+
         return data.map((json) => Assignment.fromJson(json)).toList();
       } else {
         throw DioException(
@@ -560,8 +601,12 @@ class TeacherService {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (courseId != null) queryParams['courseId'] = courseId.toString();
-      if (status != null) queryParams['status'] = status;
+      if (courseId != null) {
+        queryParams['courseId'] = courseId.toString();
+      }
+      if (status != null) {
+        queryParams['status'] = status;
+      }
 
       final response = await _apiService.dio.get(
         '/teachers/$userUuid/examinations',
@@ -569,7 +614,44 @@ class TeacherService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'];
+        // Handle different response formats
+        final responseData = response.data;
+        List<dynamic> data;
+
+        if (responseData is List) {
+          // Direct list response
+          data = responseData;
+        } else if (responseData is Map<String, dynamic>) {
+          // Response wrapped in 'data' key
+          final dataField = responseData['data'];
+          if (dataField is List) {
+            // data field is directly a list
+            data = dataField;
+          } else if (dataField == null) {
+            // Empty response
+            data = [];
+          } else if (dataField is Map<String, dynamic>) {
+            // Nested structure - check for examinations/items array
+            if (dataField['examinations'] is List) {
+              data = dataField['examinations'] as List<dynamic>;
+            } else if (dataField['items'] is List) {
+              data = dataField['items'] as List<dynamic>;
+            } else {
+              // Single object, wrap it in a list
+              data = [dataField];
+            }
+          } else {
+            // Unknown format
+            throw Exception(
+              'Unexpected response format: data field type is ${dataField.runtimeType}',
+            );
+          }
+        } else {
+          throw Exception(
+            'Unexpected response format: response type is ${responseData.runtimeType}',
+          );
+        }
+
         return data.map((json) => Examination.fromJson(json)).toList();
       } else {
         throw DioException(

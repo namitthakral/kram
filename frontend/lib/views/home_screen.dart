@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -7,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../provider/bottom_nav_provider.dart';
 import '../provider/login_signup/login_provider.dart';
+import '../utils/platform_helper.dart';
 import '../utils/router_service.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
 import '../widgets/custom_widgets/custom_navigation_rail.dart';
@@ -57,7 +57,7 @@ class _HomeScreenContent extends StatelessWidget {
     // On native platforms, always use bottom bar for iOS/Android
     // (regardless of orientation or screen size)
     if (!kIsWeb) {
-      return Platform.isIOS || Platform.isAndroid;
+      return PlatformHelper.isMobilePlatform;
     }
 
     // On web, check if device is mobile-sized in ANY orientation

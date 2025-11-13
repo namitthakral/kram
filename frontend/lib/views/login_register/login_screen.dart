@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../provider/bottom_nav_provider.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../provider/theme_provider.dart';
 import '../../utils/custom_colors.dart';
@@ -337,9 +338,19 @@ class LoginScreen extends StatelessWidget {
                         : () async {
                           await provider.loginAccount();
                           if (provider.currentUser != null && context.mounted) {
-                            context.router.goToHome();
+                            // Initialize navigation provider before navigating to home
+                            final navProvider = context.read<BottomNavProvider>();
+                            final user = provider.currentUser;
+
+                            if (user?.role?.id != null) {
+                              navProvider.initializeForRole(user!.role!.id);
+                            }
+
+                            // Navigate to home - user data and navigation already set up
+                            if (context.mounted) {
+                              context.router.goToHome();
+                            }
                           }
-                          // context.router.goToHome();
                         },
               ),
 

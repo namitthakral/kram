@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
 import 'core/services/api_service.dart';
@@ -36,11 +37,12 @@ import 'utils/router_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  RouterService().init();
-  ApiService().init();
 
   // Configure web-specific settings
   if (kIsWeb) {
+    // Use path-based URL strategy (removes # from URLs)
+    usePathUrlStrategy();
+
     // Add custom error handling for web
     FlutterError.onError = (details) {
       FlutterError.presentError(details);
@@ -50,6 +52,9 @@ void main() async {
       }
     };
   }
+
+  RouterService().init();
+  ApiService().init();
 
   runApp(
     MultiProvider(

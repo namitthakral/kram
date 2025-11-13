@@ -50,6 +50,12 @@ class RouterService {
 
   // Define all routes
   List<RouteBase> get _routes => [
+    // Root route - redirects to splash
+    GoRoute(
+      path: '/',
+      name: 'root',
+      redirect: (context, state) => '/splash',
+    ),
     GoRoute(
       path: '/splash',
       name: 'splash',

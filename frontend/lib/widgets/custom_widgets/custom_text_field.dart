@@ -22,6 +22,9 @@ class CustomTextField extends StatelessWidget {
     this.suffixButtonIcon,
     this.onTap,
     this.onChanged,
+    this.validator,
+    this.maxLines = 1,
+    this.prefixIcon,
   });
   final String? label /* ,prefixIcon, suffixIcon */;
   final TextEditingController? controller;
@@ -33,7 +36,10 @@ class CustomTextField extends StatelessWidget {
   final String? hintText;
   final void Function()? onTap;
   final void Function(String)? onChanged;
+  final String? Function(String?)? validator;
+  final int? maxLines;
   final ButtonIcon? prefixButtonIcon, suffixButtonIcon;
+  final Widget? prefixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -66,11 +72,14 @@ class CustomTextField extends StatelessWidget {
           readOnly: !isEnabled,
           onTap: onTap,
           onChanged: onChanged,
+          validator: validator,
+          maxLines: maxLines,
           decoration: InputDecoration(
             filled: filled,
             fillColor: filled ? const Color(0xFFFBFBFD) : null,
             prefixIcon:
-                prefixButtonIcon?.icon != null
+                prefixIcon ??
+                (prefixButtonIcon?.icon != null
                     ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       child: InkWell(
@@ -84,7 +93,7 @@ class CustomTextField extends StatelessWidget {
                         ),
                       ),
                     )
-                    : null,
+                    : null),
             suffixIcon:
                 suffixButtonIcon?.icon != null
                     ? Padding(

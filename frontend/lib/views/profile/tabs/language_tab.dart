@@ -20,29 +20,32 @@ class LanguageTab extends StatelessWidget {
           title: 'Select Language',
           children: [
             Consumer<LanguageProvider>(
-              builder: (context, languageProvider, child) => Column(
-                children: [
-                  _LanguageTile(
-                    title: context.translate('english'),
-                    flag: 'en',
-                    isSelected: languageProvider.locale.languageCode == 'en',
-                    onTap: () {
-                      languageProvider.setLocale('en');
-                      context.read<BottomNavProvider>().setIndex(0);
-                    },
+              builder:
+                  (context, languageProvider, child) => Column(
+                    children: [
+                      _LanguageTile(
+                        title: context.translate('english'),
+                        flag: 'en',
+                        isSelected:
+                            languageProvider.locale.languageCode == 'en',
+                        onTap: () {
+                          languageProvider.setLocale('en');
+                          context.read<BottomNavProvider>().setIndex(0);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _LanguageTile(
+                        title: context.translate('hindi'),
+                        flag: 'hi',
+                        isSelected:
+                            languageProvider.locale.languageCode == 'hi',
+                        onTap: () {
+                          languageProvider.setLocale('hi');
+                          context.read<BottomNavProvider>().setIndex(0);
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  _LanguageTile(
-                    title: context.translate('hindi'),
-                    flag: 'hi',
-                    isSelected: languageProvider.locale.languageCode == 'hi',
-                    onTap: () {
-                      languageProvider.setLocale('hi');
-                      context.read<BottomNavProvider>().setIndex(0);
-                    },
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -100,7 +103,7 @@ class _LanguageTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
       color: AppTheme.slate100,
       borderRadius: BorderRadius.circular(12),
@@ -128,15 +131,15 @@ class _LanguageTile extends StatelessWidget {
           'assets/images/language/$flag.png',
           height: 30,
           width: 30,
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.language,
-            size: 30,
-          ),
+          errorBuilder:
+              (context, error, stackTrace) =>
+                  const Icon(Icons.language, size: 30),
         ),
       ),
-      trailing: isSelected
-          ? const Icon(Icons.check_circle, color: AppTheme.warning)
-          : const Icon(Icons.circle_outlined, color: AppTheme.slate500),
+      trailing:
+          isSelected
+              ? const Icon(Icons.check_circle, color: AppTheme.warning)
+              : const Icon(Icons.circle_outlined, color: AppTheme.slate500),
       onTap: onTap,
     ),
   );

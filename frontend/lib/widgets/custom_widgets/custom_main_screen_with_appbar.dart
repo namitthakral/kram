@@ -320,11 +320,13 @@ class _CustomAppBar extends StatelessWidget {
               ? IconButton(
                 padding: const EdgeInsets.only(left: 16),
                 icon: SvgPicture.asset(
-                  config.showCircularBackButton
-                      ? 'assets/images/icons/ic_back_arrow_in_circle.svg'
-                      : 'assets/images/icons/ic_back_arrow.svg',
+                  'assets/images/icons/ic_back_arrow.svg',
                   width: 60,
                   alignment: Alignment.centerLeft,
+                  colorFilter: const ColorFilter.mode(
+                    CustomAppColors.white,
+                    BlendMode.srcIn,
+                  ),
                 ),
                 onPressed: () {
                   if (config.onBackButtonTapped != null) {

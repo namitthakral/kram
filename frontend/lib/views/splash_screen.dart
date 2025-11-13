@@ -35,6 +35,9 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
 
+    // Refresh cache from storage (important for web after page refresh)
+    await _secureStorage.refreshCache();
+
     // Check if user has completed onboarding
     final hasCompletedOnboarding = await _secureStorage.read(
       AppConstants.onboardingCompletedKey,

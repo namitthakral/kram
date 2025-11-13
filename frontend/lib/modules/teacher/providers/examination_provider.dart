@@ -37,7 +37,7 @@ class ExaminationProvider with ChangeNotifier {
         status: _selectedStatusFilter,
       );
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _examinations = [];
     } finally {
@@ -51,7 +51,7 @@ class ExaminationProvider with ChangeNotifier {
     try {
       _semesters = await _teacherService.getActiveSemesters();
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading semesters: $e');
     }
   }
@@ -75,7 +75,7 @@ class ExaminationProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -107,7 +107,7 @@ class ExaminationProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
@@ -128,7 +128,7 @@ class ExaminationProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
