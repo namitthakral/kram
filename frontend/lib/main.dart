@@ -16,6 +16,8 @@ import 'modules/parent/providers/parent_dashboard_provider.dart';
 import 'modules/parent/providers/parent_tab_provider.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
 import 'modules/student/providers/student_dashboard_provider.dart';
+import 'modules/teacher/providers/assignment_provider.dart';
+import 'modules/teacher/providers/examination_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/providers/teacher_dashboard_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
@@ -71,6 +73,12 @@ void main() async {
         ),
         ChangeNotifierProvider<TeacherDashboardProvider>(
           create: (_) => TeacherDashboardProvider(),
+        ),
+        ChangeNotifierProvider<AssignmentProvider>(
+          create: (_) => AssignmentProvider(),
+        ),
+        ChangeNotifierProvider<ExaminationProvider>(
+          create: (_) => ExaminationProvider(),
         ),
         ChangeNotifierProvider<ParentDashboardProvider>(
           create: (_) => ParentDashboardProvider(),

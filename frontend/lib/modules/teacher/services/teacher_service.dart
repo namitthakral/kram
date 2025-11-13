@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/services/api_service.dart';
+import '../models/assignment_models.dart';
 import '../models/dashboard_stats.dart';
+import '../models/examination_models.dart';
 
 /// Service class for handling teacher-related API calls
 ///
@@ -361,10 +363,7 @@ class TeacherService {
     try {
       final response = await _apiService.dio.get(
         '/teachers',
-        queryParameters: {
-          'page': page.toString(),
-          'limit': limit.toString(),
-        },
+        queryParameters: {'page': page.toString(), 'limit': limit.toString()},
       );
 
       if (response.statusCode == 200) {
@@ -379,6 +378,344 @@ class TeacherService {
       }
     } catch (e) {
       throw Exception('Failed to load teachers: $e');
+    }
+  }
+
+  // ==================== ASSIGNMENT MANAGEMENT ====================
+
+  /// Create a new assignment
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/assignments
+  Future<Assignment> createAssignment(
+    String userUuid,
+    CreateAssignmentDto dto,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/assignments',
+        data: dto.toJson(),
+      );
+
+      if (response.statusCode == 201) {
+        return Assignment.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create assignment',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to create assignment: $e');
+    }
+  }
+
+  /// Get all assignments for a teacher
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/assignments
+  Future<List<Assignment>> getAssignments(
+    String userUuid, {
+    int? courseId,
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (courseId != null) queryParams['courseId'] = courseId.toString();
+      if (status != null) queryParams['status'] = status;
+
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/assignments',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => Assignment.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load assignments',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load assignments: $e');
+    }
+  }
+
+  /// Get a single assignment by ID
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/assignments/:assignmentId
+  Future<Assignment> getAssignment(String userUuid, int assignmentId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/assignments/$assignmentId',
+      );
+
+      if (response.statusCode == 200) {
+        return Assignment.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load assignment',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load assignment: $e');
+    }
+  }
+
+  /// Update an assignment
+  ///
+  /// Endpoint: PATCH /teachers/:user_uuid/assignments/:assignmentId
+  Future<Assignment> updateAssignment(
+    String userUuid,
+    int assignmentId,
+    UpdateAssignmentDto dto,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/teachers/$userUuid/assignments/$assignmentId',
+        data: dto.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        return Assignment.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update assignment',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to update assignment: $e');
+    }
+  }
+
+  /// Delete an assignment
+  ///
+  /// Endpoint: DELETE /teachers/:user_uuid/assignments/:assignmentId
+  Future<void> deleteAssignment(String userUuid, int assignmentId) async {
+    try {
+      final response = await _apiService.dio.delete(
+        '/teachers/$userUuid/assignments/$assignmentId',
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete assignment',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to delete assignment: $e');
+    }
+  }
+
+  // ==================== EXAMINATION MANAGEMENT ====================
+
+  /// Create a new examination
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/examinations
+  Future<Examination> createExamination(
+    String userUuid,
+    CreateExaminationDto dto,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/examinations',
+        data: dto.toJson(),
+      );
+
+      if (response.statusCode == 201) {
+        return Examination.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create examination',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to create examination: $e');
+    }
+  }
+
+  /// Get all examinations for a teacher
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/examinations
+  Future<List<Examination>> getExaminations(
+    String userUuid, {
+    int? courseId,
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (courseId != null) queryParams['courseId'] = courseId.toString();
+      if (status != null) queryParams['status'] = status;
+
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/examinations',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'];
+        return data.map((json) => Examination.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load examinations',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load examinations: $e');
+    }
+  }
+
+  /// Get a single examination by ID
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/examinations/:examId
+  Future<Examination> getExamination(String userUuid, int examId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/examinations/$examId',
+      );
+
+      if (response.statusCode == 200) {
+        return Examination.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load examination',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load examination: $e');
+    }
+  }
+
+  /// Update an examination
+  ///
+  /// Endpoint: PATCH /teachers/:user_uuid/examinations/:examId
+  Future<Examination> updateExamination(
+    String userUuid,
+    int examId,
+    UpdateExaminationDto dto,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/teachers/$userUuid/examinations/$examId',
+        data: dto.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        return Examination.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update examination',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to update examination: $e');
+    }
+  }
+
+  /// Delete an examination
+  ///
+  /// Endpoint: DELETE /teachers/:user_uuid/examinations/:examId
+  Future<void> deleteExamination(String userUuid, int examId) async {
+    try {
+      final response = await _apiService.dio.delete(
+        '/teachers/$userUuid/examinations/$examId',
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete examination',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to delete examination: $e');
+    }
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  /// Get teacher's courses (for dropdowns)
+  ///
+  /// This wraps the getTeacherSubjects call and extracts courses
+  Future<List<Course>> getTeacherCourses(String userUuid) async {
+    try {
+      final subjects = await getTeacherSubjects(userUuid);
+      final courses = <Course>[];
+      final seenCourseIds = <int>{};
+
+      for (final subject in subjects) {
+        if (subject['course'] != null) {
+          final courseData = subject['course'] as Map<String, dynamic>;
+          final courseId = courseData['id'] as int;
+          if (!seenCourseIds.contains(courseId)) {
+            courses.add(Course.fromJson(courseData));
+            seenCourseIds.add(courseId);
+          }
+        }
+      }
+
+      return courses;
+    } catch (e) {
+      throw Exception('Failed to load teacher courses: $e');
+    }
+  }
+
+  /// Get sections for a specific course
+  Future<List<Section>> getSectionsForCourse(
+    String userUuid,
+    int courseId,
+  ) async {
+    try {
+      final classes = await getTeacherClasses(userUuid);
+      final sections = <Section>[];
+
+      for (final classData in classes) {
+        if (classData['courseId'] == courseId) {
+          sections.add(Section.fromJson(classData as Map<String, dynamic>));
+        }
+      }
+
+      return sections;
+    } catch (e) {
+      throw Exception('Failed to load sections: $e');
+    }
+  }
+
+  /// Get active semesters
+  Future<List<Semester>> getActiveSemesters() async {
+    try {
+      // This would need a backend endpoint, for now return empty
+      // In a real app, you'd call GET /semesters?status=ACTIVE
+      return [];
+    } catch (e) {
+      throw Exception('Failed to load semesters: $e');
     }
   }
 }

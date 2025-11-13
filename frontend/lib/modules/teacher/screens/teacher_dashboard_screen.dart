@@ -15,6 +15,8 @@ import '../widgets/chart_widgets.dart';
 import '../widgets/quick_action_button.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/student_activity_card.dart';
+import 'assignments_list_screen.dart';
+import 'examinations_list_screen.dart';
 
 enum PerformanceTab { attendance, subject, grade }
 
@@ -302,29 +304,50 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         ),
         const SizedBox(height: 20),
         QuickActionButton(
-          title: context.translate('mark_attendance'),
-          icon: Icons.calendar_today,
+          title: 'Manage Assignments',
+          icon: Icons.assignment,
           backgroundColor: const Color(0xFF4F7CFF),
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AssignmentsListScreen(),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: context.translate('enter_marks'),
-          icon: Icons.book,
+          title: 'Manage Examinations',
+          icon: Icons.quiz,
+          backgroundColor: const Color(0xFF8b5cf6),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ExaminationsListScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        QuickActionButton(
+          title: context.translate('mark_attendance'),
+          icon: Icons.calendar_today,
           backgroundColor: const Color(0xFF10b981),
           onTap: () {},
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: context.translate('generate_report_cards'),
-          icon: Icons.star,
+          title: context.translate('enter_marks'),
+          icon: Icons.grade,
           backgroundColor: const Color(0xFFf59e0b),
           onTap: () {},
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: context.translate('send_absence_alerts'),
-          icon: Icons.warning,
+          title: context.translate('generate_report_cards'),
+          icon: Icons.description,
           backgroundColor: const Color(0xFFef4444),
           onTap: () {},
         ),
