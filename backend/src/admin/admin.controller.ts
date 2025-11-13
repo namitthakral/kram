@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common'
@@ -20,6 +21,7 @@ import {
   UserQueryDto,
 } from '../common/dto/user.dto'
 import { AdminService } from './admin.service'
+import { UpdateGradingConfigDto } from './dto/grading-config.dto'
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -85,5 +87,25 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   unlockAccount(@Param('user_uuid') userUuid: string) {
     return this.adminService.unlockAccount(userUuid)
+  }
+
+  // Grading Configuration Endpoints
+  @Get('institutions/:institutionId/grading-config')
+  getGradingConfig(@Param('institutionId') institutionId: string) {
+    return this.adminService.getGradingConfig(+institutionId)
+  }
+
+  @Put('institutions/:institutionId/grading-config')
+  updateGradingConfig(
+    @Param('institutionId') institutionId: string,
+    @Body() updateDto: UpdateGradingConfigDto,
+  ) {
+    return this.adminService.updateGradingConfig(+institutionId, updateDto)
+  }
+
+  @Post('institutions/:institutionId/grading-config/reset')
+  @HttpCode(HttpStatus.OK)
+  resetGradingConfig(@Param('institutionId') institutionId: string) {
+    return this.adminService.resetGradingConfig(+institutionId)
   }
 }

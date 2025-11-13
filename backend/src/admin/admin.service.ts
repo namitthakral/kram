@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -15,6 +16,7 @@ import {
   generateEdVerseId,
   generateTemporaryPassword,
 } from '../utils/edverse-id.util'
+import { UpdateGradingConfigDto } from './dto/grading-config.dto'
 
 @Injectable()
 export class AdminService {
@@ -462,6 +464,141 @@ export class AdminService {
         loginAttempts: 0,
         accountLocked: false,
       },
+    }
+  }
+
+  /**
+   * Get grading configuration for an institution
+   */
+  async getGradingConfig(institutionId: number) {
+    // Verify institution exists
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+    })
+
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`,
+      )
+    }
+
+    // Get grading config
+    const config = await this.prisma.institutionGradingConfig.findUnique({
+      where: { institutionId },
+    })
+
+    if (!config) {
+      return {
+        success: true,
+        message: 'No custom grading configuration found. Using default settings.',
+        data: null,
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Grading configuration retrieved successfully',
+      data: config,
+    }
+  }
+
+  /**
+   * Update or create grading configuration for an institution
+   */
+  async updateGradingConfig(
+    institutionId: number,
+    updateDto: UpdateGradingConfigDto,
+  ) {
+    // Verify institution exists
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+    })
+
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`,
+      )
+    }
+
+    // Validate that weights sum to 100 if all are provided
+    const {
+      attendanceWeight,
+      assignmentWeight,
+      examWeight,
+      participationWeight,
+    } = updateDto
+
+    if (
+      attendanceWeight !== undefined ||
+      assignmentWeight !== undefined ||
+      examWeight !== undefined ||
+      participationWeight !== undefined
+    ) {
+      // Get current config or defaults
+      const currentConfig =
+        await this.prisma.institutionGradingConfig.findUnique({
+          where: { institutionId },
+        })
+
+      const finalAttendance = attendanceWeight ?? currentConfig?.attendanceWeight ?? 10
+      const finalAssignment = assignmentWeight ?? currentConfig?.assignmentWeight ?? 30
+      const finalExam = examWeight ?? currentConfig?.examWeight ?? 50
+      const finalParticipation = participationWeight ?? currentConfig?.participationWeight ?? 10
+
+      const totalWeight =
+        Number(finalAttendance) +
+        Number(finalAssignment) +
+        Number(finalExam) +
+        Number(finalParticipation)
+
+      if (Math.abs(totalWeight - 100) > 0.01) {
+        throw new BadRequestException(
+          `Grading weights must sum to 100. Current sum: ${totalWeight}`,
+        )
+      }
+    }
+
+    // Upsert grading config
+    const config = await this.prisma.institutionGradingConfig.upsert({
+      where: { institutionId },
+      update: updateDto,
+      create: {
+        institutionId,
+        ...updateDto,
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Grading configuration updated successfully',
+      data: config,
+    }
+  }
+
+  /**
+   * Reset grading configuration to defaults
+   */
+  async resetGradingConfig(institutionId: number) {
+    // Verify institution exists
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+    })
+
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`,
+      )
+    }
+
+    // Delete existing config (will use defaults)
+    await this.prisma.institutionGradingConfig.deleteMany({
+      where: { institutionId },
+    })
+
+    return {
+      success: true,
+      message:
+        'Grading configuration reset to default values successfully',
     }
   }
 }

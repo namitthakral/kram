@@ -10,6 +10,7 @@ import 'core/services/api_service.dart';
 import 'core/services/app_lifecycle_service.dart';
 import 'modules/admin/providers/admin_analytics_tab_provider.dart';
 import 'modules/admin/providers/admin_dashboard_provider.dart';
+import 'modules/admin/providers/grading_config_provider.dart';
 import 'modules/library/providers/library_dashboard_provider.dart';
 import 'modules/library/providers/library_filter_provider.dart';
 import 'modules/library/providers/library_tab_provider.dart';
@@ -113,6 +114,9 @@ void main() async {
         ),
         ChangeNotifierProvider<SegmentedControlProvider<AdminAnalyticsTab>>(
           create: (_) => AdminAnalyticsTabProvider(),
+        ),
+        ChangeNotifierProvider<GradingConfigProvider>(
+          create: (_) => GradingConfigProvider(),
         ),
       ],
       child: const EdVerseApp(),

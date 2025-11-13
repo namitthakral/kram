@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/services/api_service.dart';
+import '../../../models/grading_config.dart';
 import '../models/admin_dashboard_models.dart';
 
 /// Service class for handling admin-related API calls
@@ -216,6 +217,88 @@ class AdminService {
       }
     } catch (e) {
       throw Exception('Failed to load system alerts: $e');
+    }
+  }
+
+  /// Get grading configuration for an institution
+  ///
+  /// Endpoint: GET /admin/institutions/:institutionId/grading-config
+  Future<GradingConfig?> getGradingConfig(int institutionId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/admin/institutions/$institutionId/grading-config',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return GradingConfig.fromJson(data['data']);
+        }
+        return null;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load grading configuration',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load grading configuration: $e');
+    }
+  }
+
+  /// Update grading configuration for an institution
+  ///
+  /// Endpoint: PUT /admin/institutions/:institutionId/grading-config
+  Future<bool> updateGradingConfig(
+    int institutionId,
+    UpdateGradingConfigDto dto,
+  ) async {
+    try {
+      final response = await _apiService.dio.put(
+        '/admin/institutions/$institutionId/grading-config',
+        data: dto.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return data['success'] == true;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update grading configuration',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to update grading configuration: $e');
+    }
+  }
+
+  /// Reset grading configuration to defaults
+  ///
+  /// Endpoint: POST /admin/institutions/:institutionId/grading-config/reset
+  Future<bool> resetGradingConfig(int institutionId) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/admin/institutions/$institutionId/grading-config/reset',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return data['success'] == true;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to reset grading configuration',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to reset grading configuration: $e');
     }
   }
 }

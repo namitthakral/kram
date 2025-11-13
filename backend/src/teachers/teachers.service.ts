@@ -6,8 +6,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
+import { ProgressUpdaterService } from '../students/services/progress-updater.service'
 import {
   AttendanceTrendsData,
   DailyAttendanceDetail,
@@ -33,7 +35,11 @@ import {
 
 @Injectable()
 export class TeachersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventEmitter: EventEmitter2,
+    private progressUpdater: ProgressUpdaterService,
+  ) {}
 
   /**
    * Helper method to get UTC date at midnight to avoid timezone issues
@@ -3214,6 +3220,14 @@ export class TeachersService {
         },
       })
 
+      // Trigger progress recalculation (async, non-blocking)
+      await this.triggerProgressRecalculation(
+        markAttendanceDto.studentId,
+        section.courseId,
+        section.semesterId,
+        'attendance_update',
+      )
+
       return {
         success: true,
         message: 'Attendance updated successfully',
@@ -3258,6 +3272,14 @@ export class TeachersService {
         },
       },
     })
+
+    // Trigger progress recalculation (async, non-blocking)
+    await this.triggerProgressRecalculation(
+      markAttendanceDto.studentId,
+      section.courseId,
+      section.semesterId,
+      'attendance_create',
+    )
 
     return {
       success: true,
@@ -3849,6 +3871,14 @@ export class TeachersService {
             },
           })
           results.push(updated)
+
+          // Trigger progress recalculation for updated result
+          await this.triggerProgressRecalculation(
+            resultDto.studentId,
+            examination.courseId,
+            examination.semesterId,
+            'exam_result_update',
+          )
         } else {
           // Create new result
           const created = await this.prisma.examResult.create({
@@ -3875,6 +3905,14 @@ export class TeachersService {
             },
           })
           results.push(created)
+
+          // Trigger progress recalculation for new result
+          await this.triggerProgressRecalculation(
+            resultDto.studentId,
+            examination.courseId,
+            examination.semesterId,
+            'exam_result_create',
+          )
         }
       } catch (error) {
         errors.push({
@@ -4218,6 +4256,71 @@ export class TeachersService {
     return {
       success: true,
       message: 'Exam result deleted successfully',
+    }
+  }
+
+  /**
+   * Helper method to trigger progress recalculation
+   * Emits an event that will be handled asynchronously
+   */
+  private async triggerProgressRecalculation(
+    studentId: number,
+    courseId: number,
+    semesterId: number,
+    trigger: string,
+  ): Promise<void> {
+    try {
+      // Get academic year for this semester
+      const semester = await this.prisma.semester.findUnique({
+        where: { id: semesterId },
+        select: { academicYearId: true },
+      })
+
+      if (!semester) {
+        return
+      }
+
+      // Get course to find its code and institution
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+        select: {
+          courseCode: true,
+          program: {
+            select: { institutionId: true },
+          },
+        },
+      })
+
+      if (!course || !course.program) {
+        return
+      }
+
+      // Find subjects with matching course code
+      const subjects = await this.prisma.subject.findMany({
+        where: {
+          code: course.courseCode,
+          institutionId: course.program.institutionId,
+        },
+        select: { id: true },
+      })
+
+      if (subjects.length === 0) {
+        return
+      }
+
+      // Trigger recalculation for each subject
+      for (const subject of subjects) {
+        this.eventEmitter.emit('progress.recalculate', {
+          studentId,
+          subjectId: subject.id,
+          semesterId,
+          academicYearId: semester.academicYearId,
+          trigger,
+        })
+      }
+    } catch (error) {
+      // Log error but don't throw - this is a background operation
+      console.error('Failed to trigger progress recalculation:', error)
     }
   }
 }
