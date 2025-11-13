@@ -134,6 +134,17 @@ async function main() {
   // Create Phase 1 test data
   await createPhase1TestData()
 
+  // Create comprehensive data for Student 1 (for full dashboard demo)
+  console.log('Creating comprehensive data for Student 1...')
+  await createStudent1ComprehensiveData(
+    students,
+    courses,
+    semesters,
+    classSections,
+    academicYear
+  )
+  console.log('✅ Created comprehensive data for Student 1')
+
   console.log('🎉 Comprehensive database seeding completed successfully!')
   printSummary(students.length, parents.length)
 }
@@ -2254,6 +2265,460 @@ async function createPhase1TestData() {
   console.log('  🎯 Test the APIs:')
   console.log(`     • GET /teachers/${teacher.user.uuid}/submissions/pending`)
   console.log(`     • GET /teachers/${teacher.user.uuid}/students/at-risk`)
+}
+
+/**
+ * Creates comprehensive data specifically for Student 1 to populate full dashboard
+ */
+async function createStudent1ComprehensiveData(
+  students: { id: number; userId: number }[],
+  _courses: { id: number; courseName: string }[],
+  semesters: { id: number; semesterName: string }[],
+  classSections: { id: number; teacherId: number; courseId: number }[],
+  _academicYear: { id: number }
+) {
+  // Get Student 1
+  const student1 = students[0]
+  if (!student1) {
+    console.log('  ⚠️ Student 1 not found, skipping')
+    return
+  }
+
+  // Get student's enrollments
+  const enrollments = await prisma.enrollment.findMany({
+    where: { studentId: student1.id },
+    include: { course: true },
+  })
+
+  if (enrollments.length === 0) {
+    console.log('  ⚠️ Student 1 has no enrollments, skipping')
+    return
+  }
+
+  // Get the latest semester (Spring 2025)
+  const latestSemester =
+    semesters.find(s => s.semesterName === 'Spring 2025') ||
+    semesters[semesters.length - 1]
+
+  // Get sections for enrolled courses
+  const sections = classSections.filter(s =>
+    enrollments.some(e => e.courseId === s.courseId)
+  )
+
+  console.log(`  👤 Creating comprehensive data for Student 1`)
+  console.log(`     - ${enrollments.length} courses enrolled`)
+  console.log(`     - ${sections.length} sections`)
+
+  // Create assignments for each course
+  const assignmentCount = { past: 0, upcoming: 0, overdue: 0 }
+  for (let i = 0; i < enrollments.length && i < sections.length; i++) {
+    const enrollment = enrollments[i]
+    const section = sections[i]
+
+    // Past assignment (submitted & graded)
+    try {
+      const pastAssignment = await prisma.assignment.create({
+        data: {
+          courseId: enrollment.courseId,
+          sectionId: section.id,
+          teacherId: section.teacherId,
+          title: `${enrollment.course.courseName} - Assignment 1`,
+          description: `Complete the first chapter exercises for ${enrollment.course.courseName}`,
+          instructions: 'Submit your answers in PDF format',
+          maxMarks: 100,
+          assignedDate: new Date('2025-10-15'),
+          dueDate: new Date('2025-10-25'),
+          status: 'PUBLISHED',
+        },
+      })
+
+      await prisma.submission.create({
+        data: {
+          assignmentId: pastAssignment.id,
+          studentId: student1.id,
+          submittedAt: new Date('2025-10-24'),
+          status: 'GRADED',
+          marksObtained: 85,
+          feedback: 'Excellent work! Well structured and comprehensive.',
+          gradedBy: section.teacherId,
+          gradedAt: new Date('2025-10-26'),
+        },
+      })
+      assignmentCount.past++
+    } catch {
+      // Skip if exists
+    }
+
+    // Upcoming assignment (not submitted)
+    try {
+      await prisma.assignment.create({
+        data: {
+          courseId: enrollment.courseId,
+          sectionId: section.id,
+          teacherId: section.teacherId,
+          title: `${enrollment.course.courseName} - Assignment 2`,
+          description: `Research project on advanced topics in ${enrollment.course.courseName}`,
+          instructions:
+            'Submit a 5-page report with references. Include diagrams and examples.',
+          maxMarks: 100,
+          assignedDate: new Date('2025-11-01'),
+          dueDate: new Date('2025-11-20'),
+          status: 'PUBLISHED',
+        },
+      })
+      assignmentCount.upcoming++
+    } catch {
+      // Skip if exists
+    }
+
+    // Overdue assignment (not submitted)
+    try {
+      await prisma.assignment.create({
+        data: {
+          courseId: enrollment.courseId,
+          sectionId: section.id,
+          teacherId: section.teacherId,
+          title: `${enrollment.course.courseName} - Quiz 1`,
+          description: `Online quiz covering chapters 1-3 of ${enrollment.course.courseName}`,
+          instructions: 'Complete within 30 minutes. No retakes allowed.',
+          maxMarks: 50,
+          assignedDate: new Date('2025-10-28'),
+          dueDate: new Date('2025-11-05'),
+          status: 'PUBLISHED',
+        },
+      })
+      assignmentCount.overdue++
+    } catch {
+      // Skip if exists
+    }
+
+    // Additional past assignment (submitted but not graded)
+    try {
+      const pastAssignment2 = await prisma.assignment.create({
+        data: {
+          courseId: enrollment.courseId,
+          sectionId: section.id,
+          teacherId: section.teacherId,
+          title: `${enrollment.course.courseName} - Lab Work 1`,
+          description: `Practical lab exercises for ${enrollment.course.courseName}`,
+          instructions: 'Complete all lab exercises and submit the report.',
+          maxMarks: 50,
+          assignedDate: new Date('2025-09-15'),
+          dueDate: new Date('2025-09-30'),
+          status: 'PUBLISHED',
+        },
+      })
+
+      await prisma.submission.create({
+        data: {
+          assignmentId: pastAssignment2.id,
+          studentId: student1.id,
+          submittedAt: new Date('2025-09-29'),
+          status: 'SUBMITTED',
+        },
+      })
+      assignmentCount.past++
+    } catch {
+      // Skip if exists
+    }
+
+    // Additional past assignment (graded - high score)
+    try {
+      const pastAssignment3 = await prisma.assignment.create({
+        data: {
+          courseId: enrollment.courseId,
+          sectionId: section.id,
+          teacherId: section.teacherId,
+          title: `${enrollment.course.courseName} - Midterm Project`,
+          description: `Comprehensive project covering first half of ${enrollment.course.courseName}`,
+          instructions:
+            'Create a detailed project report with code examples and documentation.',
+          maxMarks: 100,
+          assignedDate: new Date('2025-09-01'),
+          dueDate: new Date('2025-10-10'),
+          status: 'PUBLISHED',
+        },
+      })
+
+      await prisma.submission.create({
+        data: {
+          assignmentId: pastAssignment3.id,
+          studentId: student1.id,
+          submittedAt: new Date('2025-10-09'),
+          status: 'GRADED',
+          marksObtained: 92,
+          feedback:
+            'Outstanding work! Excellent understanding of concepts and clear presentation.',
+          gradedBy: section.teacherId,
+          gradedAt: new Date('2025-10-12'),
+        },
+      })
+      assignmentCount.past++
+    } catch {
+      // Skip if exists
+    }
+
+    // Additional overdue assignment (recently overdue)
+    try {
+      await prisma.assignment.create({
+        data: {
+          courseId: enrollment.courseId,
+          sectionId: section.id,
+          teacherId: section.teacherId,
+          title: `${enrollment.course.courseName} - Reading Assignment`,
+          description: `Read chapters 5-7 and submit summary for ${enrollment.course.courseName}`,
+          instructions: 'Write a 2-page summary of key concepts.',
+          maxMarks: 30,
+          assignedDate: new Date('2025-11-01'),
+          dueDate: new Date('2025-11-08'),
+          status: 'PUBLISHED',
+        },
+      })
+      assignmentCount.overdue++
+    } catch {
+      // Skip if exists
+    }
+  }
+
+  // Create examinations
+  const examCount = { past: 0, upcoming: 0 }
+  for (let i = 0; i < enrollments.length && i < sections.length; i++) {
+    const enrollment = enrollments[i]
+    const section = sections[i]
+
+    // Past exam (graded)
+    try {
+      const midtermExam = await prisma.examination.create({
+        data: {
+          course: { connect: { id: enrollment.courseId } },
+          semester: { connect: { id: latestSemester.id } },
+          creator: { connect: { id: section.teacherId } },
+          examName: `${enrollment.course.courseName} - Midterm Exam`,
+          examType: 'MIDTERM',
+          totalMarks: 100,
+          passingMarks: 40,
+          durationMinutes: 120,
+          examDate: new Date('2025-10-20'),
+          venue: 'Exam Hall A',
+          instructions:
+            'Bring your ID card. No electronic devices allowed. Answer all questions.',
+          status: 'COMPLETED',
+        },
+      })
+
+      await prisma.examResult.create({
+        data: {
+          examId: midtermExam.id,
+          studentId: student1.id,
+          marksObtained: 78,
+          grade: 'B+',
+          rankInClass: 5,
+          remarks: 'Good performance. Focus on time management.',
+          isAbsent: false,
+          evaluatedBy: section.teacherId,
+          evaluatedAt: new Date('2025-10-25'),
+        },
+      })
+      examCount.past++
+    } catch {
+      // Skip if exists
+    }
+
+    // Upcoming exam
+    try {
+      await prisma.examination.create({
+        data: {
+          course: { connect: { id: enrollment.courseId } },
+          semester: { connect: { id: latestSemester.id } },
+          creator: { connect: { id: section.teacherId } },
+          examName: `${enrollment.course.courseName} - Final Exam`,
+          examType: 'FINAL',
+          totalMarks: 100,
+          passingMarks: 40,
+          durationMinutes: 180,
+          examDate: new Date('2025-11-25'),
+          venue: 'Exam Hall B',
+          instructions:
+            'Comprehensive exam covering all topics. Bring calculator and drawing instruments.',
+          status: 'SCHEDULED',
+        },
+      })
+      examCount.upcoming++
+    } catch {
+      // Skip if exists
+    }
+  }
+
+  // Create attendance records (last 30 days)
+  let attendanceCount = 0
+  for (const section of sections) {
+    for (let i = 30; i >= 0; i--) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+
+      // Skip weekends
+      if (date.getDay() === 0 || date.getDay() === 6) continue
+
+      // Determine status (90% present, 5% late, 5% absent)
+      let status: 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED' = 'PRESENT'
+      const random = Math.random()
+      if (random < 0.05) status = 'ABSENT'
+      else if (random < 0.1) status = 'LATE'
+
+      try {
+        await prisma.attendance.create({
+          data: {
+            studentId: student1.id,
+            sectionId: section.id,
+            date: new Date(
+              Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+            ),
+            status: status,
+            remarks:
+              status === 'LATE'
+                ? 'Arrived 10 minutes late'
+                : status === 'ABSENT'
+                  ? 'Medical leave'
+                  : undefined,
+            markedBy: section.teacherId,
+          },
+        })
+        attendanceCount++
+      } catch {
+        // Skip if exists
+      }
+    }
+  }
+
+  // Create academic records for previous semesters
+  const previousSemesters = semesters
+    .filter(
+      s =>
+        s.semesterName.includes('2024') ||
+        s.semesterName.includes('Jan') ||
+        s.semesterName.includes('Feb')
+    )
+    .slice(0, 2)
+
+  let academicRecordsCount = 0
+  for (const semester of previousSemesters) {
+    for (const enrollment of enrollments) {
+      try {
+        await prisma.academicRecord.upsert({
+          where: {
+            unique_record: {
+              studentId: student1.id,
+              semesterId: semester.id,
+              courseId: enrollment.courseId,
+            },
+          },
+          update: {
+            marksObtained: 85,
+            maxMarks: 100,
+            grade: 'A',
+            gradePoints: 4.0,
+            creditsEarned: 3,
+            status: 'PASSED',
+            remarks: 'Good performance',
+          },
+          create: {
+            studentId: student1.id,
+            semesterId: semester.id,
+            courseId: enrollment.courseId,
+            marksObtained: 85,
+            maxMarks: 100,
+            grade: 'A',
+            gradePoints: 4.0,
+            creditsEarned: 3,
+            status: 'PASSED',
+            remarks: 'Good performance',
+          },
+        })
+        academicRecordsCount++
+      } catch {
+        // Skip if exists
+      }
+    }
+  }
+
+  // Create StudentProgress records for Spring 2025
+  const spring2025 = semesters.find(s => s.semesterName === 'Spring 2025')
+  const currentAcademicYear = await prisma.academicYear.findFirst({
+    where: { status: 'CURRENT' },
+  })
+  const institution = await prisma.institution.findFirst()
+
+  let studentProgressCount = 0
+  if (spring2025 && currentAcademicYear && institution) {
+    // Get or create subjects for enrolled courses
+    for (const enrollment of enrollments) {
+      // Find or create subject matching the course
+      let subject = await prisma.subject.findFirst({
+        where: {
+          code: enrollment.course.courseCode,
+          institutionId: institution.id,
+        },
+      })
+
+      if (!subject) {
+        subject = await prisma.subject.create({
+          data: {
+            institutionId: institution.id,
+            name: enrollment.course.courseName,
+            code: enrollment.course.courseCode,
+            description: `Subject for ${enrollment.course.courseName}`,
+            credits: 3,
+            subjectType: 'CORE',
+            theoryHours: 3,
+            practicalHours: 0,
+          },
+        })
+      }
+
+      // Create StudentProgress record
+      try {
+        await prisma.studentProgress.create({
+          data: {
+            studentId: student1.id,
+            subjectId: subject.id,
+            semesterId: spring2025.id,
+            academicYearId: currentAcademicYear.id,
+            overallGrade: 'A',
+            gradePoints: 4.0,
+            attendancePercentage: 92.5,
+            assignmentScore: 85.0,
+            examScore: 78.0,
+            participationScore: 88.0,
+            status: 'ON_TRACK',
+            strengths: [
+              'Strong analytical skills',
+              'Good problem-solving',
+              'Active participation',
+            ],
+            areasForImprovement: [
+              'Time management',
+              'More practice with complex topics',
+            ],
+            teacherComments:
+              'Excellent progress this semester. Keep up the good work!',
+          },
+        })
+        studentProgressCount++
+      } catch {
+        // Skip if exists
+      }
+    }
+  }
+
+  console.log(
+    `     ✅ Assignments: ${assignmentCount.past} past, ${assignmentCount.upcoming} upcoming, ${assignmentCount.overdue} overdue`
+  )
+  console.log(
+    `     ✅ Exams: ${examCount.past} past, ${examCount.upcoming} upcoming`
+  )
+  console.log(`     ✅ Attendance: ${attendanceCount} records`)
+  console.log(`     ✅ Academic Records: ${academicRecordsCount}`)
+  console.log(`     ✅ Student Progress: ${studentProgressCount} records`)
 }
 
 main()

@@ -54,13 +54,13 @@ export class AuthService {
     } else if (loginDto.phone) {
       user = await this.prisma.user.findFirst({
         where: { phone: loginDto.phone },
-        include: {
-          role: true,
-          student: true,
-          teacher: true,
-          parent: true,
-        },
-      })
+      include: {
+        role: true,
+        student: true,
+        teacher: true,
+        parent: true,
+      },
+    })
     }
 
     if (!user) {
@@ -143,8 +143,8 @@ export class AuthService {
         updatedAt: user.updatedAt,
       },
       tokens: {
-        accessToken,
-        refreshToken,
+      accessToken,
+      refreshToken,
         expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
       },
     }
@@ -162,7 +162,7 @@ export class AuthService {
     if (loginDto.email) {
       userToUpdate = await this.prisma.user.findUnique({
         where: { email: loginDto.email },
-      })
+    })
     } else if (loginDto.phone) {
       userToUpdate = await this.prisma.user.findFirst({
         where: { phone: loginDto.phone },
@@ -180,11 +180,11 @@ export class AuthService {
 
       await this.prisma.user.update({
         where: { id: userToUpdate.id },
-        data: {
+      data: {
           loginAttempts: newAttempts,
           accountLocked: shouldLock,
-        },
-      })
+      },
+    })
 
       // Log the failed attempt for security monitoring
       console.warn(
@@ -226,7 +226,7 @@ export class AuthService {
 
     return {
       tokens: {
-        accessToken,
+      accessToken,
         refreshToken,
         expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
       },

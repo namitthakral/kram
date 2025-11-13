@@ -107,8 +107,9 @@ class StudentDashboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _subjectPerformance =
-          await _studentService.getSubjectPerformance(userUuid);
+      _subjectPerformance = await _studentService.getSubjectPerformance(
+        userUuid,
+      );
       _subjectPerformanceError = null;
     } on Exception catch (e) {
       _subjectPerformanceError = e.toString();
@@ -127,8 +128,10 @@ class StudentDashboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _upcomingEvents =
-          await _studentService.getUpcomingEvents(userUuid, limit: limit);
+      _upcomingEvents = await _studentService.getUpcomingEvents(
+        userUuid,
+        limit: limit,
+      );
       _upcomingEventsError = null;
     } on Exception catch (e) {
       _upcomingEventsError = e.toString();
@@ -196,10 +199,7 @@ class StudentDashboardProvider extends ChangeNotifier {
   }
 
   /// Load attendance history
-  Future<void> loadAttendanceHistory(
-    String userUuid, {
-    int? semesterId,
-  }) async {
+  Future<void> loadAttendanceHistory(String userUuid, {int? semesterId}) async {
     _isLoadingAttendanceHistory = true;
     _attendanceHistoryError = null;
     notifyListeners();
@@ -256,20 +256,28 @@ class StudentDashboardProvider extends ChangeNotifier {
     }
 
     try {
-      final subjects = _subjectPerformance!['subjects'] as List<dynamic>?;
+      final data = _subjectPerformance!['data'] as Map<String, dynamic>?;
+      if (data == null) {
+        return [];
+      }
+
+      final subjects = data['subjects'] as List<dynamic>?;
       if (subjects == null) {
         return [];
       }
 
-      return subjects.map((subject) => SubjectPerformance(
-          subject: subject['name'] ?? 'Unknown',
-          teacher: subject['teacherName'] ?? 'TBD',
-          nextTest: subject['nextTest'] ?? 'TBD',
-          grade: subject['grade'] ?? 'N/A',
-          percentage: (subject['percentage'] ?? 0).toDouble(),
-          color: subject['color'] ?? '#4F7CFF',
-        ),
-      ).toList();
+      return subjects
+          .map(
+            (subject) => SubjectPerformance(
+              subject: subject['subject'] ?? 'Unknown',
+              teacher: subject['teacher'] ?? 'TBD',
+              nextTest: subject['nextTest'] ?? 'TBD',
+              grade: subject['grade'] ?? 'N/A',
+              percentage: (subject['percentage'] ?? 0).toDouble(),
+              color: subject['color'] ?? '#4F7CFF',
+            ),
+          )
+          .toList();
     } on Exception catch (e) {
       debugPrint('Error parsing subject performance: $e');
       return [];

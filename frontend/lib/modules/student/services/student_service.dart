@@ -176,7 +176,12 @@ class StudentService {
       );
 
       if (response.statusCode == 200) {
-        return response.data as List<dynamic>;
+        // Extract assignments array from nested response structure
+        final data = response.data['data'] as Map<String, dynamic>?;
+        if (data == null) {
+          return [];
+        }
+        return data['assignments'] as List<dynamic>? ?? [];
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -308,7 +313,12 @@ class StudentService {
       );
 
       if (response.statusCode == 200) {
-        return response.data as List<dynamic>;
+        // Extract events array from nested response structure
+        final data = response.data['data'] as Map<String, dynamic>?;
+        if (data == null) {
+          return [];
+        }
+        return data['events'] as List<dynamic>? ?? [];
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -335,10 +345,7 @@ class StudentService {
     try {
       final response = await _apiService.dio.get(
         '/students',
-        queryParameters: {
-          'page': page.toString(),
-          'limit': limit.toString(),
-        },
+        queryParameters: {'page': page.toString(), 'limit': limit.toString()},
       );
 
       if (response.statusCode == 200) {
