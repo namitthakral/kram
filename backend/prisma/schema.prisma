@@ -110,7 +110,7 @@ model Institution {
 
   // Relations
   students        Student[]
-  programs        Program[]
+  courses         Course[] // Courses (degree programs/streams)
   teachers        Teacher[]
   staff           Staff[]
   academicYears   AcademicYear[]
@@ -125,7 +125,6 @@ model Institution {
   visitorPasses   VisitorPass[]
   timeTables      TimeTable[]
   timeSlots       TimeSlot[]
-  subjects        Subject[]
   rooms           Room[]
   dashboardStats  DashboardStats[]
   performanceMetrics PerformanceMetrics[]
@@ -153,6 +152,18 @@ enum InstitutionStatus {
   INACTIVE
 }
 
+
+// ============================================================================
+// ACADEMIC STRUCTURE MODELS
+// ============================================================================
+// 
+// INDIAN EDUCATION SYSTEM TERMINOLOGY:
+// - Program (Course in Indian context) = Degree/Stream (e.g., B.Sc. CS, Commerce, Science-Medical)
+// - Course (Subject/Paper in Indian context) = Individual subject (e.g., Data Structures, Physics, English)
+// 
+// Note: This schema uses international terminology in database
+// but APIs should expose Indian terminology for better UX
+// ============================================================================
 
 model AcademicYear {
   id           Int             @id @default(autoincrement())
@@ -200,57 +211,73 @@ model Semester {
   @@map("semesters")
 }
 
-model Program {
+// Course model - Represents "Course" in Indian context
+// In Indian education: Course = Degree/Stream program
+// Examples: 
+// - Colleges: "B.Sc. Computer Science", "B.Com", "BCA", "M.Tech"
+// - Schools (11-12): "Science - Medical", "Science - Non-Medical", "Commerce", "Arts"
+// - Schools (K-10): Optional, can use general "Primary Education" or none
+model Course {
   id                  Int            @id @default(autoincrement())
   institutionId       Int            @map("institution_id")
-  name                String         @db.VarChar(200)
-  code                String?        @unique @db.VarChar(20)
-  degreeType          DegreeType     @map("degree_type")
-  durationYears       Decimal?       @map("duration_years") @db.Decimal(3, 1)
-  totalCredits        Int?           @map("total_credits")
+  name                String         @db.VarChar(200) // e.g., "B.Sc. Computer Science", "Science - Medical Stream"
+  code                String?        @unique @db.VarChar(20) // e.g., "BSCS", "SCI-MED"
+  degreeType          DegreeType     @map("degree_type") // For schools (11-12), use CERTIFICATE
+  durationYears       Decimal?       @map("duration_years") @db.Decimal(3, 1) // e.g., 3.0 for B.Sc., 2.0 for 11-12
+  totalCredits        Int?           @map("total_credits") // Optional for schools
   description         String?
-  eligibilityCriteria String?        @map("eligibility_criteria")
-  status              ProgramStatus  @default(ACTIVE)
+  eligibilityCriteria String?        @map("eligibility_criteria") // e.g., "Passed 10th with 60%"
+  status              CourseStatus   @default(ACTIVE)
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
   // Relations
   institution         Institution    @relation(fields: [institutionId], references: [id])
-  courses             Course[]
+  subjects            Subject[]      // Subjects within this course/program
   students            Student[]
   feeStructures       FeeStructure[]
   timeTables          TimeTable[]
   classTeachers       ClassTeacher[]
 
-  @@map("programs")
+  @@map("courses")
 }
 
-model Course {
+// Subject model - Represents "Subject/Paper" in Indian context
+// In Indian education: Subject = Individual academic subject/paper
+// Examples: 
+// - Colleges: "Data Structures", "DBMS", "Web Development", "Organic Chemistry"
+// - Schools: "English", "Hindi", "Mathematics", "Physics", "Chemistry", "Biology"
+model Subject {
   id              Int          @id @default(autoincrement())
-  programId       Int?         @map("program_id")
-  courseName      String       @map("course_name") @db.VarChar(200)
-  courseCode      String       @unique @map("course_code") @db.VarChar(20)
-  credits         Int
-  lectureHours    Int          @default(0) @map("lecture_hours")
-  labHours        Int          @default(0) @map("lab_hours")
+  courseId        Int?         @map("course_id") // Optional - links to Course (degree/stream)
+  subjectName     String       @map("subject_name") @db.VarChar(200) // e.g., "Data Structures", "English"
+  subjectCode     String       @unique @map("subject_code") @db.VarChar(20) // e.g., "CS201", "ENG101", "MATH10"
+  credits         Int          // For colleges; marks/total for schools
+  theoryHours     Int          @default(0) @map("theory_hours") // Lecture hours
+  practicalHours  Int          @default(0) @map("practical_hours") // Lab hours
   tutorialHours   Int          @default(0) @map("tutorial_hours")
-  courseType      CourseType   @default(CORE) @map("course_type")
-  prerequisites   String?      // JSON array of course_ids
+  subjectType     SubjectType  @default(CORE) @map("subject_type") // CORE, ELECTIVE
+  prerequisites   String?      // JSON array of subject_ids - mainly for college
   description     String?
   syllabus        String?
-  status          CourseStatus @default(ACTIVE)
+  status          SubjectStatus @default(ACTIVE)
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
   // Relations
-  program         Program?     @relation(fields: [programId], references: [id])
+  course          Course?      @relation(fields: [courseId], references: [id]) // Links to Course (program/stream)
   academicRecords AcademicRecord[]
   classSections   ClassSection[]
   enrollments     Enrollment[]
   examinations    Examination[]
   assignments     Assignment[]
+  // Timetabling and scheduling relations
+  timetables      TimeTable[]
+  teacherSubjects TeacherSubject[]
+  studentProgress StudentProgress[]
+  attendanceSummary AttendanceSummary[]
 
-  @@map("courses")
+  @@map("subjects")
 }
 
 // Academic Enums
@@ -263,19 +290,31 @@ enum DegreeType {
   OTHER
 }
 
-enum ProgramStatus {
+// Course Status (was ProgramStatus)
+enum CourseStatus {
   ACTIVE
   INACTIVE
 }
 
-enum CourseType {
+// Subject Type (was CourseType)
+// Combined from academic and timetable contexts
+enum SubjectType {
   CORE
   ELECTIVE
   MINOR
   MAJOR
+  OPTIONAL
+  EXTRA_CURRICULAR
+  LANGUAGE
+  SCIENCE
+  MATHEMATICS
+  SOCIAL_STUDIES
+  ARTS
+  PHYSICAL_EDUCATION
 }
 
-enum CourseStatus {
+// Subject Status (was CourseStatus)
+enum SubjectStatus {
   ACTIVE
   INACTIVE
 }
@@ -297,7 +336,7 @@ model Student {
   id                    Int              @id @default(autoincrement())
   userId                Int              @unique @map("user_id")
   institutionId         Int              @map("institution_id")
-  programId             Int?             @map("program_id")
+  courseId              Int?             @map("course_id") // Course (program/stream) student is enrolled in
   admissionNumber       String           @unique @map("admission_number") @db.VarChar(50)
   rollNumber            String?          @map("roll_number") @db.VarChar(50)
   admissionDate         DateTime?        @map("admission_date") @db.Date
@@ -320,7 +359,7 @@ model Student {
   // Relations
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
-  program               Program?         @relation(fields: [programId], references: [id])
+  course                Course?          @relation(fields: [courseId], references: [id])
   parents               Parent[]
   academicRecords       AcademicRecord[]
   attendance            Attendance[]
@@ -498,7 +537,7 @@ model AcademicRecord {
   id          Int      @id @default(autoincrement())
   studentId   Int      @map("student_id")
   semesterId  Int      @map("semester_id")
-  courseId    Int      @map("course_id")
+  subjectId   Int      @map("subject_id") // Subject (individual paper/subject)
   marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
   maxMarks    Decimal? @map("max_marks") @db.Decimal(6, 2)
   grade       String?  @db.VarChar(5)
@@ -512,9 +551,9 @@ model AcademicRecord {
   // Relations
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   semester    Semester @relation(fields: [semesterId], references: [id])
-  course      Course   @relation(fields: [courseId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
 
-  @@unique([studentId, semesterId, courseId], name: "unique_record")
+  @@unique([studentId, semesterId, subjectId], name: "unique_record")
   @@map("academic_records")
 }
 
@@ -539,7 +578,7 @@ model Attendance {
 
 model ClassSection {
   id          Int      @id @default(autoincrement())
-  courseId    Int      @map("course_id")
+  subjectId   Int      @map("subject_id") // Subject being taught in this section
   semesterId  Int      @map("semester_id")
   teacherId   Int      @map("teacher_id")
   sectionName String   @map("section_name") @db.VarChar(10)
@@ -552,7 +591,7 @@ model ClassSection {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  course      Course   @relation(fields: [courseId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
   semester    Semester @relation(fields: [semesterId], references: [id])
   teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   attendance  Attendance[]
@@ -564,7 +603,7 @@ model ClassSection {
 model Enrollment {
   id                Int              @id @default(autoincrement())
   studentId         Int              @map("student_id")
-  courseId          Int              @map("course_id")
+  subjectId         Int              @map("subject_id") // Subject student is enrolled in
   semesterId        Int              @map("semester_id")
   enrollmentDate    DateTime         @default(now()) @map("enrollment_date") @db.Date
   enrollmentStatus  EnrollmentStatus @default(ENROLLED) @map("enrollment_status")
@@ -576,10 +615,10 @@ model Enrollment {
 
   // Relations
   student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course            Course           @relation(fields: [courseId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
-  @@unique([studentId, courseId, semesterId], name: "unique_enrollment")
+  @@unique([studentId, subjectId, semesterId], name: "unique_enrollment")
   @@map("enrollments")
 }
 
@@ -614,7 +653,7 @@ enum EnrollmentStatus {
 
 model Examination {
   id                  Int              @id @default(autoincrement())
-  courseId            Int              @map("course_id")
+  subjectId           Int              @map("subject_id") // Subject being examined
   semesterId          Int              @map("semester_id")
   examName            String           @map("exam_name") @db.VarChar(100)
   examType            ExamType         @map("exam_type")
@@ -632,7 +671,7 @@ model Examination {
   updatedAt           DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  course              Course           @relation(fields: [courseId], references: [id])
+  subject             Subject          @relation(fields: [subjectId], references: [id])
   semester            Semester         @relation(fields: [semesterId], references: [id])
   creator             Teacher          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   results             ExamResult[]
@@ -665,7 +704,7 @@ model ExamResult {
 
 model Assignment {
   id                      Int                @id @default(autoincrement())
-  courseId                Int                @map("course_id")
+  subjectId               Int                @map("subject_id") // Subject for this assignment
   sectionId               Int?               @map("section_id")
   teacherId               Int                @map("teacher_id")
   title                   String             @db.VarChar(200)
@@ -683,7 +722,7 @@ model Assignment {
   updatedAt               DateTime           @updatedAt @map("updated_at")
 
   // Relations
-  course                  Course             @relation(fields: [courseId], references: [id])
+  subject                 Subject            @relation(fields: [subjectId], references: [id])
   section                 ClassSection?      @relation(fields: [sectionId], references: [id])
   teacher                 Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   submissions             Submission[]
@@ -751,7 +790,7 @@ enum SubmissionStatus {
 model FeeStructure {
   id                Int              @id @default(autoincrement())
   institutionId     Int              @map("institution_id")
-  programId         Int?             @map("program_id")
+  courseId          Int?             @map("course_id") // Course (program/stream)
   academicYearId    Int              @map("academic_year_id")
   feeType           FeeType          @map("fee_type")
   feeName           String           @map("fee_name") @db.VarChar(100)
@@ -768,7 +807,7 @@ model FeeStructure {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  program           Program?         @relation(fields: [programId], references: [id])
+  course            Course?          @relation(fields: [courseId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
   studentFees       StudentFee[]
 
@@ -1493,13 +1532,22 @@ enum VisitorPassStatus {
 }
 
 
+// ============================================================================
+// TIMETABLE AND SCHEDULE MODELS
+// ============================================================================
+//
+// Subject model here is used for timetabling and teacher assignments
+// This is separate from Course model (which stores academic subjects)
+// Both represent "Subject" in Indian context but serve different purposes
+// ============================================================================
+
 model TimeTable {
   id                Int              @id @default(autoincrement())
   institutionId     Int              @map("institution_id")
   academicYearId    Int              @map("academic_year_id")
   semesterId        Int              @map("semester_id")
   classId           Int?             @map("class_id") // For school classes
-  programId         Int?             @map("program_id") // For college programs
+  courseId          Int?             @map("course_id") // For courses (programs/streams)
   section           String?          @db.VarChar(10)
   dayOfWeek         DayOfWeek        @map("day_of_week")
   timeSlotId        Int              @map("time_slot_id")
@@ -1514,14 +1562,14 @@ model TimeTable {
   institution       Institution      @relation(fields: [institutionId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
-  program           Program?         @relation(fields: [programId], references: [id])
+  course            Course?          @relation(fields: [courseId], references: [id])
   timeSlot          TimeSlot         @relation(fields: [timeSlotId], references: [id])
   subject           Subject          @relation(fields: [subjectId], references: [id])
   teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   room              Room?            @relation(fields: [roomId], references: [id])
   substitutions     TeacherSubstitution[]
 
-  @@unique([institutionId, academicYearId, semesterId, programId, section, dayOfWeek, timeSlotId], name: "unique_timetable_slot")
+  @@unique([institutionId, academicYearId, semesterId, courseId, section, dayOfWeek, timeSlotId], name: "unique_timetable_slot")
   @@map("timetables")
 }
 
@@ -1544,30 +1592,8 @@ model TimeSlot {
   @@map("time_slots")
 }
 
-model Subject {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  name              String           @db.VarChar(100)
-  code              String           @db.VarChar(20)
-  description       String?
-  subjectType       SubjectType      @map("subject_type")
-  credits           Int?
-  theoryHours       Int              @default(0) @map("theory_hours")
-  practicalHours    Int              @default(0) @map("practical_hours")
-  isActive          Boolean          @default(true) @map("is_active")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  timetables        TimeTable[]
-  teacherSubjects   TeacherSubject[]
-  studentProgress   StudentProgress[]
-  attendanceSummary AttendanceSummary[]
-
-  @@unique([institutionId, code], name: "unique_subject_code")
-  @@map("subjects")
-}
+// ScheduleSubject table removed - using unified Subject table instead
+// TimeTable, TeacherSubject, etc. now reference the main Subject model
 
 model Room {
   id                Int              @id @default(autoincrement())
@@ -1634,7 +1660,7 @@ model TeacherSubstitution {
 model ClassTeacher {
   id                Int              @id @default(autoincrement())
   teacherId         Int              @map("teacher_id")
-  programId         Int?             @map("program_id")
+  courseId          Int?             @map("course_id") // Course (program/stream) for this class
   classLevel        String?          @map("class_level") @db.VarChar(20) // For schools: "Class 10", "Grade 5"
   section           String?          @db.VarChar(10)
   academicYearId    Int              @map("academic_year_id")
@@ -1645,10 +1671,10 @@ model ClassTeacher {
 
   // Relations
   teacher           Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  program           Program?         @relation(fields: [programId], references: [id])
+  course            Course?          @relation(fields: [courseId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
 
-  @@unique([programId, classLevel, section, academicYearId], name: "unique_class_teacher")
+  @@unique([courseId, classLevel, section, academicYearId], name: "unique_class_teacher")
   @@map("class_teachers")
 }
 
@@ -1675,18 +1701,7 @@ enum SlotType {
   STUDY_HALL
 }
 
-enum SubjectType {
-  CORE
-  ELECTIVE
-  OPTIONAL
-  EXTRA_CURRICULAR
-  LANGUAGE
-  SCIENCE
-  MATHEMATICS
-  SOCIAL_STUDIES
-  ARTS
-  PHYSICAL_EDUCATION
-}
+// SubjectType enum moved to academic.prisma to avoid duplication
 
 enum RoomType {
   CLASSROOM

@@ -5,7 +5,7 @@
 model FeeStructure {
   id                Int              @id @default(autoincrement())
   institutionId     Int              @map("institution_id")
-  programId         Int?             @map("program_id")
+  courseId          Int?             @map("course_id") // Course (program/stream)
   academicYearId    Int              @map("academic_year_id")
   feeType           FeeType          @map("fee_type")
   feeName           String           @map("fee_name") @db.VarChar(100)
@@ -22,7 +22,7 @@ model FeeStructure {
 
   // Relations
   institution       Institution      @relation(fields: [institutionId], references: [id])
-  program           Program?         @relation(fields: [programId], references: [id])
+  course            Course?          @relation(fields: [courseId], references: [id])
   academicYear      AcademicYear     @relation(fields: [academicYearId], references: [id])
   studentFees       StudentFee[]
 

@@ -1,54 +1,106 @@
 # Ed-verse 🎓
 
-A modern educational platform built with a monorepo architecture featuring:
+A comprehensive educational management platform built with modern technologies, designed specifically for Indian schools, colleges, and universities.
 
-- **Backend**: Node.js with TypeScript and Express
-- **Frontend**: Flutter for cross-platform mobile and web applications
+## 🌟 Key Features
 
-## 🏗️ Project Structure
+- **Multi-Institution Support** - Manage multiple educational institutions from a single platform
+- **Indian Education System** - Built with Indian terminology (courses, subjects, streams)
+- **Role-Based Access** - Super Admin, Admin, Teacher, Student, Parent, Librarian, Staff
+- **Academic Management** - Complete student lifecycle from admission to graduation
+- **Attendance Tracking** - Real-time attendance with analytics
+- **Assessment & Grading** - Assignments, examinations, and comprehensive grading system
+- **Fee Management** - Fee structures, collections, and payment tracking
+- **Library Management** - Book cataloging, issue/return, and reservations
+- **Timetable Management** - Automated scheduling with conflict detection
+- **Communication Hub** - Notices, announcements, and messaging system
+- **Analytics Dashboard** - Comprehensive insights for administrators and teachers
+
+## 🏗️ Technology Stack
+
+### Backend
+- **Runtime**: Node.js (v18+)
+- **Framework**: NestJS with TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: JWT with role-based access control
+- **Validation**: class-validator
+- **Security**: Helmet, CORS, Rate Limiting
+
+### Frontend
+- **Framework**: Flutter (v3.10+)
+- **State Management**: Riverpod
+- **HTTP Client**: Dio
+- **Platforms**: Web, Android, iOS
+
+## 🇮🇳 Indian Education System Terminology
+
+This platform uses terminology familiar to Indian educational institutions:
+
+| Term | Meaning | Examples |
+|------|---------|----------|
+| **Course** | Degree/Stream/Program | B.Sc. Computer Science, Science-Medical, Commerce, Arts |
+| **Subject** | Individual Academic Paper | Data Structures, Physics, English, Mathematics |
+| **Semester** | Academic Term | Fall 2024, Spring 2025 |
+| **Section** | Class Division | Section A, Section B |
+
+### Database Structure
+- `courses` table → Degree programs and streams
+- `subjects` table → Individual subjects/papers that students study
+- `enrollments` → Students enrolled in specific subjects
+- `academic_records` → Grades and marks for subjects
+
+## 📁 Project Structure
 
 ```
 ed-verse/
-├── backend/                 # Node.js TypeScript API
+├── backend/                    # Node.js + NestJS API
 │   ├── src/
-│   │   ├── controllers/     # Route controllers
-│   │   ├── middleware/      # Express middleware
-│   │   ├── routes/         # API routes
-│   │   ├── services/       # Business logic
-│   │   ├── types/          # TypeScript type definitions
-│   │   ├── utils/          # Utility functions
-│   │   └── index.ts        # Application entry point
-│   ├── tests/              # Backend tests
-│   ├── package.json        # Backend dependencies
-│   ├── tsconfig.json       # TypeScript configuration
-│   └── .env.example        # Environment variables template
-├── frontend/               # Flutter application
+│   │   ├── auth/              # Authentication & authorization
+│   │   ├── users/             # User management
+│   │   ├── students/          # Student management
+│   │   ├── teachers/          # Teacher management
+│   │   ├── courses/           # Subjects management (academic papers)
+│   │   ├── attendance/        # Attendance tracking
+│   │   ├── assignments/       # Assignment management
+│   │   ├── examinations/      # Examination system
+│   │   ├── fees/              # Fee management
+│   │   ├── library/           # Library management
+│   │   ├── timetable/         # Scheduling system
+│   │   ├── communication/     # Notices & messages
+│   │   └── analytics/         # Dashboard & reports
+│   ├── prisma/
+│   │   ├── schema/            # Modular Prisma schemas
+│   │   │   ├── core.prisma
+│   │   │   ├── academic.prisma
+│   │   │   ├── users.prisma
+│   │   │   └── ...
+│   │   ├── schema.prisma      # Auto-generated combined schema
+│   │   └── seed.ts            # Database seeding
+│   └── package.json
+│
+├── frontend/                  # Flutter application
 │   ├── lib/
-│   │   ├── screens/        # UI screens
-│   │   ├── widgets/        # Reusable widgets
-│   │   ├── services/       # API services
-│   │   ├── models/         # Data models
-│   │   ├── providers/      # State management
-│   │   ├── utils/          # Utility functions
-│   │   └── main.dart       # Flutter app entry point
-│   ├── assets/             # Images, fonts, icons
-│   ├── test/               # Frontend tests
-│   ├── pubspec.yaml        # Flutter dependencies
-│   └── analysis_options.yaml # Dart linting rules
-├── docs/                   # Documentation
-├── scripts/                # Build and deployment scripts
-└── package.json           # Root package.json for monorepo scripts
+│   │   ├── core/              # Core utilities & constants
+│   │   ├── modules/           # Feature modules
+│   │   │   ├── admin/
+│   │   │   ├── teacher/
+│   │   │   ├── student/
+│   │   │   └── parent/
+│   │   └── main.dart
+│   └── pubspec.yaml
+│
+├── docs/                      # Documentation
+└── scripts/                   # Build & deployment scripts
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-Make sure you have the following installed:
-
-- **Node.js** (v18+) and **npm** (v9+)
-- **Flutter** (v3.10+) - [Installation Guide](https://flutter.dev/docs/get-started/install)
-- **Git**
+- **Node.js** v18 or higher
+- **npm** v9 or higher
+- **PostgreSQL** v12 or higher
+- **Flutter** v3.10 or higher (for frontend development)
 
 ### 1. Clone the Repository
 
@@ -57,152 +109,299 @@ git clone https://github.com/namitthakral/ed-verse.git
 cd ed-verse
 ```
 
-### 2. Install Dependencies
-
-```bash
-# Install root dependencies and backend dependencies
-npm run setup
-```
-
-### 3. Environment Setup
-
-```bash
-# Copy environment template for backend
-cp backend/.env.example backend/.env
-# Edit the .env file with your configuration
-```
-
-### 4. Development
-
-```bash
-# Start both backend and frontend in development mode
-npm run dev
-
-# Or start them separately:
-npm run dev:backend    # Starts backend on http://localhost:3000
-npm run dev:frontend   # Starts Flutter app
-```
-
-## 🛠️ Available Scripts
-
-### Root Level Scripts
-
-```bash
-npm run dev             # Start both backend and frontend
-npm run build           # Build both projects
-npm run test            # Run all tests
-npm run lint            # Lint backend code
-npm run clean           # Clean all build artifacts
-npm run setup           # Install all dependencies
-```
-
-### Backend Scripts
+### 2. Backend Setup
 
 ```bash
 cd backend
-npm run dev             # Start development server with hot reload
-npm run build           # Build TypeScript to JavaScript
-npm run start           # Start production server
-npm run test            # Run Jest tests
-npm run lint            # Run ESLint
-npm run lint:fix        # Fix ESLint errors automatically
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database credentials
+
+# Set up database
+npm run db:generate    # Generate Prisma client
+npm run db:push        # Apply schema to database
+npm run db:seed        # Seed with sample data
+
+# Start development server
+npm run dev
 ```
 
-### Frontend Scripts
+The backend will be available at `http://localhost:3000`
+
+### 3. Frontend Setup
 
 ```bash
 cd frontend
-flutter run             # Run on connected device/emulator
-flutter run -d web      # Run on web
-flutter build web       # Build for web
-flutter build apk       # Build Android APK
-flutter build ios       # Build iOS app
-flutter test            # Run tests
-flutter analyze         # Analyze code
+
+# Install dependencies
+flutter pub get
+
+# Run on web
+flutter run -d chrome
+
+# Run on mobile (with device/simulator connected)
+flutter run
 ```
 
-## 🔧 Development Workflow
+## 📝 Sample Accounts
 
-### Backend Development
+After running the seed script, you can login with these accounts:
 
-1. **API Development**: Add routes in `backend/src/routes/`
-2. **Business Logic**: Implement services in `backend/src/services/`
-3. **Controllers**: Handle requests in `backend/src/controllers/`
-4. **Middleware**: Add custom middleware in `backend/src/middleware/`
-5. **Types**: Define TypeScript interfaces in `backend/src/types/`
+```
+Super Admin:  admin@edverse.edu      / admin123!
+Teacher:      john.doe@edverse.edu   / teacher123!
+Students:     student1@edverse.edu   / student123!
+              student2@edverse.edu   / student123!
+              ...student5@edverse.edu
+Parents:      parent1@email.com      / parent123!
+              parent2@email.com      / parent123!
+              ...parent5@email.com
+Librarian:    librarian@edverse.edu  / librarian123!
+Staff:        staff@edverse.edu      / staff123!
+```
 
-### Frontend Development
+## 🎯 Key Features Breakdown
 
-1. **Screens**: Create new screens in `frontend/lib/screens/`
-2. **Widgets**: Build reusable components in `frontend/lib/widgets/`
-3. **State Management**: Use Riverpod providers in `frontend/lib/providers/`
-4. **API Integration**: Implement services in `frontend/lib/services/`
-5. **Models**: Define data models in `frontend/lib/models/`
+### For Administrators
+- ✅ Multi-institution management
+- ✅ User role management
+- ✅ Course and subject setup
+- ✅ Fee structure configuration
+- ✅ Academic year & semester management
+- ✅ Comprehensive analytics dashboard
+- ✅ System-wide notices and announcements
 
-## 📱 Platform Support
+### For Teachers
+- ✅ Class attendance marking
+- ✅ Assignment creation and grading
+- ✅ Examination scheduling
+- ✅ Student performance tracking
+- ✅ Timetable management
+- ✅ Class-specific communication
 
-The Flutter frontend supports:
+### For Students
+- ✅ View enrolled subjects
+- ✅ Check attendance records
+- ✅ Submit assignments online
+- ✅ View exam schedules and results
+- ✅ Fee payment status
+- ✅ Library book reservations
+- ✅ Digital gate pass requests
 
-- **Web** (Progressive Web App)
-- **Android** (Native mobile app)
-- **iOS** (Native mobile app)
+### For Parents
+- ✅ Monitor child's attendance
+- ✅ View academic performance
+- ✅ Fee payment tracking
+- ✅ Communication with teachers
+- ✅ Receive important notices
+
+## 🔌 API Documentation
+
+The backend API follows RESTful conventions:
+
+```
+Base URL: http://localhost:3000/api
+
+Authentication:
+POST   /auth/login          # User login
+POST   /auth/register       # User registration
+POST   /auth/refresh        # Refresh token
+GET    /auth/profile        # Get user profile
+
+Students:
+GET    /students            # List all students
+GET    /students/:id        # Get student details
+POST   /students            # Create student (Admin)
+PATCH  /students/:id        # Update student
+DELETE /students/:id        # Delete student
+
+Subjects:
+GET    /subjects            # List all subjects
+GET    /subjects/:id        # Get subject details
+GET    /subjects/course/:id # Get subjects for a course
+POST   /subjects            # Create subject (Admin)
+PATCH  /subjects/:id        # Update subject
+DELETE /subjects/:id        # Delete subject
+
+...and many more endpoints
+```
+
+See [backend/README.md](backend/README.md) for complete API documentation.
+
+## 🗄️ Database Management
+
+```bash
+cd backend
+
+# Generate Prisma client
+npm run db:generate
+
+# Push schema changes
+npm run db:push
+
+# Create a migration
+npm run db:migrate
+
+# Open Prisma Studio (Database GUI)
+npm run db:studio
+
+# Reset database
+npm run db:reset
+
+# Seed database with sample data
+npm run db:seed
+```
 
 ## 🧪 Testing
 
-### Backend Testing
+### Backend Tests
+```bash
+cd backend
+npm test                 # Run all tests
+npm run test:watch      # Watch mode
+npm run test:cov        # With coverage
+```
 
-- **Framework**: Jest with ts-jest
-- **Location**: `backend/tests/`
-- **Run**: `cd backend && npm test`
+### Frontend Tests
+```bash
+cd frontend
+flutter test            # Run all tests
+flutter test --coverage # With coverage
+```
 
-### Frontend Testing
-
-- **Framework**: Flutter Test
-- **Location**: `frontend/test/`
-- **Run**: `cd frontend && flutter test`
-
-## 📦 Deployment
+## 🚀 Deployment
 
 ### Backend Deployment
 
-The backend can be deployed to any Node.js hosting service:
+1. **Build for production:**
+   ```bash
+   cd backend
+   npm run build
+   ```
 
-- Build: `cd backend && npm run build`
-- Start: `npm start`
+2. **Set environment variables:**
+   - `NODE_ENV=production`
+   - `DATABASE_URL=<production-db-url>`
+   - `JWT_SECRET=<strong-secret>`
+   - `PORT=3000`
+
+3. **Start production server:**
+   ```bash
+   npm start
+   ```
 
 ### Frontend Deployment
 
-- **Web**: `cd frontend && flutter build web`
-- **Android**: `cd frontend && flutter build apk`
-- **iOS**: `cd frontend && flutter build ios`
+**Web:**
+```bash
+cd frontend
+flutter build web
+# Deploy the build/web folder to your hosting service
+```
+
+**Android:**
+```bash
+flutter build apk --release
+# Find APK in build/app/outputs/flutter-apk/
+```
+
+**iOS:**
+```bash
+flutter build ios --release
+# Build and archive using Xcode
+```
+
+## 📚 Documentation
+
+- [Backend API Documentation](backend/README.md)
+- [Database Schema Documentation](backend/prisma/README.md)
+- [Subjects Module Documentation](backend/src/courses/README.md)
+- [Frontend Architecture](frontend/README.md)
+
+## 🔒 Security Features
+
+- **JWT Authentication** with refresh tokens
+- **Role-Based Access Control** (RBAC)
+- **Password Hashing** with bcrypt
+- **Rate Limiting** to prevent abuse
+- **CORS Configuration** for secure cross-origin requests
+- **Input Validation** at multiple layers
+- **SQL Injection Protection** via Prisma ORM
+- **XSS Protection** with Helmet middleware
+
+## 🛠️ Development Tools
+
+### Backend Development
+```bash
+npm run dev           # Start with hot reload
+npm run lint          # Check code quality
+npm run lint:fix      # Auto-fix linting issues
+npm run format        # Format code with Prettier
+npm run build         # Build for production
+```
+
+### Frontend Development
+```bash
+flutter run           # Run in debug mode
+flutter analyze       # Static analysis
+flutter format .      # Format Dart code
+flutter clean         # Clean build artifacts
+```
+
+## 🐛 Troubleshooting
+
+### Database Issues
+```bash
+# If Prisma client is out of sync
+npm run db:generate
+
+# If schema doesn't match database
+npm run db:push
+
+# If you want to start fresh
+npm run db:reset
+```
+
+### Port Conflicts
+If port 3000 is already in use, change it in `.env`:
+```env
+PORT=3001
+```
+
+### Flutter Issues
+```bash
+# Clear Flutter cache
+flutter clean
+flutter pub get
+
+# Update Flutter
+flutter upgrade
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Troubleshooting
+## 🆘 Support
 
-### Common Issues
-
-1. **Flutter not found**: Make sure Flutter is installed and added to PATH
-2. **Node.js version**: Ensure you're using Node.js v18 or higher
-3. **Port conflicts**: Backend runs on port 3000 by default (configurable via .env)
-
-### Getting Help
-
-- Check the [Issues](https://github.com/namitthakral/ed-verse/issues) page
-- Create a new issue if you find a bug
-- Refer to [Flutter documentation](https://flutter.dev/docs)
-- Refer to [Node.js documentation](https://nodejs.org/docs)
+- **Issues**: [GitHub Issues](https://github.com/namitthakral/ed-verse/issues)
+- **Documentation**: Check the `docs/` folder
+- **Email**: support@edverse.edu
 
 ---
 
-Built with ❤️ by [Namit Thakral](https://github.com/namitthakral)
+**Built with ❤️ for Indian educational institutions**
+
+Empowering schools, colleges, and universities with modern technology.

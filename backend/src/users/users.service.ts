@@ -133,7 +133,7 @@ export class UsersService {
         student: {
           include: {
             institution: true,
-            program: true,
+            course: true,
             parents: {
               include: {
                 user: true,
@@ -152,7 +152,7 @@ export class UsersService {
               include: {
                 user: true,
                 institution: true,
-                program: true,
+                course: true,
               },
             },
           },
@@ -424,7 +424,7 @@ export class UsersService {
         student: {
           include: {
             institution: true,
-            program: true,
+            course: true,
             parents: {
               include: {
                 user: true,
@@ -443,7 +443,7 @@ export class UsersService {
               include: {
                 user: true,
                 institution: true,
-                program: true,
+                course: true,
               },
             },
           },

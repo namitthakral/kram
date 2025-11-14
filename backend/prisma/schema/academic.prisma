@@ -1,6 +1,14 @@
 // ============================================================================
 // ACADEMIC STRUCTURE MODELS
 // ============================================================================
+// 
+// INDIAN EDUCATION SYSTEM TERMINOLOGY:
+// - Program (Course in Indian context) = Degree/Stream (e.g., B.Sc. CS, Commerce, Science-Medical)
+// - Course (Subject/Paper in Indian context) = Individual subject (e.g., Data Structures, Physics, English)
+// 
+// Note: This schema uses international terminology in database
+// but APIs should expose Indian terminology for better UX
+// ============================================================================
 
 model AcademicYear {
   id           Int             @id @default(autoincrement())
@@ -48,57 +56,73 @@ model Semester {
   @@map("semesters")
 }
 
-model Program {
+// Course model - Represents "Course" in Indian context
+// In Indian education: Course = Degree/Stream program
+// Examples: 
+// - Colleges: "B.Sc. Computer Science", "B.Com", "BCA", "M.Tech"
+// - Schools (11-12): "Science - Medical", "Science - Non-Medical", "Commerce", "Arts"
+// - Schools (K-10): Optional, can use general "Primary Education" or none
+model Course {
   id                  Int            @id @default(autoincrement())
   institutionId       Int            @map("institution_id")
-  name                String         @db.VarChar(200)
-  code                String?        @unique @db.VarChar(20)
-  degreeType          DegreeType     @map("degree_type")
-  durationYears       Decimal?       @map("duration_years") @db.Decimal(3, 1)
-  totalCredits        Int?           @map("total_credits")
+  name                String         @db.VarChar(200) // e.g., "B.Sc. Computer Science", "Science - Medical Stream"
+  code                String?        @unique @db.VarChar(20) // e.g., "BSCS", "SCI-MED"
+  degreeType          DegreeType     @map("degree_type") // For schools (11-12), use CERTIFICATE
+  durationYears       Decimal?       @map("duration_years") @db.Decimal(3, 1) // e.g., 3.0 for B.Sc., 2.0 for 11-12
+  totalCredits        Int?           @map("total_credits") // Optional for schools
   description         String?
-  eligibilityCriteria String?        @map("eligibility_criteria")
-  status              ProgramStatus  @default(ACTIVE)
+  eligibilityCriteria String?        @map("eligibility_criteria") // e.g., "Passed 10th with 60%"
+  status              CourseStatus   @default(ACTIVE)
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
   // Relations
   institution         Institution    @relation(fields: [institutionId], references: [id])
-  courses             Course[]
+  subjects            Subject[]      // Subjects within this course/program
   students            Student[]
   feeStructures       FeeStructure[]
   timeTables          TimeTable[]
   classTeachers       ClassTeacher[]
 
-  @@map("programs")
+  @@map("courses")
 }
 
-model Course {
+// Subject model - Represents "Subject/Paper" in Indian context
+// In Indian education: Subject = Individual academic subject/paper
+// Examples: 
+// - Colleges: "Data Structures", "DBMS", "Web Development", "Organic Chemistry"
+// - Schools: "English", "Hindi", "Mathematics", "Physics", "Chemistry", "Biology"
+model Subject {
   id              Int          @id @default(autoincrement())
-  programId       Int?         @map("program_id")
-  courseName      String       @map("course_name") @db.VarChar(200)
-  courseCode      String       @unique @map("course_code") @db.VarChar(20)
-  credits         Int
-  lectureHours    Int          @default(0) @map("lecture_hours")
-  labHours        Int          @default(0) @map("lab_hours")
+  courseId        Int?         @map("course_id") // Optional - links to Course (degree/stream)
+  subjectName     String       @map("subject_name") @db.VarChar(200) // e.g., "Data Structures", "English"
+  subjectCode     String       @unique @map("subject_code") @db.VarChar(20) // e.g., "CS201", "ENG101", "MATH10"
+  credits         Int          // For colleges; marks/total for schools
+  theoryHours     Int          @default(0) @map("theory_hours") // Lecture hours
+  practicalHours  Int          @default(0) @map("practical_hours") // Lab hours
   tutorialHours   Int          @default(0) @map("tutorial_hours")
-  courseType      CourseType   @default(CORE) @map("course_type")
-  prerequisites   String?      // JSON array of course_ids
+  subjectType     SubjectType  @default(CORE) @map("subject_type") // CORE, ELECTIVE
+  prerequisites   String?      // JSON array of subject_ids - mainly for college
   description     String?
   syllabus        String?
-  status          CourseStatus @default(ACTIVE)
+  status          SubjectStatus @default(ACTIVE)
   createdAt       DateTime     @default(now()) @map("created_at")
   updatedAt       DateTime     @updatedAt @map("updated_at")
 
   // Relations
-  program         Program?     @relation(fields: [programId], references: [id])
+  course          Course?      @relation(fields: [courseId], references: [id]) // Links to Course (program/stream)
   academicRecords AcademicRecord[]
   classSections   ClassSection[]
   enrollments     Enrollment[]
   examinations    Examination[]
   assignments     Assignment[]
+  // Timetabling and scheduling relations
+  timetables      TimeTable[]
+  teacherSubjects TeacherSubject[]
+  studentProgress StudentProgress[]
+  attendanceSummary AttendanceSummary[]
 
-  @@map("courses")
+  @@map("subjects")
 }
 
 // Academic Enums
@@ -111,19 +135,31 @@ enum DegreeType {
   OTHER
 }
 
-enum ProgramStatus {
+// Course Status (was ProgramStatus)
+enum CourseStatus {
   ACTIVE
   INACTIVE
 }
 
-enum CourseType {
+// Subject Type (was CourseType)
+// Combined from academic and timetable contexts
+enum SubjectType {
   CORE
   ELECTIVE
   MINOR
   MAJOR
+  OPTIONAL
+  EXTRA_CURRICULAR
+  LANGUAGE
+  SCIENCE
+  MATHEMATICS
+  SOCIAL_STUDIES
+  ARTS
+  PHYSICAL_EDUCATION
 }
 
-enum CourseStatus {
+// Subject Status (was CourseStatus)
+enum SubjectStatus {
   ACTIVE
   INACTIVE
 }

@@ -241,11 +241,11 @@ export class TeachersService {
         institution: true,
         classSections: {
           include: {
-            course: {
+            subject: {
               select: {
                 id: true,
-                courseName: true,
-                courseCode: true,
+                subjectName: true,
+                subjectCode: true,
                 credits: true,
               },
             },
@@ -297,11 +297,11 @@ export class TeachersService {
         institution: true,
         classSections: {
           include: {
-            course: {
+            subject: {
               select: {
                 id: true,
-                courseName: true,
-                courseCode: true,
+                subjectName: true,
+                subjectCode: true,
                 credits: true,
               },
             },
@@ -527,11 +527,11 @@ export class TeachersService {
     const classes = await this.prisma.classSection.findMany({
       where,
       include: {
-        course: {
+        subject: {
           select: {
             id: true,
-            courseName: true,
-            courseCode: true,
+            subjectName: true,
+            subjectCode: true,
             credits: true,
           },
         },
@@ -551,63 +551,13 @@ export class TeachersService {
         },
       },
       orderBy: {
-        course: {
-          courseName: 'asc',
+        subject: {
+          subjectName: 'asc',
         },
       },
     })
 
     return classes
-  }
-
-  async getTeacherStats(teacherId: number) {
-    const [
-      totalClasses,
-      totalStudents,
-      currentSemesterClasses,
-      recentAssignments,
-      upcomingExaminations,
-    ] = await Promise.all([
-      this.prisma.classSection.count({
-        where: { teacherId },
-      }),
-      this.prisma.classSection.aggregate({
-        where: { teacherId },
-        _sum: { currentEnrollment: true },
-      }),
-      this.prisma.classSection.count({
-        where: {
-          teacherId,
-          semester: {
-            status: 'ACTIVE',
-          },
-        },
-      }),
-      this.prisma.assignment.count({
-        where: {
-          teacherId,
-          assignedDate: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
-          },
-        },
-      }),
-      this.prisma.examination.count({
-        where: {
-          createdBy: teacherId,
-          examDate: {
-            gte: new Date(),
-          },
-        },
-      }),
-    ])
-
-    return {
-      totalClasses,
-      totalStudents: totalStudents._sum.currentEnrollment || 0,
-      currentSemesterClasses,
-      recentAssignments,
-      upcomingExaminations,
-    }
   }
 
   /**
@@ -644,7 +594,7 @@ export class TeachersService {
       },
       include: {
         academicYear: true,
-        program: true,
+        course: true,
       },
     })
 
@@ -1059,10 +1009,10 @@ export class TeachersService {
         },
         section: {
           include: {
-            course: {
+            subject: {
               select: {
-                courseName: true,
-                courseCode: true,
+                subjectName: true,
+                subjectCode: true,
               },
             },
           },
@@ -1107,9 +1057,9 @@ export class TeachersService {
           name: record.student.user.name,
           admissionNumber: record.student.admissionNumber,
         },
-        course: {
-          name: record.section.course.courseName,
-          code: record.section.course.courseCode,
+        subject: {
+          name: record.section.subject.subjectName,
+          code: record.section.subject.subjectCode,
         },
         remarks: record.remarks,
       })),
@@ -1198,22 +1148,6 @@ export class TeachersService {
 
     // Use the existing getTeacherClasses method with the found teacher ID
     return this.getTeacherClasses(teacher.id, semesterId)
-  }
-
-  async getTeacherStatsByUuid(uuid: string) {
-    // First find the teacher by UUID
-    const teacher = await this.prisma.teacher.findFirst({
-      where: {
-        user: { uuid },
-      },
-    })
-
-    if (!teacher) {
-      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
-    }
-
-    // Use the existing getTeacherStats method with the found teacher ID
-    return this.getTeacherStats(teacher.id)
   }
 
   async getDashboardStatsByUuid(uuid: string): Promise<TeacherDashboardStats> {
@@ -1305,12 +1239,43 @@ export class TeachersService {
     }
 
     // Get additional metrics (these are available to all teachers)
-    const [subjectCount, subjectPerformanceSummary, gradeDistSummary] =
-      await Promise.all([
-        this.getTeacherSubjectCount(teacherId),
-        this.getSubjectPerformanceSummary(teacherId),
-        this.getGradeDistributionSummary(teacherId),
-      ])
+    const [
+      subjectCount,
+      subjectPerformanceSummary,
+      gradeDistSummary,
+      currentSemesterClasses,
+      recentAssignments,
+      upcomingExaminations,
+    ] = await Promise.all([
+      this.getTeacherSubjectCount(teacherId),
+      this.getSubjectPerformanceSummary(teacherId),
+      this.getGradeDistributionSummary(teacherId),
+      // Workload metrics (previously in /stats)
+      this.prisma.classSection.count({
+        where: {
+          teacherId,
+          semester: {
+            status: 'ACTIVE',
+          },
+        },
+      }),
+      this.prisma.assignment.count({
+        where: {
+          teacherId,
+          assignedDate: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+          },
+        },
+      }),
+      this.prisma.examination.count({
+        where: {
+          createdBy: teacherId,
+          examDate: {
+            gte: new Date(),
+          },
+        },
+      }),
+    ])
 
     return {
       ...basicStats,
@@ -1319,6 +1284,9 @@ export class TeachersService {
       studentsAtRisk: subjectPerformanceSummary.studentsAtRisk,
       hasAttendanceAccess: accessCheck.hasAccess,
       attendanceAccessReason: accessCheck.reason,
+      currentSemesterClasses,
+      recentAssignments,
+      upcomingExaminations,
       tabSummaries: {
         attendanceTrends: {
           weeklyAverage: accessCheck.hasAccess
@@ -1717,8 +1685,8 @@ export class TeachersService {
 
         return {
           id: ts.subject.id,
-          name: ts.subject.name,
-          code: ts.subject.code,
+          name: ts.subject.subjectName,
+          code: ts.subject.subjectCode,
           averageScore: Math.round(averageScore * 100) / 100,
           totalStudents: studentProgress.length,
           performanceTrend: 'stable' as const, // TODO: Implement trend calculation
@@ -1868,7 +1836,7 @@ export class TeachersService {
 
         return {
           subjectId,
-          subjectName: records[0].subject.name,
+          subjectName: records[0].subject.subjectName,
           gradeDistribution: subjectGrades,
           averageGrade,
           medianGrade: averageGrade, // Simplified
@@ -1884,7 +1852,7 @@ export class TeachersService {
         studentId: sp.student.user.uuid!,
         studentName: `${sp.student.user.firstName} ${sp.student.user.lastName}`,
         overallGrade: sp.overallGrade!,
-        subjectGrades: { [sp.subject.name]: sp.overallGrade! },
+        subjectGrades: { [sp.subject.subjectName]: sp.overallGrade! },
       }))
 
     return {
@@ -1948,7 +1916,7 @@ export class TeachersService {
             : 0
 
         return {
-          name: ts.subject.name,
+          name: ts.subject.subjectName,
           score: avgScore,
         }
       })
@@ -2097,14 +2065,14 @@ export class TeachersService {
       throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
     }
 
-    // Verify course exists
-    const course = await this.prisma.course.findUnique({
-      where: { id: createAssignmentDto.courseId },
+    // Verify subject exists
+    const subject = await this.prisma.subject.findUnique({
+      where: { id: createAssignmentDto.subjectId },
     })
 
-    if (!course) {
+    if (!subject) {
       throw new NotFoundException(
-        `Course with ID ${createAssignmentDto.courseId} not found`
+        `Subject with ID ${createAssignmentDto.subjectId} not found`
       )
     }
 
@@ -2131,7 +2099,7 @@ export class TeachersService {
         status: (status as 'DRAFT' | 'PUBLISHED' | 'CLOSED') || 'DRAFT',
       },
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         section: { select: { sectionName: true } },
         teacher: {
           select: {
@@ -2168,13 +2136,13 @@ export class TeachersService {
     }
 
     if (courseId) {
-      where.courseId = courseId
+      where.subjectId = courseId
     }
 
     const assignments = await this.prisma.assignment.findMany({
       where,
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         section: { select: { sectionName: true } },
         submissions: {
           select: {
@@ -2223,7 +2191,7 @@ export class TeachersService {
     const assignment = await this.prisma.assignment.findUnique({
       where: { id: assignmentId },
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         section: { select: { sectionName: true } },
         teacher: {
           select: {
@@ -2307,7 +2275,7 @@ export class TeachersService {
       where: { id: assignmentId },
       data: updateData,
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         section: { select: { sectionName: true } },
       },
     })
@@ -2370,14 +2338,14 @@ export class TeachersService {
       throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
     }
 
-    // Verify course exists
-    const course = await this.prisma.course.findUnique({
-      where: { id: createExaminationDto.courseId },
+    // Verify subject exists
+    const subject = await this.prisma.subject.findUnique({
+      where: { id: createExaminationDto.subjectId },
     })
 
-    if (!course) {
+    if (!subject) {
       throw new NotFoundException(
-        `Course with ID ${createExaminationDto.courseId} not found`
+        `Subject with ID ${createExaminationDto.subjectId} not found`
       )
     }
 
@@ -2397,7 +2365,7 @@ export class TeachersService {
       startTime,
       examType,
       status,
-      courseId,
+      subjectId,
       semesterId,
       ...examinationRest
     } = createExaminationDto
@@ -2405,7 +2373,7 @@ export class TeachersService {
     const examination = await this.prisma.examination.create({
       data: {
         ...examinationRest,
-        course: { connect: { id: courseId } },
+        subject: { connect: { id: subjectId } },
         semester: { connect: { id: semesterId } },
         creator: { connect: { id: teacher.id } },
         examDate: new Date(examDate),
@@ -2421,7 +2389,7 @@ export class TeachersService {
         startTime: startTime ? new Date(`2024-01-01T${startTime}`) : undefined,
       } as Prisma.ExaminationCreateInput,
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         semester: { select: { semesterName: true } },
       },
     })
@@ -2457,13 +2425,13 @@ export class TeachersService {
     }
 
     if (courseId) {
-      where.courseId = courseId
+      where.subjectId = courseId
     }
 
     const examinations = await this.prisma.examination.findMany({
       where,
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         semester: { select: { semesterName: true } },
         results: {
           select: {
@@ -2513,7 +2481,7 @@ export class TeachersService {
     const examination = await this.prisma.examination.findUnique({
       where: { id: examinationId },
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         semester: { select: { semesterName: true } },
         results: {
           include: {
@@ -2610,7 +2578,7 @@ export class TeachersService {
       where: { id: examinationId },
       data: updateData,
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         semester: { select: { semesterName: true } },
       },
     })
@@ -3157,7 +3125,7 @@ export class TeachersService {
     const enrollment = await this.prisma.enrollment.findFirst({
       where: {
         studentId: markAttendanceDto.studentId,
-        courseId: section.courseId,
+        subjectId: section.subjectId,
         semesterId: section.semesterId,
         enrollmentStatus: 'ENROLLED',
       },
@@ -3208,10 +3176,10 @@ export class TeachersService {
           },
           section: {
             include: {
-              course: {
+              subject: {
                 select: {
-                  courseName: true,
-                  courseCode: true,
+                  subjectName: true,
+                  subjectCode: true,
                 },
               },
             },
@@ -3253,10 +3221,10 @@ export class TeachersService {
         },
         section: {
           include: {
-            course: {
+            subject: {
               select: {
-                courseName: true,
-                courseCode: true,
+                subjectName: true,
+                subjectCode: true,
               },
             },
           },
@@ -3302,10 +3270,10 @@ export class TeachersService {
         teacherId: teacher.id,
       },
       include: {
-        course: {
+        subject: {
           select: {
-            courseName: true,
-            courseCode: true,
+            subjectName: true,
+            subjectCode: true,
           },
         },
       },
@@ -3331,7 +3299,7 @@ export class TeachersService {
         const enrollment = await this.prisma.enrollment.findFirst({
           where: {
             studentId: record.studentId,
-            courseId: section.courseId,
+            subjectId: section.subjectId,
             semesterId: section.semesterId,
             enrollmentStatus: 'ENROLLED',
           },
@@ -3424,7 +3392,7 @@ export class TeachersService {
         section: {
           id: section.id,
           sectionName: section.sectionName,
-          course: section.course,
+          course: section.subject,
         },
         date: bulkMarkAttendanceDto.date,
         totalRecords: bulkMarkAttendanceDto.attendanceRecords.length,
@@ -3505,10 +3473,10 @@ export class TeachersService {
         },
         section: {
           include: {
-            course: {
+            subject: {
               select: {
-                courseName: true,
-                courseCode: true,
+                subjectName: true,
+                subjectCode: true,
               },
             },
           },
@@ -3613,7 +3581,7 @@ export class TeachersService {
     const enrollment = await this.prisma.enrollment.findFirst({
       where: {
         studentId: enterExamResultDto.studentId,
-        courseId: examination.courseId,
+        subjectId: examination.subjectId,
         semesterId: examination.semesterId,
         enrollmentStatus: 'ENROLLED',
       },
@@ -3785,7 +3753,7 @@ export class TeachersService {
         const enrollment = await this.prisma.enrollment.findFirst({
           where: {
             studentId: resultDto.studentId,
-            courseId: examination.courseId,
+            subjectId: examination.subjectId,
             semesterId: examination.semesterId,
             enrollmentStatus: 'ENROLLED',
           },
@@ -3924,10 +3892,10 @@ export class TeachersService {
     const examination = await this.prisma.examination.findUnique({
       where: { id: examId },
       include: {
-        course: {
+        subject: {
           select: {
-            courseName: true,
-            courseCode: true,
+            subjectName: true,
+            subjectCode: true,
           },
         },
       },
@@ -4021,7 +3989,7 @@ export class TeachersService {
           examDate: examination.examDate,
           totalMarks: examination.totalMarks,
           passingMarks: examination.passingMarks,
-          course: examination.course,
+          course: examination.subject,
         },
         statistics: {
           totalStudents,

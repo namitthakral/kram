@@ -12,7 +12,7 @@ export class CreateExaminationDto {
   examName: string
 
   @IsNumber()
-  courseId: number
+  subjectId: number
 
   @IsNumber()
   semesterId: number
@@ -66,7 +66,7 @@ export class UpdateExaminationDto {
 
   @IsNumber()
   @IsOptional()
-  courseId?: number
+  subjectId?: number
 
   @IsNumber()
   @IsOptional()

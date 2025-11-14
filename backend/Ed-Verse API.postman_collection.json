@@ -714,19 +714,6 @@
           "response": []
         },
         {
-          "name": "Get Teacher Statistics",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{api_url}}/teachers/stats",
-              "host": ["{{api_url}}"],
-              "path": ["teachers", "stats"]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Get Teacher by UUID",
           "request": {
             "method": "GET",
@@ -791,7 +778,7 @@
                 }
               ]
             },
-            "description": "Get comprehensive dashboard statistics including total students, today's attendance, and monthly averages."
+            "description": "Get comprehensive dashboard statistics including attendance metrics, performance analytics, and workload metrics (classes, assignments, exams). Consolidated endpoint that replaces the deprecated /stats endpoint."
           },
           "response": [
             {
@@ -826,7 +813,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n    \"totalStudents\": 28,\n    \"presentToday\": 26,\n    \"absentToday\": 2,\n    \"lateToday\": 0,\n    \"attendancePercentageToday\": 92.9,\n    \"avgAttendanceThisMonth\": 92.5,\n    \"totalSubjects\": 4,\n    \"overallClassAverage\": 81.5,\n    \"studentsAtRisk\": 3,\n    \"tabSummaries\": {\n        \"attendanceTrends\": {\n            \"weeklyAverage\": 88,\n            \"trend\": \"improving\",\n            \"dailyPreview\": [\n                {\"day\": \"Mon\", \"percentage\": 89},\n                {\"day\": \"Tue\", \"percentage\": 86},\n                {\"day\": \"Wed\", \"percentage\": 93},\n                {\"day\": \"Thu\", \"percentage\": 89},\n                {\"day\": \"Fri\", \"percentage\": 79}\n            ],\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        },\n        \"subjectPerformance\": {\n            \"bestSubject\": \"Mathematics (85%)\",\n            \"needsAttention\": \"Science (78%)\",\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        },\n        \"gradeDistribution\": {\n            \"topGrade\": \"B+ (30%)\",\n            \"averageGrade\": \"B+\",\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        }\n    }\n}"
+              "body": "{\n    \"totalStudents\": 28,\n    \"presentToday\": 26,\n    \"absentToday\": 2,\n    \"lateToday\": 0,\n    \"attendancePercentageToday\": 92.9,\n    \"avgAttendanceThisMonth\": 92.5,\n    \"totalSubjects\": 4,\n    \"overallClassAverage\": 81.5,\n    \"studentsAtRisk\": 3,\n    \"hasAttendanceAccess\": true,\n    \"currentSemesterClasses\": 3,\n    \"recentAssignments\": 8,\n    \"upcomingExaminations\": 2,\n    \"tabSummaries\": {\n        \"attendanceTrends\": {\n            \"weeklyAverage\": 88,\n            \"trend\": \"improving\",\n            \"dailyPreview\": [\n                {\"day\": \"Mon\", \"percentage\": 89},\n                {\"day\": \"Tue\", \"percentage\": 86},\n                {\"day\": \"Wed\", \"percentage\": 93},\n                {\"day\": \"Thu\", \"percentage\": 89},\n                {\"day\": \"Fri\", \"percentage\": 79}\n            ],\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        },\n        \"subjectPerformance\": {\n            \"bestSubject\": \"Mathematics (85%)\",\n            \"needsAttention\": \"Science (78%)\",\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        },\n        \"gradeDistribution\": {\n            \"topGrade\": \"B+ (30%)\",\n            \"averageGrade\": \"B+\",\n            \"lastUpdated\": \"2024-01-20T10:30:00Z\"\n        }\n    }\n}"
             }
           ]
         },
@@ -928,7 +915,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Programming Assignment 2\",\n  \"description\": \"Build a REST API using Node.js and Express\",\n  \"instructions\": \"Create endpoints for CRUD operations with proper error handling\",\n  \"courseId\": 1,\n  \"sectionId\": 1,\n  \"maxMarks\": 100,\n  \"weightagePercentage\": 15,\n  \"dueDate\": \"2025-12-15\",\n  \"lateSubmissionAllowed\": true,\n  \"latePenaltyPercentage\": 10,\n  \"status\": \"PUBLISHED\"\n}"
+              "raw": "{\n  \"title\": \"Programming Assignment 2\",\n  \"description\": \"Build a REST API using Node.js and Express\",\n  \"instructions\": \"Create endpoints for CRUD operations with proper error handling\",\n  \"subjectId\": 1,\n  \"sectionId\": 1,\n  \"maxMarks\": 100,\n  \"weightagePercentage\": 15,\n  \"dueDate\": \"2025-12-15\",\n  \"lateSubmissionAllowed\": true,\n  \"latePenaltyPercentage\": 10,\n  \"status\": \"PUBLISHED\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/assignments",
@@ -958,7 +945,7 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:user_uuid/assignments?status=PUBLISHED&courseId=1",
+              "raw": "{{api_url}}/teachers/:user_uuid/assignments?status=PUBLISHED&subjectId=1",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid", "assignments"],
               "query": [
@@ -968,9 +955,9 @@
                   "description": "Filter by status (DRAFT, PUBLISHED, CLOSED)"
                 },
                 {
-                  "key": "courseId",
+                  "key": "subjectId",
                   "value": "1",
-                  "description": "Filter by course ID"
+                  "description": "Filter by subject ID"
                 }
               ],
               "variable": [
@@ -1121,7 +1108,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"examName\": \"Final Examination - Computer Science\",\n  \"courseId\": 1,\n  \"semesterId\": 2,\n  \"examType\": \"FINAL\",\n  \"examDate\": \"2025-12-20\",\n  \"startTime\": \"10:00\",\n  \"durationMinutes\": 180,\n  \"totalMarks\": 100,\n  \"passingMarks\": 40,\n  \"venue\": \"Main Hall A\",\n  \"instructions\": \"Bring your student ID and writing materials\",\n  \"status\": \"SCHEDULED\"\n}"
+              "raw": "{\n  \"examName\": \"Final Examination - Computer Science\",\n  \"subjectId\": 1,\n  \"semesterId\": 2,\n  \"examType\": \"FINAL\",\n  \"examDate\": \"2025-12-20\",\n  \"startTime\": \"10:00\",\n  \"durationMinutes\": 180,\n  \"totalMarks\": 100,\n  \"passingMarks\": 40,\n  \"venue\": \"Main Hall A\",\n  \"instructions\": \"Bring your student ID and writing materials\",\n  \"status\": \"SCHEDULED\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/teachers/:user_uuid/examinations",
@@ -1151,7 +1138,7 @@
               }
             ],
             "url": {
-              "raw": "{{api_url}}/teachers/:user_uuid/examinations?status=SCHEDULED&courseId=1",
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations?status=SCHEDULED&subjectId=1",
               "host": ["{{api_url}}"],
               "path": ["teachers", ":user_uuid", "examinations"],
               "query": [
@@ -1161,9 +1148,9 @@
                   "description": "Filter by status (DRAFT, SCHEDULED, ONGOING, COMPLETED, CANCELLED)"
                 },
                 {
-                  "key": "courseId",
+                  "key": "subjectId",
                   "value": "1",
-                  "description": "Filter by course ID"
+                  "description": "Filter by subject ID"
                 }
               ],
               "variable": [

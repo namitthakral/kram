@@ -94,7 +94,7 @@ model Institution {
 
   // Relations
   students        Student[]
-  programs        Program[]
+  courses         Course[] // Courses (degree programs/streams)
   teachers        Teacher[]
   staff           Staff[]
   academicYears   AcademicYear[]
@@ -109,7 +109,6 @@ model Institution {
   visitorPasses   VisitorPass[]
   timeTables      TimeTable[]
   timeSlots       TimeSlot[]
-  subjects        Subject[]
   rooms           Room[]
   dashboardStats  DashboardStats[]
   performanceMetrics PerformanceMetrics[]

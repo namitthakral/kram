@@ -22,7 +22,7 @@ export class CreateAssignmentDto {
   instructions?: string
 
   @IsNumber()
-  courseId: number
+  subjectId: number
 
   @IsNumber()
   @IsOptional()
@@ -76,7 +76,7 @@ export class UpdateAssignmentDto {
 
   @IsNumber()
   @IsOptional()
-  courseId?: number
+  subjectId?: number
 
   @IsNumber()
   @IsOptional()

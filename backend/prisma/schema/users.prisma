@@ -6,7 +6,7 @@ model Student {
   id                    Int              @id @default(autoincrement())
   userId                Int              @unique @map("user_id")
   institutionId         Int              @map("institution_id")
-  programId             Int?             @map("program_id")
+  courseId              Int?             @map("course_id") // Course (program/stream) student is enrolled in
   admissionNumber       String           @unique @map("admission_number") @db.VarChar(50)
   rollNumber            String?          @map("roll_number") @db.VarChar(50)
   admissionDate         DateTime?        @map("admission_date") @db.Date
@@ -29,7 +29,7 @@ model Student {
   // Relations
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
-  program               Program?         @relation(fields: [programId], references: [id])
+  course                Course?          @relation(fields: [courseId], references: [id])
   parents               Parent[]
   academicRecords       AcademicRecord[]
   attendance            Attendance[]

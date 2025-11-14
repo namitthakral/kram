@@ -6,7 +6,7 @@ model AcademicRecord {
   id          Int      @id @default(autoincrement())
   studentId   Int      @map("student_id")
   semesterId  Int      @map("semester_id")
-  courseId    Int      @map("course_id")
+  subjectId   Int      @map("subject_id") // Subject (individual paper/subject)
   marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
   maxMarks    Decimal? @map("max_marks") @db.Decimal(6, 2)
   grade       String?  @db.VarChar(5)
@@ -20,9 +20,9 @@ model AcademicRecord {
   // Relations
   student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   semester    Semester @relation(fields: [semesterId], references: [id])
-  course      Course   @relation(fields: [courseId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
 
-  @@unique([studentId, semesterId, courseId], name: "unique_record")
+  @@unique([studentId, semesterId, subjectId], name: "unique_record")
   @@map("academic_records")
 }
 
@@ -47,7 +47,7 @@ model Attendance {
 
 model ClassSection {
   id          Int      @id @default(autoincrement())
-  courseId    Int      @map("course_id")
+  subjectId   Int      @map("subject_id") // Subject being taught in this section
   semesterId  Int      @map("semester_id")
   teacherId   Int      @map("teacher_id")
   sectionName String   @map("section_name") @db.VarChar(10)
@@ -60,7 +60,7 @@ model ClassSection {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  course      Course   @relation(fields: [courseId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
   semester    Semester @relation(fields: [semesterId], references: [id])
   teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   attendance  Attendance[]
@@ -72,7 +72,7 @@ model ClassSection {
 model Enrollment {
   id                Int              @id @default(autoincrement())
   studentId         Int              @map("student_id")
-  courseId          Int              @map("course_id")
+  subjectId         Int              @map("subject_id") // Subject student is enrolled in
   semesterId        Int              @map("semester_id")
   enrollmentDate    DateTime         @default(now()) @map("enrollment_date") @db.Date
   enrollmentStatus  EnrollmentStatus @default(ENROLLED) @map("enrollment_status")
@@ -84,10 +84,10 @@ model Enrollment {
 
   // Relations
   student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  course            Course           @relation(fields: [courseId], references: [id])
+  subject           Subject          @relation(fields: [subjectId], references: [id])
   semester          Semester         @relation(fields: [semesterId], references: [id])
 
-  @@unique([studentId, courseId, semesterId], name: "unique_enrollment")
+  @@unique([studentId, subjectId, semesterId], name: "unique_enrollment")
   @@map("enrollments")
 }
 

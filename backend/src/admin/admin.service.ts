@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import {
   CreateUserDto,
@@ -144,7 +145,7 @@ export class AdminService {
     } = query
 
     const skip = (page - 1) * limit
-    const where: any = {}
+    const where: Prisma.UserWhereInput = {}
 
     // Add search filter
     if (search) {
@@ -252,7 +253,7 @@ export class AdminService {
   async getUsersByRole(roleId: number, query: UserQueryDto) {
     const { page = 1, limit = 10, search, status } = query
     const skip = (page - 1) * limit
-    const where: any = { roleId }
+    const where: Prisma.UserWhereInput = { roleId }
 
     if (search) {
       where.OR = [
@@ -339,7 +340,7 @@ export class AdminService {
     }
 
     // Update name if firstName or lastName is changed
-    const updateData: any = { ...updateUserDto }
+    const updateData: Prisma.UserUpdateInput = { ...updateUserDto }
     if (updateUserDto.firstName || updateUserDto.lastName) {
       const firstName = updateUserDto.firstName || existingUser.firstName
       const lastName = updateUserDto.lastName || existingUser.lastName

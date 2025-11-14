@@ -26,22 +26,17 @@ async function main() {
     `✅ Created academic year: ${academicYear.yearName} with ${semesters.length} semesters`
   )
 
-  // Create program and courses
-  console.log('Creating program and courses...')
-  const { program, courses } = await createProgramAndCourses(institution.id)
+  // Create course (degree/stream) and subjects
+  console.log('Creating course and subjects...')
+  const { course, subjects } = await createCourseAndSubjects(institution.id)
   console.log(
-    `✅ Created program: ${program.name} with ${courses.length} courses`
+    `✅ Created course: ${course.name} with ${subjects.length} subjects`
   )
-
-  // Create subjects
-  console.log('Creating subjects...')
-  const subjects = await createSubjects(institution.id)
-  console.log(`✅ Created ${subjects.length} subjects`)
 
   // Create users (admin, teacher, students, parents, staff)
   console.log('Creating users...')
   const { superAdmin, teacher, students, parents, librarian } =
-    await createUsers(roles, institution.id, program.id)
+    await createUsers(roles, institution.id, course.id)
   console.log(
     `✅ Created users: 1 admin, 1 teacher, ${students.length} students, ${parents.length} parents, 2 staff`
   )
@@ -49,11 +44,11 @@ async function main() {
   // Create class sections and enrollments
   console.log('Creating class sections and enrollments...')
   const classSections = await createClassSections(
-    courses,
+    subjects,
     semesters[0],
     teacher
   )
-  await createEnrollments(students, courses, semesters[0])
+  await createEnrollments(students, subjects, semesters[0])
   console.log(
     `✅ Created ${classSections.length} class sections and enrollments`
   )
@@ -79,7 +74,7 @@ async function main() {
   console.log('Creating fee structures...')
   const feeStructures = await createFeeStructures(
     institution.id,
-    program.id,
+    course.id,
     academicYear.id
   )
   await createStudentFees(students, feeStructures, semesters[0])
@@ -87,8 +82,8 @@ async function main() {
 
   // Create assignments and examinations
   console.log('Creating assignments and examinations...')
-  const assignments = await createAssignments(courses, classSections, teacher)
-  const examinations = await createExaminations(courses, semesters[0], teacher)
+  const assignments = await createAssignments(subjects, classSections, teacher)
+  const examinations = await createExaminations(subjects, semesters[0], teacher)
   console.log(
     `✅ Created ${assignments.length} assignments and ${examinations.length} examinations`
   )
@@ -99,7 +94,7 @@ async function main() {
     institution.id,
     academicYear.id,
     semesters[0],
-    program.id,
+    course.id,
     subjects,
     teacher
   )
@@ -138,7 +133,7 @@ async function main() {
   console.log('Creating comprehensive data for Student 1...')
   await createStudent1ComprehensiveData(
     students,
-    courses,
+    subjects,
     semesters,
     classSections,
     academicYear
@@ -442,8 +437,21 @@ async function createAcademicStructure(institutionId: number) {
   return { academicYear, semesters }
 }
 
-async function createProgramAndCourses(institutionId: number) {
-  const program = await prisma.program.upsert({
+/**
+ * Create Course and Subjects
+ *
+ * INDIAN EDUCATION TERMINOLOGY (Updated Schema):
+ * - Course (DB) = Degree/Stream in Indian context (e.g., B.Sc. Computer Science, Science-Medical)
+ * - Subject (DB) = Individual Subject/Paper in Indian context (e.g., Data Structures, Physics)
+ *
+ * This function creates:
+ * 1. A course/degree program (e.g., B.Sc. CS) - called "Course" in India
+ * 2. Subjects within that course (e.g., CS101, CS102) - called "Subjects" in India
+ */
+async function createCourseAndSubjects(institutionId: number) {
+  // Create a Course (Degree/Stream in Indian context)
+  // Example: "B.Sc. Computer Science" is a "Course" in Indian terminology
+  const course = await prisma.course.upsert({
     where: { id: 1 },
     update: {},
     create: {
@@ -460,54 +468,57 @@ async function createProgramAndCourses(institutionId: number) {
     },
   })
 
-  const courses = await Promise.all([
-    prisma.course.upsert({
-      where: { courseCode: 'CS101' },
+  // Create Subjects (Individual papers/subjects in Indian context)
+  // These are individual subjects students study within the course
+  // Examples: "Data Structures", "DBMS", "Web Development"
+  const subjects = await Promise.all([
+    prisma.subject.upsert({
+      where: { subjectCode: 'CS101' },
       update: {},
       create: {
-        programId: program.id,
-        courseName: 'Introduction to Programming',
-        courseCode: 'CS101',
+        courseId: course.id,
+        subjectName: 'Introduction to Programming',
+        subjectCode: 'CS101',
         credits: 3,
-        lectureHours: 3,
-        labHours: 2,
+        theoryHours: 3,
+        practicalHours: 2,
         tutorialHours: 1,
-        courseType: 'CORE',
+        subjectType: 'CORE',
         description: 'Fundamentals of programming using Python',
         syllabus:
           'Variables, loops, functions, data structures, and basic algorithms',
       },
     }),
-    prisma.course.upsert({
-      where: { courseCode: 'CS102' },
+    prisma.subject.upsert({
+      where: { subjectCode: 'CS102' },
       update: {},
       create: {
-        programId: program.id,
-        courseName: 'Data Structures and Algorithms',
-        courseCode: 'CS102',
+        courseId: course.id,
+        subjectName: 'Data Structures and Algorithms',
+        subjectCode: 'CS102',
         credits: 4,
-        lectureHours: 3,
-        labHours: 2,
+        theoryHours: 3,
+        practicalHours: 2,
         tutorialHours: 1,
-        courseType: 'CORE',
+        subjectType: 'CORE',
         prerequisites: JSON.stringify(['CS101']),
         description: 'Advanced data structures and algorithm design',
         syllabus:
           'Arrays, linked lists, trees, graphs, sorting, and searching algorithms',
       },
     }),
-    prisma.course.upsert({
-      where: { courseCode: 'CS201' },
+    prisma.subject.upsert({
+      where: { subjectCode: 'CS201' },
       update: {},
       create: {
-        programId: program.id,
-        courseName: 'Web Development',
-        courseCode: 'CS201',
+        courseId: course.id,
+        subjectName: 'Web Development',
+        subjectCode: 'CS201',
         credits: 3,
-        lectureHours: 2,
-        labHours: 3,
+        theoryHours: 2,
+        practicalHours: 3,
         tutorialHours: 0,
-        courseType: 'CORE',
+        subjectType: 'CORE',
         prerequisites: JSON.stringify(['CS101']),
         description:
           'Modern web development using HTML, CSS, JavaScript, and frameworks',
@@ -517,46 +528,13 @@ async function createProgramAndCourses(institutionId: number) {
     }),
   ])
 
-  return { program, courses }
-}
-
-async function createSubjects(institutionId: number) {
-  return await Promise.all([
-    prisma.subject.upsert({
-      where: { unique_subject_code: { institutionId, code: 'MATH101' } },
-      update: {},
-      create: {
-        institutionId,
-        name: 'Calculus I',
-        code: 'MATH101',
-        description: 'Differential and integral calculus',
-        subjectType: 'CORE',
-        credits: 4,
-        theoryHours: 4,
-        practicalHours: 0,
-      },
-    }),
-    prisma.subject.upsert({
-      where: { unique_subject_code: { institutionId, code: 'ENG101' } },
-      update: {},
-      create: {
-        institutionId,
-        name: 'English Composition',
-        code: 'ENG101',
-        description: 'Academic writing and communication skills',
-        subjectType: 'CORE',
-        credits: 3,
-        theoryHours: 3,
-        practicalHours: 0,
-      },
-    }),
-  ])
+  return { course, subjects }
 }
 
 async function createUsers(
   roles: any[],
   institutionId: number,
-  programId: number
+  courseId: number
 ) {
   // Create super admin
   const superAdminPassword = await bcrypt.hash('admin123!', 12)
@@ -650,7 +628,7 @@ async function createUsers(
       create: {
         userId: studentUser.id,
         institutionId,
-        programId,
+        courseId,
         admissionNumber: `ADM00${i}`,
         rollNumber: `202400${i}`,
         admissionDate: new Date('2024-08-15'),
@@ -790,7 +768,7 @@ async function createUsers(
 }
 
 async function createClassSections(
-  courses: any[],
+  subjects: any[],
   semester: any,
   teacher: any
 ) {
@@ -799,7 +777,7 @@ async function createClassSections(
       where: { id: 1 },
       update: {},
       create: {
-        courseId: courses[0].id,
+        subjectId: subjects[0].id,
         semesterId: semester.id,
         teacherId: teacher.id,
         sectionName: 'A',
@@ -818,7 +796,7 @@ async function createClassSections(
       where: { id: 2 },
       update: {},
       create: {
-        courseId: courses[1].id,
+        subjectId: subjects[1].id,
         semesterId: semester.id,
         teacherId: teacher.id,
         sectionName: 'A',
@@ -837,27 +815,27 @@ async function createClassSections(
 
 async function createEnrollments(
   students: any[],
-  courses: any[],
+  subjects: any[],
   semester: any
 ) {
   for (const student of students) {
-    for (const course of courses) {
+    for (const subject of subjects) {
       await prisma.enrollment.upsert({
         where: {
           unique_enrollment: {
             studentId: student.id,
-            courseId: course.id,
+            subjectId: subject.id,
             semesterId: semester.id,
           },
         },
         update: {},
         create: {
           studentId: student.id,
-          courseId: course.id,
+          subjectId: subject.id,
           semesterId: semester.id,
           enrollmentDate: new Date('2024-08-15'),
           enrollmentStatus: 'ENROLLED',
-          creditsEarned: course.credits,
+          creditsEarned: subject.credits,
           attendancePercentage: 85.0,
         },
       })
@@ -1011,7 +989,7 @@ async function createLibraryData(institutionId: number, librarianId: number) {
 
 async function createFeeStructures(
   institutionId: number,
-  programId: number,
+  courseId: number,
   academicYearId: number
 ) {
   return await Promise.all([
@@ -1020,7 +998,7 @@ async function createFeeStructures(
       update: {},
       create: {
         institutionId,
-        programId,
+        courseId,
         academicYearId,
         feeType: 'TUITION',
         feeName: 'Fall 2024 Tuition Fee',
@@ -1038,7 +1016,7 @@ async function createFeeStructures(
       update: {},
       create: {
         institutionId,
-        programId,
+        courseId,
         academicYearId,
         feeType: 'LIBRARY',
         feeName: 'Library Fee',
@@ -1083,7 +1061,7 @@ async function createStudentFees(
 }
 
 async function createAssignments(
-  courses: any[],
+  subjects: any[],
   classSections: any[],
   teacher: any
 ) {
@@ -1092,7 +1070,7 @@ async function createAssignments(
       where: { id: 1 },
       update: {},
       create: {
-        courseId: courses[0].id,
+        subjectId: subjects[0].id,
         sectionId: classSections[0].id,
         teacherId: teacher.id,
         title: 'Programming Assignment 1',
@@ -1111,13 +1089,17 @@ async function createAssignments(
   ])
 }
 
-async function createExaminations(courses: any[], semester: any, teacher: any) {
+async function createExaminations(
+  subjects: any[],
+  semester: any,
+  teacher: any
+) {
   return await Promise.all([
     prisma.examination.upsert({
       where: { id: 1 },
       update: {},
       create: {
-        courseId: courses[0].id,
+        subjectId: subjects[0].id,
         semesterId: semester.id,
         examName: 'Midterm Exam - Introduction to Programming',
         examType: 'MIDTERM',
@@ -1141,7 +1123,7 @@ async function createTimetableData(
   institutionId: number,
   academicYearId: number,
   semester: any,
-  programId: number,
+  courseId: number,
   subjects: any[],
   teacher: any
 ) {
@@ -1221,7 +1203,7 @@ async function createTimetableData(
         institutionId,
         academicYearId,
         semesterId: semester.id,
-        programId,
+        courseId,
         section: 'A',
         dayOfWeek: 'MONDAY',
         timeSlotId: timeSlots[0].id,
@@ -1320,7 +1302,7 @@ async function createTeacherDashboardData(
   await prisma.classTeacher.upsert({
     where: {
       unique_class_teacher: {
-        programId: 1,
+        courseId: 1,
         classLevel: 'Year 1',
         section: 'A',
         academicYearId: academicYear.id,
@@ -1331,7 +1313,7 @@ async function createTeacherDashboardData(
     },
     create: {
       teacherId: teacher.id,
-      programId: 1,
+      courseId: 1,
       classLevel: 'Year 1',
       section: 'A',
       academicYearId: academicYear.id,
@@ -1529,7 +1511,7 @@ async function createTeacherDashboardData(
           data: {
             userId: studentUser.id,
             institutionId: students[0].institutionId,
-            programId: students[0].programId,
+            courseId: students[0].courseId,
             admissionNumber: `ADM0${String(i).padStart(2, '0')}`,
             rollNumber: `20240${String(i).padStart(2, '0')}`,
             admissionDate: new Date('2024-08-15'),
@@ -1749,7 +1731,7 @@ async function createStudentDashboardData() {
           data: {
             studentId: student.id,
             semesterId: activeSemester.id,
-            courseId: subject.id, // Using subject as course for simplicity
+            subjectId: subject.id, // Using subject as course for simplicity
             marksObtained: gradePoints * 25, // Convert to percentage
             maxMarks: 100,
             grade:
@@ -1820,7 +1802,6 @@ async function createStudentDashboardData() {
 
   // Create upcoming examinations
   console.log('  📅 Creating upcoming examinations...')
-  const courses = await prisma.course.findMany({ take: 5 })
 
   const upcomingDates = [
     {
@@ -1842,14 +1823,14 @@ async function createStudentDashboardData() {
     { name: 'History Final', date: new Date(2025, 11, 8), time: '13:00:00' }, // Dec 8, 2025
   ]
 
-  for (let i = 0; i < Math.min(courses.length, upcomingDates.length); i++) {
-    const course = courses[i]
+  for (let i = 0; i < Math.min(subjects.length, upcomingDates.length); i++) {
+    const subject = subjects[i]
     const examData = upcomingDates[i]
 
     try {
       await prisma.examination.create({
         data: {
-          courseId: course.id,
+          subjectId: subject.id,
           semesterId: activeSemester.id,
           examName: examData.name,
           examType:
@@ -1909,15 +1890,15 @@ async function createStudentDashboardData() {
       },
     ]
 
-    for (let i = 0; i < Math.min(courses.length, assignmentData.length); i++) {
-      const course = courses[i]
+    for (let i = 0; i < Math.min(subjects.length, assignmentData.length); i++) {
+      const subject = subjects[i]
       const assignment = assignmentData[i]
       const teacher = teachers[i % teachers.length]
 
       try {
         await prisma.assignment.create({
           data: {
-            courseId: course.id,
+            subjectId: subject.id,
             teacherId: teacher.id,
             title: assignment.title,
             description: `Complete the ${assignment.title} as discussed in class.`,
@@ -1967,18 +1948,18 @@ async function createPhase1TestData() {
 
   console.log(`  📚 Found ${students.length} students to work with`)
 
-  // Get active semester and courses
+  // Get active semester and subjects
   const activeSemester = await prisma.semester.findFirst({
     where: { status: 'ACTIVE' },
   })
 
-  const courses = await prisma.course.findMany({
+  const subjects = await prisma.subject.findMany({
     take: 3,
   })
 
-  if (!activeSemester || courses.length === 0) {
+  if (!activeSemester || subjects.length === 0) {
     console.log(
-      '  ⚠️ No active semester or courses found, skipping Phase 1 data'
+      '  ⚠️ No active semester or subjects found, skipping Phase 1 data'
     )
     return
   }
@@ -2004,12 +1985,12 @@ async function createPhase1TestData() {
 
   for (let i = 0; i < assignmentDates.length; i++) {
     const assignmentInfo = assignmentDates[i]
-    const course = courses[i % courses.length]
+    const subject = subjects[i % subjects.length]
 
     try {
       const assignment = await prisma.assignment.create({
         data: {
-          courseId: course.id,
+          subjectId: subject.id,
           teacherId: teacher.id,
           title: assignmentInfo.title,
           description: `Complete ${assignmentInfo.title} assignment`,
@@ -2272,9 +2253,9 @@ async function createPhase1TestData() {
  */
 async function createStudent1ComprehensiveData(
   students: { id: number; userId: number }[],
-  _courses: { id: number; courseName: string }[],
+  _subjects: { id: number; subjectName: string }[],
   semesters: { id: number; semesterName: string }[],
-  classSections: { id: number; teacherId: number; courseId: number }[],
+  classSections: { id: number; teacherId: number; subjectId: number }[],
   _academicYear: { id: number }
 ) {
   // Get Student 1
@@ -2287,7 +2268,7 @@ async function createStudent1ComprehensiveData(
   // Get student's enrollments
   const enrollments = await prisma.enrollment.findMany({
     where: { studentId: student1.id },
-    include: { course: true },
+    include: { subject: true },
   })
 
   if (enrollments.length === 0) {
@@ -2302,7 +2283,7 @@ async function createStudent1ComprehensiveData(
 
   // Get sections for enrolled courses
   const sections = classSections.filter(s =>
-    enrollments.some(e => e.courseId === s.courseId)
+    enrollments.some(e => e.subjectId === s.subjectId)
   )
 
   console.log(`  👤 Creating comprehensive data for Student 1`)
@@ -2319,11 +2300,11 @@ async function createStudent1ComprehensiveData(
     try {
       const pastAssignment = await prisma.assignment.create({
         data: {
-          courseId: enrollment.courseId,
+          subjectId: enrollment.subjectId,
           sectionId: section.id,
           teacherId: section.teacherId,
-          title: `${enrollment.course.courseName} - Assignment 1`,
-          description: `Complete the first chapter exercises for ${enrollment.course.courseName}`,
+          title: `${enrollment.subject.subjectName} - Assignment 1`,
+          description: `Complete the first chapter exercises for ${enrollment.subject.subjectName}`,
           instructions: 'Submit your answers in PDF format',
           maxMarks: 100,
           assignedDate: new Date('2025-10-15'),
@@ -2353,11 +2334,11 @@ async function createStudent1ComprehensiveData(
     try {
       await prisma.assignment.create({
         data: {
-          courseId: enrollment.courseId,
+          subjectId: enrollment.subjectId,
           sectionId: section.id,
           teacherId: section.teacherId,
-          title: `${enrollment.course.courseName} - Assignment 2`,
-          description: `Research project on advanced topics in ${enrollment.course.courseName}`,
+          title: `${enrollment.subject.subjectName} - Assignment 2`,
+          description: `Research project on advanced topics in ${enrollment.subject.subjectName}`,
           instructions:
             'Submit a 5-page report with references. Include diagrams and examples.',
           maxMarks: 100,
@@ -2375,11 +2356,11 @@ async function createStudent1ComprehensiveData(
     try {
       await prisma.assignment.create({
         data: {
-          courseId: enrollment.courseId,
+          subjectId: enrollment.subjectId,
           sectionId: section.id,
           teacherId: section.teacherId,
-          title: `${enrollment.course.courseName} - Quiz 1`,
-          description: `Online quiz covering chapters 1-3 of ${enrollment.course.courseName}`,
+          title: `${enrollment.subject.subjectName} - Quiz 1`,
+          description: `Online quiz covering chapters 1-3 of ${enrollment.subject.subjectName}`,
           instructions: 'Complete within 30 minutes. No retakes allowed.',
           maxMarks: 50,
           assignedDate: new Date('2025-10-28'),
@@ -2396,11 +2377,11 @@ async function createStudent1ComprehensiveData(
     try {
       const pastAssignment2 = await prisma.assignment.create({
         data: {
-          courseId: enrollment.courseId,
+          subjectId: enrollment.subjectId,
           sectionId: section.id,
           teacherId: section.teacherId,
-          title: `${enrollment.course.courseName} - Lab Work 1`,
-          description: `Practical lab exercises for ${enrollment.course.courseName}`,
+          title: `${enrollment.subject.subjectName} - Lab Work 1`,
+          description: `Practical lab exercises for ${enrollment.subject.subjectName}`,
           instructions: 'Complete all lab exercises and submit the report.',
           maxMarks: 50,
           assignedDate: new Date('2025-09-15'),
@@ -2426,11 +2407,11 @@ async function createStudent1ComprehensiveData(
     try {
       const pastAssignment3 = await prisma.assignment.create({
         data: {
-          courseId: enrollment.courseId,
+          subjectId: enrollment.subjectId,
           sectionId: section.id,
           teacherId: section.teacherId,
-          title: `${enrollment.course.courseName} - Midterm Project`,
-          description: `Comprehensive project covering first half of ${enrollment.course.courseName}`,
+          title: `${enrollment.subject.subjectName} - Midterm Project`,
+          description: `Comprehensive project covering first half of ${enrollment.subject.subjectName}`,
           instructions:
             'Create a detailed project report with code examples and documentation.',
           maxMarks: 100,
@@ -2462,11 +2443,11 @@ async function createStudent1ComprehensiveData(
     try {
       await prisma.assignment.create({
         data: {
-          courseId: enrollment.courseId,
+          subjectId: enrollment.subjectId,
           sectionId: section.id,
           teacherId: section.teacherId,
-          title: `${enrollment.course.courseName} - Reading Assignment`,
-          description: `Read chapters 5-7 and submit summary for ${enrollment.course.courseName}`,
+          title: `${enrollment.subject.subjectName} - Reading Assignment`,
+          description: `Read chapters 5-7 and submit summary for ${enrollment.subject.subjectName}`,
           instructions: 'Write a 2-page summary of key concepts.',
           maxMarks: 30,
           assignedDate: new Date('2025-11-01'),
@@ -2490,10 +2471,10 @@ async function createStudent1ComprehensiveData(
     try {
       const midtermExam = await prisma.examination.create({
         data: {
-          course: { connect: { id: enrollment.courseId } },
+          subject: { connect: { id: enrollment.subjectId } },
           semester: { connect: { id: latestSemester.id } },
           creator: { connect: { id: section.teacherId } },
-          examName: `${enrollment.course.courseName} - Midterm Exam`,
+          examName: `${enrollment.subject.subjectName} - Midterm Exam`,
           examType: 'MIDTERM',
           totalMarks: 100,
           passingMarks: 40,
@@ -2528,10 +2509,10 @@ async function createStudent1ComprehensiveData(
     try {
       await prisma.examination.create({
         data: {
-          course: { connect: { id: enrollment.courseId } },
+          subject: { connect: { id: enrollment.subjectId } },
           semester: { connect: { id: latestSemester.id } },
           creator: { connect: { id: section.teacherId } },
-          examName: `${enrollment.course.courseName} - Final Exam`,
+          examName: `${enrollment.subject.subjectName} - Final Exam`,
           examType: 'FINAL',
           totalMarks: 100,
           passingMarks: 40,
@@ -2609,7 +2590,7 @@ async function createStudent1ComprehensiveData(
             unique_record: {
               studentId: student1.id,
               semesterId: semester.id,
-              courseId: enrollment.courseId,
+              subjectId: enrollment.subjectId,
             },
           },
           update: {
@@ -2624,7 +2605,7 @@ async function createStudent1ComprehensiveData(
           create: {
             studentId: student1.id,
             semesterId: semester.id,
-            courseId: enrollment.courseId,
+            subjectId: enrollment.subjectId,
             marksObtained: 85,
             maxMarks: 100,
             grade: 'A',
@@ -2650,30 +2631,10 @@ async function createStudent1ComprehensiveData(
 
   let studentProgressCount = 0
   if (spring2025 && currentAcademicYear && institution) {
-    // Get or create subjects for enrolled courses
+    // Get subjects for enrolled students
     for (const enrollment of enrollments) {
-      // Find or create subject matching the course
-      let subject = await prisma.subject.findFirst({
-        where: {
-          code: enrollment.course.courseCode,
-          institutionId: institution.id,
-        },
-      })
-
-      if (!subject) {
-        subject = await prisma.subject.create({
-          data: {
-            institutionId: institution.id,
-            name: enrollment.course.courseName,
-            code: enrollment.course.courseCode,
-            description: `Subject for ${enrollment.course.courseName}`,
-            credits: 3,
-            subjectType: 'CORE',
-            theoryHours: 3,
-            practicalHours: 0,
-          },
-        })
-      }
+      // Get the subject from enrollment
+      const subject = enrollment.subject
 
       // Create StudentProgress record
       try {

@@ -16,6 +16,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { CreateAssignmentDto, UpdateAssignmentDto } from './dto/assignment.dto'
 import {
+  BulkMarkAttendanceDto,
+  MarkAttendanceDto,
+  UpdateAttendanceDto,
+} from './dto/attendance.dto'
+import {
   BulkEnterExamResultDto,
   EnterExamResultDto,
   UpdateExamResultDto,
@@ -49,14 +54,6 @@ export class TeachersController {
   @Roles('super_admin', 'admin', 'teacher')
   findAll(@Query() query: TeacherQueryDto) {
     return this.teachersService.findAll(query)
-  }
-
-  @Get('stats')
-  @UseGuards(RolesGuard)
-  @Roles('super_admin', 'admin')
-  getStats() {
-    // This would return overall teacher statistics
-    return { message: 'Teacher stats endpoint - to be implemented' }
   }
 
   @Get(':user_uuid')
@@ -94,13 +91,6 @@ export class TeachersController {
       userUuid,
       parsedSemesterId
     )
-  }
-
-  @Get(':user_uuid/stats')
-  @UseGuards(RolesGuard)
-  @Roles('super_admin', 'admin', 'teacher')
-  getTeacherStats(@Param('user_uuid') userUuid: string) {
-    return this.teachersService.getTeacherStatsByUuid(userUuid)
   }
 
   @Get(':user_uuid/dashboard-stats')
@@ -368,7 +358,7 @@ export class TeachersController {
   @HttpCode(HttpStatus.CREATED)
   markAttendance(
     @Param('user_uuid') userUuid: string,
-    @Body() markAttendanceDto: any
+    @Body() markAttendanceDto: MarkAttendanceDto
   ) {
     return this.teachersService.markAttendance(userUuid, markAttendanceDto)
   }
@@ -379,7 +369,7 @@ export class TeachersController {
   @HttpCode(HttpStatus.CREATED)
   bulkMarkAttendance(
     @Param('user_uuid') userUuid: string,
-    @Body() bulkMarkAttendanceDto: any
+    @Body() bulkMarkAttendanceDto: BulkMarkAttendanceDto
   ) {
     return this.teachersService.bulkMarkAttendance(
       userUuid,
@@ -393,7 +383,7 @@ export class TeachersController {
   updateAttendance(
     @Param('user_uuid') userUuid: string,
     @Param('attendanceId') attendanceId: string,
-    @Body() updateAttendanceDto: any
+    @Body() updateAttendanceDto: UpdateAttendanceDto
   ) {
     return this.teachersService.updateAttendance(
       userUuid,

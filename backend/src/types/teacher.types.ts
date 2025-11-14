@@ -93,7 +93,7 @@ export interface TeacherAttendanceRecord {
     name: string
     admissionNumber: string
   }
-  course: {
+  subject: {
     name: string
     code: string
   }
@@ -134,6 +134,10 @@ export interface EnhancedTeacherDashboardStats extends TeacherDashboardStats {
   studentsAtRisk: number
   hasAttendanceAccess: boolean // Indicates if teacher can view attendance stats
   attendanceAccessReason?: string // Optional reason if access is denied
+  // Additional workload metrics (previously in /stats)
+  currentSemesterClasses: number // Classes in active semester
+  recentAssignments: number // Assignments in last 30 days
+  upcomingExaminations: number // Future exams
   tabSummaries: {
     attendanceTrends: AttendanceTrendsSummary
     subjectPerformance: SubjectPerformanceSummary

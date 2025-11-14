@@ -88,7 +88,7 @@ export class StudentsService {
               type: true,
             },
           },
-          program: {
+          course: {
             select: {
               id: true,
               name: true,
@@ -147,7 +147,7 @@ export class StudentsService {
           },
         },
         institution: true,
-        program: true,
+        course: true,
         parents: {
           include: {
             user: {
@@ -205,7 +205,7 @@ export class StudentsService {
           },
         },
         institution: true,
-        program: true,
+        course: true,
         parents: {
           include: {
             user: {
@@ -325,7 +325,7 @@ export class StudentsService {
               type: true,
             },
           },
-          program: {
+          course: {
             select: {
               id: true,
               name: true,
@@ -383,7 +383,7 @@ export class StudentsService {
             type: true,
           },
         },
-        program: {
+        course: {
           select: {
             id: true,
             name: true,
@@ -461,11 +461,11 @@ export class StudentsService {
     const academicRecords = await this.prisma.academicRecord.findMany({
       where: { studentId: id },
       include: {
-        course: {
+        subject: {
           select: {
             id: true,
-            courseName: true,
-            courseCode: true,
+            subjectName: true,
+            subjectCode: true,
             credits: true,
           },
         },
@@ -479,7 +479,7 @@ export class StudentsService {
       },
       orderBy: [
         { semester: { semesterNumber: 'desc' } },
-        { course: { courseCode: 'asc' } },
+        { subject: { subjectCode: 'asc' } },
       ],
     })
 
@@ -523,10 +523,10 @@ export class StudentsService {
       include: {
         section: {
           include: {
-            course: {
+            subject: {
               select: {
-                courseName: true,
-                courseCode: true,
+                subjectName: true,
+                subjectCode: true,
               },
             },
           },
@@ -656,7 +656,7 @@ export class StudentsService {
         studentId: student.id,
         semesterId: currentSemester.id,
       },
-      include: { course: true },
+      include: { subject: true },
     })
 
     let totalGradePoints = 0
@@ -825,14 +825,14 @@ export class StudentsService {
     // Get student's enrollments to find their courses
     const enrollments = await this.prisma.enrollment.findMany({
       where: { studentId: student.id },
-      include: { course: true },
+      include: { subject: true },
     })
 
-    const courseIds = enrollments.map(e => e.courseId)
+    const courseIds = enrollments.map(e => e.subjectId)
 
     // Build where clause
     const where: Prisma.AssignmentWhereInput = {
-      courseId: { in: courseIds },
+      subjectId: { in: courseIds },
       status: 'PUBLISHED',
     }
 
@@ -840,7 +840,7 @@ export class StudentsService {
     const assignments = await this.prisma.assignment.findMany({
       where,
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         submissions: {
           where: { studentId: student.id },
           orderBy: { version: 'desc' },
@@ -882,7 +882,7 @@ export class StudentsService {
       return {
         id: assignment.id,
         title: assignment.title,
-        subject: assignment.course.courseName,
+        subject: assignment.subject.subjectName,
         dueDate: assignment.dueDate.toISOString().split('T')[0],
         status: assignmentStatus,
         grade,
@@ -954,7 +954,7 @@ export class StudentsService {
         createdAt: { gte: startDate, lte: endDate },
       },
       include: {
-        subject: { select: { name: true, code: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
         semester: { select: { semesterName: true } },
       },
       orderBy: { createdAt: 'asc' },
@@ -964,11 +964,11 @@ export class StudentsService {
     const subjectMap = new Map()
 
     progressData.forEach(progress => {
-      const subjectKey = progress.subject.code
+      const subjectKey = progress.subject.subjectCode
       if (!subjectMap.has(subjectKey)) {
         subjectMap.set(subjectKey, {
-          subject: progress.subject.name,
-          subjectCode: progress.subject.code,
+          subject: progress.subject.subjectName,
+          subjectCode: progress.subject.subjectCode,
           dataPoints: [],
         })
       }
@@ -1163,7 +1163,7 @@ export class StudentsService {
         semesterId: currentSemester.id,
       },
       include: {
-        subject: { select: { name: true, code: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
       },
     })
 
@@ -1174,10 +1174,10 @@ export class StudentsService {
         semesterId: currentSemester.id,
       },
       include: {
-        course: {
+        subject: {
           select: {
-            courseName: true,
-            courseCode: true,
+            subjectName: true,
+            subjectCode: true,
             classSections: {
               include: {
                 teacher: {
@@ -1197,7 +1197,7 @@ export class StudentsService {
         semesterId: currentSemester.id,
       },
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
       },
       orderBy: { examDate: 'asc' },
     })
@@ -1205,18 +1205,18 @@ export class StudentsService {
     const subjects = progressData.map(progress => {
       // Find teacher for this subject - match by subject name
       const enrollment = enrollments.find(e =>
-        e.course.courseName
+        e.subject.subjectName
           .toLowerCase()
-          .includes(progress.subject.name.toLowerCase())
+          .includes(progress.subject.subjectName.toLowerCase())
       )
       const teacher =
-        enrollment?.course.classSections[0]?.teacher?.user?.name || 'TBD'
+        enrollment?.subject.classSections[0]?.teacher?.user?.name || 'TBD'
 
       // Find next test
       const nextExam = upcomingExams.find(exam =>
-        exam.course.courseName
+        exam.subject.subjectName
           .toLowerCase()
-          .includes(progress.subject.name.toLowerCase())
+          .includes(progress.subject.subjectName.toLowerCase())
       )
       const nextTest = nextExam
         ? nextExam.examDate.toLocaleDateString('en-US', {
@@ -1246,8 +1246,8 @@ export class StudentsService {
       }
 
       return {
-        subject: progress.subject.name,
-        subjectCode: progress.subject.code,
+        subject: progress.subject.subjectName,
+        subjectCode: progress.subject.subjectCode,
         teacher,
         nextTest,
         grade,
@@ -1313,19 +1313,19 @@ export class StudentsService {
     // Get student's enrolled courses
     const enrollments = await this.prisma.enrollment.findMany({
       where: { studentId: student.id },
-      select: { courseId: true },
+      select: { subjectId: true },
     })
-    const enrolledCourseIds = enrollments.map(e => e.courseId)
+    const enrolledCourseIds = enrollments.map(e => e.subjectId)
 
     // Get upcoming exams for enrolled courses
     const upcomingExams = await this.prisma.examination.findMany({
       where: {
         examDate: { gte: now },
         status: { in: ['SCHEDULED', 'ONGOING'] },
-        courseId: { in: enrolledCourseIds },
+        subjectId: { in: enrolledCourseIds },
       },
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
       },
       orderBy: { examDate: 'asc' },
       take: limit,
@@ -1338,8 +1338,8 @@ export class StudentsService {
         date: exam.examDate?.toISOString().split('T')[0] || '',
         time: exam.startTime?.toISOString().slice(11, 16) || '10:00',
         type: 'test' as const,
-        subject: exam.course.courseName,
-        description: `${exam.examType} - ${exam.course.courseName}`,
+        subject: exam.subject.subjectName,
+        description: `${exam.examType} - ${exam.subject.subjectName}`,
       })
     })
 
@@ -1348,13 +1348,13 @@ export class StudentsService {
       where: {
         dueDate: { gte: now },
         status: 'PUBLISHED',
-        courseId: { in: enrolledCourseIds },
+        subjectId: { in: enrolledCourseIds },
         submissions: {
           none: { studentId: student.id },
         },
       },
       include: {
-        course: { select: { courseName: true, courseCode: true } },
+        subject: { select: { subjectName: true, subjectCode: true } },
       },
       orderBy: { dueDate: 'asc' },
       take: limit,
@@ -1367,8 +1367,8 @@ export class StudentsService {
         date: assignment.dueDate.toISOString().split('T')[0],
         time: '23:59',
         type: 'assignment' as const,
-        subject: assignment.course.courseName,
-        description: `Assignment Due - ${assignment.course.courseName}`,
+        subject: assignment.subject.subjectName,
+        description: `Assignment Due - ${assignment.subject.subjectName}`,
       })
     })
 

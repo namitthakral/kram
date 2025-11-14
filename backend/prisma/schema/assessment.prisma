@@ -4,7 +4,7 @@
 
 model Examination {
   id                  Int              @id @default(autoincrement())
-  courseId            Int              @map("course_id")
+  subjectId           Int              @map("subject_id") // Subject being examined
   semesterId          Int              @map("semester_id")
   examName            String           @map("exam_name") @db.VarChar(100)
   examType            ExamType         @map("exam_type")
@@ -22,7 +22,7 @@ model Examination {
   updatedAt           DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  course              Course           @relation(fields: [courseId], references: [id])
+  subject             Subject          @relation(fields: [subjectId], references: [id])
   semester            Semester         @relation(fields: [semesterId], references: [id])
   creator             Teacher          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   results             ExamResult[]
@@ -55,7 +55,7 @@ model ExamResult {
 
 model Assignment {
   id                      Int                @id @default(autoincrement())
-  courseId                Int                @map("course_id")
+  subjectId               Int                @map("subject_id") // Subject for this assignment
   sectionId               Int?               @map("section_id")
   teacherId               Int                @map("teacher_id")
   title                   String             @db.VarChar(200)
@@ -73,7 +73,7 @@ model Assignment {
   updatedAt               DateTime           @updatedAt @map("updated_at")
 
   // Relations
-  course                  Course             @relation(fields: [courseId], references: [id])
+  subject                 Subject            @relation(fields: [subjectId], references: [id])
   section                 ClassSection?      @relation(fields: [sectionId], references: [id])
   teacher                 Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   submissions             Submission[]

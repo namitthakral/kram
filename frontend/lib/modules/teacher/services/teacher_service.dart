@@ -9,12 +9,10 @@ import '../models/examination_models.dart';
 ///
 /// Available endpoints (based on backend/src/teachers/teachers.controller.ts):
 /// - GET /teachers - Get all teachers (admin only)
-/// - GET /teachers/stats - Get overall teacher statistics
 /// - GET /teachers/:user_uuid - Get teacher by UUID
 /// - GET /teachers/:user_uuid/subjects - Get teacher's subjects
 /// - GET /teachers/:user_uuid/classes - Get teacher's classes
-/// - GET /teachers/:user_uuid/stats - Get teacher statistics
-/// - GET /teachers/:user_uuid/dashboard-stats - Get enhanced dashboard stats
+/// - GET /teachers/:user_uuid/dashboard-stats - Get enhanced dashboard stats (includes workload metrics)
 /// - GET /teachers/:user_uuid/attendance-trends - Get attendance trends
 /// - GET /teachers/:user_uuid/subject-performance - Get subject performance
 /// - GET /teachers/:user_uuid/grade-distribution - Get grade distribution
@@ -325,28 +323,6 @@ class TeacherService {
       }
     } catch (e) {
       throw Exception('Failed to load teacher classes: $e');
-    }
-  }
-
-  /// Get teacher statistics
-  ///
-  /// Endpoint: GET /teachers/:user_uuid/stats
-  Future<Map<String, dynamic>> getTeacherStats(String userUuid) async {
-    try {
-      final response = await _apiService.dio.get('/teachers/$userUuid/stats');
-
-      if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error: 'Failed to load teacher stats',
-        );
-      }
-    } catch (e) {
-      throw Exception('Failed to load teacher stats: $e');
     }
   }
 
