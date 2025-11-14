@@ -1334,7 +1334,9 @@ export class StudentsService {
     upcomingExams.forEach(exam => {
       events.push({
         id: exam.id,
-        title: `${exam.examName}`,
+        title:
+          exam.examName ||
+          `${exam.subject.subjectName} - ${exam.examType} Exam`,
         date: exam.examDate?.toISOString().split('T')[0] || '',
         time: exam.startTime?.toISOString().slice(11, 16) || '10:00',
         type: 'test' as const,

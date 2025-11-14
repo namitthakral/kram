@@ -35,6 +35,16 @@ import {
 export class TeachersService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Helper method to get UTC date at midnight to avoid timezone issues
+   * when comparing with database DATE columns
+   */
+  private getUTCDate(date: Date = new Date()): Date {
+    return new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    )
+  }
+
   async create(createTeacherDto: CreateTeacherDto) {
     const { firstName, lastName, email, phone, password, ...teacherData } =
       createTeacherDto
@@ -618,13 +628,18 @@ export class TeachersService {
       )
     }
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    // Use UTC dates to avoid timezone issues with date comparisons
+    const now = new Date()
+    const today = this.getUTCDate(now)
     const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    const startOfMonth = new Date(
+      Date.UTC(now.getFullYear(), now.getMonth(), 1)
+    )
+    const endOfMonth = new Date(
+      Date.UTC(now.getFullYear(), now.getMonth() + 1, 0)
+    )
 
     // Get section IDs for this teacher
     const classSections = await this.prisma.classSection.findMany({
@@ -1339,14 +1354,13 @@ export class TeachersService {
    * Get detailed attendance trends data for the Attendance Trends tab
    */
   async getAttendanceTrends(teacherId: number): Promise<AttendanceTrendsData> {
-    const today = new Date()
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay()) // Start of current week
-    startOfWeek.setHours(0, 0, 0, 0)
+    const today = this.getUTCDate()
+    const startOfWeek = this.getUTCDate()
+    startOfWeek.setUTCDate(today.getUTCDate() - today.getUTCDay()) // Start of current week
 
     const endOfWeek = new Date(startOfWeek)
-    endOfWeek.setDate(startOfWeek.getDate() + 6)
-    endOfWeek.setHours(23, 59, 59, 999)
+    endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6)
+    endOfWeek.setUTCHours(23, 59, 59, 999)
 
     const [weeklyData, monthlyData, patterns] = await Promise.all([
       this.getWeeklyAttendanceData(teacherId, startOfWeek, endOfWeek),
@@ -1440,9 +1454,13 @@ export class TeachersService {
   }
 
   private async getMonthlyAttendanceData(teacherId: number) {
-    const today = new Date()
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    const today = this.getUTCDate()
+    const startOfMonth = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)
+    )
+    const endOfMonth = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0)
+    )
 
     // Get weekly breakdown for current month
     const weeklyBreakdown = []
@@ -1531,9 +1549,13 @@ export class TeachersService {
   }
 
   private async getAttendancePatterns(teacherId: number) {
-    const today = new Date()
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    const today = this.getUTCDate()
+    const startOfMonth = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)
+    )
+    const endOfMonth = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0)
+    )
 
     // Get all attendance records for the month
     const attendanceRecords = await this.prisma.attendance.findMany({
@@ -1982,13 +2004,12 @@ export class TeachersService {
   private async getWeeklyAttendancePreview(
     teacherId: number
   ): Promise<DailyAttendancePreview[]> {
-    const today = new Date()
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay())
-    startOfWeek.setHours(0, 0, 0, 0)
+    const today = this.getUTCDate()
+    const startOfWeek = this.getUTCDate()
+    startOfWeek.setUTCDate(today.getUTCDate() - today.getUTCDay())
 
     const endOfWeek = new Date(startOfWeek)
-    endOfWeek.setDate(startOfWeek.getDate() + 6)
+    endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6)
 
     const weekData = await this.getWeeklyAttendanceData(
       teacherId,
@@ -2005,10 +2026,16 @@ export class TeachersService {
   private async getAttendanceTrend(
     teacherId: number
   ): Promise<'improving' | 'declining' | 'stable'> {
-    const today = new Date()
-    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0)
+    const today = this.getUTCDate()
+    const thisMonth = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)
+    )
+    const lastMonth = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 1, 1)
+    )
+    const lastMonthEnd = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 0)
+    )
 
     const [thisMonthAvg, lastMonthAvg] = await Promise.all([
       this.getMonthAttendanceAverage(teacherId, thisMonth, today),
