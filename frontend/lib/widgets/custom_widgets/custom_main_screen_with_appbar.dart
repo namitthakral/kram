@@ -318,10 +318,10 @@ class _CustomAppBar extends StatelessWidget {
       leading:
           !isProfileType && config.showBackButton
               ? IconButton(
-                padding: const EdgeInsets.only(left: 16),
+                // padding: const EdgeInsets.only(left: 16),
                 icon: SvgPicture.asset(
                   'assets/images/icons/ic_back_arrow.svg',
-                  width: 60,
+                  width: 20,
                   alignment: Alignment.centerLeft,
                   colorFilter: const ColorFilter.mode(
                     CustomAppColors.white,
