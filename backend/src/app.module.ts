@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule } from '@nestjs/throttler'
+import { EventEmitterModule } from '@nestjs/event-emitter'
+import { ScheduleModule } from '@nestjs/schedule'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
 import { CoursesModule } from './courses/courses.module'
@@ -17,6 +19,20 @@ import { UsersModule } from './users/users.module'
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // Event-driven architecture
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      newListener: false,
+      removeListener: false,
+      maxListeners: 10,
+      verboseMemoryLeak: false,
+      ignoreErrors: false,
+    }),
+
+    // Scheduled jobs
+    ScheduleModule.forRoot(),
 
     // Rate limiting
     ThrottlerModule.forRoot([

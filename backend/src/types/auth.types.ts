@@ -1,4 +1,4 @@
-import { User, Role, Student, Teacher, Parent } from './index'
+import { Parent, Role, Staff, Student, Teacher, User } from './index'
 
 // Extended user type with relations
 export type UserWithRelations = User & {
@@ -6,6 +6,7 @@ export type UserWithRelations = User & {
   student?: Student | null
   teacher?: Teacher | null
   parent?: Parent | null
+  staff?: Staff | null
 }
 
 // JWT payload type
