@@ -33,6 +33,7 @@ export interface User {
   student?: Student
   teacher?: Teacher
   parent?: Parent
+  staff?: Staff
 }
 
 export interface Role {
@@ -52,6 +53,29 @@ export interface Parent {
   annualIncome?: number | { toNumber(): number } // Support Prisma Decimal type
   educationLevel?: string
   isPrimaryContact: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Staff {
+  id: number
+  userId: number
+  institutionId: number
+  employeeId: string
+  staffType?: string
+  designation?: string
+  department?: string
+  joinDate?: Date
+  salary?: number | { toNumber(): number } // Support Prisma Decimal type
+  employmentType?: string
+  workingHours?: string
+  reportingManager?: number
+  skills?: string[]
+  qualifications?: string
+  experience?: string
+  emergencyContact?: string
+  address?: string
+  status?: string
   createdAt: Date
   updatedAt: Date
 }

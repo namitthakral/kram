@@ -1,6 +1,6 @@
-import { PrismaService } from '../../prisma/prisma.service';
-import { Decimal } from '@prisma/client/runtime/library';
-import { GradingConfig } from './grading-config.interface';
+import { Decimal } from '@prisma/client/runtime/library'
+import { PrismaService } from '../../prisma/prisma.service'
+import { GradingConfig } from './grading-config.interface'
 
 /**
  * Utility class for calculating student progress metrics
@@ -49,21 +49,21 @@ export class ProgressCalculator {
     goodAssignment: 80,
     goodExam: 80,
     goodGradePoints: 3.3,
-  };
+  }
 
   /**
    * Get grading configuration for an institution
    */
   static async getGradingConfig(
     prisma: PrismaService,
-    institutionId: number,
+    institutionId: number
   ): Promise<GradingConfig> {
     const config = await prisma.institutionGradingConfig.findUnique({
       where: { institutionId, isActive: true },
-    });
+    })
 
     if (!config) {
-      return this.DEFAULT_CONFIG;
+      return this.DEFAULT_CONFIG
     }
 
     // Convert Prisma Decimal to number
@@ -92,14 +92,14 @@ export class ProgressCalculator {
       atRiskGradePoints: parseFloat(config.atRiskGradePoints.toString()),
 
       needsImprovementAttendance: parseFloat(
-        config.needsImprovementAttendance.toString(),
+        config.needsImprovementAttendance.toString()
       ),
       needsImprovementAssignment: parseFloat(
-        config.needsImprovementAssignment.toString(),
+        config.needsImprovementAssignment.toString()
       ),
       needsImprovementExam: parseFloat(config.needsImprovementExam.toString()),
       needsImprovementGradePoints: parseFloat(
-        config.needsImprovementGradePoints.toString(),
+        config.needsImprovementGradePoints.toString()
       ),
 
       excellentAttendance: parseFloat(config.excellentAttendance.toString()),
@@ -111,7 +111,7 @@ export class ProgressCalculator {
       goodAssignment: parseFloat(config.goodAssignment.toString()),
       goodExam: parseFloat(config.goodExam.toString()),
       goodGradePoints: parseFloat(config.goodGradePoints.toString()),
-    };
+    }
   }
   /**
    * Calculate attendance percentage for a student in a subject
@@ -120,30 +120,20 @@ export class ProgressCalculator {
     prisma: PrismaService,
     studentId: number,
     subjectId: number,
-    semesterId: number,
+    semesterId: number
   ): Promise<number> {
-    // Get the subject to find its code
-    const subject = await prisma.subject.findUnique({
-      where: { id: subjectId },
-      select: { code: true },
-    });
-
-    if (!subject) return 0;
-
-    // Get all sections for courses with matching subject code in the current semester
+    // Get all sections for this subject in the current semester
     const sections = await prisma.classSection.findMany({
       where: {
         semesterId,
-        course: {
-          courseCode: subject.code,
-        },
+        subjectId,
       },
       select: { id: true },
-    });
+    })
 
-    if (sections.length === 0) return 0;
+    if (sections.length === 0) return 0
 
-    const sectionIds = sections.map(s => s.id);
+    const sectionIds = sections.map(s => s.id)
 
     // Get attendance records
     const attendanceRecords = await prisma.attendance.findMany({
@@ -151,15 +141,17 @@ export class ProgressCalculator {
         studentId,
         sectionId: { in: sectionIds },
       },
-    });
+    })
 
-    if (attendanceRecords.length === 0) return 0;
+    if (attendanceRecords.length === 0) return 0
 
     const presentCount = attendanceRecords.filter(
-      a => a.status === 'PRESENT' || a.status === 'LATE',
-    ).length;
+      a => a.status === 'PRESENT' || a.status === 'LATE'
+    ).length
 
-    return Math.round((presentCount / attendanceRecords.length) * 100 * 100) / 100;
+    return (
+      Math.round((presentCount / attendanceRecords.length) * 100 * 100) / 100
+    )
   }
 
   /**
@@ -169,32 +161,33 @@ export class ProgressCalculator {
     prisma: PrismaService,
     studentId: number,
     subjectId: number,
-    semesterId: number,
+    semesterId: number
   ): Promise<number> {
-    // Get the subject to find its code
-    const subject = await prisma.subject.findUnique({
-      where: { id: subjectId },
-      select: { code: true },
-    });
-
-    if (!subject) return 0;
-
-    // Get all assignments for courses with matching subject code
-    const assignments = await prisma.assignment.findMany({
+    // Get all sections for this subject in the current semester
+    const sections = await prisma.classSection.findMany({
       where: {
-        course: {
-          courseCode: subject.code,
-        },
-        section: {
-          semesterId,
-        },
+        semesterId,
+        subjectId,
       },
       select: { id: true },
-    });
+    })
 
-    if (assignments.length === 0) return 0;
+    if (sections.length === 0) return 0
 
-    const assignmentIds = assignments.map(a => a.id);
+    const sectionIds = sections.map(s => s.id)
+
+    // Get all assignments for this subject and semester
+    const assignments = await prisma.assignment.findMany({
+      where: {
+        subjectId,
+        sectionId: { in: sectionIds },
+      },
+      select: { id: true },
+    })
+
+    if (assignments.length === 0) return 0
+
+    const assignmentIds = assignments.map(a => a.id)
 
     // Get submissions
     const submissions = await prisma.submission.findMany({
@@ -209,24 +202,24 @@ export class ProgressCalculator {
           select: { maxMarks: true },
         },
       },
-    });
+    })
 
-    if (submissions.length === 0) return 0;
+    if (submissions.length === 0) return 0
 
     // Calculate weighted average
-    let totalScore = 0;
-    let totalMaxMarks = 0;
+    let totalScore = 0
+    let totalMaxMarks = 0
 
     submissions.forEach(sub => {
       if (sub.marksObtained && sub.assignment.maxMarks) {
-        totalScore += parseFloat(sub.marksObtained.toString());
-        totalMaxMarks += parseFloat(sub.assignment.maxMarks.toString());
+        totalScore += parseFloat(sub.marksObtained.toString())
+        totalMaxMarks += parseFloat(sub.assignment.maxMarks.toString())
       }
-    });
+    })
 
-    if (totalMaxMarks === 0) return 0;
+    if (totalMaxMarks === 0) return 0
 
-    return Math.round((totalScore / totalMaxMarks) * 100 * 100) / 100;
+    return Math.round((totalScore / totalMaxMarks) * 100 * 100) / 100
   }
 
   /**
@@ -236,30 +229,20 @@ export class ProgressCalculator {
     prisma: PrismaService,
     studentId: number,
     subjectId: number,
-    semesterId: number,
+    semesterId: number
   ): Promise<number> {
-    // Get the subject to find its code
-    const subject = await prisma.subject.findUnique({
-      where: { id: subjectId },
-      select: { code: true },
-    });
-
-    if (!subject) return 0;
-
-    // Get all exams for courses with matching subject code
+    // Get all exams for this subject and semester
     const exams = await prisma.examination.findMany({
       where: {
         semesterId,
-        course: {
-          courseCode: subject.code,
-        },
+        subjectId,
       },
       select: { id: true },
-    });
+    })
 
-    if (exams.length === 0) return 0;
+    if (exams.length === 0) return 0
 
-    const examIds = exams.map(e => e.id);
+    const examIds = exams.map(e => e.id)
 
     // Get exam results
     const results = await prisma.examResult.findMany({
@@ -273,24 +256,24 @@ export class ProgressCalculator {
           select: { totalMarks: true },
         },
       },
-    });
+    })
 
-    if (results.length === 0) return 0;
+    if (results.length === 0) return 0
 
     // Calculate weighted average
-    let totalScore = 0;
-    let totalMaxMarks = 0;
+    let totalScore = 0
+    let totalMaxMarks = 0
 
     results.forEach(result => {
       if (result.marksObtained && result.exam.totalMarks) {
-        totalScore += parseFloat(result.marksObtained.toString());
-        totalMaxMarks += parseFloat(result.exam.totalMarks.toString());
+        totalScore += parseFloat(result.marksObtained.toString())
+        totalMaxMarks += parseFloat(result.exam.totalMarks.toString())
       }
-    });
+    })
 
-    if (totalMaxMarks === 0) return 0;
+    if (totalMaxMarks === 0) return 0
 
-    return Math.round((totalScore / totalMaxMarks) * 100 * 100) / 100;
+    return Math.round((totalScore / totalMaxMarks) * 100 * 100) / 100
   }
 
   /**
@@ -300,7 +283,7 @@ export class ProgressCalculator {
     prisma: PrismaService,
     studentId: number,
     subjectId: number,
-    semesterId: number,
+    semesterId: number
   ): Promise<number> {
     // For now, use attendance as a proxy for participation
     // Can be extended to include class participation, discussions, etc.
@@ -308,9 +291,9 @@ export class ProgressCalculator {
       prisma,
       studentId,
       subjectId,
-      semesterId,
-    );
-    return attendance;
+      semesterId
+    )
+    return attendance
   }
 
   /**
@@ -321,28 +304,28 @@ export class ProgressCalculator {
     assignmentScore: number,
     examScore: number,
     participationScore: number,
-    config: GradingConfig,
+    config: GradingConfig
   ): string {
     // Weighted average using institution's weights
     const weightedScore =
       attendancePercentage * (config.attendanceWeight / 100) +
       assignmentScore * (config.assignmentWeight / 100) +
       examScore * (config.examWeight / 100) +
-      participationScore * (config.participationWeight / 100);
+      participationScore * (config.participationWeight / 100)
 
-    return this.scoreToGrade(weightedScore, config);
+    return this.scoreToGrade(weightedScore, config)
   }
 
   /**
    * Convert numeric score to letter grade using institution's thresholds
    */
   static scoreToGrade(score: number, config: GradingConfig): string {
-    if (score >= config.gradeAPlusThreshold) return 'A+';
-    if (score >= config.gradeAThreshold) return 'A';
-    if (score >= config.gradeBPlusThreshold) return 'B+';
-    if (score >= config.gradeBThreshold) return 'B';
-    if (score >= config.gradeCThreshold) return 'C';
-    return 'D';
+    if (score >= config.gradeAPlusThreshold) return 'A+'
+    if (score >= config.gradeAThreshold) return 'A'
+    if (score >= config.gradeBPlusThreshold) return 'B+'
+    if (score >= config.gradeBThreshold) return 'B'
+    if (score >= config.gradeCThreshold) return 'C'
+    return 'D'
   }
 
   /**
@@ -356,8 +339,8 @@ export class ProgressCalculator {
       B: config.gradeBPoints,
       C: config.gradeCPoints,
       D: config.gradeDPoints,
-    };
-    return gradeMap[grade] || 0;
+    }
+    return gradeMap[grade] || 0
   }
 
   /**
@@ -368,9 +351,9 @@ export class ProgressCalculator {
     assignmentScore: number,
     examScore: number,
     overallGrade: string,
-    config: GradingConfig,
+    config: GradingConfig
   ): string {
-    const gradePoints = this.gradeToPoints(overallGrade, config);
+    const gradePoints = this.gradeToPoints(overallGrade, config)
 
     // At-risk criteria (using institution's thresholds)
     if (
@@ -379,7 +362,7 @@ export class ProgressCalculator {
       examScore < config.atRiskExam ||
       gradePoints < config.atRiskGradePoints
     ) {
-      return 'AT_RISK';
+      return 'AT_RISK'
     }
 
     // Needs improvement
@@ -389,7 +372,7 @@ export class ProgressCalculator {
       examScore < config.needsImprovementExam ||
       gradePoints < config.needsImprovementGradePoints
     ) {
-      return 'NEEDS_IMPROVEMENT';
+      return 'NEEDS_IMPROVEMENT'
     }
 
     // Excellent
@@ -399,7 +382,7 @@ export class ProgressCalculator {
       examScore >= config.excellentExam &&
       gradePoints >= config.excellentGradePoints
     ) {
-      return 'EXCELLENT';
+      return 'EXCELLENT'
     }
 
     // Good
@@ -409,11 +392,11 @@ export class ProgressCalculator {
       examScore >= config.goodExam &&
       gradePoints >= config.goodGradePoints
     ) {
-      return 'GOOD';
+      return 'GOOD'
     }
 
     // Default: On track
-    return 'ON_TRACK';
+    return 'ON_TRACK'
   }
 
   /**
@@ -425,47 +408,47 @@ export class ProgressCalculator {
     subjectId: number,
     semesterId: number,
     academicYearId: number,
-    institutionId: number,
+    institutionId: number
   ): Promise<{
-    attendancePercentage: Decimal;
-    assignmentScore: Decimal;
-    examScore: Decimal;
-    participationScore: Decimal;
-    overallGrade: string;
-    gradePoints: Decimal;
-    status: string;
+    attendancePercentage: Decimal
+    assignmentScore: Decimal
+    examScore: Decimal
+    participationScore: Decimal
+    overallGrade: string
+    gradePoints: Decimal
+    status: string
   }> {
     // Get institution's grading configuration
-    const config = await this.getGradingConfig(prisma, institutionId);
+    const config = await this.getGradingConfig(prisma, institutionId)
 
     // Calculate all metrics
     const attendancePercentage = await this.calculateAttendance(
       prisma,
       studentId,
       subjectId,
-      semesterId,
-    );
+      semesterId
+    )
 
     const assignmentScore = await this.calculateAssignmentScore(
       prisma,
       studentId,
       subjectId,
-      semesterId,
-    );
+      semesterId
+    )
 
     const examScore = await this.calculateExamScore(
       prisma,
       studentId,
       subjectId,
-      semesterId,
-    );
+      semesterId
+    )
 
     const participationScore = await this.calculateParticipationScore(
       prisma,
       studentId,
       subjectId,
-      semesterId,
-    );
+      semesterId
+    )
 
     // Calculate overall grade using institution's config
     const overallGrade = this.calculateOverallGrade(
@@ -473,10 +456,10 @@ export class ProgressCalculator {
       assignmentScore,
       examScore,
       participationScore,
-      config,
-    );
+      config
+    )
 
-    const gradePoints = this.gradeToPoints(overallGrade, config);
+    const gradePoints = this.gradeToPoints(overallGrade, config)
 
     // Determine status using institution's thresholds
     const status = this.determineStatus(
@@ -484,8 +467,8 @@ export class ProgressCalculator {
       assignmentScore,
       examScore,
       overallGrade,
-      config,
-    );
+      config
+    )
 
     return {
       attendancePercentage: new Decimal(attendancePercentage),
@@ -495,7 +478,6 @@ export class ProgressCalculator {
       overallGrade,
       gradePoints: new Decimal(gradePoints),
       status,
-    };
+    }
   }
 }
-

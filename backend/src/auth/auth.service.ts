@@ -39,6 +39,7 @@ export class AuthService {
           student: true,
           teacher: true,
           parent: true,
+          staff: true,
         },
       })
     } else if (loginDto.email) {
@@ -49,23 +50,35 @@ export class AuthService {
           student: true,
           teacher: true,
           parent: true,
+          staff: true,
         },
       })
     } else if (loginDto.phone) {
       user = await this.prisma.user.findFirst({
         where: { phone: loginDto.phone },
-      include: {
-        role: true,
-        student: true,
-        teacher: true,
-        parent: true,
-      },
-    })
+        include: {
+          role: true,
+          student: true,
+          teacher: true,
+          parent: true,
+          staff: true,
+        },
+      })
     }
 
     if (!user) {
       return null
     }
+
+    // Debug logging
+    console.log('User found:', {
+      id: user.id,
+      email: user.email,
+      student: user.student?.id,
+      teacher: user.teacher?.id,
+      staff: user.staff?.id,
+      staffObject: user.staff,
+    })
 
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
@@ -143,8 +156,8 @@ export class AuthService {
         updatedAt: user.updatedAt,
       },
       tokens: {
-      accessToken,
-      refreshToken,
+        accessToken,
+        refreshToken,
         expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
       },
     }
@@ -162,7 +175,7 @@ export class AuthService {
     if (loginDto.email) {
       userToUpdate = await this.prisma.user.findUnique({
         where: { email: loginDto.email },
-    })
+      })
     } else if (loginDto.phone) {
       userToUpdate = await this.prisma.user.findFirst({
         where: { phone: loginDto.phone },
@@ -180,11 +193,11 @@ export class AuthService {
 
       await this.prisma.user.update({
         where: { id: userToUpdate.id },
-      data: {
+        data: {
           loginAttempts: newAttempts,
           accountLocked: shouldLock,
-      },
-    })
+        },
+      })
 
       // Log the failed attempt for security monitoring
       console.warn(
@@ -226,7 +239,7 @@ export class AuthService {
 
     return {
       tokens: {
-      accessToken,
+        accessToken,
         refreshToken,
         expiresIn: 3600, // 1 hour (matches JWT_EXPIRES_IN in auth.module.ts)
       },

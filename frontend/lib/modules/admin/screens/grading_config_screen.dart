@@ -24,13 +24,14 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
 
-    // Get institutionId from student or teacher (admins/super_admins use teacher profile)
+    // Get institutionId from student, teacher, or staff profile
     final institutionId =
-        user?.student?.institutionId ?? user?.teacher?.institutionId;
+        user?.student?.institutionId ??
+        user?.teacher?.institutionId ??
+        user?.staff?.institutionId ??
+        1; // Fallback to institution 1 if none found
 
-    if (institutionId != null) {
-      await context.read<GradingConfigProvider>().loadConfig(institutionId);
-    }
+    await context.read<GradingConfigProvider>().loadConfig(institutionId);
   }
 
   @override
@@ -606,9 +607,12 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
 
-    // Get institutionId from student or teacher (admins/super_admins use teacher profile)
+    // Get institutionId from student, teacher, or staff profile
     final institutionId =
-        user?.student?.institutionId ?? user?.teacher?.institutionId;
+        user?.student?.institutionId ??
+        user?.teacher?.institutionId ??
+        user?.staff?.institutionId ??
+        1; // Fallback to institution 1 if none found
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -630,7 +634,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
         const SizedBox(width: 12),
         ElevatedButton(
           onPressed:
-              provider.isWeightValid && institutionId != null
+              provider.isWeightValid
                   ? () => _saveConfig(provider, institutionId)
                   : null,
           style: ElevatedButton.styleFrom(

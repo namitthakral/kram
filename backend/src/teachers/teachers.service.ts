@@ -38,7 +38,7 @@ export class TeachersService {
   constructor(
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
-    private progressUpdater: ProgressUpdaterService,
+    private progressUpdater: ProgressUpdaterService
   ) {}
 
   /**
@@ -3223,9 +3223,9 @@ export class TeachersService {
       // Trigger progress recalculation (async, non-blocking)
       await this.triggerProgressRecalculation(
         markAttendanceDto.studentId,
-        section.courseId,
+        section.subjectId,
         section.semesterId,
-        'attendance_update',
+        'attendance_update'
       )
 
       return {
@@ -3276,9 +3276,9 @@ export class TeachersService {
     // Trigger progress recalculation (async, non-blocking)
     await this.triggerProgressRecalculation(
       markAttendanceDto.studentId,
-      section.courseId,
+      section.subjectId,
       section.semesterId,
-      'attendance_create',
+      'attendance_create'
     )
 
     return {
@@ -3875,9 +3875,9 @@ export class TeachersService {
           // Trigger progress recalculation for updated result
           await this.triggerProgressRecalculation(
             resultDto.studentId,
-            examination.courseId,
+            examination.subjectId,
             examination.semesterId,
-            'exam_result_update',
+            'exam_result_update'
           )
         } else {
           // Create new result
@@ -3909,9 +3909,9 @@ export class TeachersService {
           // Trigger progress recalculation for new result
           await this.triggerProgressRecalculation(
             resultDto.studentId,
-            examination.courseId,
+            examination.subjectId,
             examination.semesterId,
-            'exam_result_create',
+            'exam_result_create'
           )
         }
       } catch (error) {
@@ -4265,9 +4265,9 @@ export class TeachersService {
    */
   private async triggerProgressRecalculation(
     studentId: number,
-    courseId: number,
+    subjectId: number,
     semesterId: number,
-    trigger: string,
+    trigger: string
   ): Promise<void> {
     try {
       // Get academic year for this semester
@@ -4280,44 +4280,14 @@ export class TeachersService {
         return
       }
 
-      // Get course to find its code and institution
-      const course = await this.prisma.course.findUnique({
-        where: { id: courseId },
-        select: {
-          courseCode: true,
-          program: {
-            select: { institutionId: true },
-          },
-        },
+      // Trigger recalculation for the subject
+      this.eventEmitter.emit('progress.recalculate', {
+        studentId,
+        subjectId,
+        semesterId,
+        academicYearId: semester.academicYearId,
+        trigger,
       })
-
-      if (!course || !course.program) {
-        return
-      }
-
-      // Find subjects with matching course code
-      const subjects = await this.prisma.subject.findMany({
-        where: {
-          code: course.courseCode,
-          institutionId: course.program.institutionId,
-        },
-        select: { id: true },
-      })
-
-      if (subjects.length === 0) {
-        return
-      }
-
-      // Trigger recalculation for each subject
-      for (const subject of subjects) {
-        this.eventEmitter.emit('progress.recalculate', {
-          studentId,
-          subjectId: subject.id,
-          semesterId,
-          academicYearId: semester.academicYearId,
-          trigger,
-        })
-      }
     } catch (error) {
       // Log error but don't throw - this is a background operation
       console.error('Failed to trigger progress recalculation:', error)

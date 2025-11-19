@@ -175,6 +175,7 @@ class User {
     this.student,
     this.teacher,
     this.parent,
+    this.staff,
     this.mustChangePassword,
     this.isTemporaryPassword,
   });
@@ -190,6 +191,7 @@ class User {
     student: json['student'] != null ? Student.fromJson(json['student']) : null,
     teacher: json['teacher'] != null ? Teacher.fromJson(json['teacher']) : null,
     parent: json['parent'] != null ? Parent.fromJson(json['parent']) : null,
+    staff: json['staff'] != null ? Staff.fromJson(json['staff']) : null,
     status: json['status'],
     mustChangePassword: json['mustChangePassword'] ?? false,
     isTemporaryPassword: json['isTemporaryPassword'] ?? false,
@@ -212,6 +214,7 @@ class User {
   final Student? student;
   final Teacher? teacher;
   final Parent? parent;
+  final Staff? staff;
   final String status;
   final bool? mustChangePassword;
   final bool? isTemporaryPassword;
@@ -229,6 +232,7 @@ class User {
     'student': student?.toJson(),
     'teacher': teacher?.toJson(),
     'parent': parent?.toJson(),
+    'staff': staff?.toJson(),
     'status': status,
     'mustChangePassword': mustChangePassword,
     'isTemporaryPassword': isTemporaryPassword,
@@ -472,4 +476,40 @@ class Parent {
   final String parentId;
 
   Map<String, dynamic> toJson() => {'id': id, 'parentId': parentId};
+}
+
+class Staff {
+  Staff({
+    required this.id,
+    required this.userId,
+    required this.institutionId,
+    this.employeeId,
+    this.staffType,
+    this.designation,
+  });
+
+  factory Staff.fromJson(Map<String, dynamic> json) => Staff(
+    id: json['id'],
+    userId: json['userId'],
+    institutionId: json['institutionId'],
+    employeeId: json['employeeId'],
+    staffType: json['staffType'],
+    designation: json['designation'],
+  );
+
+  final int id;
+  final int userId;
+  final int institutionId;
+  final String? employeeId;
+  final String? staffType;
+  final String? designation;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'institutionId': institutionId,
+    'employeeId': employeeId,
+    'staffType': staffType,
+    'designation': designation,
+  };
 }

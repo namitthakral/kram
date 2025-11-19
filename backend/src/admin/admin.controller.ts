@@ -98,7 +98,7 @@ export class AdminController {
   @Put('institutions/:institutionId/grading-config')
   updateGradingConfig(
     @Param('institutionId') institutionId: string,
-    @Body() updateDto: UpdateGradingConfigDto,
+    @Body() updateDto: UpdateGradingConfigDto
   ) {
     return this.adminService.updateGradingConfig(+institutionId, updateDto)
   }
@@ -107,5 +107,47 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   resetGradingConfig(@Param('institutionId') institutionId: string) {
     return this.adminService.resetGradingConfig(+institutionId)
+  }
+
+  // Dashboard Analytics Endpoints
+  @Get('dashboard-stats')
+  getDashboardStats() {
+    return this.adminService.getDashboardStats()
+  }
+
+  @Get('teacher-performance')
+  getTeacherPerformance(@Query('limit') limit?: string) {
+    return this.adminService.getTeacherPerformance(limit ? parseInt(limit) : 10)
+  }
+
+  @Get('attendance-trends')
+  getAttendanceTrends(@Query('period') period?: string) {
+    return this.adminService.getAttendanceTrends(period)
+  }
+
+  @Get('grade-distribution')
+  getGradeDistribution() {
+    return this.adminService.getGradeDistribution()
+  }
+
+  @Get('class-performance')
+  getClassPerformance() {
+    return this.adminService.getClassPerformance()
+  }
+
+  @Get('financial-overview')
+  getFinancialOverview(@Query('period') period?: string) {
+    return this.adminService.getFinancialOverview(period)
+  }
+
+  @Get('system-alerts')
+  getSystemAlerts(
+    @Query('severity') severity?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.adminService.getSystemAlerts(
+      severity,
+      limit ? parseInt(limit) : 20
+    )
   }
 }

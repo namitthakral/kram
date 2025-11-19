@@ -478,7 +478,7 @@ export class AdminService {
 
     if (!institution) {
       throw new NotFoundException(
-        `Institution with ID ${institutionId} not found`,
+        `Institution with ID ${institutionId} not found`
       )
     }
 
@@ -490,7 +490,8 @@ export class AdminService {
     if (!config) {
       return {
         success: true,
-        message: 'No custom grading configuration found. Using default settings.',
+        message:
+          'No custom grading configuration found. Using default settings.',
         data: null,
       }
     }
@@ -507,7 +508,7 @@ export class AdminService {
    */
   async updateGradingConfig(
     institutionId: number,
-    updateDto: UpdateGradingConfigDto,
+    updateDto: UpdateGradingConfigDto
   ) {
     // Verify institution exists
     const institution = await this.prisma.institution.findUnique({
@@ -516,7 +517,7 @@ export class AdminService {
 
     if (!institution) {
       throw new NotFoundException(
-        `Institution with ID ${institutionId} not found`,
+        `Institution with ID ${institutionId} not found`
       )
     }
 
@@ -540,10 +541,13 @@ export class AdminService {
           where: { institutionId },
         })
 
-      const finalAttendance = attendanceWeight ?? currentConfig?.attendanceWeight ?? 10
-      const finalAssignment = assignmentWeight ?? currentConfig?.assignmentWeight ?? 30
+      const finalAttendance =
+        attendanceWeight ?? currentConfig?.attendanceWeight ?? 10
+      const finalAssignment =
+        assignmentWeight ?? currentConfig?.assignmentWeight ?? 30
       const finalExam = examWeight ?? currentConfig?.examWeight ?? 50
-      const finalParticipation = participationWeight ?? currentConfig?.participationWeight ?? 10
+      const finalParticipation =
+        participationWeight ?? currentConfig?.participationWeight ?? 10
 
       const totalWeight =
         Number(finalAttendance) +
@@ -553,7 +557,7 @@ export class AdminService {
 
       if (Math.abs(totalWeight - 100) > 0.01) {
         throw new BadRequestException(
-          `Grading weights must sum to 100. Current sum: ${totalWeight}`,
+          `Grading weights must sum to 100. Current sum: ${totalWeight}`
         )
       }
     }
@@ -586,7 +590,7 @@ export class AdminService {
 
     if (!institution) {
       throw new NotFoundException(
-        `Institution with ID ${institutionId} not found`,
+        `Institution with ID ${institutionId} not found`
       )
     }
 
@@ -597,8 +601,465 @@ export class AdminService {
 
     return {
       success: true,
-      message:
-        'Grading configuration reset to default values successfully',
+      message: 'Grading configuration reset to default values successfully',
     }
+  }
+
+  /**
+   * Get comprehensive dashboard statistics
+   */
+  async getDashboardStats() {
+    const [
+      stats,
+      teacherPerformance,
+      attendanceTrends,
+      gradeDistribution,
+      classPerformance,
+      financialOverview,
+      systemAlerts,
+    ] = await Promise.all([
+      this.getBasicStats(),
+      this.getTeacherPerformanceData(10),
+      this.getAttendanceTrendsData(),
+      this.getGradeDistributionData(),
+      this.getClassPerformanceData(),
+      this.getFinancialOverviewData(),
+      this.getSystemAlertsData(undefined, 20),
+    ])
+
+    return {
+      stats,
+      teacher_performance: teacherPerformance,
+      attendance_trends: attendanceTrends,
+      grade_distribution: gradeDistribution,
+      class_performance: classPerformance,
+      financial_overview: financialOverview,
+      system_alerts: systemAlerts,
+    }
+  }
+
+  /**
+   * Get basic statistics for dashboard
+   */
+  private async getBasicStats() {
+    const [
+      totalStudents,
+      totalTeachers,
+      totalClasses,
+      attendanceRecords,
+      feeStats,
+    ] = await Promise.all([
+      this.prisma.student.count(),
+      this.prisma.teacher.count(),
+      this.prisma.classSection.count(),
+      this.prisma.attendance.groupBy({
+        by: ['status'],
+        _count: { id: true },
+      }),
+      this.prisma.payment.aggregate({
+        _sum: { amount: true },
+        where: {
+          status: 'COMPLETED',
+        },
+      }),
+    ])
+
+    // Calculate attendance rate
+    const totalAttendance = attendanceRecords.reduce(
+      (sum, record) => sum + record._count.id,
+      0
+    )
+    const presentCount =
+      attendanceRecords.find(r => r.status === 'PRESENT')?._count.id || 0
+    const attendanceRate =
+      totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0
+
+    // Get pending fees
+    const pendingFeesData = await this.prisma.studentFee.aggregate({
+      _sum: { amountDue: true, amountPaid: true },
+      where: {
+        status: { in: ['PENDING', 'OVERDUE'] },
+      },
+    })
+
+    const pendingFees =
+      Number(pendingFeesData._sum.amountDue || 0) -
+      Number(pendingFeesData._sum.amountPaid || 0)
+
+    return {
+      total_students: totalStudents,
+      total_teachers: totalTeachers,
+      total_classes: totalClasses,
+      attendance_rate: Math.round(attendanceRate * 100) / 100,
+      fee_collection: feeStats._sum.amount || 0,
+      pending_fees: Math.max(0, pendingFees),
+    }
+  }
+
+  /**
+   * Get teacher performance data
+   */
+  async getTeacherPerformance(limit: number = 10) {
+    return this.getTeacherPerformanceData(limit)
+  }
+
+  private async getTeacherPerformanceData(limit: number = 10) {
+    const teachers = await this.prisma.teacher.findMany({
+      take: limit,
+      include: {
+        user: true,
+        teacherSubjects: {
+          include: {
+            subject: true,
+          },
+        },
+      },
+    })
+
+    const performanceData = await Promise.all(
+      teachers.map(async teacher => {
+        // Get number of students taught through class sections
+        const studentCount = await this.prisma.classSection.count({
+          where: {
+            teacherId: teacher.id,
+          },
+        })
+
+        // Get average exam results for students taught by this teacher
+        const examResults = await this.prisma.examResult.findMany({
+          where: {
+            evaluatedBy: teacher.id,
+          },
+          select: {
+            marksObtained: true,
+            exam: {
+              select: {
+                totalMarks: true,
+              },
+            },
+          },
+        })
+
+        const avgGrade =
+          examResults.length > 0
+            ? examResults.reduce((sum, result) => {
+                const marks = Number(result.marksObtained || 0)
+                const total = result.exam.totalMarks
+                return sum + (total > 0 ? (marks / total) * 100 : 0)
+              }, 0) / examResults.length
+            : 0
+
+        return {
+          teacher_name: teacher.user.name,
+          subject:
+            teacher.teacherSubjects[0]?.subject.subjectName ||
+            'Multiple Subjects',
+          students: studentCount,
+          avg_grade: Math.round(avgGrade * 100) / 100,
+          rating: 4.5, // Placeholder - implement rating system later
+        }
+      })
+    )
+
+    return performanceData
+  }
+
+  /**
+   * Get attendance trends
+   */
+  async getAttendanceTrends(_period?: string) {
+    return this.getAttendanceTrendsData()
+  }
+
+  private async getAttendanceTrendsData() {
+    // Get attendance data for the last 6 months
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+    const attendanceData = await this.prisma.attendance.findMany({
+      where: {
+        date: {
+          gte: sixMonthsAgo,
+        },
+      },
+      select: {
+        date: true,
+        status: true,
+      },
+    })
+
+    // Group by month
+    const monthlyData = new Map<string, { present: number; total: number }>()
+
+    attendanceData.forEach(record => {
+      const monthKey = record.date.toISOString().substring(0, 7) // YYYY-MM
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, { present: 0, total: 0 })
+      }
+      const data = monthlyData.get(monthKey)!
+      data.total++
+      if (record.status === 'PRESENT') {
+        data.present++
+      }
+    })
+
+    // Convert to array and format
+    const trends = Array.from(monthlyData.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, data]) => ({
+        month: new Date(month + '-01').toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        }),
+        actual_attendance:
+          data.total > 0
+            ? Math.round((data.present / data.total) * 100 * 100) / 100
+            : 0,
+        target_attendance: 95,
+      }))
+
+    return trends
+  }
+
+  /**
+   * Get grade distribution
+   */
+  async getGradeDistribution() {
+    return this.getGradeDistributionData()
+  }
+
+  private async getGradeDistributionData() {
+    const grades = await this.prisma.academicRecord.findMany({
+      select: {
+        grade: true,
+      },
+    })
+
+    // Count occurrences of each grade
+    const distribution = new Map<string, number>()
+    grades.forEach(record => {
+      if (record.grade) {
+        distribution.set(
+          record.grade,
+          (distribution.get(record.grade) || 0) + 1
+        )
+      }
+    })
+
+    // Convert to array and sort by grade
+    const gradeOrder = ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F']
+    return gradeOrder
+      .filter(grade => distribution.has(grade))
+      .map(grade => ({
+        grade,
+        count: distribution.get(grade) || 0,
+      }))
+  }
+
+  /**
+   * Get class performance
+   */
+  async getClassPerformance() {
+    return this.getClassPerformanceData()
+  }
+
+  private async getClassPerformanceData() {
+    const sections = await this.prisma.classSection.findMany({
+      take: 20,
+      include: {
+        subject: true,
+        semester: true,
+      },
+    })
+
+    const performanceData = await Promise.all(
+      sections.map(async section => {
+        // Get number of enrollments for this section
+        const studentCount = await this.prisma.enrollment.count({
+          where: {
+            subjectId: section.subjectId,
+            semesterId: section.semesterId,
+          },
+        })
+
+        // Get average academic record grades for this section's subject
+        const academicRecords = await this.prisma.academicRecord.findMany({
+          where: {
+            subjectId: section.subjectId,
+            semesterId: section.semesterId,
+          },
+          select: {
+            marksObtained: true,
+            maxMarks: true,
+          },
+        })
+
+        const avgGrade =
+          academicRecords.length > 0
+            ? academicRecords.reduce((sum, record) => {
+                const marks = Number(record.marksObtained || 0)
+                const max = Number(record.maxMarks || 1)
+                return sum + (max > 0 ? (marks / max) * 100 : 0)
+              }, 0) / academicRecords.length
+            : 0
+
+        // Get attendance rate for this section
+        const attendanceData = await this.prisma.attendance.groupBy({
+          by: ['status'],
+          where: {
+            sectionId: section.id,
+          },
+          _count: { id: true },
+        })
+
+        const totalAttendance = attendanceData.reduce(
+          (sum, record) => sum + record._count.id,
+          0
+        )
+        const presentCount =
+          attendanceData.find(r => r.status === 'PRESENT')?._count.id || 0
+        const attendanceRate =
+          totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0
+
+        return {
+          class_name: `${section.subject.subjectName} (${section.sectionName})`,
+          student_count: studentCount,
+          avg_grade: Math.round(avgGrade * 100) / 100,
+          attendance_rate: Math.round(attendanceRate * 100) / 100,
+        }
+      })
+    )
+
+    return performanceData
+  }
+
+  /**
+   * Get financial overview
+   */
+  async getFinancialOverview(_period?: string) {
+    return this.getFinancialOverviewData()
+  }
+
+  private async getFinancialOverviewData() {
+    // Get fee collection data for the last 6 months
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        paymentDate: {
+          gte: sixMonthsAgo,
+        },
+        status: 'COMPLETED',
+      },
+      select: {
+        paymentDate: true,
+        amount: true,
+      },
+    })
+
+    // Group by month
+    const monthlyData = new Map<string, number>()
+
+    payments.forEach(payment => {
+      const monthKey = payment.paymentDate.toISOString().substring(0, 7)
+      monthlyData.set(
+        monthKey,
+        (monthlyData.get(monthKey) || 0) + Number(payment.amount)
+      )
+    })
+
+    // Convert to array and format
+    const overview = Array.from(monthlyData.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([month, feeCollection]) => ({
+        month: new Date(month + '-01').toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+        }),
+        expenses: 0, // Placeholder - implement expense tracking
+        fee_collection: feeCollection,
+        profit: feeCollection, // Simplified - should subtract expenses
+      }))
+
+    return overview
+  }
+
+  /**
+   * Get system alerts
+   */
+  async getSystemAlerts(severity?: string, limit: number = 20) {
+    return this.getSystemAlertsData(severity, limit)
+  }
+
+  private async getSystemAlertsData(severity?: string, limit: number = 20) {
+    const alerts: Array<{
+      category: string
+      message: string
+      severity: string
+      timestamp: Date
+    }> = []
+
+    // Check for low attendance in sections
+    const sections = await this.prisma.classSection.findMany({
+      take: 50,
+      include: {
+        subject: true,
+      },
+    })
+
+    for (const section of sections) {
+      const attendanceData = await this.prisma.attendance.groupBy({
+        by: ['status'],
+        where: {
+          sectionId: section.id,
+          date: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+          },
+        },
+        _count: { id: true },
+      })
+
+      const totalAttendance = attendanceData.reduce(
+        (sum, record) => sum + record._count.id,
+        0
+      )
+      const presentCount =
+        attendanceData.find(r => r.status === 'PRESENT')?._count.id || 0
+      const attendanceRate =
+        totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0
+
+      if (attendanceRate < 78 && totalAttendance > 0) {
+        alerts.push({
+          category: 'Attendance',
+          message: `${section.subject.subjectName} (${section.sectionName}) has ${attendanceRate.toFixed(1)}% attendance this week`,
+          severity: 'high',
+          timestamp: new Date(),
+        })
+      }
+    }
+
+    // Check for pending fees
+    const overdueFees = await this.prisma.studentFee.count({
+      where: {
+        status: 'OVERDUE',
+      },
+    })
+
+    if (overdueFees > 0) {
+      alerts.push({
+        category: 'Finance',
+        message: `${overdueFees} fee payments are overdue`,
+        severity: 'medium',
+        timestamp: new Date(),
+      })
+    }
+
+    // Filter by severity if provided
+    const filteredAlerts = severity
+      ? alerts.filter(alert => alert.severity === severity)
+      : alerts
+
+    return filteredAlerts.slice(0, limit)
   }
 }
