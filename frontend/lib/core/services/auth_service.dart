@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
@@ -179,20 +180,24 @@ class AuthService {
   Future<String> refreshToken() async {
     try {
       final refreshToken = await _storage.read(AppConstants.refreshTokenKey);
-      if (refreshToken == null) {
+      if (refreshToken == null || refreshToken.isEmpty) {
+        log('❌ No refresh token available in storage');
         throw Exception('No refresh token available');
       }
 
+      log('🔄 Calling refresh token API endpoint...');
       final response = await _apiService.dio.post(
         '/auth/refresh',
         options: Options(headers: {'Authorization': 'Bearer $refreshToken'}),
       );
 
       if (response.statusCode == 200) {
+        log('✅ Refresh token API call successful');
         final tokens = AuthTokens.fromJson(response.data);
 
         // Store new access token
         await _storage.write(AppConstants.accessTokenKey, tokens.accessToken);
+        log('💾 Stored new access token');
 
         // Update refresh token if provided
         if (tokens.refreshToken != null && tokens.refreshToken!.isNotEmpty) {
@@ -200,6 +205,7 @@ class AuthService {
             AppConstants.refreshTokenKey,
             tokens.refreshToken!,
           );
+          log('💾 Stored new refresh token');
         }
 
         // Calculate and store new expiry time
@@ -210,12 +216,15 @@ class AuthService {
           AppConstants.tokenExpiryKey,
           expiryTime.toIso8601String(),
         );
+        log('💾 Stored new token expiry: $expiryTime');
 
         return tokens.accessToken;
       } else {
+        log('❌ Token refresh failed with status: ${response.statusCode}');
         throw Exception('Token refresh failed');
       }
     } catch (e) {
+      log('❌ Token refresh error: $e');
       // Don't logout here - let the API interceptor handle it
       // This prevents premature logout during refresh attempts
       throw Exception('Token refresh failed: $e');
@@ -252,4 +261,135 @@ class AuthService {
 
   /// Check if using API
   bool get isUsingApi => _dataSource.isUsingApi;
+
+  /// Change user password
+  ///
+  /// Endpoint: POST /auth/change-password
+  ///
+  /// [oldPassword] - Current password
+  /// [newPassword] - New password
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/auth/change-password',
+        data: {
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Password changed successfully
+        return;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to change password',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Current password is incorrect');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid password';
+        throw Exception(errorMessage);
+      } else {
+        throw Exception('Failed to change password: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Failed to change password: $e');
+    }
+  }
+
+  /// Get current user profile
+  ///
+  /// Endpoint: GET /auth/profile
+  ///
+  /// Returns the complete profile of the currently authenticated user
+  Future<User> getProfile() async {
+    try {
+      final response = await _apiService.dio.get('/auth/profile');
+
+      if (response.statusCode == 200) {
+        final userData = response.data as Map<String, dynamic>;
+        final user = User.fromJson(userData);
+
+        // Update stored user data
+        await _storage.write(
+          AppConstants.userKey,
+          jsonEncode(user.toJson()),
+        );
+
+        return user;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to get profile',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized - Please login again');
+      } else {
+        throw Exception('Failed to get profile: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Failed to get profile: $e');
+    }
+  }
+
+  /// Activate account with temporary password
+  ///
+  /// Endpoint: POST /auth/activate-account
+  ///
+  /// [edverseId] - EdVerse ID of the user
+  /// [tempPassword] - Temporary password received
+  /// [newPassword] - New password to set
+  Future<void> activateAccount({
+    required String edverseId,
+    required String tempPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/auth/activate-account',
+        data: {
+          'edverseId': edverseId,
+          'tempPassword': tempPassword,
+          'newPassword': newPassword,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Account activated successfully
+        return;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          message: 'Failed to activate account',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Invalid temporary password');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('User not found');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      } else {
+        throw Exception('Failed to activate account: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Failed to activate account: $e');
+    }
+  }
 }

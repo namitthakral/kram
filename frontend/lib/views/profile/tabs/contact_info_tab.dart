@@ -25,6 +25,57 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
   late TextEditingController _emergencyContactNameController;
   late TextEditingController _emergencyContactPhoneController;
 
+  /// Collect form data for saving
+  Map<String, dynamic> getFormData() {
+    final data = <String, dynamic>{};
+
+    if (_emailController.text.isNotEmpty) {
+      data['email'] = _emailController.text.trim();
+    }
+
+    if (_phoneController.text.isNotEmpty) {
+      data['phone'] = _phoneController.text.trim();
+    }
+
+    if (_alternatePhoneController.text.isNotEmpty) {
+      data['alternatePhone'] = _alternatePhoneController.text.trim();
+    }
+
+    if (_addressController.text.isNotEmpty) {
+      data['address'] = _addressController.text.trim();
+    }
+
+    if (_cityController.text.isNotEmpty) {
+      data['city'] = _cityController.text.trim();
+    }
+
+    if (_stateController.text.isNotEmpty) {
+      data['state'] = _stateController.text.trim();
+    }
+
+    if (_postalCodeController.text.isNotEmpty) {
+      data['postalCode'] = _postalCodeController.text.trim();
+    }
+
+    if (_countryController.text.isNotEmpty) {
+      data['country'] = _countryController.text.trim();
+    }
+
+    if (_emergencyContactNameController.text.isNotEmpty) {
+      data['emergencyContactName'] = _emergencyContactNameController.text.trim();
+    }
+
+    if (_emergencyContactPhoneController.text.isNotEmpty) {
+      data['emergencyContactPhone'] =
+          _emergencyContactPhoneController.text.trim();
+    }
+
+    return data;
+  }
+
+  /// Validate the form
+  bool validateForm() => _formKey.currentState?.validate() ?? false;
+
   @override
   void initState() {
     super.initState();

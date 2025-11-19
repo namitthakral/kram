@@ -776,4 +776,347 @@ class TeacherService {
       throw Exception('Failed to load semesters: $e');
     }
   }
+
+  // ==================== ATTENDANCE MANAGEMENT ====================
+
+  /// Mark attendance for a single student
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/attendance
+  Future<Map<String, dynamic>> markAttendance(
+    String userUuid,
+    Map<String, dynamic> attendanceData,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/attendance',
+        data: attendanceData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to mark attendance',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to mark attendance: $e');
+    }
+  }
+
+  /// Mark attendance for multiple students at once
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/attendance/bulk
+  Future<Map<String, dynamic>> markBulkAttendance(
+    String userUuid,
+    List<Map<String, dynamic>> attendanceRecords,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/attendance/bulk',
+        data: {'attendanceRecords': attendanceRecords},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to mark bulk attendance',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to mark bulk attendance: $e');
+    }
+  }
+
+  /// Update an attendance record
+  ///
+  /// Endpoint: PATCH /teachers/:user_uuid/attendance/:attendanceId
+  Future<Map<String, dynamic>> updateAttendance(
+    String userUuid,
+    int attendanceId,
+    Map<String, dynamic> updateData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/teachers/$userUuid/attendance/$attendanceId',
+        data: updateData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update attendance',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to update attendance: $e');
+    }
+  }
+
+  /// Delete an attendance record
+  ///
+  /// Endpoint: DELETE /teachers/:user_uuid/attendance/:attendanceId
+  Future<void> deleteAttendance(String userUuid, int attendanceId) async {
+    try {
+      final response = await _apiService.dio.delete(
+        '/teachers/$userUuid/attendance/$attendanceId',
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete attendance',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to delete attendance: $e');
+    }
+  }
+
+  // ==================== EXAM RESULTS MANAGEMENT ====================
+
+  /// Create a single exam result
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/examinations/:examId/results
+  Future<Map<String, dynamic>> createExamResult(
+    String userUuid,
+    int examId,
+    Map<String, dynamic> resultData,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/examinations/$examId/results',
+        data: resultData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create exam result',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to create exam result: $e');
+    }
+  }
+
+  /// Upload bulk exam results
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/examinations/:examId/results/bulk
+  Future<Map<String, dynamic>> uploadBulkExamResults(
+    String userUuid,
+    int examId,
+    List<Map<String, dynamic>> results,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/examinations/$examId/results/bulk',
+        data: {'results': results},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to upload bulk results',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to upload bulk results: $e');
+    }
+  }
+
+  /// Get all results for an exam
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/examinations/:examId/results
+  Future<List<dynamic>> getExamResults(String userUuid, int examId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/examinations/$examId/results',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get exam results',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to get exam results: $e');
+    }
+  }
+
+  /// Update an exam result
+  ///
+  /// Endpoint: PATCH /teachers/:user_uuid/examinations/:examId/results/:resultId
+  Future<Map<String, dynamic>> updateExamResult(
+    String userUuid,
+    int examId,
+    int resultId,
+    Map<String, dynamic> updateData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/teachers/$userUuid/examinations/$examId/results/$resultId',
+        data: updateData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update exam result',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to update exam result: $e');
+    }
+  }
+
+  /// Delete an exam result
+  ///
+  /// Endpoint: DELETE /teachers/:user_uuid/examinations/:examId/results/:resultId
+  Future<void> deleteExamResult(
+    String userUuid,
+    int examId,
+    int resultId,
+  ) async {
+    try {
+      final response = await _apiService.dio.delete(
+        '/teachers/$userUuid/examinations/$examId/results/$resultId',
+      );
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete exam result',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to delete exam result: $e');
+    }
+  }
+
+  // ==================== SUBMISSIONS & INSIGHTS ====================
+
+  /// Get pending submissions to grade
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/submissions/pending
+  Future<List<dynamic>> getPendingSubmissions(
+    String userUuid, {
+    int? courseId,
+    int? assignmentId,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (courseId != null) {
+        queryParams['courseId'] = courseId.toString();
+      }
+      if (assignmentId != null) {
+        queryParams['assignmentId'] = assignmentId.toString();
+      }
+
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/submissions/pending',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get pending submissions',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to get pending submissions: $e');
+    }
+  }
+
+  /// Get list of at-risk students
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/students/at-risk
+  Future<List<dynamic>> getAtRiskStudents(
+    String userUuid, {
+    int? courseId,
+    String? criteria,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (courseId != null) {
+        queryParams['courseId'] = courseId.toString();
+      }
+      if (criteria != null) {
+        queryParams['criteria'] = criteria;
+      }
+
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/students/at-risk',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get at-risk students',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to get at-risk students: $e');
+    }
+  }
 }

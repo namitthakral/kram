@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/services/api_service.dart';
+import '../../../core/utils/api_error_handler.dart';
 
 /// Service class for handling student-related API calls
 ///
@@ -47,13 +48,16 @@ class StudentService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         throw Exception('Student not found');
-      } else if (e.response?.statusCode == 401) {
-        throw Exception('Unauthorized access');
-      } else {
-        throw Exception('Failed to load dashboard stats: ${e.message}');
       }
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load dashboard stats',
+      );
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load dashboard stats',
+      );
     }
   }
 
@@ -77,13 +81,16 @@ class StudentService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         throw Exception('Student not found');
-      } else if (e.response?.statusCode == 401) {
-        throw Exception('Unauthorized access');
-      } else {
-        throw Exception('Failed to load student data: ${e.message}');
       }
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load student data',
+      );
     } catch (e) {
-      throw Exception('Unexpected error: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load student data',
+      );
     }
   }
 
@@ -106,8 +113,16 @@ class StudentService {
           error: 'Failed to load academic records',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load academic records',
+      );
     } catch (e) {
-      throw Exception('Failed to load academic records: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load academic records',
+      );
     }
   }
 
@@ -147,8 +162,16 @@ class StudentService {
           error: 'Failed to load attendance data',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load attendance data',
+      );
     } catch (e) {
-      throw Exception('Failed to load attendance data: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load attendance data',
+      );
     }
   }
 
@@ -190,8 +213,16 @@ class StudentService {
           error: 'Failed to load assignments',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load assignments',
+      );
     } catch (e) {
-      throw Exception('Failed to load assignments: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load assignments',
+      );
     }
   }
 
@@ -231,8 +262,16 @@ class StudentService {
           error: 'Failed to load performance trends',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load performance trends',
+      );
     } catch (e) {
-      throw Exception('Failed to load performance trends: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load performance trends',
+      );
     }
   }
 
@@ -267,8 +306,16 @@ class StudentService {
           error: 'Failed to load attendance history',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load attendance history',
+      );
     } catch (e) {
-      throw Exception('Failed to load attendance history: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load attendance history',
+      );
     }
   }
 
@@ -291,8 +338,16 @@ class StudentService {
           error: 'Failed to load subject performance',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load subject performance',
+      );
     } catch (e) {
-      throw Exception('Failed to load subject performance: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load subject performance',
+      );
     }
   }
 
@@ -327,8 +382,16 @@ class StudentService {
           error: 'Failed to load upcoming events',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load upcoming events',
+      );
     } catch (e) {
-      throw Exception('Failed to load upcoming events: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load upcoming events',
+      );
     }
   }
 
@@ -358,8 +421,16 @@ class StudentService {
           error: 'Failed to load students',
         );
       }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load students',
+      );
     } catch (e) {
-      throw Exception('Failed to load students: $e');
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load students',
+      );
     }
   }
 }

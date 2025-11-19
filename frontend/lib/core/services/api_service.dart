@@ -24,6 +24,8 @@ class ApiService {
     '/auth/login',
     '/auth/register',
     '/auth/refresh',
+    '/auth/activate-account',
+    '/institutions/public',
   ];
 
   void init() {
@@ -63,12 +65,15 @@ class ApiService {
 
               if (isExpired && !_isRefreshing) {
                 // Token is expired, try to refresh
+                log('⏰ Token is expired, attempting proactive refresh...');
                 _isRefreshing = true;
                 try {
                   await authService.refreshToken();
+                  log('✅ Proactive token refresh successful');
                   _isRefreshing = false;
-                } on Exception {
+                } on Exception catch (e) {
                   _isRefreshing = false;
+                  log('❌ Proactive token refresh failed: $e');
                   // Refresh failed, let the request continue with old token
                   // and let error handler deal with 401
                 }
@@ -79,7 +84,8 @@ class ApiService {
               if (token != null && token.isNotEmpty) {
                 options.headers['Authorization'] = 'Bearer $token';
               }
-            } on Exception {
+            } on Exception catch (e) {
+              log('⚠️ Token check failed: $e');
               // If token check fails, continue without token
             }
           }
@@ -99,17 +105,20 @@ class ApiService {
           // Handle common errors
           if (error.response?.statusCode == 401) {
             final originalRequest = error.requestOptions;
+            log('🔒 Received 401 Unauthorized for: ${originalRequest.path}');
 
             // Check if this is not a refresh token request to avoid infinite loop
             if (!originalRequest.path.contains('/auth/refresh') &&
                 !_isRefreshing) {
               _isRefreshing = true;
+              log('🔄 Attempting reactive token refresh...');
 
               try {
                 // Try to refresh the token
                 final authService = AuthService();
                 final newToken = await authService.refreshToken();
                 _isRefreshing = false;
+                log('✅ Reactive token refresh successful, retrying request...');
 
                 // Retry the original request with new token
                 originalRequest.headers['Authorization'] = 'Bearer $newToken';
@@ -118,19 +127,39 @@ class ApiService {
                 final retryDio = Dio(_dio.options);
                 final response = await retryDio.fetch(originalRequest);
 
+                log('✅ Retry successful for: ${originalRequest.path}');
                 // Return the successful response
                 return handler.resolve(response);
               } on Exception catch (e) {
                 _isRefreshing = false;
-                log('Token refresh failed: $e');
+                log('❌ Reactive token refresh failed: $e');
+                log('🚪 Clearing auth tokens and logging out user...');
                 // Token refresh failed, clear tokens and let user login again
                 await _clearAuthToken();
-                handler.next(error);
+
+                // Create a more informative error for session expiry
+                final sessionExpiredError = DioException(
+                  requestOptions: originalRequest,
+                  response: error.response,
+                  type: DioExceptionType.badResponse,
+                  error: 'Session expired. Please login again.',
+                );
+                return handler.reject(sessionExpiredError);
               }
             } else {
+              log('⚠️ Cannot refresh token (${originalRequest.path.contains('/auth/refresh') ? "refresh endpoint" : "already refreshing"})');
+              log('🚪 Clearing auth tokens and logging out user...');
               // If refresh token request failed or already refreshing, clear tokens
               await _clearAuthToken();
-              handler.next(error);
+
+              // Create a more informative error
+              final sessionExpiredError = DioException(
+                requestOptions: originalRequest,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: 'Session expired. Please login again.',
+              );
+              return handler.reject(sessionExpiredError);
             }
           } else {
             handler.next(error);
@@ -149,7 +178,8 @@ class ApiService {
 
   Future<void> _clearAuthToken() async {
     await _storage.delete(AppConstants.accessTokenKey);
-    await _storage.delete('refresh_token');
+    await _storage.delete(AppConstants.refreshTokenKey);
+    await _storage.delete(AppConstants.tokenExpiryKey);
     await _storage.delete(AppConstants.userKey);
   }
 

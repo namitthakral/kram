@@ -29,9 +29,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = loginProvider.currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text('User not found')),
-      );
+      return const Scaffold(body: Center(child: Text('User not found')));
     }
 
     // Determine which tabs to show based on role
@@ -65,7 +63,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           // TODO: Implement save changes
         },
         icon: const Icon(Icons.save_outlined),
-        label: const Text('Save Changes'),
+        label: const Text('Save Changes1'),
         backgroundColor: AppTheme.blue500,
         foregroundColor: Colors.white,
         elevation: 4,
@@ -110,27 +108,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  Widget _buildMobileLayout(List<ProfileTab> tabs, List<String> tabNames) => Column(
-    children: [
-      Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(16),
-        child: CustomSlidingSegmentedControl<int>(
-          segments: Map.fromIterables(
-            List.generate(tabNames.length, (i) => i),
-            tabNames,
+  Widget _buildMobileLayout(List<ProfileTab> tabs, List<String> tabNames) =>
+      Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: CustomSlidingSegmentedControl<int>(
+              segments: Map.fromIterables(
+                List.generate(tabNames.length, (i) => i),
+                tabNames,
+              ),
+              initialValue: _selectedTabIndex,
+              onValueChanged: (value) {
+                setState(() {
+                  _selectedTabIndex = value;
+                });
+              },
+            ),
           ),
-          initialValue: _selectedTabIndex,
-          onValueChanged: (value) {
-            setState(() {
-              _selectedTabIndex = value;
-            });
-          },
-        ),
-      ),
-      Expanded(child: _buildTabContent(tabs[_selectedTabIndex])),
-    ],
-  );
+          Expanded(child: _buildTabContent(tabs[_selectedTabIndex])),
+        ],
+      );
 
   Widget _buildDesktopLayout(List<ProfileTab> tabs, List<String> tabNames) =>
       ResponsivePadding(

@@ -57,13 +57,15 @@ class AttendanceTrendsChart extends StatelessWidget {
             touchTooltipData: BarTouchTooltipData(
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final day = data[groupIndex].day;
-                final value = rod.toY.toInt();
-                final type = rodIndex == 0 ? 'Present' : 'Absent';
+                final present = data[groupIndex].present;
+                final absent = data[groupIndex].absent;
+                final total = data[groupIndex].total;
                 return BarTooltipItem(
-                  '$day\n$type: $value',
+                  '$day\nPresent: $present\nAbsent: $absent\nTotal: $total',
                   const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontSize: 12,
                   ),
                 );
               },
@@ -122,26 +124,35 @@ class AttendanceTrendsChart extends StatelessWidget {
   List<BarChartGroupData> _buildBarGroups(List<AttendanceData> data) =>
       List.generate(data.length, (index) {
         final item = data[index];
+        final presentValue = item.present.toDouble();
+        final absentValue = item.absent.toDouble();
+        final totalValue = presentValue + absentValue;
+
         return BarChartGroupData(
           x: index,
           barRods: [
             BarChartRodData(
-              toY: item.present > 0 ? item.present.toDouble() : 0.5,
-              color: const Color(0xFF10b981),
-              width: 20,
+              toY: totalValue > 0 ? totalValue : 0.5,
+              width: 40,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(4),
               ),
-            ),
-            BarChartRodData(
-              toY: item.absent > 0 ? item.absent.toDouble() : 0.5,
-              color: const Color(0xFFef4444),
-              width: 20,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
-              ),
+              rodStackItems: totalValue > 0
+                  ? [
+                      BarChartRodStackItem(
+                        0,
+                        presentValue,
+                        const Color(0xFF10b981),
+                      ),
+                      BarChartRodStackItem(
+                        presentValue,
+                        totalValue,
+                        const Color(0xFFef4444),
+                      ),
+                    ]
+                  : null,
+              color: totalValue == 0 ? const Color(0xFFe2e8f0) : null,
             ),
           ],
         );

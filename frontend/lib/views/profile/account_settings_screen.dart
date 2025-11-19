@@ -6,6 +6,7 @@ import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
+import '../../widgets/custom_widgets/custom_tab_bar.dart';
 import 'tabs/academic_info_tab.dart';
 import 'tabs/contact_info_tab.dart';
 import 'tabs/language_tab.dart';
@@ -23,6 +24,8 @@ class AccountSettingsScreen extends StatefulWidget {
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   int _selectedTabIndex = 0;
+  final GlobalKey<FormState> _personalInfoKey = GlobalKey();
+  final GlobalKey<FormState> _contactInfoKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -40,14 +43,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
     // Determine which tabs to show based on role
     final tabs = _getTabsForRole(user.role?.id ?? 0);
-    final tabNames = tabs.map((t) => t.label).toList();
+    final selectedTab = tabs[_selectedTabIndex].value;
 
     return Scaffold(
       backgroundColor: CustomAppColors.backgroundColor,
       body: ResponsiveLayout(
-        mobile: _buildMobileLayout(tabs, tabNames),
-        tablet: _buildDesktopLayout(tabs, tabNames),
-        desktop: _buildDesktopLayout(tabs, tabNames),
+        mobile: _buildMobileLayout(tabs, selectedTab),
+        tablet: _buildDesktopLayout(tabs, selectedTab),
+        desktop: _buildDesktopLayout(tabs, selectedTab),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -62,10 +65,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
 
-  List<ProfileTab> _getTabsForRole(int roleId) {
+  List<TabItem<String>> _getTabsForRole(int roleId) {
     final baseTabs = [
-      const ProfileTab(label: 'Personal', icon: Icons.person_outline),
-      const ProfileTab(label: 'Contact', icon: Icons.contact_mail_outlined),
+      const TabItem(
+        value: 'Personal',
+        label: 'Personal',
+        icon: Icons.person_outline,
+      ),
+      const TabItem(
+        value: 'Contact',
+        label: 'Contact',
+        icon: Icons.contact_mail_outlined,
+      ),
     ];
 
     // Add role-specific tabs
@@ -73,18 +84,50 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       case 2: // Student
         return [
           ...baseTabs,
-          const ProfileTab(label: 'Academic', icon: Icons.school_outlined),
-          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
-          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
-          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+          const TabItem(
+            value: 'Academic',
+            label: 'Academic',
+            icon: Icons.school_outlined,
+          ),
+          const TabItem(
+            value: 'Security',
+            label: 'Security',
+            icon: Icons.security_outlined,
+          ),
+          const TabItem(
+            value: 'Notifications',
+            label: 'Notifications',
+            icon: Icons.notifications_outlined,
+          ),
+          const TabItem(
+            value: 'Language',
+            label: 'Language',
+            icon: Icons.language_outlined,
+          ),
         ];
       case 4: // Teacher
         return [
           ...baseTabs,
-          const ProfileTab(label: 'Professional', icon: Icons.work_outline),
-          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
-          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
-          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+          const TabItem(
+            value: 'Professional',
+            label: 'Professional',
+            icon: Icons.work_outline,
+          ),
+          const TabItem(
+            value: 'Security',
+            label: 'Security',
+            icon: Icons.security_outlined,
+          ),
+          const TabItem(
+            value: 'Notifications',
+            label: 'Notifications',
+            icon: Icons.notifications_outlined,
+          ),
+          const TabItem(
+            value: 'Language',
+            label: 'Language',
+            icon: Icons.language_outlined,
+          ),
         ];
       case 3: // Librarian
       case 5: // Admin
@@ -92,149 +135,187 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       case 7: // Super Admin
         return [
           ...baseTabs,
-          const ProfileTab(label: 'Professional', icon: Icons.work_outline),
-          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
-          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
-          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+          const TabItem(
+            value: 'Professional',
+            label: 'Professional',
+            icon: Icons.work_outline,
+          ),
+          const TabItem(
+            value: 'Security',
+            label: 'Security',
+            icon: Icons.security_outlined,
+          ),
+          const TabItem(
+            value: 'Notifications',
+            label: 'Notifications',
+            icon: Icons.notifications_outlined,
+          ),
+          const TabItem(
+            value: 'Language',
+            label: 'Language',
+            icon: Icons.language_outlined,
+          ),
         ];
       default:
         return [
           ...baseTabs,
-          const ProfileTab(label: 'Security', icon: Icons.security_outlined),
-          const ProfileTab(label: 'Notifications', icon: Icons.notifications_outlined),
-          const ProfileTab(label: 'Language', icon: Icons.language_outlined),
+          const TabItem(
+            value: 'Security',
+            label: 'Security',
+            icon: Icons.security_outlined,
+          ),
+          const TabItem(
+            value: 'Notifications',
+            label: 'Notifications',
+            icon: Icons.notifications_outlined,
+          ),
+          const TabItem(
+            value: 'Language',
+            label: 'Language',
+            icon: Icons.language_outlined,
+          ),
         ];
     }
   }
 
-  Widget _buildMobileLayout(List<ProfileTab> tabs, List<String> tabNames) => Column(
-      children: [
-        // Profile-style Gradient Header
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppTheme.blue500, AppTheme.blue600],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(32),
-              bottomRight: Radius.circular(32),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.blue600.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+  Widget _buildMobileLayout(
+    List<TabItem<String>> tabs,
+    String selectedTab,
+  ) =>
+      Column(
+        children: [
+          // Profile-style Gradient Header
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.blue500, AppTheme.blue600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              child: Column(
-                children: [
-                  // Back button row
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.of(context).pop(),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Settings Icon
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.blue600.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Column(
+                  children: [
+                    // Back button row
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
-                    child: const CircleAvatar(
-                      radius: 36,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.settings,
-                        size: 36,
-                        color: AppTheme.blue500,
+                    const SizedBox(height: 8),
+
+                    // Settings Icon
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Title
-                  Text(
-                    'Account Settings',
-                    style: context.textTheme.h3.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  // Subtitle badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                      child: const CircleAvatar(
+                        radius: 36,
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.settings,
+                          size: 36,
+                          color: AppTheme.blue500,
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      'Manage Your Profile',
-                      style: context.textTheme.labelSm.copyWith(
-                        color: AppTheme.blue600,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 12),
+
+                    // Title
+                    Text(
+                      'Account Settings',
+                      style: context.textTheme.h3.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    // Subtitle badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        'Manage Your Profile',
+                        style: context.textTheme.labelSm.copyWith(
+                          color: AppTheme.blue600,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
 
-        // Horizontal Scrollable Tabs
-        _HorizontalTabBar(
-          tabs: tabs,
-          selectedIndex: _selectedTabIndex,
-          onTabSelected: (index) {
-            setState(() {
-              _selectedTabIndex = index;
-            });
-          },
-        ),
+          // Horizontal Scrollable Tabs
+          CustomTabBar<String>(
+            tabs: tabs,
+            selectedValue: selectedTab,
+            onTabSelected: (value) {
+              setState(() {
+                _selectedTabIndex = tabs.indexWhere((t) => t.value == value);
+              });
+            },
+          ),
 
-        Expanded(child: _buildTabContent(tabs[_selectedTabIndex])),
-      ],
-    );
+          Expanded(child: _buildTabContent(selectedTab)),
+        ],
+      );
 
-  Widget _buildDesktopLayout(List<ProfileTab> tabs, List<String> tabNames) =>
+  Widget _buildDesktopLayout(
+    List<TabItem<String>> tabs,
+    String selectedTab,
+  ) =>
       SafeArea(
         child: ResponsivePadding(
           desktop: const EdgeInsets.all(32),
@@ -248,12 +329,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               // Horizontal Scrollable Tabs
               Container(
                 constraints: const BoxConstraints(maxWidth: 800),
-                child: _HorizontalTabBar(
+                child: CustomTabBar<String>(
                   tabs: tabs,
-                  selectedIndex: _selectedTabIndex,
-                  onTabSelected: (index) {
+                  selectedValue: selectedTab,
+                  onTabSelected: (value) {
                     setState(() {
-                      _selectedTabIndex = index;
+                      _selectedTabIndex = tabs.indexWhere((t) => t.value == value);
                     });
                   },
                 ),
@@ -262,7 +343,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               Expanded(
                 child: ResponsiveCenter(
                   maxWidth: 1200,
-                  child: _buildTabContent(tabs[_selectedTabIndex]),
+                  child: _buildTabContent(selectedTab),
                 ),
               ),
             ],
@@ -358,8 +439,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     ),
   );
 
-  Widget _buildTabContent(ProfileTab tab) {
-    switch (tab.label) {
+  Widget _buildTabContent(String tabName) {
+    switch (tabName) {
       case 'Personal':
         return const PersonalInfoTab();
       case 'Contact':
@@ -378,86 +459,4 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         return const Center(child: Text('Tab not implemented'));
     }
   }
-}
-
-class ProfileTab {
-  const ProfileTab({required this.label, required this.icon});
-  final String label;
-  final IconData icon;
-}
-
-class _HorizontalTabBar extends StatelessWidget {
-  const _HorizontalTabBar({
-    required this.tabs,
-    required this.selectedIndex,
-    required this.onTabSelected,
-  });
-
-  final List<ProfileTab> tabs;
-  final int selectedIndex;
-  final ValueChanged<int> onTabSelected;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    child: SizedBox(
-      height: 40,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: tabs.length,
-        itemBuilder: (context, index) {
-          final tab = tabs[index];
-          final isSelected = index == selectedIndex;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Material(
-              color: isSelected
-                  ? AppTheme.blue500
-                  : AppTheme.slate100,
-              borderRadius: BorderRadius.circular(20),
-              elevation: isSelected ? 2 : 0,
-              child: InkWell(
-                onTap: () => onTabSelected(index),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        tab.icon,
-                        size: 18,
-                        color: isSelected
-                            ? Colors.white
-                            : AppTheme.slate600,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        tab.label,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? Colors.white
-                              : AppTheme.slate800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    ),
-  );
 }

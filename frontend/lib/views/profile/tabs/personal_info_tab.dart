@@ -21,6 +21,39 @@ class _PersonalInfoTabState extends State<PersonalInfoTab> {
   late TextEditingController _nationalityController;
   late TextEditingController _bloodGroupController;
 
+  /// Collect form data for saving
+  Map<String, dynamic> getFormData() {
+    final data = <String, dynamic>{};
+
+    // Combine first and last name
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    if (firstName.isNotEmpty || lastName.isNotEmpty) {
+      data['name'] = '$firstName $lastName'.trim();
+    }
+
+    if (_dateOfBirthController.text.isNotEmpty) {
+      data['dateOfBirth'] = _dateOfBirthController.text;
+    }
+
+    if (_genderController.text.isNotEmpty) {
+      data['gender'] = _genderController.text;
+    }
+
+    if (_nationalityController.text.isNotEmpty) {
+      data['nationality'] = _nationalityController.text;
+    }
+
+    if (_bloodGroupController.text.isNotEmpty) {
+      data['bloodGroup'] = _bloodGroupController.text;
+    }
+
+    return data;
+  }
+
+  /// Validate the form
+  bool validateForm() => _formKey.currentState?.validate() ?? false;
+
   @override
   void initState() {
     super.initState();

@@ -7,7 +7,7 @@ import '../../../utils/responsive_utils.dart';
 import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
+import '../../../widgets/custom_widgets/custom_tab_bar.dart';
 import '../../teacher/widgets/stat_card.dart';
 import '../providers/dashboard_tab_provider.dart';
 import '../providers/student_dashboard_provider.dart';
@@ -351,17 +351,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
           ),
           const SizedBox(height: 20),
-          if (subjects.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(context.translate('no_subject_data')),
-              ),
-            )
-          else
-            ...subjects.map(
-              (subject) => SubjectPerformanceCard(subject: subject),
-            ),
+          // Flexible scrollable content
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 400),
+            child:
+                subjects.isEmpty
+                    ? const SizedBox(
+                      height: 100,
+                      child: Center(child: Text('No subject data')),
+                    )
+                    : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: subjects.length,
+                      itemBuilder:
+                          (context, index) =>
+                              SubjectPerformanceCard(subject: subjects[index]),
+                    ),
+          ),
         ],
       ),
     );
@@ -410,15 +417,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
           ),
           const SizedBox(height: 20),
-          if (events.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(context.translate('no_upcoming_events')),
-              ),
-            )
-          else
-            ...events.map((event) => EventCard(event: event)),
+          // Flexible scrollable content
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 400),
+            child:
+                events.isEmpty
+                    ? const SizedBox(
+                      height: 100,
+                      child: Center(child: Text('No upcoming events')),
+                    )
+                    : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: events.length,
+                      itemBuilder:
+                          (context, index) => EventCard(event: events[index]),
+                    ),
+          ),
         ],
       ),
     );
@@ -435,33 +450,35 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Sliding Segmented Control with Provider
-        SizedBox(
-          width: double.infinity,
-          child: Consumer<DashboardTabProvider>(
-            builder:
-                (context, provider, child) =>
-                    CustomSlidingSegmentedControl<DashboardTab>(
-                      segments: {
-                        DashboardTab.recentAssignments: context.translate(
-                          'recent_assignments',
-                        ),
-                        DashboardTab.performanceTrends: context.translate(
-                          'performance_trends',
-                        ),
-                        DashboardTab.attendanceHistory: context.translate(
-                          'attendance_history',
-                        ),
-                      },
-                      initialValue: provider.selectedTab,
-                      onValueChanged: (value) {
-                        provider.updateSelectedTab(value);
-                      },
-                    ),
-          ),
+        // Tab Bar with Provider
+        Consumer<DashboardTabProvider>(
+          builder:
+              (context, provider, child) => CustomTabBar<DashboardTab>(
+                tabs: [
+                  TabItem(
+                    value: DashboardTab.recentAssignments,
+                    label: context.translate('recent_assignments'),
+                    icon: Icons.assignment,
+                  ),
+                  TabItem(
+                    value: DashboardTab.performanceTrends,
+                    label: context.translate('performance_trends'),
+                    icon: Icons.trending_up,
+                  ),
+                  TabItem(
+                    value: DashboardTab.attendanceHistory,
+                    label: context.translate('attendance_history'),
+                    icon: Icons.calendar_today,
+                  ),
+                ],
+                selectedValue: provider.selectedTab,
+                onTabSelected: (value) {
+                  provider.updateSelectedTab(value);
+                },
+              ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
 
         // Content based on selected segment from Provider
         Consumer<DashboardTabProvider>(
@@ -471,7 +488,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             final isMobileScreen = screenWidth < 600;
             final isTabletScreen = screenWidth >= 600 && screenWidth < 900;
             final containerHeight =
-                isMobileScreen ? 350.0 : (isTabletScreen ? 420.0 : 450.0);
+                isMobileScreen ? 300.0 : (isTabletScreen ? 420.0 : 450.0);
 
             return SizedBox(
               height: containerHeight,
@@ -519,26 +536,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recent Assignments & Exams',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1e293b),
-                      ),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Recent Assignments & Exams',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1e293b),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Your latest submissions and grades',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Your latest submissions and grades',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               if (assignments.isEmpty)
@@ -795,7 +809,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     // Check if there's actual performance data
     final trendsData = dashboardProvider.performanceTrends;
-    final hasData = trendsData != null &&
+    final hasData =
+        trendsData != null &&
         trendsData['data'] != null &&
         (trendsData['data']['trends'] as List<dynamic>?)?.isNotEmpty == true;
 
@@ -840,10 +855,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   Text(
                     'Performance trends will appear here once you have academic records',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -929,11 +941,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       return const SizedBox.shrink();
     }
 
-    return Wrap(
-      spacing: 24,
-      runSpacing: 12,
-      children: legendItems,
-    );
+    return Wrap(spacing: 24, runSpacing: 12, children: legendItems);
   }
 
   Widget _buildAttendanceHistoryTab(
@@ -944,6 +952,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -956,7 +965,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         ),
         const SizedBox(height: 4),
         const Text(
-          'Your attendance percentage over the semester',
+          'Breakdown of your attendance status',
           style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
         const SizedBox(height: 20),

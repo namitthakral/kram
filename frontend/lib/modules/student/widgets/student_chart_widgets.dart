@@ -1,148 +1,170 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-/// Widget for displaying attendance history as a bar chart
-class AttendanceHistoryChart extends StatelessWidget {
+/// Widget for displaying attendance history as a pie chart
+class AttendanceHistoryChart extends StatefulWidget {
   const AttendanceHistoryChart({super.key, this.attendanceData});
 
   final Map<String, dynamic>? attendanceData;
 
   @override
+  State<AttendanceHistoryChart> createState() => _AttendanceHistoryChartState();
+}
+
+class _AttendanceHistoryChartState extends State<AttendanceHistoryChart> {
+  int touchedIndex = -1;
+
+  @override
   Widget build(BuildContext context) {
     // Parse attendance data from API or use default
-    final monthlyData = _parseAttendanceData(attendanceData);
+    final data = _parseAttendanceData(widget.attendanceData);
+    final hasData = data.any((element) => element['value'] > 0);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Get responsive dimensions
-        final screenWidth = MediaQuery.of(context).size.width;
-        final isMobile = screenWidth < 600;
-        final isTablet = screenWidth >= 600 && screenWidth < 900;
-
-        // Responsive sizing
-        final chartHeight = isMobile ? 200.0 : (isTablet ? 250.0 : 280.0);
-        final fontSize = isMobile ? 10.0 : 12.0;
-        final reservedSize = isMobile ? 28.0 : 35.0;
-        final barWidth = isMobile ? 20.0 : (isTablet ? 26.0 : 32.0);
-        final padding = isMobile ? 12.0 : 16.0;
-
-        return Container(
-          height: chartHeight,
-          padding: EdgeInsets.all(padding),
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: 100,
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchTooltipData: BarTouchTooltipData(
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    if (groupIndex < monthlyData.length) {
-                      final month = monthlyData[groupIndex]['month'] ?? '';
-                      return BarTooltipItem(
-                        '$month\n${rod.toY.toInt()}%',
-                        TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: fontSize,
-                        ),
-                      );
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
-                rightTitles: const AxisTitles(),
-                topTitles: const AxisTitles(),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) {
-                      final style = TextStyle(
-                        color: const Color(0xFF64748b),
-                        fontWeight: FontWeight.bold,
-                        fontSize: fontSize,
-                      );
-                      final index = value.toInt();
-                      if (index >= 0 && index < monthlyData.length) {
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          space: 4,
-                          child: Text(
-                            monthlyData[index]['month'] ?? '',
-                            style: style,
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: reservedSize,
-                    interval: 25,
-                    getTitlesWidget: (value, meta) {
-                      final style = TextStyle(
-                        color: const Color(0xFF64748b),
-                        fontWeight: FontWeight.bold,
-                        fontSize: fontSize,
-                      );
-                      return Text(value.toInt().toString(), style: style);
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(
-                border: Border.all(color: const Color(0xFFe2e8f0)),
-              ),
-              gridData: FlGridData(
-                drawVerticalLine: false,
-                horizontalInterval: 25,
-                getDrawingHorizontalLine:
-                    (value) =>
-                        const FlLine(color: Color(0xFFe2e8f0), strokeWidth: 1),
-              ),
-              barGroups: List.generate(
-                monthlyData.length,
-                (index) => BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: monthlyData[index]['percentage']?.toDouble() ?? 0,
-                      color: const Color(0xFF4F7CFF),
-                      width: barWidth,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(4),
-                        topRight: Radius.circular(4),
-                      ),
+    return SizedBox(
+      height: 300,
+      child:
+          !hasData
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.pie_chart_outline,
+                      size: 64,
+                      color: Colors.grey[300],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No attendance data available',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
                   ],
                 ),
+              )
+              : Column(
+                children: [
+                  Expanded(
+                    child: PieChart(
+                      PieChartData(
+                        pieTouchData: PieTouchData(
+                          touchCallback: (
+                            FlTouchEvent event,
+                            pieTouchResponse,
+                          ) {
+                            setState(() {
+                              if (!event.isInterestedForInteractions ||
+                                  pieTouchResponse == null ||
+                                  pieTouchResponse.touchedSection == null) {
+                                touchedIndex = -1;
+                                return;
+                              }
+                              touchedIndex =
+                                  pieTouchResponse
+                                      .touchedSection!
+                                      .touchedSectionIndex;
+                            });
+                          },
+                        ),
+                        borderData: FlBorderData(show: false),
+                        sectionsSpace: 0,
+                        centerSpaceRadius: 20,
+                        sections: _showingSections(data),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children:
+                        data
+                            .map(
+                              (item) => _buildLegendItem(
+                                item['label']!,
+                                '${item['percentage'].toInt()}%',
+                                _parseColor(item['color']!),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ],
               ),
-            ),
-          ),
-        );
-      },
     );
   }
 
+  Widget _buildLegendItem(String label, String value, Color color) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+      const SizedBox(width: 4),
+      Text(
+        '$label - $value',
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF1e293b),
+        ),
+      ),
+    ],
+  );
+
+  List<PieChartSectionData> _showingSections(List<Map<String, dynamic>> data) =>
+      List.generate(data.length, (i) {
+        final isTouched = i == touchedIndex;
+        final fontSize = isTouched ? 20.0 : 16.0;
+        final radius = isTouched ? 110.0 : 100.0;
+        const shadows = [Shadow(blurRadius: 2)];
+        final item = data[i];
+
+        return PieChartSectionData(
+          color: _parseColor(item['color']!),
+          value: item['value'] > 0 ? item['value'].toDouble() : 0.1,
+          title: '${item['percentage'].toInt()}%',
+          radius: radius,
+          titleStyle: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            shadows: shadows,
+          ),
+          badgeWidget: _AttendanceBadge(
+            label: item['label']!,
+            size: isTouched ? 55.0 : 40.0,
+            borderColor: _parseColor(item['color']!),
+          ),
+          badgePositionPercentageOffset: .98,
+        );
+      });
+
+  Color _parseColor(String colorString) {
+    final hexColor = colorString.replaceAll('#', '');
+    return Color(int.parse('FF$hexColor', radix: 16));
+  }
+
   List<Map<String, dynamic>> _parseAttendanceData(Map<String, dynamic>? data) {
-    // Backend returns: { success: true, data: { attendanceHistory: [...], overallPercentage: ... } }
+    // Backend returns: { success: true, data: { attendanceHistory: [...], overallPercentage: ..., summary: { present: X, absent: Y, late: Z } } }
 
     debugPrint('📊 Attendance History - Raw data received: $data');
 
     if (data == null) {
       debugPrint('⚠️ Attendance History - No data received, using default');
       return [
-        {'month': 'Jan', 'percentage': 98},
-        {'month': 'Feb', 'percentage': 94},
-        {'month': 'Mar', 'percentage': 97},
-        {'month': 'Apr', 'percentage': 93},
-        {'month': 'May', 'percentage': 95},
-        {'month': 'Jun', 'percentage': 96},
+        {
+          'label': 'Present',
+          'value': 90,
+          'percentage': 90.0,
+          'color': '#10b981',
+        },
+        {'label': 'Absent', 'value': 5, 'percentage': 5.0, 'color': '#ef4444'},
+        {'label': 'Late', 'value': 5, 'percentage': 5.0, 'color': '#f59e0b'},
       ];
     }
 
@@ -151,46 +173,157 @@ class AttendanceHistoryChart extends StatelessWidget {
       final responseData = data['data'] ?? data;
       debugPrint('📊 Attendance History - Response data: $responseData');
 
-      final history = responseData['attendanceHistory'] as List<dynamic>?;
-      debugPrint('📊 Attendance History - History array: $history');
+      // Try to get summary data
+      final summary = responseData['summary'] as Map<String, dynamic>?;
 
-      if (history == null || history.isEmpty) {
-        debugPrint('⚠️ Attendance History - No history data, using default');
+      if (summary != null) {
+        final present = (summary['present'] ?? 0).toDouble();
+        final absent = (summary['absent'] ?? 0).toDouble();
+        final late = (summary['late'] ?? 0).toDouble();
+        final total = present + absent + late;
+
+        if (total > 0) {
+          debugPrint('✅ Attendance History - Using summary data');
+          return [
+            {
+              'label': 'Present',
+              'value': present,
+              'percentage': (present / total) * 100,
+              'color': '#10b981',
+            },
+            {
+              'label': 'Absent',
+              'value': absent,
+              'percentage': (absent / total) * 100,
+              'color': '#ef4444',
+            },
+            if (late > 0)
+              {
+                'label': 'Late',
+                'value': late,
+                'percentage': (late / total) * 100,
+                'color': '#f59e0b',
+              },
+          ];
+        }
+      }
+
+      // Fallback: Calculate from attendance history
+      final history = responseData['attendanceHistory'] as List<dynamic>?;
+      if (history != null && history.isNotEmpty) {
+        debugPrint('📊 Attendance History - Calculating from history');
+
+        // Assuming total days per month is 30 for calculation
+        final totalMonths = history.length;
+        final avgPercentage =
+            history.fold<double>(
+              0.0,
+              (sum, item) =>
+                  sum + ((item['percentage'] ?? 0) as num).toDouble(),
+            ) /
+            totalMonths;
+
+        final presentDays = (avgPercentage * totalMonths * 30 / 100).round();
+        final totalDays = totalMonths * 30;
+        final absentDays = totalDays - presentDays;
+
         return [
-          {'month': 'Jan', 'percentage': 98},
-          {'month': 'Feb', 'percentage': 94},
-          {'month': 'Mar', 'percentage': 97},
-          {'month': 'Apr', 'percentage': 93},
-          {'month': 'May', 'percentage': 95},
-          {'month': 'Jun', 'percentage': 96},
+          {
+            'label': 'Present',
+            'value': presentDays,
+            'percentage': avgPercentage,
+            'color': '#10b981',
+          },
+          {
+            'label': 'Absent',
+            'value': absentDays,
+            'percentage': 100 - avgPercentage,
+            'color': '#ef4444',
+          },
         ];
       }
 
-      final parsedData =
-          history
-              .map(
-                (item) => {
-                  'month': item['month'] ?? '',
-                  'percentage': item['percentage'] ?? 0,
-                },
-              )
-              .toList();
-
-      debugPrint(
-        '✅ Attendance History - Successfully parsed ${parsedData.length} months',
-      );
-      return parsedData;
+      debugPrint('⚠️ Attendance History - No valid data, using default');
+      return [
+        {
+          'label': 'Present',
+          'value': 90,
+          'percentage': 90.0,
+          'color': '#10b981',
+        },
+        {'label': 'Absent', 'value': 5, 'percentage': 5.0, 'color': '#ef4444'},
+        {'label': 'Late', 'value': 5, 'percentage': 5.0, 'color': '#f59e0b'},
+      ];
     } on Exception catch (e) {
       debugPrint('❌ Attendance History - Error parsing: $e');
-      // Return default on error
       return [
-        {'month': 'Jan', 'percentage': 98},
-        {'month': 'Feb', 'percentage': 94},
-        {'month': 'Mar', 'percentage': 97},
-        {'month': 'Apr', 'percentage': 93},
-        {'month': 'May', 'percentage': 95},
-        {'month': 'Jun', 'percentage': 96},
+        {
+          'label': 'Present',
+          'value': 90,
+          'percentage': 90.0,
+          'color': '#10b981',
+        },
+        {'label': 'Absent', 'value': 5, 'percentage': 5.0, 'color': '#ef4444'},
+        {'label': 'Late', 'value': 5, 'percentage': 5.0, 'color': '#f59e0b'},
       ];
+    }
+  }
+}
+
+class _AttendanceBadge extends StatelessWidget {
+  const _AttendanceBadge({
+    required this.label,
+    required this.size,
+    required this.borderColor,
+  });
+
+  final String label;
+  final double size;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: PieChart.defaultDuration,
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      shape: BoxShape.circle,
+      border: Border.all(color: borderColor, width: 2),
+      boxShadow: <BoxShadow>[
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.5),
+          offset: const Offset(3, 3),
+          blurRadius: 3,
+        ),
+      ],
+    ),
+    padding: EdgeInsets.all(size * .15),
+    child: Center(
+      child: FittedBox(
+        child: Text(
+          _getShortLabel(label),
+          style: TextStyle(
+            fontSize: size * 0.3,
+            fontWeight: FontWeight.bold,
+            color: borderColor,
+          ),
+        ),
+      ),
+    ),
+  );
+
+  String _getShortLabel(String label) {
+    // Convert label to short form for badge
+    switch (label.toLowerCase()) {
+      case 'present':
+        return 'P';
+      case 'absent':
+        return 'A';
+      case 'late':
+        return 'L';
+      default:
+        return label.substring(0, 1).toUpperCase();
     }
   }
 }
@@ -396,9 +529,7 @@ class PerformanceTrendsChart extends StatelessWidget {
       }
 
       if (subjectsMap.isEmpty) {
-        debugPrint(
-          '⚠️ Performance Trends - No subject data parsed from API',
-        );
+        debugPrint('⚠️ Performance Trends - No subject data parsed from API');
         return _getEmptyTrendsData();
       }
 

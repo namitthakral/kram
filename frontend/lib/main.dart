@@ -28,6 +28,8 @@ import 'provider/language_provider.dart';
 import 'provider/login_signup/login_provider.dart';
 import 'provider/login_signup/signup_provider.dart';
 import 'provider/onboarding_provider.dart';
+import 'provider/profile/change_password_provider.dart';
+import 'provider/profile/edit_profile_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
 import 'provider/theme_provider.dart';
@@ -63,6 +65,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LanguageProvider()..loadLocale()),
         ChangeNotifierProvider(create: (_) => BottomNavProvider()),
         ChangeNotifierProvider(create: (_) => ProfileSecurityProvider()),
+        ChangeNotifierProvider(create: (_) => ChangePasswordProvider()),
+        ChangeNotifierProvider(create: (_) => EditProfileProvider()),
         ChangeNotifierProvider(create: (_) => FavouriteProvider()),
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => SignUpProvider()),
