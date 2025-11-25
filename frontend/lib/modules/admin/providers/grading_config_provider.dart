@@ -124,9 +124,8 @@ class GradingConfigProvider with ChangeNotifier {
     return (total - 100).abs() < 0.01;
   }
 
-  double get totalWeight {
-    return attendanceWeight + assignmentWeight + examWeight + participationWeight;
-  }
+  double get totalWeight =>
+      attendanceWeight + assignmentWeight + examWeight + participationWeight;
 
   /// Load grading configuration
   Future<void> loadConfig(int institutionId) async {
@@ -140,7 +139,7 @@ class GradingConfigProvider with ChangeNotifier {
       _clearTempValues();
       _hasUnsavedChanges = false;
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _config = GradingConfig.defaults(institutionId);
     } finally {
@@ -386,7 +385,10 @@ class GradingConfigProvider with ChangeNotifier {
         goodGradePoints: _tempGoodGradePoints,
       );
 
-      final success = await _adminService.updateGradingConfig(institutionId, dto);
+      final success = await _adminService.updateGradingConfig(
+        institutionId,
+        dto,
+      );
 
       if (success) {
         await loadConfig(institutionId); // Reload to get updated data
@@ -395,7 +397,7 @@ class GradingConfigProvider with ChangeNotifier {
         _error = 'Failed to save configuration';
         return false;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       return false;
     } finally {
@@ -420,7 +422,7 @@ class GradingConfigProvider with ChangeNotifier {
         _error = 'Failed to reset configuration';
         return false;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       return false;
     } finally {
@@ -470,4 +472,3 @@ class GradingConfigProvider with ChangeNotifier {
     _tempGoodGradePoints = null;
   }
 }
-
