@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../widgets/custom_widgets/responsive_layout.dart';
 import '../providers/grading_config_provider.dart';
 
 class GradingConfigScreen extends StatefulWidget {
@@ -24,496 +26,854 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
 
-    // Get institutionId from student, teacher, or staff profile
     final institutionId =
         user?.student?.institutionId ??
         user?.teacher?.institutionId ??
         user?.staff?.institutionId ??
-        1; // Fallback to institution 1 if none found
+        1;
 
     await context.read<GradingConfigProvider>().loadConfig(institutionId);
   }
 
+  int get _institutionId {
+    final loginProvider = context.read<LoginProvider>();
+    final user = loginProvider.currentUser;
+    return user?.student?.institutionId ??
+        user?.teacher?.institutionId ??
+        user?.staff?.institutionId ??
+        1;
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Grading Configuration'),
-      backgroundColor: const Color(0xFF4F7CFF),
-    ),
+    backgroundColor: AppTheme.slate100,
     body: Consumer<GradingConfigProvider>(
       builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (provider.error != null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Error: ${provider.error}',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loadConfig,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
+        if (provider.isLoading && provider.attendanceWeight == 0) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppTheme.blue500),
           );
         }
 
-        return SingleChildScrollView(
+        if (provider.error != null && provider.attendanceWeight == 0) {
+          return _buildErrorState(provider);
+        }
+
+        return ResponsiveLayout(
+          mobile: _buildMobileLayout(provider),
+          tablet: _buildDesktopLayout(provider),
+          desktop: _buildDesktopLayout(provider),
+        );
+      },
+    ),
+  );
+
+  Widget _buildErrorState(GradingConfigProvider provider) => Center(
+    child: Container(
+      margin: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.danger.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: AppTheme.danger,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Failed to Load Configuration',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.slate800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            provider.error ?? 'An unexpected error occurred',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.slate500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadConfig,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try Again'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.blue500,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildMobileLayout(GradingConfigProvider provider) => Column(
+    children: [
+      _buildMobileHeader(),
+      Expanded(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildInfoBanner(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _buildWeightsSection(provider),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _buildGradeBoundariesSection(provider),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _buildGradePointsSection(provider),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               _buildRiskThresholdsSection(provider),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               _buildActionButtons(provider),
               const SizedBox(height: 32),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    ],
+  );
+
+  Widget _buildDesktopLayout(GradingConfigProvider provider) => SafeArea(
+    child: ResponsivePadding(
+      desktop: const EdgeInsets.all(32),
+      tablet: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          _buildDesktopHeader(),
+          const SizedBox(height: 32),
+          Expanded(
+            child: ResponsiveCenter(
+              maxWidth: 1000,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildInfoBanner(),
+                    const SizedBox(height: 24),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildWeightsSection(provider),
+                              const SizedBox(height: 24),
+                              _buildGradeBoundariesSection(provider),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildGradePointsSection(provider),
+                              const SizedBox(height: 24),
+                              _buildRiskThresholdsSection(provider),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    _buildActionButtons(provider),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildMobileHeader() => Container(
+    width: double.infinity,
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [AppTheme.blue500, AppTheme.blue600],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: AppTheme.blue600.withValues(alpha: 0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2.5),
+              ),
+              child: const CircleAvatar(
+                radius: 32,
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.tune,
+                  size: 32,
+                  color: AppTheme.blue500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Grading Configuration',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Text(
+                'Configure Grading System',
+                style: TextStyle(
+                  color: AppTheme.blue600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildDesktopHeader() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [AppTheme.blue500, AppTheme.blue600],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: AppTheme.blue500.withValues(alpha: 0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
+    ),
+    child: Stack(
+      children: [
+        Positioned(
+          left: 0,
+          top: 0,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 48),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Grading Configuration',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Configure grading formula, boundaries, and risk thresholds',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.tune,
+                  color: Colors.white,
+                  size: 32,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 
   Widget _buildInfoBanner() => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.blue.shade50,
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: Colors.blue.shade200),
+      gradient: LinearGradient(
+        colors: [
+          AppTheme.info.withValues(alpha: 0.1),
+          AppTheme.blue500.withValues(alpha: 0.05),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppTheme.info.withValues(alpha: 0.3)),
     ),
     child: Row(
       children: [
-        Icon(Icons.info_outline, color: Colors.blue.shade700),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            'Configure how grades are calculated and when students are flagged as at-risk. Changes apply immediately to new calculations.',
-            style: TextStyle(color: Colors.blue.shade900, fontSize: 13),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppTheme.info,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.lightbulb_outline,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 16),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Configuration Guide',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: AppTheme.slate800,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Configure how grades are calculated and when students are flagged as at-risk. Changes apply immediately to new calculations.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.slate600,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     ),
   );
 
-  Widget _buildWeightsSection(GradingConfigProvider provider) => Card(
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.pie_chart, color: Color(0xFF4F7CFF)),
-              const SizedBox(width: 8),
-              Text(
-                'Grading Formula Weights',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Configure how different components contribute to the overall grade',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 16),
-          _buildWeightSlider(
-            label: 'Attendance',
-            value: provider.attendanceWeight,
-            onChanged: provider.updateAttendanceWeight,
-          ),
-          _buildWeightSlider(
-            label: 'Assignments',
-            value: provider.assignmentWeight,
-            onChanged: provider.updateAssignmentWeight,
-          ),
-          _buildWeightSlider(
-            label: 'Exams',
-            value: provider.examWeight,
-            onChanged: provider.updateExamWeight,
-          ),
-          _buildWeightSlider(
-            label: 'Participation',
-            value: provider.participationWeight,
-            onChanged: provider.updateParticipationWeight,
-          ),
-          const SizedBox(height: 16),
-          _buildTotalWeightIndicator(provider),
-        ],
-      ),
+  Widget _buildWeightsSection(GradingConfigProvider provider) => _buildCard(
+    icon: Icons.pie_chart_rounded,
+    iconColor: AppTheme.blue500,
+    title: 'Grading Formula Weights',
+    subtitle: 'Configure how different components contribute to the overall grade',
+    child: Column(
+      children: [
+        _buildWeightItem(
+          label: 'Attendance',
+          icon: Icons.calendar_today,
+          value: provider.attendanceWeight,
+          onChanged: provider.updateAttendanceWeight,
+          color: const Color(0xFF10B981),
+        ),
+        _buildWeightItem(
+          label: 'Assignments',
+          icon: Icons.assignment,
+          value: provider.assignmentWeight,
+          onChanged: provider.updateAssignmentWeight,
+          color: const Color(0xFF3B82F6),
+        ),
+        _buildWeightItem(
+          label: 'Exams',
+          icon: Icons.quiz,
+          value: provider.examWeight,
+          onChanged: provider.updateExamWeight,
+          color: const Color(0xFF8B5CF6),
+        ),
+        _buildWeightItem(
+          label: 'Participation',
+          icon: Icons.record_voice_over,
+          value: provider.participationWeight,
+          onChanged: provider.updateParticipationWeight,
+          color: const Color(0xFFF59E0B),
+        ),
+        const SizedBox(height: 16),
+        _buildTotalWeightIndicator(provider),
+      ],
     ),
   );
 
-  Widget _buildWeightSlider({
+  Widget _buildWeightItem({
     required String label,
+    required IconData icon,
     required double value,
     required ValueChanged<double> onChanged,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(
-            '${value.toInt()}%',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF4F7CFF),
+    required Color color,
+  }) => Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.2)),
+    ),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: color),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: AppTheme.slate800,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${value.toInt()}%',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: color,
+            inactiveTrackColor: color.withValues(alpha: 0.2),
+            thumbColor: color,
+            overlayColor: color.withValues(alpha: 0.2),
+            trackHeight: 6,
           ),
-        ],
-      ),
-      Slider(
-        value: value,
-        max: 100,
-        divisions: 20,
-        activeColor: const Color(0xFF4F7CFF),
-        onChanged: onChanged,
-      ),
-    ],
+          child: Slider(
+            value: value,
+            max: 100,
+            divisions: 20,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    ),
   );
 
   Widget _buildTotalWeightIndicator(GradingConfigProvider provider) {
     final total = provider.totalWeight;
     final isValid = provider.isWeightValid;
+    final color = isValid ? AppTheme.success : AppTheme.danger;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isValid ? Colors.green.shade50 : Colors.red.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: isValid ? Colors.green : Colors.red,
-          width: 2,
-        ),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color, width: 2),
       ),
       child: Row(
         children: [
-          Icon(
-            isValid ? Icons.check_circle : Icons.error,
-            color: isValid ? Colors.green : Colors.red,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Total: ${total.toInt()}%',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: isValid ? Colors.green.shade900 : Colors.red.shade900,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isValid ? Icons.check : Icons.warning,
+              color: Colors.white,
+              size: 20,
             ),
           ),
-          if (!isValid) ...[
-            const SizedBox(width: 8),
-            Text(
-              '(Must be 100%)',
-              style: TextStyle(color: Colors.red.shade900),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGradeBoundariesSection(GradingConfigProvider provider) => Card(
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.grade, color: Color(0xFF4F7CFF)),
-              const SizedBox(width: 8),
-              Text(
-                'Grade Boundaries',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Set minimum percentage scores for each letter grade',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 16),
-          _buildGradeBoundaryRow(
-            grade: 'A+',
-            value: provider.gradeAPlusThreshold,
-            onChanged: provider.updateGradeAPlusThreshold,
-            suffix: 'and above',
-          ),
-          _buildGradeBoundaryRow(
-            grade: 'A',
-            value: provider.gradeAThreshold,
-            onChanged: provider.updateGradeAThreshold,
-            suffix: 'to ${(provider.gradeAPlusThreshold - 1).toInt()}%',
-          ),
-          _buildGradeBoundaryRow(
-            grade: 'B+',
-            value: provider.gradeBPlusThreshold,
-            onChanged: provider.updateGradeBPlusThreshold,
-            suffix: 'to ${(provider.gradeAThreshold - 1).toInt()}%',
-          ),
-          _buildGradeBoundaryRow(
-            grade: 'B',
-            value: provider.gradeBThreshold,
-            onChanged: provider.updateGradeBThreshold,
-            suffix: 'to ${(provider.gradeBPlusThreshold - 1).toInt()}%',
-          ),
-          _buildGradeBoundaryRow(
-            grade: 'C',
-            value: provider.gradeCThreshold,
-            onChanged: provider.updateGradeCThreshold,
-            suffix: 'to ${(provider.gradeBThreshold - 1).toInt()}%',
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'D Grade',
-                  style: TextStyle(fontWeight: FontWeight.w500),
-                ),
                 Text(
-                  'Below ${provider.gradeCThreshold.toInt()}%',
-                  style: const TextStyle(color: Colors.grey),
+                  'Total Weight: ${total.toInt()}%',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: color,
+                  ),
                 ),
+                if (!isValid)
+                  const Text(
+                    'Weights must add up to 100%',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.danger,
+                    ),
+                  ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildGradeBoundariesSection(GradingConfigProvider provider) => _buildCard(
+    icon: Icons.leaderboard_rounded,
+    iconColor: const Color(0xFF8B5CF6),
+    title: 'Grade Boundaries',
+    subtitle: 'Set minimum percentage scores for each letter grade',
+    child: Column(
+      children: [
+        _buildGradeBoundaryItem('A+', provider.gradeAPlusThreshold, provider.updateGradeAPlusThreshold, const Color(0xFF10B981), '${provider.gradeAPlusThreshold.toInt()}% and above'),
+        _buildGradeBoundaryItem('A', provider.gradeAThreshold, provider.updateGradeAThreshold, const Color(0xFF22C55E), '${provider.gradeAThreshold.toInt()}% - ${(provider.gradeAPlusThreshold - 1).toInt()}%'),
+        _buildGradeBoundaryItem('B+', provider.gradeBPlusThreshold, provider.updateGradeBPlusThreshold, const Color(0xFF3B82F6), '${provider.gradeBPlusThreshold.toInt()}% - ${(provider.gradeAThreshold - 1).toInt()}%'),
+        _buildGradeBoundaryItem('B', provider.gradeBThreshold, provider.updateGradeBThreshold, const Color(0xFF6366F1), '${provider.gradeBThreshold.toInt()}% - ${(provider.gradeBPlusThreshold - 1).toInt()}%'),
+        _buildGradeBoundaryItem('C', provider.gradeCThreshold, provider.updateGradeCThreshold, const Color(0xFFF59E0B), '${provider.gradeCThreshold.toInt()}% - ${(provider.gradeBThreshold - 1).toInt()}%'),
+        _buildStaticGradeItem('D', const Color(0xFFEF4444), 'Below ${provider.gradeCThreshold.toInt()}%'),
+      ],
     ),
   );
 
-  Widget _buildGradeBoundaryRow({
-    required String grade,
-    required double value,
-    required ValueChanged<double> onChanged,
-    required String suffix,
-  }) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
+  Widget _buildGradeBoundaryItem(
+    String grade,
+    double value,
+    ValueChanged<double> onChanged,
+    Color color,
+    String range,
+  ) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppTheme.slate100,
+      borderRadius: BorderRadius.circular(10),
+    ),
     child: Row(
       children: [
-        SizedBox(
+        Container(
           width: 40,
-          child: Text(
-            grade,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          height: 40,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              grade,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
+        const SizedBox(width: 12),
         Expanded(
-          child: Slider(
-            value: value,
-            max: 100,
-            divisions: 100,
-            activeColor: const Color(0xFF4F7CFF),
-            onChanged: onChanged,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: color,
+              inactiveTrackColor: color.withValues(alpha: 0.2),
+              thumbColor: color,
+              overlayColor: color.withValues(alpha: 0.2),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: value,
+              max: 100,
+              divisions: 100,
+              onChanged: onChanged,
+            ),
           ),
         ),
         SizedBox(
-          width: 120,
+          width: 90,
           child: Text(
-            '${value.toInt()}% $suffix',
-            style: const TextStyle(fontSize: 12),
+            range,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.slate600,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.right,
           ),
         ),
       ],
     ),
   );
 
-  Widget _buildGradePointsSection(GradingConfigProvider provider) => Card(
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.functions, color: Color(0xFF4F7CFF)),
-              const SizedBox(width: 8),
-              Text(
-                'Grade Points (GPA)',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+  Widget _buildStaticGradeItem(String grade, Color color, String range) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: color.withValues(alpha: 0.3)),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              grade,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.white,
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Configure GPA values for each letter grade',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            'Lowest Grade',
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildGradePointRow(
-            grade: 'A+',
-            value: provider.gradeAPlusPoints,
-            onChanged: provider.updateGradeAPlusPoints,
+        ),
+        Text(
+          range,
+          style: TextStyle(
+            fontSize: 12,
+            color: color,
+            fontWeight: FontWeight.w600,
           ),
-          _buildGradePointRow(
-            grade: 'A',
-            value: provider.gradeAPoints,
-            onChanged: provider.updateGradeAPoints,
-          ),
-          _buildGradePointRow(
-            grade: 'B+',
-            value: provider.gradeBPlusPoints,
-            onChanged: provider.updateGradeBPlusPoints,
-          ),
-          _buildGradePointRow(
-            grade: 'B',
-            value: provider.gradeBPoints,
-            onChanged: provider.updateGradeBPoints,
-          ),
-          _buildGradePointRow(
-            grade: 'C',
-            value: provider.gradeCPoints,
-            onChanged: provider.updateGradeCPoints,
-          ),
-          _buildGradePointRow(
-            grade: 'D',
-            value: provider.gradeDPoints,
-            onChanged: provider.updateGradeDPoints,
-          ),
-        ],
-      ),
+        ),
+      ],
     ),
   );
 
-  Widget _buildGradePointRow({
-    required String grade,
-    required double value,
-    required ValueChanged<double> onChanged,
-  }) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
+  Widget _buildGradePointsSection(GradingConfigProvider provider) => _buildCard(
+    icon: Icons.analytics_rounded,
+    iconColor: const Color(0xFF10B981),
+    title: 'Grade Points (GPA)',
+    subtitle: 'Configure GPA values for each letter grade',
+    child: Column(
+      children: [
+        _buildGradePointItem('A+', provider.gradeAPlusPoints, provider.updateGradeAPlusPoints, const Color(0xFF10B981)),
+        _buildGradePointItem('A', provider.gradeAPoints, provider.updateGradeAPoints, const Color(0xFF22C55E)),
+        _buildGradePointItem('B+', provider.gradeBPlusPoints, provider.updateGradeBPlusPoints, const Color(0xFF3B82F6)),
+        _buildGradePointItem('B', provider.gradeBPoints, provider.updateGradeBPoints, const Color(0xFF6366F1)),
+        _buildGradePointItem('C', provider.gradeCPoints, provider.updateGradeCPoints, const Color(0xFFF59E0B)),
+        _buildGradePointItem('D', provider.gradeDPoints, provider.updateGradeDPoints, const Color(0xFFEF4444)),
+      ],
+    ),
+  );
+
+  Widget _buildGradePointItem(
+    String grade,
+    double value,
+    ValueChanged<double> onChanged,
+    Color color,
+  ) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppTheme.slate100,
+      borderRadius: BorderRadius.circular(10),
+    ),
     child: Row(
       children: [
-        SizedBox(
+        Container(
           width: 40,
-          child: Text(
-            grade,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          height: 40,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              grade,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
+        const SizedBox(width: 12),
         Expanded(
-          child: Slider(
-            value: value,
-            max: 5,
-            divisions: 50,
-            activeColor: const Color(0xFF4F7CFF),
-            onChanged: onChanged,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: color,
+              inactiveTrackColor: color.withValues(alpha: 0.2),
+              thumbColor: color,
+              overlayColor: color.withValues(alpha: 0.2),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: value,
+              max: 5,
+              divisions: 50,
+              onChanged: onChanged,
+            ),
           ),
         ),
-        SizedBox(
-          width: 60,
+        Container(
+          width: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Text(
             value.toStringAsFixed(1),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFF4F7CFF),
+              fontSize: 13,
+              color: Colors.white,
             ),
+            textAlign: TextAlign.center,
           ),
         ),
       ],
     ),
   );
 
-  Widget _buildRiskThresholdsSection(GradingConfigProvider provider) => Card(
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.warning_amber, color: Colors.orange),
-              const SizedBox(width: 8),
-              Text(
-                'Risk Status Thresholds',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Configure when students are flagged for intervention',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 16),
-          _buildRiskCategory(
-            title: '🔴 At Risk',
-            description: 'Students flagged if ANY metric falls below:',
-            color: Colors.red,
-            attendanceValue: provider.atRiskAttendance,
-            onAttendanceChanged: provider.updateAtRiskAttendance,
-            assignmentValue: provider.atRiskAssignment,
-            onAssignmentChanged: provider.updateAtRiskAssignment,
-            examValue: provider.atRiskExam,
-            onExamChanged: provider.updateAtRiskExam,
-            gpaValue: provider.atRiskGradePoints,
-            onGpaChanged: provider.updateAtRiskGradePoints,
-          ),
-          const Divider(height: 32),
-          _buildRiskCategory(
-            title: '🟡 Needs Improvement',
-            description: 'Students flagged if ANY metric falls below:',
-            color: Colors.orange,
-            attendanceValue: provider.needsImprovementAttendance,
-            onAttendanceChanged: provider.updateNeedsImprovementAttendance,
-            assignmentValue: provider.needsImprovementAssignment,
-            onAssignmentChanged: provider.updateNeedsImprovementAssignment,
-            examValue: provider.needsImprovementExam,
-            onExamChanged: provider.updateNeedsImprovementExam,
-            gpaValue: provider.needsImprovementGradePoints,
-            onGpaChanged: provider.updateNeedsImprovementGradePoints,
-          ),
-        ],
-      ),
+  Widget _buildRiskThresholdsSection(GradingConfigProvider provider) => _buildCard(
+    icon: Icons.warning_amber_rounded,
+    iconColor: AppTheme.warning,
+    title: 'Risk Status Thresholds',
+    subtitle: 'Configure when students are flagged for intervention',
+    child: Column(
+      children: [
+        _buildRiskCategory(
+          title: 'At Risk',
+          icon: Icons.error,
+          color: AppTheme.danger,
+          description: 'Flag students if ANY metric falls below these values',
+          attendanceValue: provider.atRiskAttendance,
+          onAttendanceChanged: provider.updateAtRiskAttendance,
+          assignmentValue: provider.atRiskAssignment,
+          onAssignmentChanged: provider.updateAtRiskAssignment,
+          examValue: provider.atRiskExam,
+          onExamChanged: provider.updateAtRiskExam,
+          gpaValue: provider.atRiskGradePoints,
+          onGpaChanged: provider.updateAtRiskGradePoints,
+        ),
+        const SizedBox(height: 20),
+        _buildRiskCategory(
+          title: 'Needs Improvement',
+          icon: Icons.trending_down,
+          color: AppTheme.warning,
+          description: 'Flag students if ANY metric falls below these values',
+          attendanceValue: provider.needsImprovementAttendance,
+          onAttendanceChanged: provider.updateNeedsImprovementAttendance,
+          assignmentValue: provider.needsImprovementAssignment,
+          onAssignmentChanged: provider.updateNeedsImprovementAssignment,
+          examValue: provider.needsImprovementExam,
+          onExamChanged: provider.updateNeedsImprovementExam,
+          gpaValue: provider.needsImprovementGradePoints,
+          onGpaChanged: provider.updateNeedsImprovementGradePoints,
+        ),
+      ],
     ),
   );
 
   Widget _buildRiskCategory({
     required String title,
-    required String description,
+    required IconData icon,
     required Color color,
+    required String description,
     required double attendanceValue,
     required ValueChanged<double> onAttendanceChanged,
     required double assignmentValue,
@@ -522,141 +882,287 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     required ValueChanged<double> onExamChanged,
     required double gpaValue,
     required ValueChanged<double> onGpaChanged,
-  }) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-          color: color,
+  }) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withValues(alpha: 0.3)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.slate500,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-      ),
-      const SizedBox(height: 4),
-      Text(
-        description,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
-      ),
-      const SizedBox(height: 12),
-      _buildThresholdSlider(
-        label: 'Attendance',
-        value: attendanceValue,
-        onChanged: onAttendanceChanged,
-        suffix: '%',
-      ),
-      _buildThresholdSlider(
-        label: 'Assignment Score',
-        value: assignmentValue,
-        onChanged: onAssignmentChanged,
-        suffix: '%',
-      ),
-      _buildThresholdSlider(
-        label: 'Exam Score',
-        value: examValue,
-        onChanged: onExamChanged,
-        suffix: '%',
-      ),
-      _buildThresholdSlider(
-        label: 'GPA',
-        value: gpaValue,
-        onChanged: onGpaChanged,
-        suffix: '',
-        max: 5.0,
-      ),
-    ],
+        const SizedBox(height: 16),
+        _buildThresholdRow('Attendance', attendanceValue, onAttendanceChanged, '%', color),
+        _buildThresholdRow('Assignment Score', assignmentValue, onAssignmentChanged, '%', color),
+        _buildThresholdRow('Exam Score', examValue, onExamChanged, '%', color),
+        _buildThresholdRow('GPA', gpaValue, onGpaChanged, '', color, max: 5.0),
+      ],
+    ),
   );
 
-  Widget _buildThresholdSlider({
-    required String label,
-    required double value,
-    required ValueChanged<double> onChanged,
-    required String suffix,
+  Widget _buildThresholdRow(
+    String label,
+    double value,
+    ValueChanged<double> onChanged,
+    String suffix,
+    Color color, {
     double max = 100,
   }) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(
       children: [
         SizedBox(
-          width: 120,
-          child: Text(label, style: const TextStyle(fontSize: 13)),
-        ),
-        Expanded(
-          child: Slider(
-            value: value,
-            max: max,
-            divisions: max == 100 ? 100 : 50,
-            activeColor: const Color(0xFF4F7CFF),
-            onChanged: onChanged,
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.slate600,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-        SizedBox(
-          width: 60,
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: color,
+              inactiveTrackColor: color.withValues(alpha: 0.2),
+              thumbColor: color,
+              overlayColor: color.withValues(alpha: 0.2),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: value,
+              max: max,
+              divisions: max == 100 ? 100 : 50,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        Container(
+          width: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
           child: Text(
-            max == 100
-                ? '${value.toInt()}$suffix'
-                : '${value.toStringAsFixed(1)}$suffix',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            max == 100 ? '${value.toInt()}$suffix' : value.toStringAsFixed(1),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
       ],
     ),
   );
 
-  Widget _buildActionButtons(GradingConfigProvider provider) {
-    final loginProvider = context.read<LoginProvider>();
-    final user = loginProvider.currentUser;
-
-    // Get institutionId from student, teacher, or staff profile
-    final institutionId =
-        user?.student?.institutionId ??
-        user?.teacher?.institutionId ??
-        user?.staff?.institutionId ??
-        1; // Fallback to institution 1 if none found
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        if (provider.hasUnsavedChanges)
-          OutlinedButton(
-            onPressed: provider.discardChanges,
-            child: const Text('Discard Changes'),
-          ),
-        const SizedBox(width: 12),
-        OutlinedButton(
-          onPressed: () => _showResetConfirmation(institutionId),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red,
-            side: const BorderSide(color: Colors.red),
-          ),
-          child: const Text('Reset to Defaults'),
-        ),
-        const SizedBox(width: 12),
-        ElevatedButton(
-          onPressed:
-              provider.isWeightValid
-                  ? () => _saveConfig(provider, institutionId)
-                  : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4F7CFF),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-          ),
-          child:
-              provider.isLoading
-                  ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                  : const Text('Save Changes'),
+  Widget _buildCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required Widget child,
+  }) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppTheme.slate100),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
         ),
       ],
-    );
-  }
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 22, color: iconColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.slate800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.slate500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        child,
+      ],
+    ),
+  );
+
+  Widget _buildActionButtons(GradingConfigProvider provider) => Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppTheme.slate100),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.slate100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.save_outlined, size: 22, color: AppTheme.slate600),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Save Configuration',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.slate800,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Apply changes to the grading system',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.slate500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          alignment: WrapAlignment.end,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => _showResetConfirmation(_institutionId),
+              icon: const Icon(Icons.restart_alt, size: 18),
+              label: const Text('Reset to Defaults'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.danger,
+                side: const BorderSide(color: AppTheme.danger),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: provider.isWeightValid
+                  ? () => _saveConfig(provider, _institutionId)
+                  : null,
+              icon: provider.isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.check, size: 18),
+              label: Text(provider.isLoading ? 'Saving...' : 'Save Changes'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.blue500,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppTheme.slate100,
+                disabledForegroundColor: AppTheme.slate500,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 
   Future<void> _saveConfig(
     GradingConfigProvider provider,
@@ -668,45 +1174,86 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Grading configuration saved successfully!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Configuration saved successfully!'),
+            ],
+          ),
+          backgroundColor: AppTheme.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save: ${provider.error}'),
-          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Failed to save: ${provider.error}')),
+            ],
+          ),
+          backgroundColor: AppTheme.danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
         ),
       );
     }
   }
 
-  Future<void> _showResetConfirmation(int? institutionId) async {
-    if (institutionId == null) return;
-
+  Future<void> _showResetConfirmation(int institutionId) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Reset to Defaults?'),
-            content: const Text(
-              'This will restore the standard grading formula. '
-              'All custom settings will be lost. This action cannot be undone.',
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.danger.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.restart_alt, color: AppTheme.danger),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Reset'),
-              ),
-            ],
+            const SizedBox(width: 12),
+            const Text(
+              'Reset to Defaults?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: const Text(
+          'This will restore the standard grading formula. All custom settings will be lost. This action cannot be undone.',
+          style: TextStyle(color: AppTheme.slate600),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.slate500),
+            ),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.danger,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
     );
 
     if (confirmed == true && mounted) {
@@ -717,16 +1264,34 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
 
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Configuration reset to defaults successfully!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Configuration reset to defaults!'),
+              ],
+            ),
+            backgroundColor: AppTheme.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to reset: ${provider.error}'),
-            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Failed to reset: ${provider.error}')),
+              ],
+            ),
+            backgroundColor: AppTheme.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }

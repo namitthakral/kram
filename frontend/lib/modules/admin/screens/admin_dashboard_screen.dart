@@ -12,7 +12,6 @@ import '../../teacher/widgets/stat_card.dart';
 import '../providers/admin_analytics_tab_provider.dart';
 import '../providers/admin_dashboard_provider.dart';
 import '../widgets/admin_chart_widgets.dart';
-import 'grading_config_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -378,8 +377,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 const Color(0xFFdbeafe),
                 const Color(0xFF3b82f6),
               ),
-              const SizedBox(height: 16),
-              _buildGradingConfigCard(),
             ],
           );
         },
@@ -648,73 +645,4 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     ),
   );
 
-  Widget _buildGradingConfigCard() => InkWell(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const GradingConfigScreen(),
-        ),
-      );
-    },
-    child: Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFdbeafe),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.settings,
-              color: Color(0xFF4F7CFF),
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Grading Configuration',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1e293b),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Configure grading formula & thresholds',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: Color(0xFF94a3b8),
-          ),
-        ],
-      ),
-    ),
-  );
 }

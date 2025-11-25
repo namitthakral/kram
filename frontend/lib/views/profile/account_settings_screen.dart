@@ -5,10 +5,11 @@ import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
-import '../../widgets/custom_widgets/responsive_layout.dart';
 import '../../widgets/custom_widgets/custom_tab_bar.dart';
+import '../../widgets/custom_widgets/responsive_layout.dart';
 import 'tabs/academic_info_tab.dart';
 import 'tabs/contact_info_tab.dart';
+import 'tabs/institution_settings_tab.dart';
 import 'tabs/language_tab.dart';
 import 'tabs/notifications_tab.dart';
 import 'tabs/personal_info_tab.dart';
@@ -24,8 +25,6 @@ class AccountSettingsScreen extends StatefulWidget {
 
 class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   int _selectedTabIndex = 0;
-  final GlobalKey<FormState> _personalInfoKey = GlobalKey();
-  final GlobalKey<FormState> _contactInfoKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +80,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
     // Add role-specific tabs
     switch (roleId) {
-      case 2: // Student
+      case 3: // Student
         return [
           ...baseTabs,
           const TabItem(
@@ -105,7 +104,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             icon: Icons.language_outlined,
           ),
         ];
-      case 4: // Teacher
+      case 5: // Teacher
         return [
           ...baseTabs,
           const TabItem(
@@ -129,16 +128,44 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             icon: Icons.language_outlined,
           ),
         ];
-      case 3: // Librarian
-      case 5: // Admin
-      case 6: // Staff
-      case 7: // Super Admin
+      case 6: // Librarian
+      case 7: // Staff
         return [
           ...baseTabs,
           const TabItem(
             value: 'Professional',
             label: 'Professional',
             icon: Icons.work_outline,
+          ),
+          const TabItem(
+            value: 'Security',
+            label: 'Security',
+            icon: Icons.security_outlined,
+          ),
+          const TabItem(
+            value: 'Notifications',
+            label: 'Notifications',
+            icon: Icons.notifications_outlined,
+          ),
+          const TabItem(
+            value: 'Language',
+            label: 'Language',
+            icon: Icons.language_outlined,
+          ),
+        ];
+      case 1: // Super Admin
+      case 2: // Admin
+        return [
+          ...baseTabs,
+          const TabItem(
+            value: 'Professional',
+            label: 'Professional',
+            icon: Icons.work_outline,
+          ),
+          const TabItem(
+            value: 'Institution',
+            label: 'Institution',
+            icon: Icons.business_outlined,
           ),
           const TabItem(
             value: 'Security',
@@ -178,10 +205,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
   }
 
-  Widget _buildMobileLayout(
-    List<TabItem<String>> tabs,
-    String selectedTab,
-  ) =>
+  Widget _buildMobileLayout(List<TabItem<String>> tabs, String selectedTab) =>
       Column(
         children: [
           // Profile-style Gradient Header
@@ -312,10 +336,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ],
       );
 
-  Widget _buildDesktopLayout(
-    List<TabItem<String>> tabs,
-    String selectedTab,
-  ) =>
+  Widget _buildDesktopLayout(List<TabItem<String>> tabs, String selectedTab) =>
       SafeArea(
         child: ResponsivePadding(
           desktop: const EdgeInsets.all(32),
@@ -328,13 +349,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
               // Horizontal Scrollable Tabs
               Container(
-                constraints: const BoxConstraints(maxWidth: 800),
+                constraints: const BoxConstraints(maxWidth: 980),
                 child: CustomTabBar<String>(
                   tabs: tabs,
                   selectedValue: selectedTab,
                   onTabSelected: (value) {
                     setState(() {
-                      _selectedTabIndex = tabs.indexWhere((t) => t.value == value);
+                      _selectedTabIndex = tabs.indexWhere(
+                        (t) => t.value == value,
+                      );
                     });
                   },
                 ),
@@ -449,6 +472,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         return const AcademicInfoTab();
       case 'Professional':
         return const ProfessionalInfoTab();
+      case 'Institution':
+        return const InstitutionSettingsTab();
       case 'Security':
         return const SecurityTab();
       case 'Notifications':

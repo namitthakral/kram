@@ -37,7 +37,9 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
     final uuid = user?.uuid;
-    if (uuid == null) return;
+    if (uuid == null) {
+      return;
+    }
 
     final provider = context.read<AssignmentProvider>();
     await provider.loadCourses(uuid);
@@ -51,9 +53,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     final teacher = user?.teacher;
 
     if (user?.uuid == null) {
-      return const Scaffold(
-        body: Center(child: Text('User not found')),
-      );
+      return const Scaffold(body: Center(child: Text('User not found')));
     }
 
     // Get teacher info for app bar
@@ -97,7 +97,10 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                   icon: const Icon(Icons.filter_list, size: 20),
                   label: Text(context.translate('filter')),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -120,39 +123,44 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                 }
 
                 // Filter assignments based on search query
-                final filteredAssignments = provider.assignments.where((assignment) {
-                  if (_searchQuery.isEmpty) {
-                    return true;
-                  }
-                  final query = _searchQuery.toLowerCase();
-                  return assignment.title.toLowerCase().contains(query) ||
-                      (assignment.courseName?.toLowerCase().contains(query) ?? false);
-                }).toList();
+                final filteredAssignments =
+                    provider.assignments.where((assignment) {
+                      if (_searchQuery.isEmpty) {
+                        return true;
+                      }
+                      final query = _searchQuery.toLowerCase();
+                      return assignment.title.toLowerCase().contains(query) ||
+                          (assignment.courseName?.toLowerCase().contains(
+                                query,
+                              ) ??
+                              false);
+                    }).toList();
 
                 return RefreshIndicator(
                   onRefresh: _loadData,
-                  child: filteredAssignments.isEmpty
-                      ? Center(
-                          child: Text(
-                            context.translate('no_assignments_found'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppTheme.slate500,
+                  child:
+                      filteredAssignments.isEmpty
+                          ? Center(
+                            child: Text(
+                              context.translate('no_assignments_found'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: AppTheme.slate500,
+                              ),
                             ),
+                          )
+                          : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemCount: filteredAssignments.length,
+                            itemBuilder: (context, index) {
+                              final assignment = filteredAssignments[index];
+                              return _AssignmentCard(
+                                assignment: assignment,
+                                onTap: () => _navigateToEdit(assignment.id),
+                                onDelete: () => _confirmDelete(assignment.id),
+                              );
+                            },
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: filteredAssignments.length,
-                          itemBuilder: (context, index) {
-                            final assignment = filteredAssignments[index];
-                            return _AssignmentCard(
-                              assignment: assignment,
-                              onTap: () => _navigateToEdit(assignment.id),
-                              onDelete: () => _confirmDelete(assignment.id),
-                            );
-                          },
-                        ),
                 );
               },
             ),
@@ -168,11 +176,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Color(0xFFe7000b),
-          ),
+          const Icon(Icons.error_outline, size: 64, color: Color(0xFFe7000b)),
           const SizedBox(height: 16),
           Text(
             context.translate('error_loading_assignments'),
@@ -185,10 +189,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
           const SizedBox(height: 8),
           Text(
             error,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748b),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -208,11 +209,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.assignment_outlined,
-            size: 80,
-            color: Colors.grey[300],
-          ),
+          Icon(Icons.assignment_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 24),
           Text(
             context.translate('no_assignments_yet'),
@@ -225,10 +222,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
           const SizedBox(height: 8),
           Text(
             context.translate('create_first_assignment'),
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748b),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -285,9 +279,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
               prefixIcon: const Icon(Icons.book_outlined),
             ),
             items: [
-              DropdownMenuItem(
-                child: Text(context.translate('all_courses')),
-              ),
+              DropdownMenuItem(child: Text(context.translate('all_courses'))),
               ...provider.courses.map(
                 (course) => DropdownMenuItem(
                   value: course.id.toString(),
@@ -308,9 +300,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
               prefixIcon: const Icon(Icons.info_outline),
             ),
             items: [
-              DropdownMenuItem(
-                child: Text(context.translate('all_statuses')),
-              ),
+              DropdownMenuItem(child: Text(context.translate('all_statuses'))),
               const DropdownMenuItem(value: 'DRAFT', child: Text('Draft')),
               const DropdownMenuItem(
                 value: 'PUBLISHED',
@@ -389,7 +379,9 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
       final loginProvider = context.read<LoginProvider>();
       final user = loginProvider.currentUser;
       final uuid = user?.uuid;
-      if (uuid == null) return;
+      if (uuid == null) {
+        return;
+      }
 
       final provider = context.read<AssignmentProvider>();
       final success = await provider.deleteAssignment(uuid, assignmentId);
@@ -561,27 +553,26 @@ class _AssignmentCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 12),
-                  const Divider(
-                    height: 1,
-                    color: Color(0xFFe2e8f0),
-                  ),
+                  const Divider(height: 1, color: Color(0xFFe2e8f0)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 16,
-                        color: isOverdue
-                            ? const Color(0xFFe7000b)
-                            : const Color(0xFF64748b),
+                        color:
+                            isOverdue
+                                ? const Color(0xFFe7000b)
+                                : const Color(0xFF64748b),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Due: ${DateFormat('MMM dd, yyyy').format(dueDate)}',
                         style: TextStyle(
-                          color: isOverdue
-                              ? const Color(0xFFe7000b)
-                              : const Color(0xFF475569),
+                          color:
+                              isOverdue
+                                  ? const Color(0xFFe7000b)
+                                  : const Color(0xFF475569),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -594,7 +585,9 @@ class _AssignmentCard extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFfe9a00).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFFfe9a00,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
