@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_theme.dart';
+
 class CustomElevatedButton extends StatelessWidget {
   const CustomElevatedButton({
     required this.text,
@@ -36,8 +38,8 @@ class CustomElevatedButton extends StatelessWidget {
             : Text(
               text,
               style: const TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTheme.fontSizeBase,
+                fontWeight: AppTheme.fontWeightSemibold,
               ),
             ),
   );

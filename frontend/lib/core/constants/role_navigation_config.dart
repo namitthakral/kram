@@ -5,6 +5,7 @@ import '../../modules/admin/screens/admin_dashboard_screen.dart';
 import '../../modules/library/screens/library_dashboard_screen.dart';
 import '../../modules/parent/screens/parent_dashboard_screen.dart';
 import '../../modules/student/screens/student_dashboard_screen.dart';
+import '../../modules/teacher/screens/academic_management_screen.dart';
 import '../../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../../utils/custom_images.dart';
 import '../../views/dashboard/staff_dashboard_screen.dart';
@@ -118,6 +119,16 @@ class RoleNavigationConfig {
       labelKey: 'classes',
     ),
     NavigationItemModel(
+      iconUrl: CustomImages.iconAcademic,
+      iconFilledUrl: CustomImages.iconAcademicFilled,
+      labelKey: 'academic',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconReport,
+      iconFilledUrl: CustomImages.iconReportFilled,
+      labelKey: 'reports',
+    ),
+    NavigationItemModel(
       iconUrl: CustomImages.iconMessage,
       iconFilledUrl: CustomImages.iconMessageFilled,
       labelKey: 'messages',
@@ -132,6 +143,10 @@ class RoleNavigationConfig {
   static final List<Widget> _teacherPages = [
     const TeacherDashboardScreen(),
     const Center(child: Text('Classes Screen')), // TODO: Implement
+    const AcademicManagementScreen(),
+    const Center(
+      child: Text('Reports Screen\n(Student Reports, Marksheets)'),
+    ), // TODO: Implement
     const Center(child: Text('Messages Screen')), // TODO: Implement
     const ProfileScreen(),
   ];
@@ -319,6 +334,11 @@ class RoleNavigationConfig {
         'manage_courses',
         'mark_attendance',
         'grade_assignments',
+        'manage_exams',
+        'manage_timetables',
+        'manage_assignments',
+        'view_student_reports',
+        'generate_marksheets',
       ],
       6: ['manage_books', 'manage_issues', 'view_library_reports'],
       7: ['view_own_data', 'mark_attendance', 'view_notices'],

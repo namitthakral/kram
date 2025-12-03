@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
+import '../../utils/app_bar_config_helper.dart';
 import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
 import '../../utils/router_service.dart';
+import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
 import 'account_settings_screen.dart';
-import 'widgets/profile_header.dart';
 import 'widgets/profile_info_card.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -31,376 +31,43 @@ class ProfileScreen extends StatelessWidget {
       return const SizedBox();
     }
 
-    // Use ResponsiveLayout widget following project pattern
-    return ResponsiveLayout(
-      mobile: _buildMobileLayout(context, user),
-      tablet: _buildDesktopLayout(context, user), // Same as desktop for tablet
-      desktop: _buildDesktopLayout(context, user),
+    // Use CustomMainScreenWithAppbar for consistent header
+    return CustomMainScreenWithAppbar(
+      title: 'Profile',
+      appBarConfig: AppBarConfigHelper.getConfigForUser(
+        user,
+        onNotificationIconPressed: () {},
+        isProfileScreen: true,
+      ),
+      child: SingleChildScrollView(
+        child: ResponsivePadding(
+          mobile: const EdgeInsets.all(16),
+          tablet: const EdgeInsets.all(24),
+          desktop: const EdgeInsets.all(32),
+          child: ResponsiveCenter(
+            maxWidth: 1000,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Profile Info Card
+                ProfileInfoCard(user: user),
+                const SizedBox(height: 24),
+
+                // Profile Links Section
+                _buildProfileLinksSection(context),
+                const SizedBox(height: 24),
+
+                // Logout Button
+                _buildLogoutButton(context),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  // Mobile Layout - Original Design with ProfileHeader
-  Widget _buildMobileLayout(BuildContext context, user) =>
-      AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.light,
-        child: Scaffold(
-          body: SafeArea(
-            top: false,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ProfileHeader(user: user),
-                  DecoratedBox(
-                    decoration: const BoxDecoration(
-                      color: AppTheme.backgroundColor,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ProfileInfoCard(user: user),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Profile Links Section
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildProfileLinksSection(context),
-                        ),
-                        const SizedBox(height: 24),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildLogoutButton(context),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-  // Desktop/Tablet Layout - Modern design
-  Widget _buildDesktopLayout(BuildContext context, user) => Scaffold(
-    backgroundColor: AppTheme.backgroundColor,
-    body: SafeArea(
-      child: SingleChildScrollView(
-        child: ResponsivePadding(
-          desktop: const EdgeInsets.all(32),
-          tablet: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Modern header with gradient background
-              _buildModernHeader(context, user),
-              const SizedBox(height: 32),
-
-              // Content section with cards
-              ResponsiveCenter(
-                maxWidth: 1000,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Stats cards row
-                    _buildStatsCards(context, user),
-                    const SizedBox(height: 24),
-
-                    // Main content
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left column - Profile details
-                        Expanded(flex: 2, child: ProfileInfoCard(user: user)),
-                        const SizedBox(width: 24),
-
-                        // Right column - Quick actions & additional info
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildQuickActionsCard(context),
-                              const SizedBox(height: 24),
-                              _buildAccountStatusCard(context, user),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-
-  // Modern header with gradient
-  Widget _buildModernHeader(BuildContext context, user) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [AppTheme.blue500, AppTheme.blue600],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: AppTheme.blue500.withValues(alpha: 0.3),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        // Decorative element
-        Container(
-          width: 4,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 24),
-
-        // Text content
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.translate('profile_information'),
-                style: context.textTheme.h2.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.translate('view_and_manage_account'),
-                style: context.textTheme.bodyBase.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Icon
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.person_outline,
-            color: Colors.white,
-            size: 32,
-          ),
-        ),
-      ],
-    ),
-  );
-
-  // Stats cards
-  Widget _buildStatsCards(BuildContext context, user) => Row(
-    children: [
-      Expanded(
-        child: _buildStatCard(
-          context,
-          context.translate('account_status'),
-          user.status,
-          Icons.check_circle_outline,
-          AppTheme.success,
-        ),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: _buildStatCard(
-          context,
-          context.translate('role'),
-          _capitalizeRole(user.role?.roleName),
-          Icons.work_outline,
-          AppTheme.blue500,
-        ),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: _buildStatCard(
-          context,
-          context.translate('member_since'),
-          _getMemberSince(context, user.createdAt),
-          Icons.calendar_today_outlined,
-          AppTheme.info,
-        ),
-      ),
-    ],
-  );
-
-  Widget _buildStatCard(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppTheme.slate100),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 20, color: color),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: context.textTheme.bodySm.copyWith(
-                  color: AppTheme.slate500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          value,
-          style: context.textTheme.titleLg.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.slate800,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    ),
-  );
-
-  // Quick actions card
-  Widget _buildQuickActionsCard(BuildContext context) => Container(
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppTheme.slate100),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.blue50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.bolt, size: 20, color: AppTheme.blue500),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              context.translate('quick_actions'),
-              style: context.textTheme.titleBase.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.slate800,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        _buildActionButton(
-          context,
-          icon: Icons.settings_outlined,
-          label: context.translate('account_settings'),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const AccountSettingsScreen(),
-              ),
-            );
-          },
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildActionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) => Material(
-    color: AppTheme.slate100,
-    borderRadius: BorderRadius.circular(8),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: AppTheme.slate600),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: context.textTheme.bodyBase.copyWith(
-                  color: AppTheme.slate800,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: AppTheme.slate500,
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-
-  // Mobile Profile Links Section
+  // Profile Links Section
   Widget _buildProfileLinksSection(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
       color: Colors.white,

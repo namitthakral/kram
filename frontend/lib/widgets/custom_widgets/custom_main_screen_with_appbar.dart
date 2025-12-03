@@ -240,13 +240,14 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
     super.key,
     this.appBarConfig = const AppBarConfig(),
     this.bottomWidget,
+    this.floatingActionButtonWidget,
     this.bottomWidgetPadding = const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 32.0),
   });
 
   final Widget child;
   final String title;
   final AppBarConfig appBarConfig;
-  final Widget? bottomWidget;
+  final Widget? bottomWidget, floatingActionButtonWidget;
   final EdgeInsetsGeometry bottomWidgetPadding;
 
   @override
@@ -268,13 +269,15 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
               ? null
               : Padding(padding: bottomWidgetPadding, child: bottomWidget),
       body: _buildResponsiveBody(context, padding),
+      floatingActionButton: floatingActionButtonWidget,
     );
   }
 
   Widget _buildResponsiveBody(BuildContext context, EdgeInsets padding) {
     // For desktop/large screens, center content with max width
     if (context.isDesktop) {
-      return Center(
+      return Align(
+        alignment: Alignment.topCenter,
         child: Container(
           constraints: BoxConstraints(maxWidth: context.maxContentWidth),
           padding: padding,

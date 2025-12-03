@@ -23,8 +23,8 @@ class Examination {
 
   factory Examination.fromJson(Map<String, dynamic> json) => Examination(
     id: json['id'] as int,
-    courseId: json['courseId'] as int,
-    courseName: json['course']?['courseName'] ?? json['courseName'] ?? '',
+    courseId: json['subjectId'] as int,
+    courseName: json['subject']?['subjectName'] ?? json['courseName'] ?? '',
     semesterId: json['semesterId'] as int,
     semesterName: json['semester']?['semesterName'] ?? json['semesterName'],
     examName: json['examName'] as String,

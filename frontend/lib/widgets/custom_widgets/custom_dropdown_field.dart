@@ -77,6 +77,7 @@ class DropDownFormField<T> extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         DropdownButtonFormField<T>(
+          key: ValueKey<T?>(value),
           initialValue: value,
           isExpanded: true,
           decoration: InputDecoration(

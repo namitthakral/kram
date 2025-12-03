@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
-import '../../utils/custom_colors.dart';
+import '../../utils/app_bar_config_helper.dart';
 import '../../utils/extensions.dart';
+import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_tab_bar.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
 import 'tabs/academic_info_tab.dart';
@@ -45,11 +46,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     final selectedTab = tabs[_selectedTabIndex].value;
 
     return Scaffold(
-      backgroundColor: CustomAppColors.backgroundColor,
-      body: ResponsiveLayout(
-        mobile: _buildMobileLayout(tabs, selectedTab),
-        tablet: _buildDesktopLayout(tabs, selectedTab),
-        desktop: _buildDesktopLayout(tabs, selectedTab),
+      body: CustomMainScreenWithAppbar(
+        title: 'Account Settings',
+        appBarConfig: AppBarConfigHelper.getConfigForUser(
+          user,
+          onNotificationIconPressed: () {},
+          isProfileScreen: true,
+        ),
+        child: ResponsiveLayout(
+          mobile: _buildMobileLayout(tabs, selectedTab),
+          tablet: _buildDesktopLayout(tabs, selectedTab),
+          desktop: _buildDesktopLayout(tabs, selectedTab),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
-import '../../utils/custom_colors.dart';
-import '../../utils/extensions.dart';
+import '../../utils/app_bar_config_helper.dart';
+import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
 import 'tabs/academic_info_tab.dart';
@@ -37,33 +37,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final tabNames = tabs.map((t) => t.label).toList();
 
     return Scaffold(
-      backgroundColor: CustomAppColors.backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: CustomAppColors.slate800),
-          onPressed: () => Navigator.of(context).pop(),
+      body: CustomMainScreenWithAppbar(
+        title: 'Edit Profile',
+        appBarConfig: AppBarConfigHelper.getConfigForUser(
+          user,
+          onNotificationIconPressed: () {},
+          isProfileScreen: true,
         ),
-        title: Text(
-          'Edit Profile',
-          style: context.textTheme.h3.copyWith(
-            fontWeight: FontWeight.bold,
-            color: CustomAppColors.slate800,
-          ),
+        child: ResponsiveLayout(
+          mobile: _buildMobileLayout(tabs, tabNames),
+          tablet: _buildDesktopLayout(tabs, tabNames),
+          desktop: _buildDesktopLayout(tabs, tabNames),
         ),
-      ),
-      body: ResponsiveLayout(
-        mobile: _buildMobileLayout(tabs, tabNames),
-        tablet: _buildDesktopLayout(tabs, tabNames),
-        desktop: _buildDesktopLayout(tabs, tabNames),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // TODO: Implement save changes
         },
         icon: const Icon(Icons.save_outlined),
-        label: const Text('Save Changes1'),
+        label: const Text('Save Changes'),
         backgroundColor: AppTheme.blue500,
         foregroundColor: Colors.white,
         elevation: 4,

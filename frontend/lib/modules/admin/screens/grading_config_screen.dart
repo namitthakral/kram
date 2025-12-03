@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../utils/custom_snackbar.dart';
+import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/responsive_layout.dart';
 import '../providers/grading_config_provider.dart';
 
@@ -1173,87 +1175,28 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     if (!mounted) return;
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 12),
-              Text('Configuration saved successfully!'),
-            ],
-          ),
-          backgroundColor: AppTheme.success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(16),
-        ),
+      showCustomSnackbar(
+        message: 'Configuration saved successfully!',
+        type: SnackbarType.success,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(child: Text('Failed to save: ${provider.error}')),
-            ],
-          ),
-          backgroundColor: AppTheme.danger,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(16),
-        ),
+      showCustomSnackbar(
+        message: 'Failed to save: ${provider.error}',
+        type: SnackbarType.warning,
       );
     }
   }
 
   Future<void> _showResetConfirmation(int institutionId) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await CustomDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.danger.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.restart_alt, color: AppTheme.danger),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Reset to Defaults?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: const Text(
-          'This will restore the standard grading formula. All custom settings will be lost. This action cannot be undone.',
-          style: TextStyle(color: AppTheme.slate600),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: AppTheme.slate500),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.danger,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+      title: 'Reset to Defaults?',
+      message: 'This will restore the standard grading formula. All custom settings will be lost. This action cannot be undone.',
+      confirmText: 'Reset',
+      cancelText: 'Cancel',
+      confirmColor: AppTheme.danger,
+      icon: Icons.restart_alt,
+      iconColor: AppTheme.danger,
     );
 
     if (confirmed == true && mounted) {
@@ -1263,36 +1206,14 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
-                Text('Configuration reset to defaults!'),
-              ],
-            ),
-            backgroundColor: AppTheme.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ),
+        showCustomSnackbar(
+          message: 'Configuration reset to defaults!',
+          type: SnackbarType.success,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text('Failed to reset: ${provider.error}')),
-              ],
-            ),
-            backgroundColor: AppTheme.danger,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            margin: const EdgeInsets.all(16),
-          ),
+        showCustomSnackbar(
+          message: 'Failed to reset: ${provider.error}',
+          type: SnackbarType.warning,
         );
       }
     }

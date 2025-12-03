@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../provider/login_signup/login_provider.dart';
 import '../../provider/profile/change_password_provider.dart';
+import '../../utils/app_bar_config_helper.dart';
 import '../../utils/custom_images.dart';
 import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
+import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_text_field.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
@@ -103,28 +106,26 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ChangePasswordProvider>();
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('User not found')));
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppTheme.slate800),
-          onPressed: () => Navigator.of(context).pop(),
+      body: CustomMainScreenWithAppbar(
+        title: context.translate('Change Password'),
+        appBarConfig: AppBarConfigHelper.getConfigForUser(
+          user,
+          onNotificationIconPressed: () {},
+          isProfileScreen: true,
         ),
-        title: Text(
-          context.translate('Change Password'),
-          style: context.textTheme.h3.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.slate800,
-          ),
-        ),
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               CustomTextField(
@@ -186,6 +187,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ],
           ),
         ),
+      ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: provider.isLoading ? null : _handleChangePassword,

@@ -458,6 +458,7 @@ class TeacherService {
         );
       }
     } catch (e) {
+      await Future.error(e);
       throw Exception('Failed to load assignments: $e');
     }
   }
@@ -638,6 +639,7 @@ class TeacherService {
         );
       }
     } catch (e) {
+      await Future.error(e);
       throw Exception('Failed to load examinations: $e');
     }
   }

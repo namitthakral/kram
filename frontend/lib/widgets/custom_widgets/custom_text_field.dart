@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/theme/app_theme.dart';
 import '../../provider/theme_provider.dart';
+import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
 import '../../utils/images/base_image.dart';
 import '../../utils/images/image_asset.dart';
@@ -56,8 +58,8 @@ class CustomTextField extends StatelessWidget {
           Text(
             label ?? '',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontWeight: AppTheme.fontWeightBold,
+              fontSize: AppTheme.fontSizeSm,
               color: textColor,
             ),
           ),
@@ -76,7 +78,7 @@ class CustomTextField extends StatelessWidget {
           maxLines: maxLines,
           decoration: InputDecoration(
             filled: filled,
-            fillColor: filled ? const Color(0xFFFBFBFD) : null,
+            fillColor: filled ? CustomAppColors.slate50 : null,
             prefixIcon:
                 prefixIcon ??
                 (prefixButtonIcon?.icon != null
@@ -111,18 +113,18 @@ class CustomTextField extends StatelessWidget {
                     )
                     : null,
             hintText: hintText,
-            hintStyle: const TextStyle(color: Color(0xFFA7AEC1)),
+            hintStyle: const TextStyle(color: CustomAppColors.grey01),
             border:
                 border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Color(0xFFF3F3F3)),
+                  borderSide: const BorderSide(color: CustomAppColors.lightGrey01),
                 ),
             enabledBorder:
                 border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: Color(0xFFF3F3F3)),
+                  borderSide: const BorderSide(color: CustomAppColors.lightGrey01),
                 ),
             focusedBorder:
                 border ??
@@ -132,7 +134,7 @@ class CustomTextField extends StatelessWidget {
                 ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: const BorderSide(color: Color(0xFFF3F3F3), width: 2),
+              borderSide: const BorderSide(color: CustomAppColors.lightGrey01, width: 2),
             ),
           ),
         ),

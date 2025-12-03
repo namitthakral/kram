@@ -19,8 +19,8 @@ class Assignment {
 
   factory Assignment.fromJson(Map<String, dynamic> json) => Assignment(
     id: json['id'] as int,
-    courseId: json['courseId'] as int,
-    courseName: json['course']?['courseName'] ?? json['courseName'] ?? '',
+    courseId: json['subjectId'] as int,
+    courseName: json['subject']?['subjectName'] ?? json['courseName'] ?? '',
     sectionId: json['sectionId'] as int?,
     sectionName: json['section']?['sectionName'] ?? json['sectionName'],
     title: json['title'] as String,

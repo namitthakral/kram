@@ -17,6 +17,7 @@ import '../widgets/stat_card.dart';
 import '../widgets/student_activity_card.dart';
 import 'assignments_list_screen.dart';
 import 'examinations_list_screen.dart';
+import 'mark_attendance_screen.dart';
 
 enum PerformanceTab { attendance, subject, grade }
 
@@ -335,7 +336,14 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           title: context.translate('mark_attendance'),
           icon: Icons.calendar_today,
           backgroundColor: const Color(0xFF10b981),
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MarkAttendanceScreen(),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 12),
         QuickActionButton(

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
+import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_date_picker_field.dart';
 import '../../../widgets/custom_widgets/custom_dropdown_field.dart';
 import '../../../widgets/custom_widgets/custom_form_section.dart';
@@ -84,19 +86,63 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+    final teacher = user?.teacher;
+
+    // Use real user data
+    final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
+    final userName = user?.name ?? 'Teacher';
+    final designation = teacher?.designation ?? 'Teacher';
+    final employeeId = teacher?.employeeId ?? 'N/A';
 
     return CustomMainScreenWithAppbar(
       title:
           widget.examinationId == null
               ? context.translate('create_examination')
               : context.translate('edit_examination'),
-      appBarConfig: const AppBarConfig.standard(),
+      appBarConfig: AppBarConfig.teacher(
+        userInitials: userInitials,
+        userName: userName,
+        designation: designation,
+        employeeId: employeeId,
+        onNotificationIconPressed: () {
+          // Notification handler to be implemented
+        },
+      ),
       bottomWidget: _buildSubmitButton(),
       child: Form(
         key: _formKey,
         child: ListView(
           padding: EdgeInsets.only(bottom: isMobile ? 16 : 24),
           children: [
+            // Back Navigation Link
+            InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.arrow_back,
+                      size: 18,
+                      color: Color(0xFF155dfc),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      context.translate('back_to_examinations'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF155dfc),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             // Basic Information Section
             CustomFormSection(
               title: context.translate('basic_information'),
@@ -470,8 +516,9 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     }
 
     if (_examDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.translate('please_select_exam_date'))),
+      showCustomSnackbar(
+        message: context.translate('please_select_exam_date'),
+        type: SnackbarType.warning,
       );
       return;
     }
@@ -571,25 +618,17 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.examinationId == null
-                  ? context.translate('examination_created_success')
-                  : context.translate('examination_updated_success'),
-            ),
-            backgroundColor: Colors.green,
-          ),
+        showCustomSnackbar(
+          message: widget.examinationId == null
+              ? context.translate('examination_created_success')
+              : context.translate('examination_updated_success'),
+          type: SnackbarType.success,
         );
         Navigator.pop(context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              provider.error ?? context.translate('error_occurred'),
-            ),
-            backgroundColor: Colors.red,
-          ),
+        showCustomSnackbar(
+          message: provider.error ?? context.translate('error_occurred'),
+          type: SnackbarType.warning,
         );
       }
     }

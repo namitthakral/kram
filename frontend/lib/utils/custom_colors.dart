@@ -3,6 +3,7 @@ import 'dart:ui';
 class CustomAppColors {
   // Primary Colors
   static const Color primary = Color(0xFF3b82f6);
+  static const Color primaryBlue = Color(0xFF155dfc); // Primary interactive elements
   static const Color blue500 = Color(
     0xFF3b82f6,
   ); // Primary buttons, active states
@@ -12,9 +13,14 @@ class CustomAppColors {
   // Secondary Colors
   static const Color secondary = Color(0xFF1e293b);
   static const Color slate800 = Color(0xFF1e293b); // Headings
+  static const Color slate700 = Color(0xFF334155); // Subheadings
   static const Color slate600 = Color(0xFF475569); // Body text
   static const Color slate500 = Color(0xFF64748b); // Muted text
+  static const Color slate400 = Color(0xFF94a3b8); // Lighter muted text
+  static const Color slate300 = Color(0xFFcbd5e1); // Borders
+  static const Color slate200 = Color(0xFFe2e8f0); // Light borders
   static const Color slate100 = Color(0xFFf1f5f9); // Subtle backgrounds
+  static const Color slate50 = Color(0xFFf8fafc); // Very light backgrounds
 
   // Status Colors
   static const Color success = Color(0xFF10b981); // Green
@@ -22,6 +28,10 @@ class CustomAppColors {
   static const Color danger = Color(0xFFef4444); // Red
   static const Color error = Color(0xFFef4444); // Red (alias for danger)
   static const Color info = Color(0xFF06b6d4); // Cyan
+
+  // Accent Colors
+  static const Color purple = Color(0xFF8b5cf6); // Purple accent
+  static const Color pink = Color(0xFFec4899); // Pink accent
 
   // Red color variants
   static const Color red50 = Color(0xFFfef2f2);

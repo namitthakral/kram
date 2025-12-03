@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../provider/profile/security/security_provider.dart';
+import '../../../utils/app_bar_config_helper.dart';
 import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
@@ -14,9 +16,22 @@ class SecurityScreen extends StatefulWidget {
 
 class _SecurityScreenState extends State<SecurityScreen> {
   @override
-  Widget build(BuildContext context) => CustomMainScreenWithAppbar(
-    title: context.translate('security'),
-    child: Consumer<ProfileSecurityProvider>(
+  Widget build(BuildContext context) {
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+
+    if (user == null) {
+      return const Scaffold(body: Center(child: Text('User not found')));
+    }
+
+    return CustomMainScreenWithAppbar(
+      title: context.translate('security'),
+      appBarConfig: AppBarConfigHelper.getConfigForUser(
+        user,
+        onNotificationIconPressed: () {},
+        isProfileScreen: true,
+      ),
+      child: Consumer<ProfileSecurityProvider>(
       builder:
           (context, profileSecurityProvider, child) => Card(
             elevation: 0,
@@ -52,6 +67,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
               ],
             ),
           ),
-    ),
-  );
+      ),
+    );
+  }
 }

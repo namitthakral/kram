@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
@@ -387,15 +388,11 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
       final success = await provider.deleteAssignment(uuid, assignmentId);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Assignment deleted successfully'
-                  : 'Failed to delete assignment',
-            ),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
+        showCustomSnackbar(
+          message: success
+              ? 'Assignment deleted successfully'
+              : 'Failed to delete assignment',
+          type: success ? SnackbarType.success : SnackbarType.warning,
         );
       }
     }

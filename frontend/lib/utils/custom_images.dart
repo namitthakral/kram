@@ -64,4 +64,8 @@ class CustomImages {
   static const iconShoppingCart = '$_navbarIcon/ic_shopping_cart.svg';
   static const iconShoppingCartFilled =
       '$_navbarIcon/ic_shopping_cart_filled.svg';
+  static const iconAcademic = '$_navbarIcon/ic_academic.svg';
+  static const iconAcademicFilled = '$_navbarIcon/ic_academic_filled.svg';
+  static const iconReport = '$_navbarIcon/ic_report.svg';
+  static const iconReportFilled = '$_navbarIcon/ic_report_filled.svg';
 }
