@@ -18,9 +18,9 @@ class EnterMarksScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => MarksProvider(),
-        child: const _EnterMarksContent(),
-      );
+    create: (_) => MarksProvider(),
+    child: const _EnterMarksContent(),
+  );
 }
 
 class _EnterMarksContent extends StatelessWidget {
@@ -97,9 +97,9 @@ class _EnterMarksContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
+              const Text(
                 'Quick marks entry for recent assessment',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: AppTheme.fontSizeSm,
                   color: CustomAppColors.slate600,
                 ),
@@ -175,8 +175,9 @@ class _EnterMarksContent extends StatelessWidget {
                     (student) => _StudentMarksCard(
                       student: student,
                       totalMarks: provider.totalMarks ?? 100,
-                      onMarksChanged: (marks) =>
-                          provider.updateStudentMarks(student.id, marks),
+                      onMarksChanged:
+                          (marks) =>
+                              provider.updateStudentMarks(student.id, marks),
                     ),
                   ),
 
@@ -187,9 +188,7 @@ class _EnterMarksContent extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: CustomAppColors.slate50,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: CustomAppColors.slate200,
-                        ),
+                        border: Border.all(color: CustomAppColors.slate200),
                       ),
                       child: Row(
                         children: [
@@ -225,9 +224,9 @@ class _EnterMarksContent extends StatelessWidget {
                           color: Colors.grey[300],
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'Select class, subject, and exam type to begin',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: AppTheme.fontSizeBase,
                             color: CustomAppColors.slate600,
                           ),
@@ -270,36 +269,38 @@ class _EnterMarksContent extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton.icon(
-                      onPressed: provider.canSave
-                          ? () async {
-                              final success = await provider.saveMarks();
-                              if (context.mounted) {
-                                if (success) {
-                                  showCustomSnackbar(
-                                    message: 'Marks saved successfully',
-                                    type: SnackbarType.success,
-                                  );
-                                  Navigator.pop(context);
-                                } else {
-                                  showCustomSnackbar(
-                                    message:
-                                        provider.error ?? 'Failed to save',
-                                    type: SnackbarType.warning,
-                                  );
+                      onPressed:
+                          provider.canSave
+                              ? () async {
+                                final success = await provider.saveMarks();
+                                if (context.mounted) {
+                                  if (success) {
+                                    showCustomSnackbar(
+                                      message: 'Marks saved successfully',
+                                      type: SnackbarType.success,
+                                    );
+                                    Navigator.pop(context);
+                                  } else {
+                                    showCustomSnackbar(
+                                      message:
+                                          provider.error ?? 'Failed to save',
+                                      type: SnackbarType.warning,
+                                    );
+                                  }
                                 }
                               }
-                            }
-                          : null,
-                      icon: provider.isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.save_rounded, size: 20),
+                              : null,
+                      icon:
+                          provider.isLoading
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Icon(Icons.save_rounded, size: 20),
                       label: Text(
                         provider.isLoading ? 'Saving...' : 'Save Marks',
                         style: const TextStyle(
@@ -331,23 +332,27 @@ class _EnterMarksContent extends StatelessWidget {
   }
 
   // Show Class Picker
-  Future<void> _showClassPicker(BuildContext context, MarksProvider provider) async {
+  Future<void> _showClassPicker(
+    BuildContext context,
+    MarksProvider provider,
+  ) async {
     final selectedClass = await CustomDialog.showSelection<ClassInfo>(
       context: context,
       title: 'Select Class',
       subtitle: 'Choose the class to enter marks',
       headerIcon: Icons.class_,
       selectedValue: provider.selectedClass,
-      items: provider.availableClasses
-          .map(
-            (classInfo) => SelectionItem<ClassInfo>(
-              value: classInfo,
-              label: classInfo.name,
-              subtitle: '${classInfo.totalStudents} students enrolled',
-              icon: Icons.school,
-            ),
-          )
-          .toList(),
+      items:
+          provider.availableClasses
+              .map(
+                (classInfo) => SelectionItem<ClassInfo>(
+                  value: classInfo,
+                  label: classInfo.name,
+                  subtitle: '${classInfo.totalStudents} students enrolled',
+                  icon: Icons.school,
+                ),
+              )
+              .toList(),
     );
 
     if (selectedClass != null) {
@@ -356,22 +361,26 @@ class _EnterMarksContent extends StatelessWidget {
   }
 
   // Show Subject Picker
-  Future<void> _showSubjectPicker(BuildContext context, MarksProvider provider) async {
+  Future<void> _showSubjectPicker(
+    BuildContext context,
+    MarksProvider provider,
+  ) async {
     final selectedSubject = await CustomDialog.showSelection<SubjectInfo>(
       context: context,
       title: 'Select Subject',
       subtitle: 'Choose the subject for marks entry',
       headerIcon: Icons.book,
       selectedValue: provider.selectedSubject,
-      items: provider.availableSubjects
-          .map(
-            (subject) => SelectionItem<SubjectInfo>(
-              value: subject,
-              label: subject.name,
-              icon: Icons.menu_book,
-            ),
-          )
-          .toList(),
+      items:
+          provider.availableSubjects
+              .map(
+                (subject) => SelectionItem<SubjectInfo>(
+                  value: subject,
+                  label: subject.name,
+                  icon: Icons.menu_book,
+                ),
+              )
+              .toList(),
     );
 
     if (selectedSubject != null) {
@@ -380,22 +389,26 @@ class _EnterMarksContent extends StatelessWidget {
   }
 
   // Show Exam Type Picker
-  Future<void> _showExamTypePicker(BuildContext context, MarksProvider provider) async {
+  Future<void> _showExamTypePicker(
+    BuildContext context,
+    MarksProvider provider,
+  ) async {
     final selectedExamType = await CustomDialog.showSelection<ExamType>(
       context: context,
       title: 'Select Exam Type',
       subtitle: 'Choose the type of examination',
       headerIcon: Icons.assignment,
       selectedValue: provider.selectedExamType,
-      items: provider.availableExamTypes
-          .map(
-            (examType) => SelectionItem<ExamType>(
-              value: examType,
-              label: examType.name,
-              icon: Icons.assignment_turned_in,
-            ),
-          )
-          .toList(),
+      items:
+          provider.availableExamTypes
+              .map(
+                (examType) => SelectionItem<ExamType>(
+                  value: examType,
+                  label: examType.name,
+                  icon: Icons.assignment_turned_in,
+                ),
+              )
+              .toList(),
     );
 
     if (selectedExamType != null) {
@@ -420,228 +433,230 @@ class _CompactDropdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: CustomAppColors.white,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: CustomAppColors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color:
-                  value != null ? CustomAppColors.primaryBlue : CustomAppColors.slate200,
-              width: value != null ? 1.5 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: CustomAppColors.black01.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, size: 14, color: CustomAppColors.slate600),
-                  const SizedBox(width: 4),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: CustomAppColors.slate600,
-                      fontWeight: AppTheme.fontWeightMedium,
-                    ),
-                  ),
-                  const Spacer(),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 18,
-                    color: CustomAppColors.slate400,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value ?? 'Select',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: AppTheme.fontWeightBold,
-                  color:
-                      value != null ? CustomAppColors.slate800 : CustomAppColors.slate400,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+        border: Border.all(
+          color:
+              value != null
+                  ? CustomAppColors.primaryBlue
+                  : CustomAppColors.slate200,
+          width: value != null ? 1.5 : 1,
         ),
-      );
+        boxShadow: [
+          BoxShadow(
+            color: CustomAppColors.black01.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: CustomAppColors.slate600),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: CustomAppColors.slate600,
+                  fontWeight: AppTheme.fontWeightMedium,
+                ),
+              ),
+              const Spacer(),
+              const Icon(
+                Icons.keyboard_arrow_down,
+                size: 18,
+                color: CustomAppColors.slate400,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value ?? 'Select',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: AppTheme.fontWeightBold,
+              color:
+                  value != null
+                      ? CustomAppColors.slate800
+                      : CustomAppColors.slate400,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // Total Marks Card
 class _TotalMarksCard extends StatelessWidget {
-  const _TotalMarksCard({
-    required this.totalMarks,
-    required this.onChanged,
-  });
+  const _TotalMarksCard({required this.totalMarks, required this.onChanged});
 
   final double? totalMarks;
   final ValueChanged<double?> onChanged;
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: CustomAppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: CustomAppColors.black01.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 1),
-            ),
-          ],
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      color: CustomAppColors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: CustomAppColors.black01.withValues(alpha: 0.04),
+          blurRadius: 8,
+          offset: const Offset(0, 1),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
           children: [
-            Row(
-              children: [
-                const Icon(Icons.grading, size: 14, color: CustomAppColors.slate600),
-                const SizedBox(width: 4),
-                Text(
-                  'Total Marks',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: CustomAppColors.slate600,
-                    fontWeight: AppTheme.fontWeightMedium,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            TextField(
-              key: const ValueKey('total_marks_input'),
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(3),
-              ],
-              onChanged: (value) {
-                final marks = double.tryParse(value);
-                onChanged(marks);
-              },
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeLg,
-                fontWeight: AppTheme.fontWeightBold,
-                color: CustomAppColors.slate800,
-              ),
-              decoration: const InputDecoration(
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-                border: InputBorder.none,
-                hintText: '100',
-                hintStyle: TextStyle(
-                  fontSize: AppTheme.fontSizeLg,
-                  fontWeight: AppTheme.fontWeightBold,
-                  color: CustomAppColors.slate400,
-                ),
-              ),
-              controller: TextEditingController.fromValue(
-                TextEditingValue(
-                  text: totalMarks?.toStringAsFixed(0) ?? '',
-                  selection: TextSelection.collapsed(
-                    offset: totalMarks?.toStringAsFixed(0).length ?? 0,
-                  ),
-                ),
+            Icon(Icons.grading, size: 14, color: CustomAppColors.slate600),
+            SizedBox(width: 4),
+            Text(
+              'Total Marks',
+              style: TextStyle(
+                fontSize: 11,
+                color: CustomAppColors.slate600,
+                fontWeight: AppTheme.fontWeightMedium,
               ),
             ),
           ],
         ),
-      );
+        const SizedBox(height: 4),
+        TextField(
+          key: const ValueKey('total_marks_input'),
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(3),
+          ],
+          onChanged: (value) {
+            final marks = double.tryParse(value);
+            onChanged(marks);
+          },
+          style: const TextStyle(
+            fontSize: AppTheme.fontSizeLg,
+            fontWeight: AppTheme.fontWeightBold,
+            color: CustomAppColors.slate800,
+          ),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+            border: InputBorder.none,
+            hintText: '100',
+            hintStyle: TextStyle(
+              fontSize: AppTheme.fontSizeLg,
+              fontWeight: AppTheme.fontWeightBold,
+              color: CustomAppColors.slate400,
+            ),
+          ),
+          controller: TextEditingController.fromValue(
+            TextEditingValue(
+              text: totalMarks?.toStringAsFixed(0) ?? '',
+              selection: TextSelection.collapsed(
+                offset: totalMarks?.toStringAsFixed(0).length ?? 0,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 // Exam Date Card
 class _ExamDateCard extends StatelessWidget {
-  const _ExamDateCard({
-    required this.examDate,
-    required this.onDateSelected,
-  });
+  const _ExamDateCard({required this.examDate, required this.onDateSelected});
 
   final DateTime? examDate;
   final ValueChanged<DateTime?> onDateSelected;
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () async {
-          final date = await showDatePicker(
-            context: context,
-            initialDate: examDate ?? DateTime.now(),
-            firstDate: DateTime(2020),
-            lastDate: DateTime(2030),
-          );
-          if (date != null) {
-            onDateSelected(date);
-          }
-        },
+    onTap: () async {
+      final date = await showDatePicker(
+        context: context,
+        initialDate: examDate ?? DateTime.now(),
+        firstDate: DateTime(2020),
+        lastDate: DateTime(2030),
+      );
+      if (date != null) {
+        onDateSelected(date);
+      }
+    },
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: CustomAppColors.white,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: CustomAppColors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color:
-                  examDate != null
-                      ? CustomAppColors.primaryBlue
-                      : CustomAppColors.slate200,
-              width: examDate != null ? 1.5 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: CustomAppColors.black01.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 1),
-              ),
-            ],
+        border: Border.all(
+          color:
+              examDate != null
+                  ? CustomAppColors.primaryBlue
+                  : CustomAppColors.slate200,
+          width: examDate != null ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: CustomAppColors.black01.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 1),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 14, color: CustomAppColors.slate600),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Exam Date',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: CustomAppColors.slate600,
-                      fontWeight: AppTheme.fontWeightMedium,
-                    ),
-                  ),
-                ],
+              Icon(
+                Icons.calendar_today,
+                size: 14,
+                color: CustomAppColors.slate600,
               ),
-              const SizedBox(height: 4),
+              SizedBox(width: 4),
               Text(
-                examDate != null
-                    ? DateFormat('dd/MM/yyyy').format(examDate!)
-                    : 'dd/mm/yyyy',
+                'Exam Date',
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: AppTheme.fontWeightBold,
-                  color:
-                      examDate != null
-                          ? CustomAppColors.slate800
-                          : CustomAppColors.slate400,
+                  fontSize: 11,
+                  color: CustomAppColors.slate600,
+                  fontWeight: AppTheme.fontWeightMedium,
                 ),
               ),
             ],
           ),
-        ),
-      );
+          const SizedBox(height: 4),
+          Text(
+            examDate != null
+                ? DateFormat('dd/MM/yyyy').format(examDate!)
+                : 'dd/mm/yyyy',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: AppTheme.fontWeightBold,
+              color:
+                  examDate != null
+                      ? CustomAppColors.slate800
+                      : CustomAppColors.slate400,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // Student Marks Card
@@ -658,137 +673,131 @@ class _StudentMarksCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: CustomAppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: CustomAppColors.slate200,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: CustomAppColors.black01.withValues(alpha: 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 1),
-            ),
-          ],
+    margin: const EdgeInsets.only(bottom: 8),
+    decoration: BoxDecoration(
+      color: CustomAppColors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: CustomAppColors.slate200),
+      boxShadow: [
+        BoxShadow(
+          color: CustomAppColors.black01.withValues(alpha: 0.03),
+          blurRadius: 6,
+          offset: const Offset(0, 1),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Row(
+      ],
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [CustomAppColors.primaryBlue, Color(0xFF0c47d1)],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                student.initials,
+                style: const TextStyle(
+                  color: CustomAppColors.white,
+                  fontSize: AppTheme.fontSizeBase,
+                  fontWeight: AppTheme.fontWeightBold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Name
+          Expanded(
+            child: Text(
+              student.name,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: AppTheme.fontWeightSemibold,
+                color: CustomAppColors.slate800,
+              ),
+            ),
+          ),
+
+          // Marks Input
+          Row(
             children: [
-              // Avatar
+              const Text(
+                'Marks',
+                style: TextStyle(
+                  fontSize: AppTheme.fontSizeXs,
+                  color: CustomAppColors.slate600,
+                ),
+              ),
+              const SizedBox(width: 8),
               Container(
-                width: 42,
-                height: 42,
+                width: 80,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      CustomAppColors.primaryBlue,
-                      Color(0xFF0c47d1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
+                  color: CustomAppColors.slate50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: CustomAppColors.slate300),
                 ),
-                child: Center(
-                  child: Text(
-                    student.initials,
-                    style: const TextStyle(
-                      color: CustomAppColors.white,
-                      fontSize: AppTheme.fontSizeBase,
-                      fontWeight: AppTheme.fontWeightBold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Name
-              Expanded(
-                child: Text(
-                  student.name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: AppTheme.fontWeightSemibold,
-                    color: CustomAppColors.slate800,
-                  ),
-                ),
-              ),
-
-              // Marks Input
-              Row(
-                children: [
-                  Text(
-                    'Marks',
-                    style: const TextStyle(
-                      fontSize: AppTheme.fontSizeXs,
-                      color: CustomAppColors.slate600,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 80,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: CustomAppColors.slate50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: CustomAppColors.slate300,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: ValueKey('student_marks_${student.id}'),
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.right,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(3),
+                        ],
+                        style: const TextStyle(
+                          fontSize: AppTheme.fontSizeSm,
+                          fontWeight: AppTheme.fontWeightSemibold,
+                          color: CustomAppColors.slate800,
+                        ),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                          hintText: '-',
+                        ),
+                        controller: TextEditingController.fromValue(
+                          TextEditingValue(
+                            text: student.marks?.toStringAsFixed(0) ?? '',
+                            selection: TextSelection.collapsed(
+                              offset:
+                                  student.marks?.toStringAsFixed(0).length ?? 0,
+                            ),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          final marks = double.tryParse(value);
+                          onMarksChanged(marks);
+                        },
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            key: ValueKey('student_marks_${student.id}'),
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.right,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(3),
-                            ],
-                            style: const TextStyle(
-                              fontSize: AppTheme.fontSizeSm,
-                              fontWeight: AppTheme.fontWeightSemibold,
-                              color: CustomAppColors.slate800,
-                            ),
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                              border: InputBorder.none,
-                              hintText: '-',
-                            ),
-                            controller: TextEditingController.fromValue(
-                              TextEditingValue(
-                                text: student.marks?.toStringAsFixed(0) ?? '',
-                                selection: TextSelection.collapsed(
-                                  offset: student.marks?.toStringAsFixed(0).length ?? 0,
-                                ),
-                              ),
-                            ),
-                            onChanged: (value) {
-                              final marks = double.tryParse(value);
-                              onMarksChanged(marks);
-                            },
-                          ),
-                        ),
-                        Text(
-                          ' / ${totalMarks.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: AppTheme.fontSizeXs,
-                            color: CustomAppColors.slate600,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      ' / ${totalMarks.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontSize: AppTheme.fontSizeXs,
+                        color: CustomAppColors.slate600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }

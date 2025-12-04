@@ -54,9 +54,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     final teacher = user?.teacher;
 
     if (user?.uuid == null) {
-      return const Scaffold(
-        body: Center(child: Text('User not found')),
-      );
+      return const Scaffold(body: Center(child: Text('User not found')));
     }
 
     // Get teacher info for app bar
@@ -100,7 +98,10 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                   icon: const Icon(Icons.filter_list, size: 20),
                   label: Text(context.translate('filter')),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -125,39 +126,44 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                 // Filter examinations based on search query
                 final filteredExaminations =
                     provider.examinations.where((examination) {
-                  if (_searchQuery.isEmpty) {
-                    return true;
-                  }
-                  final query = _searchQuery.toLowerCase();
-                  return examination.examName.toLowerCase().contains(query) ||
-                      (examination.courseName?.toLowerCase().contains(query) ??
-                          false);
-                }).toList();
+                      if (_searchQuery.isEmpty) {
+                        return true;
+                      }
+                      final query = _searchQuery.toLowerCase();
+                      return examination.examName.toLowerCase().contains(
+                            query,
+                          ) ||
+                          (examination.courseName.toLowerCase().contains(
+                                query,
+                              ) ??
+                              false);
+                    }).toList();
 
                 return RefreshIndicator(
                   onRefresh: _loadData,
-                  child: filteredExaminations.isEmpty
-                      ? Center(
-                          child: Text(
-                            context.translate('no_examinations_found'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: AppTheme.slate500,
+                  child:
+                      filteredExaminations.isEmpty
+                          ? Center(
+                            child: Text(
+                              context.translate('no_examinations_found'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: AppTheme.slate500,
+                              ),
                             ),
+                          )
+                          : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemCount: filteredExaminations.length,
+                            itemBuilder: (context, index) {
+                              final examination = filteredExaminations[index];
+                              return _ExaminationCard(
+                                examination: examination,
+                                onTap: () => _navigateToEdit(examination.id),
+                                onDelete: () => _confirmDelete(examination.id),
+                              );
+                            },
                           ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: filteredExaminations.length,
-                          itemBuilder: (context, index) {
-                            final examination = filteredExaminations[index];
-                            return _ExaminationCard(
-                              examination: examination,
-                              onTap: () => _navigateToEdit(examination.id),
-                              onDelete: () => _confirmDelete(examination.id),
-                            );
-                          },
-                        ),
                 );
               },
             ),
@@ -173,11 +179,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Color(0xFFe7000b),
-          ),
+          const Icon(Icons.error_outline, size: 64, color: Color(0xFFe7000b)),
           const SizedBox(height: 16),
           Text(
             context.translate('error_loading_examinations'),
@@ -190,10 +192,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
           const SizedBox(height: 8),
           Text(
             error,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748b),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -213,11 +212,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.quiz_outlined,
-            size: 80,
-            color: Colors.grey[300],
-          ),
+          Icon(Icons.quiz_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 24),
           Text(
             context.translate('no_examinations_yet'),
@@ -230,10 +225,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
           const SizedBox(height: 8),
           Text(
             context.translate('create_first_examination'),
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF64748b),
-            ),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -290,9 +282,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
               prefixIcon: const Icon(Icons.info_outline),
             ),
             items: [
-              DropdownMenuItem(
-                child: Text(context.translate('all_statuses')),
-              ),
+              DropdownMenuItem(child: Text(context.translate('all_statuses'))),
               const DropdownMenuItem(
                 value: 'SCHEDULED',
                 child: Text('Scheduled'),
@@ -387,9 +377,10 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
 
       if (mounted) {
         showCustomSnackbar(
-          message: success
-              ? 'Examination deleted successfully'
-              : 'Failed to delete examination',
+          message:
+              success
+                  ? 'Examination deleted successfully'
+                  : 'Failed to delete examination',
           type: success ? SnackbarType.success : SnackbarType.warning,
         );
       }
@@ -569,32 +560,33 @@ class _ExaminationCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Divider(
-                    height: 1,
-                    color: Color(0xFFe2e8f0),
-                  ),
+                  const Divider(height: 1, color: Color(0xFFe2e8f0)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 16,
-                        color: isPast
-                            ? const Color(0xFF94a3b8)
-                            : const Color(0xFF64748b),
+                        color:
+                            isPast
+                                ? const Color(0xFF94a3b8)
+                                : const Color(0xFF64748b),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         DateFormat('MMM dd, yyyy').format(examDate),
                         style: TextStyle(
-                          color: isPast
-                              ? const Color(0xFF94a3b8)
-                              : const Color(0xFF475569),
+                          color:
+                              isPast
+                                  ? const Color(0xFF94a3b8)
+                                  : const Color(0xFF475569),
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      if (!isPast && daysUntilExam <= 7 && daysUntilExam >= 0) ...[
+                      if (!isPast &&
+                          daysUntilExam <= 7 &&
+                          daysUntilExam >= 0) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -602,7 +594,9 @@ class _ExaminationCard extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFfe9a00).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFFfe9a00,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(

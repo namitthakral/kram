@@ -118,28 +118,30 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
         if (teachersResponse['data'] != null) {
           final List<dynamic> teachers = teachersResponse['data'];
           setState(() {
-            teachersList = teachers.map((t) {
-              final teacher = t as Map<String, dynamic>;
-              return {
-                'uuid': teacher['uuid'] ?? '',
-                'name': teacher['name'] ?? 'Unknown Teacher',
-              };
-            }).toList();
+            teachersList =
+                teachers.map((t) {
+                  final teacher = t as Map<String, dynamic>;
+                  return {
+                    'uuid': teacher['uuid'] ?? '',
+                    'name': teacher['name'] ?? 'Unknown Teacher',
+                  };
+                }).toList();
           });
         }
 
         // Load classes
         final classes = await _teacherService.getTeacherClasses(userUuid);
         setState(() {
-          classesList = classes.map((c) {
-            final classData = c as Map<String, dynamic>;
-            return {
-              'id': classData['id'],
-              'name':
-                  '${classData['className'] ?? ''} ${classData['section'] ?? ''}'
-                      .trim(),
-            };
-          }).toList();
+          classesList =
+              classes.map((c) {
+                final classData = c as Map<String, dynamic>;
+                return {
+                  'id': classData['id'],
+                  'name':
+                      '${classData['className'] ?? ''} ${classData['section'] ?? ''}'
+                          .trim(),
+                };
+              }).toList();
         });
       }
     } on Exception catch (e) {
@@ -584,7 +586,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<String>(
-                          value: selectedSubject,
+                          initialValue: selectedSubject,
                           decoration: const InputDecoration(
                             labelText: 'Subject',
                             border: OutlineInputBorder(),
@@ -624,9 +626,10 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                         // Teacher Dropdown
                         DropdownButtonFormField<String>(
                           key: ValueKey('teacher_$selectedTeacher'),
-                          value:
-                              teachersList
-                                      .any((t) => t['name'] == selectedTeacher)
+                          initialValue:
+                              teachersList.any(
+                                    (t) => t['name'] == selectedTeacher,
+                                  )
                                   ? selectedTeacher
                                   : null,
                           decoration: const InputDecoration(
@@ -800,9 +803,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
               // Header
               Text(
                 'Create Timetable',
-                style: context.textTheme.h2.copyWith(
-                  color: AppTheme.slate800,
-                ),
+                style: context.textTheme.h2.copyWith(color: AppTheme.slate800),
               ),
               const SizedBox(height: 4),
               Text(
@@ -910,14 +911,14 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                           style: context.textTheme.bodySm,
                         ),
                         backgroundColor: AppTheme.blue50,
-                        deleteIcon: Icon(
+                        deleteIcon: const Icon(
                           Icons.close,
                           size: 18,
                           color: AppTheme.slate600,
                         ),
                         onDeleted: () => _removeTimeSlot(index),
                         avatar: IconButton(
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.edit,
                             size: 16,
                             color: AppTheme.blue500,
@@ -946,7 +947,10 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                     children: [
                       TextButton.icon(
                         onPressed: _previewTimetable,
-                        icon: Icon(Icons.visibility, color: AppTheme.blue500),
+                        icon: const Icon(
+                          Icons.visibility,
+                          color: AppTheme.blue500,
+                        ),
                         label: Text(
                           'Preview',
                           style: context.textTheme.labelSm.copyWith(
@@ -974,7 +978,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: AppTheme.slate500),
+                        side: const BorderSide(color: AppTheme.slate500),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -1115,9 +1119,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
     child: Center(
       child: Text(
         label, // Show text in all cells
-        style: context.textTheme.titleBase.copyWith(
-          color: AppTheme.warning,
-        ),
+        style: context.textTheme.titleBase.copyWith(color: AppTheme.warning),
       ),
     ),
   );
@@ -1127,9 +1129,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
     child: Text(
       text,
       textAlign: TextAlign.center,
-      style: context.textTheme.labelSm.copyWith(
-        color: Colors.white,
-      ),
+      style: context.textTheme.labelSm.copyWith(color: Colors.white),
     ),
   );
 
@@ -1139,9 +1139,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
     child: Text(
       time,
       textAlign: TextAlign.center,
-      style: context.textTheme.labelSm.copyWith(
-        color: AppTheme.slate800,
-      ),
+      style: context.textTheme.labelSm.copyWith(color: AppTheme.slate800),
     ),
   );
 
