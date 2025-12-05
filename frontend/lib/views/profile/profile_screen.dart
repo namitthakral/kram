@@ -9,6 +9,7 @@ import '../../utils/app_bar_config_helper.dart';
 import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
 import '../../utils/router_service.dart';
+import '../../widgets/custom_widgets/custom_dialog.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
 import 'account_settings_screen.dart';
@@ -311,99 +312,45 @@ class ProfileScreen extends StatelessWidget {
     ),
   );
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
+  void _showLogoutDialog(BuildContext context) async {
+    final result = await CustomDialog.showConfirmation(
       context: context,
-      builder:
-          (BuildContext dialogContext) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.danger.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.logout_rounded,
-                    color: AppTheme.danger,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  context.translate('logout_title'),
-                  style: context.textTheme.titleLg.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            content: Text(
-              context.translate('logout_message'),
-              style: context.textTheme.bodyBase,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(
-                  context.translate('cancel'),
-                  style: context.textTheme.labelBase.copyWith(
-                    color: AppTheme.slate500,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(dialogContext).pop();
-
-                  final loginProvider = context.read<LoginProvider>();
-
-                  unawaited(
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder:
-                          (BuildContext loadingContext) =>
-                              const Center(child: CircularProgressIndicator()),
-                    ),
-                  );
-
-                  await loginProvider.logout();
-
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
-                  }
-
-                  if (context.mounted) {
-                    context.router.goToLogin();
-
-                    showCustomSnackbar(
-                      message: context.translate('logout_success'),
-                      type: SnackbarType.success,
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  context.translate('logout'),
-                  style: context.textTheme.labelBase.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
+      title: context.translate('logout_title'),
+      message: context.translate('logout_message'),
+      confirmText: context.translate('logout'),
+      cancelText: context.translate('cancel'),
+      confirmColor: AppTheme.danger,
+      icon: Icons.logout_rounded,
+      iconColor: AppTheme.danger,
     );
+
+    if (result == true && context.mounted) {
+      final loginProvider = context.read<LoginProvider>();
+
+      unawaited(
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder:
+              (BuildContext loadingContext) =>
+                  const Center(child: CircularProgressIndicator()),
+        ),
+      );
+
+      await loginProvider.logout();
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (context.mounted) {
+        context.router.goToLogin();
+
+        showCustomSnackbar(
+          message: context.translate('logout_success'),
+          type: SnackbarType.success,
+        );
+      }
+    }
   }
 }

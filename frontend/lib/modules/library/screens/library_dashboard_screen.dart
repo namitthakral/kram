@@ -7,6 +7,7 @@ import '../../../utils/custom_colors.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
@@ -657,297 +658,188 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
   );
 
   void _showAddBookDialog(BuildContext context) {
+    var selectedCategory = 'Select category';
+
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              width: 600,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => CustomFormDialog(
+          title: 'Add New Book',
+          subtitle: 'Enter book details to add it to the library inventory',
+          headerIcon: Icons.menu_book,
+          confirmText: 'Add Book',
+          confirmColor: CustomAppColors.primary,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CustomTextField(
+                label: 'Book Title',
+                hintText: 'Enter book title',
+              ),
+              const SizedBox(height: 16),
+              const Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Add New Book',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Author',
+                      hintText: 'Author name',
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Enter book details to add it to the library inventory',
-                    style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-                  ),
-                  const SizedBox(height: 24),
-                  const CustomTextField(
-                    label: 'Book Title',
-                    hintText: 'Enter book title',
-                  ),
-                  const SizedBox(height: 16),
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Author',
-                          hintText: 'Author name',
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'ISBN',
-                          hintText: '978-0-123456-78-9',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildDialogDropdown(
-                          'Category',
-                          'Select category',
-                          const [
-                            'Select category',
-                            'Science',
-                            'Mathematics',
-                            'Literature',
-                            'History',
-                            'Arts',
-                            'Others',
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: CustomTextField(
-                          label: 'Publish Year',
-                          hintText: '2024',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Total Copies',
-                          hintText: 'Number of copies',
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Shelf Number',
-                          hintText: 'e.g., A-15',
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const CustomTextField(
-                    label: 'Description (Optional)',
-                    hintText: 'Brief description of the book',
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF64748B),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          // Handle add book
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.book, size: 18),
-                        label: const Text('Add Book'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: CustomAppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'ISBN',
+                      hintText: '978-0-123456-78-9',
+                    ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: FormDropdownField<String>(
+                      label: 'Category',
+                      hint: 'Select category',
+                      value: selectedCategory == 'Select category'
+                          ? null
+                          : selectedCategory,
+                      items: const [
+                        'Science',
+                        'Mathematics',
+                        'Literature',
+                        'History',
+                        'Arts',
+                        'Others',
+                      ]
+                          .map((cat) =>
+                              DropdownMenuItem(value: cat, child: Text(cat)))
+                          .toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedCategory = value ?? 'Select category';
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: CustomTextField(
+                      label: 'Publish Year',
+                      hintText: '2024',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Total Copies',
+                      hintText: 'Number of copies',
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Shelf Number',
+                      hintText: 'e.g., A-15',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const CustomTextField(
+                label: 'Description (Optional)',
+                hintText: 'Brief description of the book',
+                maxLines: 2,
+              ),
+            ],
           ),
+          onConfirm: () {
+            // Handle add book
+            Navigator.pop(context);
+          },
+        ),
+      ),
     );
   }
 
-  Widget _buildDialogDropdown(String label, String hint, List<String> items) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1E293B),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: hint,
-              underline: const SizedBox(),
-              hint: Text(hint),
-              icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-              items:
-                  items
-                      .map(
-                        (String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (String? newValue) {
-                // Handle change
-              },
-            ),
-          ),
-        ],
-      );
-
   void _showGenerateReportDialog(BuildContext context) {
+    var selectedReportType = 'Complete Inventory';
+
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              width: 500,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => CustomFormDialog(
+          title: 'Generate Library Report',
+          subtitle: 'Choose report type and format',
+          headerIcon: Icons.download_outlined,
+          showActions: false,
+          maxWidth: 500,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FormDropdownField<String>(
+                label: 'Report Type',
+                value: selectedReportType,
+                items: const [
+                  'Complete Inventory',
+                  'Issued Books',
+                  'Overdue Books',
+                  'Available Books',
+                  'Analytics Report',
+                ]
+                    .map((type) =>
+                        DropdownMenuItem(value: type, child: Text(type)))
+                    .toList(),
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedReportType = value ?? 'Complete Inventory';
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+              const FormFieldLabel(label: 'Export Format'),
+              const SizedBox(height: 8),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 2.5,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Generate Library Report',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                  _buildExportFormatButton(
+                    icon: Icons.picture_as_pdf,
+                    label: 'PDF Report',
+                    color: const Color(0xFFEF4444),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Choose report type and format',
-                    style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+                  _buildExportFormatButton(
+                    icon: Icons.table_chart,
+                    label: 'Excel Sheet',
+                    color: const Color(0xFF10B981),
                   ),
-                  const SizedBox(height: 24),
-                  _buildDialogDropdown(
-                    'Report Type',
-                    'Complete Inventory',
-                    const [
-                      'Complete Inventory',
-                      'Issued Books',
-                      'Overdue Books',
-                      'Available Books',
-                      'Analytics Report',
-                    ],
+                  _buildExportFormatButton(
+                    icon: Icons.insert_drive_file,
+                    label: 'CSV File',
+                    color: const Color(0xFF3B82F6),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Export Format',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 2.5,
-                    children: [
-                      _buildExportFormatButton(
-                        icon: Icons.picture_as_pdf,
-                        label: 'PDF Report',
-                        color: const Color(0xFFEF4444),
-                      ),
-                      _buildExportFormatButton(
-                        icon: Icons.table_chart,
-                        label: 'Excel Sheet',
-                        color: const Color(0xFF10B981),
-                      ),
-                      _buildExportFormatButton(
-                        icon: Icons.insert_drive_file,
-                        label: 'CSV File',
-                        color: const Color(0xFF3B82F6),
-                      ),
-                      _buildExportFormatButton(
-                        icon: Icons.print,
-                        label: 'Print View',
-                        color: const Color(0xFF8B5CF6),
-                      ),
-                    ],
+                  _buildExportFormatButton(
+                    icon: Icons.print,
+                    label: 'Print View',
+                    color: const Color(0xFF8B5CF6),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
+        ),
+      ),
     );
   }
 

@@ -6,6 +6,8 @@ import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/custom_dialog.dart';
+import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_form_section.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
@@ -188,128 +190,114 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
 
     showDialog<void>(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setDialogState) => AlertDialog(
-                  title: const Text('Add Time Slot'),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          title: const Text('Start Time'),
-                          subtitle: Text(
-                            startTime != null
-                                ? startTime!.format(context)
-                                : 'Tap to select',
-                          ),
-                          leading: const Icon(Icons.access_time),
-                          onTap: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                startTime = picked;
-                              });
-                            }
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey[300]!),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          title: const Text('End Time'),
-                          subtitle: Text(
-                            endTime != null
-                                ? endTime!.format(context)
-                                : 'Tap to select',
-                          ),
-                          leading: const Icon(Icons.access_time),
-                          onTap: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: startTime ?? TimeOfDay.now(),
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                endTime = picked;
-                              });
-                            }
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey[300]!),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        CheckboxListTile(
-                          title: const Text('Break/Lunch Period'),
-                          subtitle: const Text(
-                            'Merge cells across all days for break or lunch',
-                          ),
-                          value: isMerged,
-                          onChanged: (value) {
-                            setDialogState(() {
-                              isMerged = value ?? false;
-                            });
-                          },
-                        ),
-                        if (isMerged) ...[
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: mergedLabelController,
-                            decoration: const InputDecoration(
-                              labelText: 'Label (e.g., Lunch, Break)',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.label),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (startTime != null && endTime != null) {
-                          setState(() {
-                            final startStr = startTime!.format(context);
-                            final endStr = endTime!.format(context);
-                            final newSlot = '$startStr - $endStr';
-                            timeSlots.add(newSlot);
-                            final newIndex = timeSlots.length - 1;
-
-                            if (isMerged) {
-                              mergedSlots[newIndex] =
-                                  mergedLabelController.text.trim().isEmpty
-                                      ? 'Lunch'
-                                      : mergedLabelController.text.trim();
-                            }
-
-                            timetableData[newIndex] = {};
-                            for (final day in days) {
-                              timetableData[newIndex]![day] = null;
-                            }
-                          });
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Text('Add'),
-                    ),
-                  ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => CustomFormDialog(
+          title: 'Add Time Slot',
+          subtitle: 'Define a new period for the timetable',
+          headerIcon: Icons.access_time,
+          confirmText: 'Add',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Start Time'),
+                subtitle: Text(
+                  startTime != null
+                      ? startTime!.format(context)
+                      : 'Tap to select',
                 ),
+                leading: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setDialogState(() {
+                      startTime = picked;
+                    });
+                  }
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey[300]!),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                title: const Text('End Time'),
+                subtitle: Text(
+                  endTime != null ? endTime!.format(context) : 'Tap to select',
+                ),
+                leading: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: startTime ?? TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setDialogState(() {
+                      endTime = picked;
+                    });
+                  }
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey[300]!),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              FormCheckboxField(
+                label: 'Break/Lunch Period',
+                subtitle: 'Merge cells across all days for break or lunch',
+                value: isMerged,
+                onChanged: (value) {
+                  setDialogState(() {
+                    isMerged = value ?? false;
+                  });
+                },
+              ),
+              if (isMerged) ...[
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: mergedLabelController,
+                  label: 'Label (e.g., Lunch, Break)',
+                  prefixButtonIcon: ButtonIcon(
+                    icon: 'assets/images/icons/label.svg',
+                    color: AppTheme.slate500,
+                  ),
+                ),
+              ],
+            ],
           ),
+          onConfirm: () {
+            if (startTime != null && endTime != null) {
+              setState(() {
+                final startStr = startTime!.format(context);
+                final endStr = endTime!.format(context);
+                final newSlot = '$startStr - $endStr';
+                timeSlots.add(newSlot);
+                final newIndex = timeSlots.length - 1;
+
+                if (isMerged) {
+                  mergedSlots[newIndex] =
+                      mergedLabelController.text.trim().isEmpty
+                          ? 'Lunch'
+                          : mergedLabelController.text.trim();
+                }
+
+                timetableData[newIndex] = {};
+                for (final day in days) {
+                  timetableData[newIndex]![day] = null;
+                }
+              });
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ),
     );
   }
 
@@ -345,123 +333,110 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
 
     showDialog<void>(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setDialogState) => AlertDialog(
-                  title: Text('Edit Time Slot ${index + 1}'),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ListTile(
-                          title: const Text('Start Time'),
-                          subtitle: Text(
-                            startTime != null
-                                ? startTime!.format(context)
-                                : 'Tap to select',
-                          ),
-                          leading: const Icon(Icons.access_time),
-                          onTap: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: startTime ?? TimeOfDay.now(),
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                startTime = picked;
-                              });
-                            }
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey[300]!),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ListTile(
-                          title: const Text('End Time'),
-                          subtitle: Text(
-                            endTime != null
-                                ? endTime!.format(context)
-                                : 'Tap to select',
-                          ),
-                          leading: const Icon(Icons.access_time),
-                          onTap: () async {
-                            final picked = await showTimePicker(
-                              context: context,
-                              initialTime: endTime ?? TimeOfDay.now(),
-                            );
-                            if (picked != null) {
-                              setDialogState(() {
-                                endTime = picked;
-                              });
-                            }
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey[300]!),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        CheckboxListTile(
-                          title: const Text('Break/Lunch Period'),
-                          subtitle: const Text(
-                            'Merge cells across all days for break or lunch',
-                          ),
-                          value: isMerged,
-                          onChanged: (value) {
-                            setDialogState(() {
-                              isMerged = value ?? false;
-                            });
-                          },
-                        ),
-                        if (isMerged) ...[
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: mergedLabelController,
-                            decoration: const InputDecoration(
-                              labelText: 'Label (e.g., Lunch, Break)',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.label),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (startTime != null && endTime != null) {
-                          setState(() {
-                            final startStr = startTime!.format(context);
-                            final endStr = endTime!.format(context);
-                            timeSlots[index] = '$startStr - $endStr';
-
-                            if (isMerged) {
-                              mergedSlots[index] =
-                                  mergedLabelController.text.trim().isEmpty
-                                      ? 'Lunch'
-                                      : mergedLabelController.text.trim();
-                            } else {
-                              mergedSlots.remove(index);
-                            }
-                          });
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Text('Save'),
-                    ),
-                  ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => CustomFormDialog(
+          title: 'Edit Time Slot ${index + 1}',
+          subtitle: 'Modify the period timing',
+          headerIcon: Icons.edit,
+          confirmText: 'Save',
+          confirmColor: AppTheme.blue500,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Start Time'),
+                subtitle: Text(
+                  startTime != null
+                      ? startTime!.format(context)
+                      : 'Tap to select',
                 ),
+                leading: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: startTime ?? TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setDialogState(() {
+                      startTime = picked;
+                    });
+                  }
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey[300]!),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                title: const Text('End Time'),
+                subtitle: Text(
+                  endTime != null ? endTime!.format(context) : 'Tap to select',
+                ),
+                leading: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: endTime ?? TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setDialogState(() {
+                      endTime = picked;
+                    });
+                  }
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey[300]!),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              FormCheckboxField(
+                label: 'Break/Lunch Period',
+                subtitle: 'Merge cells across all days for break or lunch',
+                value: isMerged,
+                onChanged: (value) {
+                  setDialogState(() {
+                    isMerged = value ?? false;
+                  });
+                },
+              ),
+              if (isMerged) ...[
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: mergedLabelController,
+                  label: 'Label (e.g., Lunch, Break)',
+                  prefixButtonIcon: ButtonIcon(
+                    icon: 'assets/images/icons/label.svg',
+                    color: AppTheme.slate500,
+                  ),
+                ),
+              ],
+            ],
           ),
+          onConfirm: () {
+            if (startTime != null && endTime != null) {
+              setState(() {
+                final startStr = startTime!.format(context);
+                final endStr = endTime!.format(context);
+                timeSlots[index] = '$startStr - $endStr';
+
+                if (isMerged) {
+                  mergedSlots[index] =
+                      mergedLabelController.text.trim().isEmpty
+                          ? 'Lunch'
+                          : mergedLabelController.text.trim();
+                } else {
+                  mergedSlots.remove(index);
+                }
+              });
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ),
     );
   }
 
@@ -497,59 +472,46 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
     return TimeOfDay(hour: hour, minute: minute);
   }
 
-  void _removeTimeSlot(int index) {
-    showDialog<void>(
+  Future<void> _removeTimeSlot(int index) async {
+    final confirmed = await CustomDialog.showConfirmation(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Remove Time Slot'),
-            content: Text(
-              'Are you sure you want to remove the time slot "${timeSlots[index]}"? All periods in this slot will be deleted.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {
-                  setState(() {
-                    timeSlots.removeAt(index);
-                    // Remove from merged slots if it was merged
-                    mergedSlots.remove(index);
-
-                    // Rebuild timetable data and merged slots with new indices
-                    final oldData = Map<int, Map<String, SubjectPeriod?>>.from(
-                      timetableData,
-                    );
-                    final oldMerged = Map<int, String>.from(mergedSlots);
-
-                    timetableData.clear();
-                    mergedSlots.clear();
-
-                    var newIndex = 0;
-                    for (var i = 0; i < oldData.length + 1; i++) {
-                      if (i == index) {
-                        continue;
-                      }
-                      timetableData[newIndex] = oldData[i] ?? {};
-                      if (oldMerged.containsKey(i)) {
-                        mergedSlots[newIndex] = oldMerged[i]!;
-                      }
-                      newIndex++;
-                    }
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Remove'),
-              ),
-            ],
-          ),
+      title: 'Remove Time Slot',
+      message: 'Are you sure you want to remove the time slot "${timeSlots[index]}"? All periods in this slot will be deleted.',
+      confirmText: 'Remove',
+      cancelText: 'Cancel',
+      confirmColor: AppTheme.danger,
+      icon: Icons.delete_outline,
+      iconColor: AppTheme.danger,
     );
+
+    if (confirmed == true) {
+      setState(() {
+        timeSlots.removeAt(index);
+        // Remove from merged slots if it was merged
+        mergedSlots.remove(index);
+
+        // Rebuild timetable data and merged slots with new indices
+        final oldData = Map<int, Map<String, SubjectPeriod?>>.from(
+          timetableData,
+        );
+        final oldMerged = Map<int, String>.from(mergedSlots);
+
+        timetableData.clear();
+        mergedSlots.clear();
+
+        var newIndex = 0;
+        for (var i = 0; i < oldData.length + 1; i++) {
+          if (i == index) {
+            continue;
+          }
+          timetableData[newIndex] = oldData[i] ?? {};
+          if (oldMerged.containsKey(i)) {
+            mergedSlots[newIndex] = oldMerged[i]!;
+          }
+          newIndex++;
+        }
+      });
+    }
   }
 
   void _editPeriod(int slotIndex, String day) {
@@ -576,147 +538,134 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
 
     showDialog<void>(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder:
-                (context, setDialogState) => AlertDialog(
-                  title: Text('Edit Period - $day ${timeSlots[slotIndex]}'),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          initialValue: selectedSubject,
-                          decoration: const InputDecoration(
-                            labelText: 'Subject',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.book),
-                          ),
-                          items: [
-                            ...predefinedSubjects.map(
-                              (subject) => DropdownMenuItem(
-                                value: subject,
-                                child: Text(subject),
-                              ),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'Custom',
-                              child: Text('Custom / Other'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setDialogState(() {
-                              selectedSubject = value;
-                            });
-                          },
-                        ),
-                        if (selectedSubject == 'Custom') ...[
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: customSubjectController,
-                            decoration: const InputDecoration(
-                              labelText: 'Enter Custom Subject',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.edit),
-                            ),
-                            autofocus: true,
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        // Teacher Dropdown
-                        DropdownButtonFormField<String>(
-                          key: ValueKey('teacher_$selectedTeacher'),
-                          initialValue:
-                              teachersList.any(
-                                    (t) => t['name'] == selectedTeacher,
-                                  )
-                                  ? selectedTeacher
-                                  : null,
-                          decoration: const InputDecoration(
-                            labelText: 'Teacher (Optional)',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.person),
-                          ),
-                          items: [
-                            ...teachersList.map(
-                              (teacher) => DropdownMenuItem(
-                                value: teacher['name'] as String,
-                                child: Text(teacher['name'] as String),
-                              ),
-                            ),
-                            const DropdownMenuItem(
-                              value: 'Custom',
-                              child: Text('Other / Custom'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setDialogState(() {
-                              selectedTeacher = value;
-                            });
-                          },
-                        ),
-                        if (selectedTeacher == 'Custom') ...[
-                          const SizedBox(height: 12),
-                          TextField(
-                            controller: customTeacherController,
-                            decoration: const InputDecoration(
-                              labelText: 'Enter Teacher Name',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.edit),
-                            ),
-                          ),
-                        ],
-                      ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => CustomFormDialog(
+          title: 'Edit Period',
+          subtitle: '$day ${timeSlots[slotIndex]}',
+          headerIcon: Icons.schedule,
+          confirmText: 'Save',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        timetableData[slotIndex]![day] = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.clear, size: 18),
+                    label: const Text('Clear Period'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.danger,
                     ),
                   ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          timetableData[slotIndex]![day] = null;
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Clear'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              FormDropdownField<String>(
+                label: 'Subject',
+                value: selectedSubject,
+                items: [
+                  ...predefinedSubjects.map(
+                    (subject) => DropdownMenuItem(
+                      value: subject,
+                      child: Text(subject),
                     ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        String? finalSubject;
-                        if (selectedSubject == 'Custom') {
-                          finalSubject = customSubjectController.text.trim();
-                        } else {
-                          finalSubject = selectedSubject;
-                        }
-
-                        String? finalTeacher;
-                        if (selectedTeacher == 'Custom') {
-                          finalTeacher =
-                              customTeacherController.text.trim().isEmpty
-                                  ? null
-                                  : customTeacherController.text.trim();
-                        } else {
-                          finalTeacher = selectedTeacher;
-                        }
-
-                        if (finalSubject != null && finalSubject.isNotEmpty) {
-                          setState(() {
-                            timetableData[slotIndex]![day] = SubjectPeriod(
-                              subject: finalSubject!,
-                              teacher: finalTeacher,
-                            );
-                          });
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Text('Save'),
-                    ),
-                  ],
+                  ),
+                  const DropdownMenuItem(
+                    value: 'Custom',
+                    child: Text('Custom / Other'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedSubject = value;
+                  });
+                },
+              ),
+              if (selectedSubject == 'Custom') ...[
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: customSubjectController,
+                  label: 'Enter Custom Subject',
+                  prefixButtonIcon: ButtonIcon(
+                    icon: 'assets/images/icons/edit.svg',
+                    color: AppTheme.slate500,
+                  ),
                 ),
+              ],
+              const SizedBox(height: 16),
+              FormDropdownField<String>(
+                label: 'Teacher (Optional)',
+                key: ValueKey('teacher_$selectedTeacher'),
+                value: teachersList.any((t) => t['name'] == selectedTeacher)
+                    ? selectedTeacher
+                    : null,
+                hint: 'Select a teacher',
+                items: [
+                  ...teachersList.map(
+                    (teacher) => DropdownMenuItem(
+                      value: teacher['name'] as String,
+                      child: Text(teacher['name'] as String),
+                    ),
+                  ),
+                  const DropdownMenuItem(
+                    value: 'Custom',
+                    child: Text('Other / Custom'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setDialogState(() {
+                    selectedTeacher = value;
+                  });
+                },
+              ),
+              if (selectedTeacher == 'Custom') ...[
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: customTeacherController,
+                  label: 'Enter Teacher Name',
+                  prefixButtonIcon: ButtonIcon(
+                    icon: 'assets/images/icons/person.svg',
+                    color: AppTheme.slate500,
+                  ),
+                ),
+              ],
+            ],
           ),
+          onConfirm: () {
+            String? finalSubject;
+            if (selectedSubject == 'Custom') {
+              finalSubject = customSubjectController.text.trim();
+            } else {
+              finalSubject = selectedSubject;
+            }
+
+            String? finalTeacher;
+            if (selectedTeacher == 'Custom') {
+              finalTeacher = customTeacherController.text.trim().isEmpty
+                  ? null
+                  : customTeacherController.text.trim();
+            } else {
+              finalTeacher = selectedTeacher;
+            }
+
+            if (finalSubject != null && finalSubject.isNotEmpty) {
+              setState(() {
+                timetableData[slotIndex]![day] = SubjectPeriod(
+                  subject: finalSubject!,
+                  teacher: finalTeacher,
+                );
+              });
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ),
     );
   }
 

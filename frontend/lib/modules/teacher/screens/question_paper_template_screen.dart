@@ -6,6 +6,8 @@ import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/custom_dialog.dart';
+import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_form_section.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
@@ -102,62 +104,31 @@ class _QuestionPaperTemplateScreenState
   }
 
   void _addSection() {
+    final sectionNameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final marksController = TextEditingController(text: '1');
+    final questionsController = TextEditingController(text: '5');
+
     showDialog<void>(
       context: context,
-      builder: (context) {
-        final sectionNameController = TextEditingController();
-        final descriptionController = TextEditingController();
-        final marksController = TextEditingController(text: '1');
-        final questionsController = TextEditingController(text: '5');
-
-        return AlertDialog(
-          title: const Text('Add Section'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: sectionNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Section Name',
-                    hintText: 'e.g., Section A - Multiple Choice',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (Optional)',
-                    hintText: 'e.g., Choose the correct answer',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: marksController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Marks Per Question',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: questionsController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Number of Questions',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
+      builder: (context) => CustomFormDialog(
+        title: 'Add Section',
+        subtitle: 'Create a new section for the question paper',
+        headerIcon: Icons.add_box,
+        confirmText: 'Add',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomTextField(
+              controller: sectionNameController,
+              label: 'Section Name',
+              hintText: 'e.g., Section A - Multiple Choice',
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+            const SizedBox(height: 16),
+            CustomTextField(
+              controller: descriptionController,
+              label: 'Description (Optional)',
+              hintText: 'e.g., Choose the correct answer',
             ),
             ElevatedButton(
               onPressed: () {
@@ -189,72 +160,93 @@ class _QuestionPaperTemplateScreenState
               child: const Text('Add'),
             ),
           ],
-        );
-      },
+        ),
+        onConfirm: () {
+          if (sectionNameController.text.isNotEmpty) {
+            final numQuestions = int.tryParse(questionsController.text) ?? 1;
+            setState(() {
+              sections.add(
+                QuestionSection(
+                  sectionName: sectionNameController.text,
+                  questions: List.generate(
+                    numQuestions,
+                    (index) => Question(questionText: 'Question ${index + 1} here'),
+                  ),
+                  marksPerQuestion: int.tryParse(marksController.text) ?? 1,
+                  description: descriptionController.text.isEmpty
+                      ? null
+                      : descriptionController.text,
+                ),
+              );
+            });
+            Navigator.pop(context);
+          }
+        },
+      ),
     );
   }
 
   void _editSection(int sectionIndex) {
     final section = sections[sectionIndex];
+    final sectionNameController = TextEditingController(
+      text: section.sectionName,
+    );
+    final descriptionController = TextEditingController(
+      text: section.description ?? '',
+    );
+    final marksController = TextEditingController(
+      text: section.marksPerQuestion.toString(),
+    );
+
     showDialog<void>(
       context: context,
-      builder: (context) {
-        final sectionNameController = TextEditingController(
-          text: section.sectionName,
-        );
-        final descriptionController = TextEditingController(
-          text: section.description ?? '',
-        );
-        final marksController = TextEditingController(
-          text: section.marksPerQuestion.toString(),
-        );
-
-        return AlertDialog(
-          title: const Text('Edit Section'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+      builder: (context) => CustomFormDialog(
+        title: 'Edit Section',
+        subtitle: 'Modify section details',
+        headerIcon: Icons.edit,
+        confirmText: 'Save',
+        maxWidth: 550,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextField(
-                  controller: sectionNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Section Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (Optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: marksController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Marks Per Question',
-                    border: OutlineInputBorder(),
+                TextButton.icon(
+                  onPressed: () async {
+                    final confirm = await CustomDialog.showConfirmation(
+                      context: context,
+                      title: 'Delete Section',
+                      message: 'Are you sure you want to delete this section?',
+                      confirmText: 'Delete',
+                      confirmColor: AppTheme.danger,
+                      icon: Icons.delete,
+                      iconColor: AppTheme.danger,
+                    );
+                    if (confirm == true && context.mounted) {
+                      setState(() {
+                        sections.removeAt(sectionIndex);
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                  icon: const Icon(Icons.delete, size: 18),
+                  label: const Text('Delete Section'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.danger,
                   ),
                 ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  sections.removeAt(sectionIndex);
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            const SizedBox(height: 8),
+            CustomTextField(
+              controller: sectionNameController,
+              label: 'Section Name',
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+            const SizedBox(height: 16),
+            CustomTextField(
+              controller: descriptionController,
+              label: 'Description (Optional)',
             ),
             ElevatedButton(
               onPressed: () {
@@ -274,8 +266,21 @@ class _QuestionPaperTemplateScreenState
               child: const Text('Save'),
             ),
           ],
-        );
-      },
+        ),
+        onConfirm: () {
+          setState(() {
+            sections[sectionIndex] = QuestionSection(
+              sectionName: sectionNameController.text,
+              questions: section.questions,
+              marksPerQuestion: int.tryParse(marksController.text) ?? 1,
+              description: descriptionController.text.isEmpty
+                  ? null
+                  : descriptionController.text,
+            );
+          });
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 
@@ -290,57 +295,41 @@ class _QuestionPaperTemplateScreenState
 
     showDialog<void>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Edit Question ${questionIndex + 1}'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: questionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Question',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: customMarksController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Custom Marks (Optional)',
-                      hintText:
-                          'Default: ${sections[sectionIndex].marksPerQuestion}',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-              ),
+      builder: (context) => CustomFormDialog(
+        title: 'Edit Question ${questionIndex + 1}',
+        subtitle: 'Modify question text and marks',
+        headerIcon: Icons.quiz,
+        confirmText: 'Save',
+        maxWidth: 550,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomTextField(
+              controller: questionController,
+              label: 'Question',
+              maxLines: 3,
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    sections[sectionIndex].questions[questionIndex] = Question(
-                      questionText: questionController.text,
-                      customMarks:
-                          customMarksController.text.isEmpty
-                              ? null
-                              : int.tryParse(customMarksController.text),
-                    );
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              controller: customMarksController,
+              label: 'Custom Marks (Optional)',
+              hintText: 'Default: ${sections[sectionIndex].marksPerQuestion}',
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        onConfirm: () {
+          setState(() {
+            sections[sectionIndex].questions[questionIndex] = Question(
+              questionText: questionController.text,
+              customMarks: customMarksController.text.isEmpty
+                  ? null
+                  : int.tryParse(customMarksController.text),
+            );
+          });
+          Navigator.pop(context);
+        },
+      ),
     );
   }
 
