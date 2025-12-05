@@ -1,5 +1,4 @@
 class GradingConfig {
-
   GradingConfig({
     required this.id,
     required this.institutionId,
@@ -40,46 +39,49 @@ class GradingConfig {
   });
 
   factory GradingConfig.fromJson(Map<String, dynamic> json) => GradingConfig(
-      id: json['id'] as int,
-      institutionId: json['institutionId'] as int,
-      attendanceWeight: _parseDouble(json['attendanceWeight']),
-      assignmentWeight: _parseDouble(json['assignmentWeight']),
-      examWeight: _parseDouble(json['examWeight']),
-      participationWeight: _parseDouble(json['participationWeight']),
-      gradeAPlusThreshold: _parseDouble(json['gradeAPlusThreshold']),
-      gradeAThreshold: _parseDouble(json['gradeAThreshold']),
-      gradeBPlusThreshold: _parseDouble(json['gradeBPlusThreshold']),
-      gradeBThreshold: _parseDouble(json['gradeBThreshold']),
-      gradeCThreshold: _parseDouble(json['gradeCThreshold']),
-      gradeAPlusPoints: _parseDouble(json['gradeAPlusPoints']),
-      gradeAPoints: _parseDouble(json['gradeAPoints']),
-      gradeBPlusPoints: _parseDouble(json['gradeBPlusPoints']),
-      gradeBPoints: _parseDouble(json['gradeBPoints']),
-      gradeCPoints: _parseDouble(json['gradeCPoints']),
-      gradeDPoints: _parseDouble(json['gradeDPoints']),
-      atRiskAttendance: _parseDouble(json['atRiskAttendance']),
-      atRiskAssignment: _parseDouble(json['atRiskAssignment']),
-      atRiskExam: _parseDouble(json['atRiskExam']),
-      atRiskGradePoints: _parseDouble(json['atRiskGradePoints']),
-      needsImprovementAttendance:
-          _parseDouble(json['needsImprovementAttendance']),
-      needsImprovementAssignment:
-          _parseDouble(json['needsImprovementAssignment']),
-      needsImprovementExam: _parseDouble(json['needsImprovementExam']),
-      needsImprovementGradePoints:
-          _parseDouble(json['needsImprovementGradePoints']),
-      excellentAttendance: _parseDouble(json['excellentAttendance']),
-      excellentAssignment: _parseDouble(json['excellentAssignment']),
-      excellentExam: _parseDouble(json['excellentExam']),
-      excellentGradePoints: _parseDouble(json['excellentGradePoints']),
-      goodAttendance: _parseDouble(json['goodAttendance']),
-      goodAssignment: _parseDouble(json['goodAssignment']),
-      goodExam: _parseDouble(json['goodExam']),
-      goodGradePoints: _parseDouble(json['goodGradePoints']),
-      isActive: json['isActive'] as bool? ?? true,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-    );
+    id: json['id'] as int,
+    institutionId: json['institutionId'] as int,
+    attendanceWeight: _parseDouble(json['attendanceWeight']),
+    assignmentWeight: _parseDouble(json['assignmentWeight']),
+    examWeight: _parseDouble(json['examWeight']),
+    participationWeight: _parseDouble(json['participationWeight']),
+    gradeAPlusThreshold: _parseDouble(json['gradeAPlusThreshold']),
+    gradeAThreshold: _parseDouble(json['gradeAThreshold']),
+    gradeBPlusThreshold: _parseDouble(json['gradeBPlusThreshold']),
+    gradeBThreshold: _parseDouble(json['gradeBThreshold']),
+    gradeCThreshold: _parseDouble(json['gradeCThreshold']),
+    gradeAPlusPoints: _parseDouble(json['gradeAPlusPoints']),
+    gradeAPoints: _parseDouble(json['gradeAPoints']),
+    gradeBPlusPoints: _parseDouble(json['gradeBPlusPoints']),
+    gradeBPoints: _parseDouble(json['gradeBPoints']),
+    gradeCPoints: _parseDouble(json['gradeCPoints']),
+    gradeDPoints: _parseDouble(json['gradeDPoints']),
+    atRiskAttendance: _parseDouble(json['atRiskAttendance']),
+    atRiskAssignment: _parseDouble(json['atRiskAssignment']),
+    atRiskExam: _parseDouble(json['atRiskExam']),
+    atRiskGradePoints: _parseDouble(json['atRiskGradePoints']),
+    needsImprovementAttendance: _parseDouble(
+      json['needsImprovementAttendance'],
+    ),
+    needsImprovementAssignment: _parseDouble(
+      json['needsImprovementAssignment'],
+    ),
+    needsImprovementExam: _parseDouble(json['needsImprovementExam']),
+    needsImprovementGradePoints: _parseDouble(
+      json['needsImprovementGradePoints'],
+    ),
+    excellentAttendance: _parseDouble(json['excellentAttendance']),
+    excellentAssignment: _parseDouble(json['excellentAssignment']),
+    excellentExam: _parseDouble(json['excellentExam']),
+    excellentGradePoints: _parseDouble(json['excellentGradePoints']),
+    goodAttendance: _parseDouble(json['goodAttendance']),
+    goodAssignment: _parseDouble(json['goodAssignment']),
+    goodExam: _parseDouble(json['goodExam']),
+    goodGradePoints: _parseDouble(json['goodGradePoints']),
+    isActive: json['isActive'] as bool? ?? true,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+    updatedAt: DateTime.parse(json['updatedAt'] as String),
+  );
 
   // Default configuration
   factory GradingConfig.defaults(int institutionId) {
@@ -173,7 +175,7 @@ class GradingConfig {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  static double _parseDouble(dynamic value) {
+  static double _parseDouble(value) {
     if (value == null) {
       return 0.0;
     }
@@ -191,7 +193,6 @@ class GradingConfig {
 }
 
 class UpdateGradingConfigDto {
-
   UpdateGradingConfigDto({
     this.attendanceWeight,
     this.assignmentWeight,
@@ -360,4 +361,3 @@ class UpdateGradingConfigDto {
     return map;
   }
 }
-

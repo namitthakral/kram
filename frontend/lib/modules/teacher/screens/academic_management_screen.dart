@@ -45,7 +45,6 @@ class AcademicManagementScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             // Stats Section
             GridView.count(
               crossAxisCount: isMobile ? 2 : 4,
@@ -123,23 +122,25 @@ class AcademicManagementScreen extends StatelessWidget {
                   title: 'Mark\nAttendance',
                   icon: Icons.how_to_reg_rounded,
                   color: CustomAppColors.success,
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MarkAttendanceScreen(),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MarkAttendanceScreen(),
+                        ),
                       ),
-                    ),
                 ),
                 _ActionGridCard(
                   title: 'Enter\nMarks',
                   icon: Icons.grading_rounded,
                   color: CustomAppColors.pink,
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const EnterMarksScreen(),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EnterMarksScreen(),
+                        ),
                       ),
-                    ),
                 ),
                 _ActionGridCard(
                   title: 'Create\nExamination',
@@ -153,23 +154,26 @@ class AcademicManagementScreen extends StatelessWidget {
                   title: 'Create\nTimetable',
                   icon: Icons.calendar_month_rounded,
                   color: CustomAppColors.blue500,
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TimetableTemplateScreen(),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TimetableTemplateScreen(),
+                        ),
                       ),
-                    ),
                 ),
                 _ActionGridCard(
                   title: 'Create\nQuestion Paper',
                   icon: Icons.description_rounded,
                   color: CustomAppColors.purple,
-                  onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const QuestionPaperTemplateScreen(),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => const QuestionPaperTemplateScreen(),
+                        ),
                       ),
-                    ),
                 ),
                 _ActionGridCard(
                   title: 'Create\nAssignment',
@@ -216,63 +220,10 @@ class _ActionGridCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: CustomAppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: CustomAppColors.black01.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeSm,
-                fontWeight: AppTheme.fontWeightSemibold,
-                color: CustomAppColors.slate800,
-                height: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RecentActivitiesSection extends StatelessWidget {
-  const _RecentActivitiesSection({required this.isMobile});
-
-  final bool isMobile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: DecoratedBox(
       decoration: BoxDecoration(
         color: CustomAppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -285,42 +236,87 @@ class _RecentActivitiesSection extends StatelessWidget {
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _ActivityItem(
-            icon: Icons.how_to_reg_rounded,
-            iconColor: CustomAppColors.success,
-            title: 'Attendance marked for Grade 10-A',
-            subtitle: '28 students present • 2 hours ago',
-            time: '2h ago',
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: color, size: 36),
           ),
-          const Divider(height: 1),
-          _ActivityItem(
-            icon: Icons.assignment_rounded,
-            iconColor: CustomAppColors.warning,
-            title: 'Assignment "Chapter 5 Problems" created',
-            subtitle: 'Due date: Dec 5, 2025',
-            time: '5h ago',
-          ),
-          const Divider(height: 1),
-          _ActivityItem(
-            icon: Icons.quiz_rounded,
-            iconColor: CustomAppColors.purple,
-            title: 'Mid-term Examination scheduled',
-            subtitle: 'December 10-15, 2025',
-            time: '1d ago',
-          ),
-          const Divider(height: 1),
-          _ActivityItem(
-            icon: Icons.calendar_month_rounded,
-            iconColor: CustomAppColors.blue500,
-            title: 'Timetable updated for next week',
-            subtitle: 'Effective from Dec 2, 2025',
-            time: '2d ago',
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: AppTheme.fontSizeSm,
+              fontWeight: AppTheme.fontWeightSemibold,
+              color: CustomAppColors.slate800,
+              height: 1.3,
+            ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+class _RecentActivitiesSection extends StatelessWidget {
+  const _RecentActivitiesSection({required this.isMobile});
+
+  final bool isMobile;
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: CustomAppColors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: CustomAppColors.black01.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: const Column(
+      children: [
+        _ActivityItem(
+          icon: Icons.how_to_reg_rounded,
+          iconColor: CustomAppColors.success,
+          title: 'Attendance marked for Grade 10-A',
+          subtitle: '28 students present • 2 hours ago',
+          time: '2h ago',
+        ),
+        Divider(height: 1),
+        _ActivityItem(
+          icon: Icons.assignment_rounded,
+          iconColor: CustomAppColors.warning,
+          title: 'Assignment "Chapter 5 Problems" created',
+          subtitle: 'Due date: Dec 5, 2025',
+          time: '5h ago',
+        ),
+        Divider(height: 1),
+        _ActivityItem(
+          icon: Icons.quiz_rounded,
+          iconColor: CustomAppColors.purple,
+          title: 'Mid-term Examination scheduled',
+          subtitle: 'December 10-15, 2025',
+          time: '1d ago',
+        ),
+        Divider(height: 1),
+        _ActivityItem(
+          icon: Icons.calendar_month_rounded,
+          iconColor: CustomAppColors.blue500,
+          title: 'Timetable updated for next week',
+          subtitle: 'Effective from Dec 2, 2025',
+          time: '2d ago',
+        ),
+      ],
+    ),
+  );
 }
 
 class _ActivityItem extends StatelessWidget {
@@ -339,57 +335,51 @@ class _ActivityItem extends StatelessWidget {
   final String time;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 24,
-            ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(16),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: AppTheme.fontWeightSemibold,
-                    color: CustomAppColors.slate800,
-                  ),
+          child: Icon(icon, color: iconColor, size: 24),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: AppTheme.fontWeightSemibold,
+                  color: CustomAppColors.slate800,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    fontSize: AppTheme.fontSizeXs,
-                    color: CustomAppColors.slate500,
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: AppTheme.fontSizeXs,
+                  color: CustomAppColors.slate500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Text(
-            time,
-            style: const TextStyle(
-              fontSize: AppTheme.fontSizeXs,
-              color: CustomAppColors.slate400,
-            ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          time,
+          style: const TextStyle(
+            fontSize: AppTheme.fontSizeXs,
+            color: CustomAppColors.slate400,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

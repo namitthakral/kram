@@ -31,7 +31,9 @@ class _QuestionPaperTemplateScreenState
   final _schoolAddressController = TextEditingController(
     text: '123 Education Street, Springfield, ST 12345',
   );
-  final _examNameController = TextEditingController(text: 'Mid-Term Examination');
+  final _examNameController = TextEditingController(
+    text: 'Mid-Term Examination',
+  );
   final _classNameController = TextEditingController(text: 'Class 10');
   final _sectionController = TextEditingController(text: 'A');
   final _subjectController = TextEditingController(text: 'Mathematics');
@@ -39,7 +41,8 @@ class _QuestionPaperTemplateScreenState
   final _durationController = TextEditingController(text: '3 Hours');
   final _maxMarksController = TextEditingController(text: '100');
   final _instructionsController = TextEditingController(
-    text: '1. All questions are compulsory.\n'
+    text:
+        '1. All questions are compulsory.\n'
         '2. Write your answers in the space provided.\n'
         '3. Use of calculators is not permitted.\n'
         '4. Read each question carefully before answering.',
@@ -167,14 +170,16 @@ class _QuestionPaperTemplateScreenState
                         sectionName: sectionNameController.text,
                         questions: List.generate(
                           numQuestions,
-                          (index) =>
-                              Question(questionText: 'Question ${index + 1} here'),
+                          (index) => Question(
+                            questionText: 'Question ${index + 1} here',
+                          ),
                         ),
                         marksPerQuestion:
                             int.tryParse(marksController.text) ?? 1,
-                        description: descriptionController.text.isEmpty
-                            ? null
-                            : descriptionController.text,
+                        description:
+                            descriptionController.text.isEmpty
+                                ? null
+                                : descriptionController.text,
                       ),
                     );
                   });
@@ -258,9 +263,10 @@ class _QuestionPaperTemplateScreenState
                     sectionName: sectionNameController.text,
                     questions: section.questions,
                     marksPerQuestion: int.tryParse(marksController.text) ?? 1,
-                    description: descriptionController.text.isEmpty
-                        ? null
-                        : descriptionController.text,
+                    description:
+                        descriptionController.text.isEmpty
+                            ? null
+                            : descriptionController.text,
                   );
                 });
                 Navigator.pop(context);
@@ -284,55 +290,57 @@ class _QuestionPaperTemplateScreenState
 
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit Question ${questionIndex + 1}'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: questionController,
-                decoration: const InputDecoration(
-                  labelText: 'Question',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Edit Question ${questionIndex + 1}'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: questionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Question',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: customMarksController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Custom Marks (Optional)',
+                      hintText:
+                          'Default: ${sections[sectionIndex].marksPerQuestion}',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: customMarksController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Custom Marks (Optional)',
-                  hintText:
-                      'Default: ${sections[sectionIndex].marksPerQuestion}',
-                  border: const OutlineInputBorder(),
-                ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    sections[sectionIndex].questions[questionIndex] = Question(
+                      questionText: questionController.text,
+                      customMarks:
+                          customMarksController.text.isEmpty
+                              ? null
+                              : int.tryParse(customMarksController.text),
+                    );
+                  });
+                  Navigator.pop(context);
+                },
+                child: const Text('Save'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                sections[sectionIndex].questions[questionIndex] = Question(
-                  questionText: questionController.text,
-                  customMarks: customMarksController.text.isEmpty
-                      ? null
-                      : int.tryParse(customMarksController.text),
-                );
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -340,31 +348,28 @@ class _QuestionPaperTemplateScreenState
     Navigator.push<void>(
       context,
       MaterialPageRoute(
-        builder: (context) => QuestionPaperPreviewScreen(
-          template: QuestionPaperTemplate(
-            schoolName: _schoolNameController.text,
-            schoolAddress: _schoolAddressController.text,
-            examName: _examNameController.text,
-            className: _classNameController.text,
-            section: _sectionController.text,
-            subject: _subjectController.text,
-            date: _dateController.text,
-            duration: _durationController.text,
-            maxMarks: int.tryParse(_maxMarksController.text) ?? 100,
-            sections: sections,
-            instructions: _instructionsController.text,
-          ),
-        ),
+        builder:
+            (context) => QuestionPaperPreviewScreen(
+              template: QuestionPaperTemplate(
+                schoolName: _schoolNameController.text,
+                schoolAddress: _schoolAddressController.text,
+                examName: _examNameController.text,
+                className: _classNameController.text,
+                section: _sectionController.text,
+                subject: _subjectController.text,
+                date: _dateController.text,
+                duration: _durationController.text,
+                maxMarks: int.tryParse(_maxMarksController.text) ?? 100,
+                sections: sections,
+                instructions: _instructionsController.text,
+              ),
+            ),
       ),
     );
   }
 
-  int _calculateTotalMarks() {
-    return sections.fold(
-      0,
-      (sum, section) => sum + section.totalMarks,
-    );
-  }
+  int _calculateTotalMarks() =>
+      sections.fold(0, (sum, section) => sum + section.totalMarks);
 
   @override
   Widget build(BuildContext context) {
@@ -421,9 +426,7 @@ class _QuestionPaperTemplateScreenState
               // Header
               Text(
                 'Create Question Paper',
-                style: context.textTheme.h2.copyWith(
-                  color: AppTheme.slate800,
-                ),
+                style: context.textTheme.h2.copyWith(color: AppTheme.slate800),
               ),
               const SizedBox(height: 4),
               Text(
@@ -567,10 +570,7 @@ class _QuestionPaperTemplateScreenState
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ...List.generate(
-                      sections.length,
-                      (sectionIndex) => _buildSectionCard(sectionIndex),
-                    ),
+                    ...List.generate(sections.length, _buildSectionCard),
                   ],
                 ),
               ),
@@ -614,7 +614,8 @@ class _QuestionPaperTemplateScreenState
                               subject: _subjectController.text,
                               date: _dateController.text,
                               duration: _durationController.text,
-                              maxMarks: int.tryParse(_maxMarksController.text) ?? 100,
+                              maxMarks:
+                                  int.tryParse(_maxMarksController.text) ?? 100,
                               sections: sections,
                               instructions: _instructionsController.text,
                             ),
@@ -685,9 +686,8 @@ class _QuestionPaperTemplateScreenState
             ),
           ],
         ),
-        subtitle: section.description != null
-            ? Text(section.description!)
-            : null,
+        subtitle:
+            section.description != null ? Text(section.description!) : null,
         trailing: IconButton(
           icon: const Icon(Icons.edit),
           onPressed: () => _editSection(sectionIndex),
@@ -727,8 +727,8 @@ class _QuestionPaperTemplateScreenState
 
   Widget _buildQuestionItem(int sectionIndex, int questionIndex) {
     final question = sections[sectionIndex].questions[questionIndex];
-    final marks = question.customMarks ??
-        sections[sectionIndex].marksPerQuestion;
+    final marks =
+        question.customMarks ?? sections[sectionIndex].marksPerQuestion;
 
     return ListTile(
       leading: CircleAvatar(
@@ -743,10 +743,7 @@ class _QuestionPaperTemplateScreenState
           ),
         ),
       ),
-      title: Text(
-        question.questionText,
-        style: const TextStyle(fontSize: 14),
-      ),
+      title: Text(question.questionText, style: const TextStyle(fontSize: 14)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -780,234 +777,228 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
   final QuestionPaperTemplate template;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Question Paper Preview'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () async {
-              try {
-                await PdfTemplateService.generateQuestionPaperPdf(template);
-                if (context.mounted) {
-                  showCustomSnackbar(
-                    message: 'PDF downloaded successfully',
-                    type: SnackbarType.success,
-                  );
-                }
-              } on Exception catch (e) {
-                if (context.mounted) {
-                  showCustomSnackbar(
-                    message: 'Failed to generate PDF: $e',
-                    type: SnackbarType.warning,
-                  );
-                }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Question Paper Preview'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.download),
+          onPressed: () async {
+            try {
+              await PdfTemplateService.generateQuestionPaperPdf(template);
+              if (context.mounted) {
+                showCustomSnackbar(
+                  message: 'PDF downloaded successfully',
+                  type: SnackbarType.success,
+                );
               }
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black, width: 2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      template.schoolName.toUpperCase(),
+            } on Exception catch (e) {
+              if (context.mounted) {
+                showCustomSnackbar(
+                  message: 'Failed to generate PDF: $e',
+                  type: SnackbarType.warning,
+                );
+              }
+            }
+          },
+        ),
+      ],
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(width: 2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    template.schoolName.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    template.schoolAddress,
+                    style: const TextStyle(fontSize: 11),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(border: Border.all(width: 2)),
+                    child: Text(
+                      template.examName.toUpperCase(),
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      template.schoolAddress,
-                      style: const TextStyle(fontSize: 11),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 2),
-                      ),
-                      child: Text(
-                        template.examName.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Exam Details
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Class: ${template.className} - ${template.section}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Subject: ${template.subject}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Date: ${template.date}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Time: ${template.duration}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Max. Marks: ${template.maxMarks}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 16),
-              const Divider(color: Colors.black, thickness: 2),
-              const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-              // Instructions
-              if (template.instructions != null) ...[
-                const Text(
-                  'GENERAL INSTRUCTIONS:',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  template.instructions!,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 16),
-                const Divider(color: Colors.black, thickness: 1),
-                const SizedBox(height: 20),
-              ],
-
-              // Sections
-              ...template.sections.map(_buildSection),
-
-              const SizedBox(height: 32),
-
-              // Footer
-              const Center(
-                child: Column(
+            // Exam Details
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Divider(color: Colors.black),
-                    SizedBox(height: 16),
                     Text(
-                      '*** END OF QUESTION PAPER ***',
-                      style: TextStyle(
-                        fontSize: 12,
+                      'Class: ${template.className} - ${template.section}',
+                      style: const TextStyle(
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Subject: ${template.subject}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection(QuestionSection section) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            border: Border.all(color: Colors.black),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                section.sectionName.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (section.description != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  section.description!,
-                  style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Date: ${template.date}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Time: ${template.duration}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Max. Marks: ${template.maxMarks}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ],
+            ),
+
+            const SizedBox(height: 16),
+            const Divider(color: Colors.black, thickness: 2),
+            const SizedBox(height: 16),
+
+            // Instructions
+            if (template.instructions != null) ...[
+              const Text(
+                'GENERAL INSTRUCTIONS:',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                template.instructions!,
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.black, thickness: 1),
+              const SizedBox(height: 20),
             ],
-          ),
+
+            // Sections
+            ...template.sections.map(_buildSection),
+
+            const SizedBox(height: 32),
+
+            // Footer
+            const Center(
+              child: Column(
+                children: [
+                  Divider(color: Colors.black),
+                  SizedBox(height: 16),
+                  Text(
+                    '*** END OF QUESTION PAPER ***',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
-        ...List.generate(
-          section.questions.length,
-          (index) => _buildQuestion(
-            index + 1,
-            section.questions[index],
-            section.marksPerQuestion,
-          ),
+      ),
+    ),
+  );
+
+  Widget _buildSection(QuestionSection section) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          border: Border.all(),
         ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              section.sectionName.toUpperCase(),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            if (section.description != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                section.description!,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      ...List.generate(
+        section.questions.length,
+        (index) => _buildQuestion(
+          index + 1,
+          section.questions[index],
+          section.marksPerQuestion,
+        ),
+      ),
+      const SizedBox(height: 24),
+    ],
+  );
 
   Widget _buildQuestion(int number, Question question, int defaultMarks) {
     final marks = question.customMarks ?? defaultMarks;
@@ -1018,10 +1009,7 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
         children: [
           Text(
             '$number. ',
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
           Expanded(
             child: Text(
@@ -1032,15 +1020,10 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black),
-            ),
+            decoration: BoxDecoration(border: Border.all()),
             child: Text(
               '[$marks]',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ),
         ],

@@ -193,7 +193,7 @@ class _MarkAttendanceContent extends StatelessWidget {
                           color: Colors.grey[300],
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'Select a class to begin',
                           style: TextStyle(
                             fontSize: AppTheme.fontSizeBase,
@@ -307,13 +307,17 @@ class _CompactDateCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        const Row(
           children: [
-            const Icon(Icons.calendar_today, size: 14, color: CustomAppColors.slate600),
-            const SizedBox(width: 4),
+            Icon(
+              Icons.calendar_today,
+              size: 14,
+              color: CustomAppColors.slate600,
+            ),
+            SizedBox(width: 4),
             Text(
               'Date',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 color: CustomAppColors.slate600,
                 fontWeight: AppTheme.fontWeightMedium,
@@ -378,20 +382,20 @@ class _CompactClassCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.class_, size: 14, color: CustomAppColors.slate600),
-              const SizedBox(width: 4),
+              Icon(Icons.class_, size: 14, color: CustomAppColors.slate600),
+              SizedBox(width: 4),
               Text(
                 'Class',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   color: CustomAppColors.slate600,
                   fontWeight: AppTheme.fontWeightMedium,
                 ),
               ),
-              const Spacer(),
-              const Icon(
+              Spacer(),
+              Icon(
                 Icons.keyboard_arrow_down,
                 size: 18,
                 color: CustomAppColors.slate400,
@@ -413,7 +417,10 @@ class _CompactClassCard extends StatelessWidget {
           if (selectedClass != null)
             Text(
               '${selectedClass!.totalStudents} students',
-              style: const TextStyle(fontSize: 11, color: CustomAppColors.slate600),
+              style: const TextStyle(
+                fontSize: 11,
+                color: CustomAppColors.slate600,
+              ),
             ),
         ],
       ),
@@ -427,16 +434,17 @@ class _CompactClassCard extends StatelessWidget {
       subtitle: 'Choose a class to mark attendance',
       headerIcon: Icons.class_,
       selectedValue: selectedClass,
-      items: availableClasses
-          .map(
-            (classInfo) => SelectionItem<ClassInfo>(
-              value: classInfo,
-              label: classInfo.name,
-              subtitle: '${classInfo.totalStudents} students enrolled',
-              icon: Icons.school,
-            ),
-          )
-          .toList(),
+      items:
+          availableClasses
+              .map(
+                (classInfo) => SelectionItem<ClassInfo>(
+                  value: classInfo,
+                  label: classInfo.name,
+                  subtitle: '${classInfo.totalStudents} students enrolled',
+                  icon: Icons.school,
+                ),
+              )
+              .toList(),
     );
 
     if (selectedClassInfo != null) {
@@ -511,7 +519,10 @@ class _SummaryItem extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 10, color: CustomAppColors.slate600),
+              style: const TextStyle(
+                fontSize: 10,
+                color: CustomAppColors.slate600,
+              ),
             ),
             Text(
               value,

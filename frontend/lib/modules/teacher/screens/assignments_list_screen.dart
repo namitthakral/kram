@@ -131,7 +131,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                       }
                       final query = _searchQuery.toLowerCase();
                       return assignment.title.toLowerCase().contains(query) ||
-                          (assignment.courseName?.toLowerCase().contains(
+                          (assignment.courseName.toLowerCase().contains(
                                 query,
                               ) ??
                               false);
@@ -389,9 +389,10 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
 
       if (mounted) {
         showCustomSnackbar(
-          message: success
-              ? 'Assignment deleted successfully'
-              : 'Failed to delete assignment',
+          message:
+              success
+                  ? 'Assignment deleted successfully'
+                  : 'Failed to delete assignment',
           type: success ? SnackbarType.success : SnackbarType.warning,
         );
       }
