@@ -17,6 +17,7 @@ import { UserWithRelations } from '../types/auth.types'
 import {
   CreateStudentDto,
   PaginationDto,
+  ReportCardQueryDto,
   UpdateStudentDto,
 } from './dto/student.dto'
 import { StudentsService } from './students.service'
@@ -159,6 +160,25 @@ export class StudentsController {
     return this.studentsService.getUpcomingEventsByUuid(
       userUuid,
       parseInt(limit || '10'),
+      user
+    )
+  }
+
+  // ==================== Report Card Generation ====================
+
+  @Get(':user_uuid/report-card')
+  async getReportCard(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query() queryDto: ReportCardQueryDto
+  ) {
+    return this.studentsService.generateReportCardByUuid(
+      userUuid,
+      {
+        semesterId: queryDto.semesterId,
+        academicYearId: queryDto.academicYearId,
+        includeExamDetails: queryDto.includeExamDetails,
+      },
       user
     )
   }

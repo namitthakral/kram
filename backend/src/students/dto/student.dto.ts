@@ -1,17 +1,17 @@
+import { Transform } from 'class-transformer'
 import {
-  IsString,
-  IsNumber,
-  IsOptional,
   IsBoolean,
   IsDateString,
-  IsEnum,
-  MinLength,
-  MaxLength,
-  IsPositive,
   IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+  MinLength,
 } from 'class-validator'
-import { Transform } from 'class-transformer'
-import { StudentType, ResidentialStatus } from '../../types'
+import { ResidentialStatus, StudentType } from '../../types'
 
 export class CreateStudentDto {
   // User fields - will be used to create the user automatically
@@ -189,4 +189,21 @@ export class PaginationDto {
   @IsString()
   @IsOptional()
   search?: string
+}
+
+export class ReportCardQueryDto {
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  semesterId?: number
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  academicYearId?: number
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true')
+  @IsBoolean()
+  includeExamDetails?: boolean = true
 }

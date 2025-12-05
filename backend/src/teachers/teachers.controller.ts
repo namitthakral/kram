@@ -31,6 +31,7 @@ import {
 } from './dto/examination.dto'
 import {
   AssignSubjectsDto,
+  BatchReportCardDto,
   CreateTeacherDto,
   TeacherQueryDto,
   UpdateTeacherDto,
@@ -481,5 +482,23 @@ export class TeachersController {
       parseInt(examId, 10),
       parseInt(resultId, 10)
     )
+  }
+
+  // ==================== Batch Report Card Generation ====================
+
+  @Post(':user_uuid/report-cards/generate')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  generateBatchReportCards(
+    @Param('user_uuid') userUuid: string,
+    @Body() batchReportCardDto: BatchReportCardDto
+  ) {
+    return this.teachersService.generateBatchReportCards(userUuid, {
+      sectionId: batchReportCardDto.sectionId,
+      courseId: batchReportCardDto.courseId,
+      semesterId: batchReportCardDto.semesterId,
+      studentIds: batchReportCardDto.studentIds,
+      includeExamDetails: batchReportCardDto.includeExamDetails,
+    })
   }
 }

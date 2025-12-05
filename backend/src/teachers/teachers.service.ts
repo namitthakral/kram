@@ -11,6 +11,19 @@ import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { ProgressUpdaterService } from '../students/services/progress-updater.service'
 import {
+  BatchReportCardRequest,
+  BatchReportCardResponse,
+  BatchReportCardStudentSummary,
+  ReportCard,
+  ReportCardAttendanceSummary,
+  ReportCardExamSummary,
+  ReportCardPerformanceSummary,
+  ReportCardRemarks,
+  ReportCardSemesterInfo,
+  ReportCardStudentInfo,
+  ReportCardSubjectRecord,
+} from '../types/student.types'
+import {
   AttendanceTrendsData,
   DailyAttendanceDetail,
   DailyAttendancePreview,
@@ -4291,6 +4304,597 @@ export class TeachersService {
     } catch (error) {
       // Log error but don't throw - this is a background operation
       console.error('Failed to trigger progress recalculation:', error)
+    }
+  }
+
+  // ============================================================================
+  // BATCH REPORT CARD GENERATION
+  // ============================================================================
+
+  async generateBatchReportCards(
+    teacherUuid: string,
+    request: BatchReportCardRequest
+  ): Promise<BatchReportCardResponse> {
+    // Verify teacher exists
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: teacherUuid } },
+      include: { user: true },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${teacherUuid} not found`)
+    }
+
+    // Determine semester to use
+    let semester
+    if (request.semesterId) {
+      semester = await this.prisma.semester.findUnique({
+        where: { id: request.semesterId },
+        include: {
+          academicYear: { select: { yearName: true } },
+        },
+      })
+    } else {
+      semester = await this.prisma.semester.findFirst({
+        where: { status: { in: ['ACTIVE', 'COMPLETED'] } },
+        orderBy: [{ status: 'asc' }, { semesterNumber: 'desc' }],
+        include: {
+          academicYear: { select: { yearName: true } },
+        },
+      })
+    }
+
+    if (!semester) {
+      throw new NotFoundException(
+        'No semester found for report card generation'
+      )
+    }
+
+    // Get students based on request criteria
+    let studentIds: number[] = []
+
+    if (request.studentIds && request.studentIds.length > 0) {
+      // Use provided student IDs
+      studentIds = request.studentIds
+    } else if (request.sectionId) {
+      // Get students from section enrollments
+      const section = await this.prisma.classSection.findUnique({
+        where: { id: request.sectionId },
+        include: {
+          subject: true,
+        },
+      })
+
+      if (!section) {
+        throw new NotFoundException(
+          `Section with ID ${request.sectionId} not found`
+        )
+      }
+
+      // Verify teacher teaches this section
+      if (section.teacherId !== teacher.id) {
+        throw new ForbiddenException('You are not assigned to this section')
+      }
+
+      const enrollments = await this.prisma.enrollment.findMany({
+        where: {
+          subjectId: section.subjectId,
+          semesterId: semester.id,
+          enrollmentStatus: 'ENROLLED',
+        },
+        select: { studentId: true },
+      })
+
+      studentIds = enrollments.map(e => e.studentId)
+    } else if (request.courseId) {
+      // Get all students in a course
+      const students = await this.prisma.student.findMany({
+        where: {
+          courseId: request.courseId,
+          status: { not: 'SUSPENDED' },
+        },
+        select: { id: true },
+      })
+
+      studentIds = students.map(s => s.id)
+    } else {
+      // Get all students taught by this teacher
+      const teacherSections = await this.prisma.classSection.findMany({
+        where: { teacherId: teacher.id },
+        select: { subjectId: true },
+      })
+
+      const subjectIds = [...new Set(teacherSections.map(s => s.subjectId))]
+
+      const enrollments = await this.prisma.enrollment.findMany({
+        where: {
+          subjectId: { in: subjectIds },
+          semesterId: semester.id,
+          enrollmentStatus: 'ENROLLED',
+        },
+        select: { studentId: true },
+      })
+
+      studentIds = [...new Set(enrollments.map(e => e.studentId))]
+    }
+
+    if (studentIds.length === 0) {
+      throw new BadRequestException('No students found matching the criteria')
+    }
+
+    // Get all students with their data
+    const students = await this.prisma.student.findMany({
+      where: {
+        id: { in: studentIds },
+        status: { not: 'SUSPENDED' },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            uuid: true,
+            edverseId: true,
+            name: true,
+            email: true,
+          },
+        },
+        institution: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
+      },
+    })
+
+    // Generate report cards for each student
+    const reportCards: ReportCard[] = []
+    const studentSummaries: BatchReportCardStudentSummary[] = []
+    const failedStudents: number[] = []
+
+    // Get class rank data once for all students
+    const classRankData = await this.prisma.academicRecord.groupBy({
+      by: ['studentId'],
+      where: { semesterId: semester.id },
+      _avg: { gradePoints: true },
+      _sum: { creditsEarned: true },
+    })
+
+    const studentGpas = classRankData
+      .map(record => ({
+        studentId: record.studentId,
+        gpa:
+          record._sum.creditsEarned && record._avg.gradePoints
+            ? parseFloat(record._avg.gradePoints.toString())
+            : 0,
+      }))
+      .sort((a, b) => b.gpa - a.gpa)
+
+    for (const student of students) {
+      try {
+        const reportCard = await this.generateSingleReportCard(
+          student,
+          semester,
+          studentGpas,
+          request.includeExamDetails !== false
+        )
+        reportCards.push(reportCard)
+
+        // Create summary
+        studentSummaries.push({
+          studentId: student.id,
+          studentName: student.user.name,
+          admissionNumber: student.admissionNumber,
+          rollNumber: student.rollNumber,
+          sgpa: reportCard.performanceSummary.sgpa,
+          cgpa: reportCard.performanceSummary.cgpa,
+          attendancePercentage: reportCard.attendanceSummary.percentage,
+          overallGrade: reportCard.performanceSummary.overallGrade,
+          overallStatus: reportCard.performanceSummary.overallStatus,
+          classRank: reportCard.performanceSummary.classRank,
+          reportCardNumber: reportCard.reportCardNumber,
+        })
+      } catch (error) {
+        console.error(
+          `Failed to generate report card for student ${student.id}:`,
+          error
+        )
+        failedStudents.push(student.id)
+      }
+    }
+
+    // Calculate summary statistics
+    const totalStudents = students.length
+    const generated = reportCards.length
+    const failed = failedStudents.length
+
+    const averageSgpa =
+      reportCards.length > 0
+        ? Math.round(
+            (reportCards.reduce(
+              (sum, r) => sum + r.performanceSummary.sgpa,
+              0
+            ) /
+              reportCards.length) *
+              100
+          ) / 100
+        : 0
+
+    const averageAttendance =
+      reportCards.length > 0
+        ? Math.round(
+            (reportCards.reduce(
+              (sum, r) => sum + r.attendanceSummary.percentage,
+              0
+            ) /
+              reportCards.length) *
+              100
+          ) / 100
+        : 0
+
+    const passCount = reportCards.filter(
+      r => r.performanceSummary.overallStatus === 'PASSED'
+    ).length
+    const failCount = reportCards.filter(
+      r => r.performanceSummary.overallStatus === 'FAILED'
+    ).length
+
+    // Calculate grade distribution
+    const gradeCount = new Map<string, number>()
+    reportCards.forEach(r => {
+      const grade = r.performanceSummary.overallGrade
+      gradeCount.set(grade, (gradeCount.get(grade) || 0) + 1)
+    })
+
+    const gradeDistribution = Array.from(gradeCount.entries())
+      .map(([grade, count]) => ({
+        grade,
+        count,
+        percentage:
+          reportCards.length > 0
+            ? Math.round((count / reportCards.length) * 100 * 100) / 100
+            : 0,
+      }))
+      .sort((a, b) => {
+        const gradeOrder = ['A+', 'A', 'B+', 'B', 'C', 'D', 'F']
+        return gradeOrder.indexOf(a.grade) - gradeOrder.indexOf(b.grade)
+      })
+
+    const batchId = `BATCH-${teacher.institutionId}-${semester.id}-${Date.now().toString(36).toUpperCase()}`
+
+    return {
+      success: true,
+      data: {
+        reportCards,
+        summary: {
+          totalStudents,
+          generated,
+          failed,
+          averageSgpa,
+          averageAttendance,
+          passCount,
+          failCount,
+          gradeDistribution,
+        },
+        studentSummaries,
+        generatedAt: new Date().toISOString(),
+        batchId,
+      },
+    }
+  }
+
+  private async generateSingleReportCard(
+    student: {
+      id: number
+      userId: number
+      admissionNumber: string
+      rollNumber: string | null
+      currentSemester: number | null
+      currentYear: number | null
+      section: string | null
+      user: {
+        id: number
+        uuid: string
+        edverseId: string | null
+        name: string
+        email: string
+      }
+      institution: {
+        id: number
+        name: string
+      }
+      course: {
+        id: number
+        name: string
+        code: string | null
+      } | null
+    },
+    semester: {
+      id: number
+      semesterName: string
+      semesterNumber: number
+      startDate: Date
+      endDate: Date
+      academicYear: { yearName: string }
+    },
+    studentGpas: { studentId: number; gpa: number }[],
+    includeExamDetails: boolean
+  ): Promise<ReportCard> {
+    // Get academic records, attendance, exam results, and progress
+    const [
+      academicRecords,
+      attendanceData,
+      examResults,
+      studentProgress,
+      cumulativeRecords,
+    ] = await Promise.all([
+      this.prisma.academicRecord.findMany({
+        where: { studentId: student.id, semesterId: semester.id },
+        include: {
+          subject: {
+            select: {
+              id: true,
+              subjectName: true,
+              subjectCode: true,
+              credits: true,
+            },
+          },
+        },
+        orderBy: { subject: { subjectCode: 'asc' } },
+      }),
+
+      this.prisma.attendance.findMany({
+        where: {
+          studentId: student.id,
+          date: { gte: semester.startDate, lte: semester.endDate },
+        },
+      }),
+
+      includeExamDetails
+        ? this.prisma.examResult.findMany({
+            where: { studentId: student.id, exam: { semesterId: semester.id } },
+            include: {
+              exam: {
+                select: { examName: true, examType: true, totalMarks: true },
+              },
+            },
+          })
+        : Promise.resolve([]),
+
+      this.prisma.studentProgress.findMany({
+        where: { studentId: student.id, semesterId: semester.id },
+        orderBy: { updatedAt: 'desc' },
+        take: 1,
+      }),
+
+      this.prisma.academicRecord.findMany({
+        where: { studentId: student.id },
+        select: { gradePoints: true, creditsEarned: true },
+      }),
+    ])
+
+    // Build student info
+    const studentInfo: ReportCardStudentInfo = {
+      name: student.user.name,
+      edverseId: student.user.edverseId,
+      admissionNumber: student.admissionNumber,
+      rollNumber: student.rollNumber,
+      courseName: student.course?.name || null,
+      courseCode: student.course?.code || null,
+      currentSemester: student.currentSemester,
+      currentYear: student.currentYear,
+      section: student.section,
+      institutionName: student.institution.name,
+    }
+
+    // Build semester info
+    const semesterInfo: ReportCardSemesterInfo = {
+      semesterId: semester.id,
+      semesterName: semester.semesterName,
+      semesterNumber: semester.semesterNumber,
+      academicYear: semester.academicYear.yearName,
+      startDate: semester.startDate.toISOString().split('T')[0],
+      endDate: semester.endDate.toISOString().split('T')[0],
+    }
+
+    // Build subject records
+    const subjectRecords: ReportCardSubjectRecord[] = academicRecords.map(
+      record => {
+        const marksObtained = record.marksObtained
+          ? parseFloat(record.marksObtained.toString())
+          : null
+        const maxMarks = record.maxMarks
+          ? parseFloat(record.maxMarks.toString())
+          : null
+        const percentage =
+          marksObtained !== null && maxMarks !== null && maxMarks > 0
+            ? Math.round((marksObtained / maxMarks) * 100 * 100) / 100
+            : null
+
+        return {
+          subjectName: record.subject.subjectName,
+          subjectCode: record.subject.subjectCode,
+          credits: record.subject.credits,
+          marksObtained,
+          maxMarks,
+          percentage,
+          grade: record.grade,
+          gradePoints: record.gradePoints
+            ? parseFloat(record.gradePoints.toString())
+            : null,
+          status: record.status as
+            | 'PASSED'
+            | 'FAILED'
+            | 'INCOMPLETE'
+            | 'WITHDRAWN',
+          teacherRemarks: record.remarks || undefined,
+        }
+      }
+    )
+
+    // Build exam summaries
+    const examSummaries: ReportCardExamSummary[] = examResults.map(result => {
+      const marksObtained = result.marksObtained
+        ? parseFloat(result.marksObtained.toString())
+        : 0
+      const totalMarks = result.exam.totalMarks || 100
+      const percentage =
+        Math.round((marksObtained / totalMarks) * 100 * 100) / 100
+
+      let grade = 'F'
+      if (percentage >= 90) grade = 'A+'
+      else if (percentage >= 80) grade = 'A'
+      else if (percentage >= 70) grade = 'B+'
+      else if (percentage >= 60) grade = 'B'
+      else if (percentage >= 50) grade = 'C'
+      else if (percentage >= 40) grade = 'D'
+
+      return {
+        examType: result.exam.examType,
+        examName: result.exam.examName || `${result.exam.examType} Exam`,
+        totalMarks,
+        marksObtained,
+        percentage,
+        grade,
+        rank: result.rankInClass || undefined,
+      }
+    })
+
+    // Build attendance summary
+    const totalClasses = attendanceData.length
+    const classesAttended = attendanceData.filter(
+      r => r.status === 'PRESENT'
+    ).length
+    const classesAbsent = totalClasses - classesAttended
+    const attendancePercentage =
+      totalClasses > 0
+        ? Math.round((classesAttended / totalClasses) * 100 * 100) / 100
+        : 0
+
+    let attendanceStatus: 'excellent' | 'good' | 'satisfactory' | 'poor' =
+      'poor'
+    if (attendancePercentage >= 90) attendanceStatus = 'excellent'
+    else if (attendancePercentage >= 75) attendanceStatus = 'good'
+    else if (attendancePercentage >= 60) attendanceStatus = 'satisfactory'
+
+    const attendanceSummary: ReportCardAttendanceSummary = {
+      totalClasses,
+      classesAttended,
+      classesAbsent,
+      percentage: attendancePercentage,
+      status: attendanceStatus,
+    }
+
+    // Calculate SGPA
+    let totalGradePoints = 0
+    let totalCredits = 0
+    for (const record of academicRecords) {
+      if (record.gradePoints && record.creditsEarned) {
+        totalGradePoints +=
+          parseFloat(record.gradePoints.toString()) * record.creditsEarned
+        totalCredits += record.creditsEarned
+      }
+    }
+    const sgpa =
+      totalCredits > 0
+        ? Math.round((totalGradePoints / totalCredits) * 100) / 100
+        : 0
+
+    // Calculate CGPA
+    let cumulativeGradePoints = 0
+    let cumulativeCredits = 0
+    for (const record of cumulativeRecords) {
+      if (record.gradePoints && record.creditsEarned) {
+        cumulativeGradePoints +=
+          parseFloat(record.gradePoints.toString()) * record.creditsEarned
+        cumulativeCredits += record.creditsEarned
+      }
+    }
+    const cgpa =
+      cumulativeCredits > 0
+        ? Math.round((cumulativeGradePoints / cumulativeCredits) * 100) / 100
+        : 0
+
+    // Calculate class rank
+    const studentRankIndex = studentGpas.findIndex(
+      s => s.studentId === student.id
+    )
+    const classRank = studentRankIndex >= 0 ? studentRankIndex + 1 : null
+    const totalStudentsInClass = studentGpas.length
+    const percentile =
+      classRank !== null && totalStudentsInClass > 0
+        ? Math.round(
+            ((totalStudentsInClass - classRank) / totalStudentsInClass) *
+              100 *
+              100
+          ) / 100
+        : null
+
+    // Determine overall grade
+    let overallGrade = 'F'
+    if (sgpa >= 9.0) overallGrade = 'A+'
+    else if (sgpa >= 8.0) overallGrade = 'A'
+    else if (sgpa >= 7.0) overallGrade = 'B+'
+    else if (sgpa >= 6.0) overallGrade = 'B'
+    else if (sgpa >= 5.0) overallGrade = 'C'
+    else if (sgpa >= 4.0) overallGrade = 'D'
+
+    // Determine overall status
+    const failedSubjects = subjectRecords.filter(
+      r => r.status === 'FAILED'
+    ).length
+    let overallStatus: 'PASSED' | 'FAILED' | 'PROMOTED' | 'DETAINED' = 'PASSED'
+    if (failedSubjects > 0 && attendancePercentage < 75) {
+      overallStatus = 'DETAINED'
+    } else if (failedSubjects > 0) {
+      overallStatus = 'FAILED'
+    } else if (sgpa < 5.0 && attendancePercentage >= 75) {
+      overallStatus = 'PROMOTED'
+    }
+
+    const performanceSummary: ReportCardPerformanceSummary = {
+      sgpa,
+      cgpa,
+      totalCreditsEarned: totalCredits,
+      totalCreditsAttempted: academicRecords.reduce(
+        (sum, r) => sum + r.subject.credits,
+        0
+      ),
+      classRank,
+      totalStudents: totalStudentsInClass > 0 ? totalStudentsInClass : null,
+      percentile,
+      overallGrade,
+      overallStatus,
+    }
+
+    // Build remarks
+    const latestProgress = studentProgress[0]
+    const remarks: ReportCardRemarks = {
+      classTeacherRemarks: latestProgress?.teacherComments || undefined,
+      strengths: latestProgress?.strengths || [],
+      areasForImprovement: latestProgress?.areasForImprovement || [],
+    }
+
+    // Generate report card number
+    const reportCardNumber = `RC-${student.institution.id}-${student.id}-${semester.id}-${Date.now().toString(36).toUpperCase()}`
+
+    return {
+      studentInfo,
+      semesterInfo,
+      subjectRecords,
+      examSummaries,
+      attendanceSummary,
+      performanceSummary,
+      remarks,
+      generatedAt: new Date().toISOString(),
+      reportCardNumber,
     }
   }
 }

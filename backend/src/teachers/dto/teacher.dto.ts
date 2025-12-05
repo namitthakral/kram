@@ -199,3 +199,26 @@ export class AssignSubjectsDto {
   @IsInt()
   academicYearId: number
 }
+
+export class BatchReportCardDto {
+  @IsOptional()
+  @IsInt()
+  sectionId?: number
+
+  @IsOptional()
+  @IsInt()
+  courseId?: number
+
+  @IsOptional()
+  @IsInt()
+  semesterId?: number
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  studentIds?: number[]
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  includeExamDetails?: boolean = true
+}
