@@ -6,9 +6,9 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
+import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
 import { CoursesService } from './courses.service'
 
 @Controller('courses')
@@ -34,7 +34,7 @@ export class CoursesController {
   /**
    * Get all courses with their sections (student groupings)
    * Returns courses with sections derived from enrolled students
-   * 
+   *
    * Example response:
    * {
    *   "courseId": 1,
@@ -73,4 +73,3 @@ export class CoursesController {
     return this.coursesService.getCourseSections(id)
   }
 }
-

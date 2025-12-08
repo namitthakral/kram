@@ -1,22 +1,16 @@
-import {
-  Controller,
-  Get,
-  Query,
-  ParseIntPipe,
-  UseGuards,
-} from '@nestjs/common'
+import { Controller, Get, ParseIntPipe, Query, UseGuards } from '@nestjs/common'
+import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
 import { CoursesService } from './courses.service'
 
 /**
  * Class Sections Controller
- * 
+ *
  * Manages subject-based class sections (ClassSection model).
- * These are sections for specific subjects in a semester, 
+ * These are sections for specific subjects in a semester,
  * assigned to a teacher with capacity and schedule.
- * 
+ *
  * Example: "Data Structures - Section A" with Teacher Dr. Sharma
  */
 @Controller('class-sections')
@@ -26,14 +20,14 @@ export class ClassSectionsController {
 
   /**
    * Get all class sections
-   * 
+   *
    * Query params:
    * - institutionId: Filter by institution
    * - semesterId: Filter by semester
    * - courseId: Filter by course/program
    * - teacherId: Filter by teacher
    * - status: Filter by status (ACTIVE, INACTIVE)
-   * 
+   *
    * Example response:
    * {
    *   "id": 1,
@@ -68,4 +62,3 @@ export class ClassSectionsController {
     })
   }
 }
-
