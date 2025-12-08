@@ -11,6 +11,7 @@ import { InstitutionsModule } from './institutions/institutions.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { StudentsModule } from './students/students.module'
 import { TeachersModule } from './teachers/teachers.module'
+import { TimetableModule } from './timetable/timetable.module'
 import { UsersModule } from './users/users.module'
 
 @Module({
@@ -57,6 +58,7 @@ import { UsersModule } from './users/users.module'
     TeachersModule,
     CoursesModule,
     InstitutionsModule,
+    TimetableModule,
   ],
 })
 export class AppModule {}

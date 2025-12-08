@@ -3376,6 +3376,355 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "Timetable Management",
+      "item": [
+        {
+          "name": "Time Slots",
+          "item": [
+            {
+              "name": "Create Time Slot",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"institutionId\": 1,\n  \"slotName\": \"Period 1\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"09:45\",\n  \"slotType\": \"LECTURE\",\n  \"duration\": 45,\n  \"sortOrder\": 1,\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/time-slots",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "time-slots"]
+                },
+                "description": "Create a new time slot.\n\nSlot Types: LECTURE, PRACTICAL, TUTORIAL, BREAK, LUNCH, ASSEMBLY, SPORTS, LIBRARY, STUDY_HALL"
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Time Slots",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/time-slots?institutionId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "time-slots"],
+                  "query": [
+                    { "key": "institutionId", "value": "1" },
+                    { "key": "slotType", "value": "LECTURE", "disabled": true },
+                    { "key": "isActive", "value": "true", "disabled": true }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Time Slot by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/time-slots/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "time-slots", "1"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Time Slot",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"slotName\": \"Period 1 (Updated)\",\n  \"duration\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/time-slots/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "time-slots", "1"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Time Slot",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/time-slots/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "time-slots", "1"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Rooms",
+          "item": [
+            {
+              "name": "Create Room",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"institutionId\": 1,\n  \"roomNumber\": \"101\",\n  \"roomName\": \"Computer Lab 1\",\n  \"roomType\": \"COMPUTER_LAB\",\n  \"building\": \"Main Building\",\n  \"floor\": \"1st Floor\",\n  \"capacity\": 40,\n  \"facilities\": [\"Projector\", \"AC\", \"Computers\"],\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/rooms",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "rooms"]
+                },
+                "description": "Create a new room.\n\nRoom Types: CLASSROOM, LABORATORY, LIBRARY, AUDITORIUM, SPORTS_ROOM, COMPUTER_LAB, CONFERENCE_ROOM, STAFF_ROOM, PRINCIPAL_OFFICE, MEDICAL_ROOM"
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Rooms",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/rooms?institutionId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "rooms"],
+                  "query": [
+                    { "key": "institutionId", "value": "1" },
+                    {
+                      "key": "roomType",
+                      "value": "CLASSROOM",
+                      "disabled": true
+                    },
+                    { "key": "isActive", "value": "true", "disabled": true },
+                    {
+                      "key": "building",
+                      "value": "Main Building",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Room by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/rooms/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "rooms", "1"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Room",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"roomName\": \"Computer Lab 1 (Upgraded)\",\n  \"capacity\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/rooms/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "rooms", "1"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Room",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/rooms/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "rooms", "1"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Timetable Entries",
+          "item": [
+            {
+              "name": "Create Timetable Entry",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"institutionId\": 1,\n  \"academicYearId\": 1,\n  \"semesterId\": 1,\n  \"courseId\": 1,\n  \"section\": \"A\",\n  \"dayOfWeek\": \"MONDAY\",\n  \"timeSlotId\": 1,\n  \"subjectId\": 1,\n  \"teacherId\": 1,\n  \"roomId\": 1,\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/entries",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "entries"]
+                },
+                "description": "Create a single timetable entry.\n\nDays: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY\n\nConflict detection:\n- Teacher cannot have two classes at same time\n- Room cannot be double-booked\n- Class cannot have two subjects at same time"
+              },
+              "response": []
+            },
+            {
+              "name": "Bulk Create Timetable",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"institutionId\": 1,\n  \"academicYearId\": 1,\n  \"semesterId\": 1,\n  \"entries\": [\n    {\n      \"courseId\": 1,\n      \"section\": \"A\",\n      \"dayOfWeek\": \"MONDAY\",\n      \"timeSlotId\": 1,\n      \"subjectId\": 1,\n      \"teacherId\": 1,\n      \"roomId\": 1\n    },\n    {\n      \"courseId\": 1,\n      \"section\": \"A\",\n      \"dayOfWeek\": \"MONDAY\",\n      \"timeSlotId\": 2,\n      \"subjectId\": 2,\n      \"teacherId\": 2,\n      \"roomId\": 2\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/entries/bulk",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "entries", "bulk"]
+                },
+                "description": "Create multiple timetable entries at once. Useful for setting up a week's schedule."
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Timetable Entries",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/entries?institutionId=1&semesterId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "entries"],
+                  "query": [
+                    { "key": "institutionId", "value": "1" },
+                    { "key": "semesterId", "value": "1" },
+                    { "key": "academicYearId", "value": "1", "disabled": true },
+                    { "key": "courseId", "value": "1", "disabled": true },
+                    { "key": "section", "value": "A", "disabled": true },
+                    { "key": "dayOfWeek", "value": "MONDAY", "disabled": true },
+                    { "key": "teacherId", "value": "1", "disabled": true },
+                    { "key": "subjectId", "value": "1", "disabled": true },
+                    { "key": "roomId", "value": "1", "disabled": true }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Timetable by Class",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/class/1/A?semesterId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "class", "1", "A"],
+                  "query": [{ "key": "semesterId", "value": "1" }]
+                },
+                "description": "Get weekly timetable for a specific class (course + section). Returns schedule grouped by day."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Timetable by Teacher",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/teacher/1?semesterId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "teacher", "1"],
+                  "query": [{ "key": "semesterId", "value": "1" }]
+                },
+                "description": "Get weekly timetable for a specific teacher. Returns schedule grouped by day."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Timetable by Room",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/room/1?semesterId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "room", "1"],
+                  "query": [{ "key": "semesterId", "value": "1" }]
+                },
+                "description": "Get weekly room occupancy. Returns schedule grouped by day."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Timetable Entry by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/entries/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "entries", "1"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Timetable Entry",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"roomId\": 2,\n  \"teacherId\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/timetable/entries/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "entries", "1"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Timetable Entry",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/timetable/entries/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["timetable", "entries", "1"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
     }
   ],
   "auth": {
