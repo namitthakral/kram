@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer'
 import {
+  IsDateString,
   IsEmail,
   IsInt,
   IsOptional,
@@ -56,6 +57,10 @@ export class SelfRegistrationDto {
   @IsOptional()
   @IsString()
   childEdverseId?: string // For parents mapping to existing students
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string
 }
 
 export class ChangePasswordDto {

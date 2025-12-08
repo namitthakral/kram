@@ -112,28 +112,6 @@
           "response": []
         },
         {
-          "name": "Self Registration",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"myPassword123\",\n  \"role\": \"student\"\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/auth/self-register",
-              "host": ["{{api_url}}"],
-              "path": ["auth", "self-register"]
-            }
-          },
-          "response": []
-        },
-        {
           "name": "Login with EdVerse ID",
           "request": {
             "method": "POST",
@@ -200,7 +178,26 @@
           "response": []
         },
         {
-          "name": "Map Parent to Child",
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/auth/refresh",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Refresh the JWT access token. Requires valid token."
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Account",
           "request": {
             "method": "POST",
             "header": [
@@ -211,13 +208,68 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"childEdverseId\": \"EDV-S-2024-000001\"\n}"
+              "raw": "{\n    \"edverseId\": \"DPS-S25-K8M2\",\n    \"temporaryPassword\": \"Doe@John123\",\n    \"newPassword\": \"MyNewSecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/activate-account",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "activate-account"]
+            },
+            "description": "Activate account for institutional users created by admin. Used on first login to change temporary password."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPassword\": \"OldPassword123!\",\n    \"newPassword\": \"NewSecurePass456!\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/auth/change-password",
+              "host": ["{{api_url}}"],
+              "path": ["auth", "change-password"]
+            },
+            "description": "Change password for logged in user."
+          },
+          "response": []
+        },
+        {
+          "name": "Map Parent to Child",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"childEdverseId\": \"DPS-S25-K8M2\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/auth/map-parent-child",
               "host": ["{{api_url}}"],
               "path": ["auth", "map-parent-child"]
-            }
+            },
+            "description": "Map a parent to their child using the child's EdVerse ID. For parent users only."
           },
           "response": []
         },
@@ -233,6 +285,267 @@
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Institution Settings",
+      "item": [
+        {
+          "name": "Create Institution",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Delhi Public School\",\n    \"type\": \"SCHOOL\",\n    \"code\": \"DPS\",\n    \"address\": \"Mathura Road, New Delhi\",\n    \"city\": \"New Delhi\",\n    \"state\": \"Delhi\",\n    \"country\": \"India\",\n    \"postalCode\": \"110003\",\n    \"phone\": \"011-24318671\",\n    \"email\": \"info@dpsmathuraroad.com\",\n    \"website\": \"https://dpsmathuraroad.com\",\n    \"establishedYear\": 1949,\n    \"accreditation\": \"CBSE\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/institutions",
+              "host": ["{{api_url}}"],
+              "path": ["institutions"]
+            },
+            "description": "Create a new institution. Only super_admin can create institutions.\n\n**Code Field:**\n- Optional: If not provided, code will be auto-generated from institution name\n- If provided: Must be 2-4 uppercase alphanumeric characters and unique\n\n**Type Options:**\n- SCHOOL\n- COLLEGE\n- UNIVERSITY\n- INSTITUTE"
+          },
+          "response": [
+            {
+              "name": "Institution Created (with custom code)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Delhi Public School\",\n    \"type\": \"SCHOOL\",\n    \"code\": \"DPS\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/institutions",
+                  "host": ["{{api_url}}"],
+                  "path": ["institutions"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Institution created successfully\",\n    \"data\": {\n        \"id\": 5,\n        \"code\": \"DPS\",\n        \"name\": \"Delhi Public School\",\n        \"type\": \"SCHOOL\",\n        \"status\": \"ACTIVE\",\n        \"createdAt\": \"2025-12-08T10:00:00.000Z\"\n    }\n}"
+            },
+            {
+              "name": "Institution Created (auto-generated code)",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"Indian Institute of Technology Delhi\",\n    \"type\": \"UNIVERSITY\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/institutions",
+                  "host": ["{{api_url}}"],
+                  "path": ["institutions"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"message\": \"Institution created successfully\",\n    \"data\": {\n        \"id\": 6,\n        \"code\": \"IITD\",\n        \"name\": \"Indian Institute of Technology Delhi\",\n        \"type\": \"UNIVERSITY\",\n        \"status\": \"ACTIVE\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get ID Configuration",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/institutions/:institutionId/id-config",
+              "host": ["{{api_url}}"],
+              "path": ["institutions", ":institutionId", "id-config"],
+              "variable": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Institution ID"
+                }
+              ]
+            },
+            "description": "Get the ID format configuration for an institution. Returns the templates used for generating admission numbers, roll numbers, and employee IDs.\n\n**Available Placeholders:**\n- `{YEAR}` - Full year (2025)\n- `{YY}` - 2-digit year (25)\n- `{MONTH}` or `{MM}` - Month (01-12)\n- `{INST}` - Institution code\n- `{COURSE}` or `{BRANCH}` - Course code\n- `{SECTION}` - Section letter\n- `{SEQ:N}` - Sequence number padded to N digits"
+          },
+          "response": []
+        },
+        {
+          "name": "Update ID Configuration",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admissionNumberFormat\": \"{INST}/{YEAR}/{COURSE}/{SEQ:4}\",\n  \"rollNumberFormat\": \"{INST}-{COURSE}-{SECTION}-{SEQ:3}\",\n  \"teacherEmployeeIdFormat\": \"{INST}-EMP-{YEAR}-{SEQ:4}\",\n  \"staffEmployeeIdFormat\": \"{INST}-STF-{YEAR}-{SEQ:4}\",\n  \"sequenceResetPolicy\": \"YEARLY\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/institutions/:institutionId/id-config",
+              "host": ["{{api_url}}"],
+              "path": ["institutions", ":institutionId", "id-config"],
+              "variable": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Institution ID"
+                }
+              ]
+            },
+            "description": "Update the ID format configuration for an institution.\n\n**Template Formats:**\n\n| Style | Admission Number | Roll Number |\n|-------|------------------|-------------|\n| Standard | `{YEAR}/{COURSE}/{SEQ:5}` | `{COURSE}-{SECTION}-{SEQ:3}` |\n| Compact | `{YY}{COURSE}{SEQ:4}` | `{COURSE}{SECTION}{SEQ:3}` |\n| Institution Prefixed | `{INST}/{YEAR}/{COURSE}/{SEQ:4}` | `{INST}-{COURSE}-{SECTION}-{SEQ:3}` |\n| Legacy | `ADM{SEQ:6}` | `ROLL{SEQ:5}` |\n\n**Sequence Reset Policies:**\n- `YEARLY` - Reset sequence at start of each year\n- `MONTHLY` - Reset sequence at start of each month\n- `NEVER` - Continuously incrementing sequence"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"admissionNumberFormat\": \"{INST}/{YEAR}/{COURSE}/{SEQ:4}\",\n  \"rollNumberFormat\": \"{INST}-{COURSE}-{SECTION}-{SEQ:3}\",\n  \"sequenceResetPolicy\": \"YEARLY\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/institutions/:institutionId/id-config",
+                  "host": ["{{api_url}}"],
+                  "path": ["institutions", ":institutionId", "id-config"],
+                  "variable": [
+                    {
+                      "key": "institutionId",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"ID configuration updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"institutionId\": 1,\n    \"admissionNumberFormat\": \"{INST}/{YEAR}/{COURSE}/{SEQ:4}\",\n    \"rollNumberFormat\": \"{INST}-{COURSE}-{SECTION}-{SEQ:3}\",\n    \"teacherEmployeeIdFormat\": \"{INST}-EMP-{YEAR}-{SEQ:4}\",\n    \"staffEmployeeIdFormat\": \"{INST}-STF-{YEAR}-{SEQ:4}\",\n    \"sequenceResetPolicy\": \"YEARLY\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Preview ID Format",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"template\": \"{INST}/{YEAR}/{COURSE}/{SEQ:4}\",\n  \"courseCode\": \"CS\",\n  \"section\": \"A\",\n  \"sequence\": 42\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/institutions/:institutionId/id-config/preview",
+              "host": ["{{api_url}}"],
+              "path": [
+                "institutions",
+                ":institutionId",
+                "id-config",
+                "preview"
+              ],
+              "variable": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Institution ID"
+                }
+              ]
+            },
+            "description": "Preview what an ID would look like with a given template. Useful for testing templates before saving."
+          },
+          "response": [
+            {
+              "name": "Preview Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"template\": \"{INST}/{YEAR}/{COURSE}/{SEQ:4}\",\n  \"courseCode\": \"CS\",\n  \"section\": \"A\",\n  \"sequence\": 42\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/institutions/:institutionId/id-config/preview",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "institutions",
+                    ":institutionId",
+                    "id-config",
+                    "preview"
+                  ],
+                  "variable": [
+                    {
+                      "key": "institutionId",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"preview\": \"DPS/2025/CS/0042\",\n  \"context\": {\n    \"year\": 2025,\n    \"institutionCode\": \"DPS\",\n    \"courseCode\": \"CS\",\n    \"section\": \"A\",\n    \"sequence\": 42\n  }\n}"
+            }
+          ]
         }
       ]
     },
@@ -523,6 +836,188 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Unlock Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/users/:user_uuid/unlock",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "users", ":user_uuid", "unlock"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001"
+                }
+              ]
+            },
+            "description": "Unlock a locked user account"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/dashboard-stats",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "dashboard-stats"]
+            },
+            "description": "Get admin dashboard statistics"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/teacher-performance?limit=10",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "teacher-performance"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Get teacher performance analytics"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/attendance-trends?period=monthly",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "attendance-trends"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "monthly"
+                }
+              ]
+            },
+            "description": "Get attendance trends for the institution"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Grade Distribution",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/grade-distribution",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "grade-distribution"]
+            },
+            "description": "Get grade distribution across the institution"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Class Performance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/class-performance",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "class-performance"]
+            },
+            "description": "Get performance metrics by class"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Financial Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/financial-overview?period=yearly",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "financial-overview"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "yearly"
+                }
+              ]
+            },
+            "description": "Get financial overview for the institution"
+          },
+          "response": []
+        },
+        {
+          "name": "Get System Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/admin/system-alerts?limit=20",
+              "host": ["{{api_url}}"],
+              "path": ["admin", "system-alerts"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Get system alerts and notifications"
+          },
+          "response": []
         }
       ]
     },
@@ -614,7 +1109,7 @@
           "response": []
         },
         {
-          "name": "Create New User",
+          "name": "Create User (Unified)",
           "request": {
             "method": "POST",
             "header": [
@@ -625,15 +1120,67 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"roleId\": 6,\n  \"email\": \"namitt68@gmail.com\",\n  \"password\": \"Password@123\",\n  \"firstName\": \"Namit\",\n  \"lastName\": \"Thakral\",\n  \"phoneNumber\": \"+1234967891\",\n  \"address\": \"123 Main St\",\n  \"city\": \"Gurgaon\",\n  \"state\": \"Haryana\",\n  \"country\": \"India\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"roleId\": 1,\n  \"institutionId\": 1,\n  \"phoneNumber\": \"+1234567890\",\n  \"studentData\": {\n    \"courseId\": 1,\n    \"currentSemester\": 1,\n    \"section\": \"A\"\n  }\n}"
             },
             "url": {
               "raw": "{{api_url}}/users",
               "host": ["{{api_url}}"],
               "path": ["users"]
-            }
+            },
+            "description": "**Unified User Creation API** - Creates any user type with role-specific profile in one step.\n\n**Role IDs:**\n- 1: Student (studentData optional)\n- 2: Teacher (teacherData optional)\n- 3: Parent (requires parentData with childEdverseId)\n- 4: Staff (requires staffData with staffType + designation)\n- 5: Admin\n- 6: Super Admin\n\n**Auto-Generated Fields:**\n- EdVerse ID (always)\n- Temporary password (if not provided)\n- Admission Number (for students)\n- Roll Number (for students with section)\n- Employee ID (for teachers/staff)\n\n**Example payloads:**\n\n**Student (roleId: 1) - Minimal:**\n```json\n{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"roleId\": 1,\n  \"institutionId\": 1,\n  \"studentData\": {\n    \"courseId\": 1,\n    \"section\": \"A\"\n  }\n}\n```\n\n**Teacher (roleId: 2) - Minimal:**\n```json\n{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane@example.com\",\n  \"roleId\": 2,\n  \"institutionId\": 1,\n  \"teacherData\": {\n    \"designation\": \"Professor\"\n  }\n}\n```\n\n**Parent (roleId: 3):**\n```json\n{\n  \"parentData\": {\n    \"childEdverseId\": \"EDV-S-2024-000001\",\n    \"relation\": \"FATHER\"\n  }\n}\n```\n\n**Staff (roleId: 4):**\n```json\n{\n  \"staffData\": {\n    \"staffType\": \"ADMINISTRATIVE\",\n    \"designation\": \"Office Manager\"\n  }\n}\n```"
           },
-          "response": []
+          "response": [
+            {
+              "name": "Create Student Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"roleId\": 1,\n  \"institutionId\": 1,\n  \"studentData\": {\n    \"courseId\": 1,\n    \"currentSemester\": 1,\n    \"section\": \"A\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/users",
+                  "host": ["{{api_url}}"],
+                  "path": ["users"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 42,\n    \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"edverseId\": \"DPS-S25-K8M2\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"role\": {\n      \"id\": 1,\n      \"roleName\": \"student\"\n    },\n    \"student\": {\n      \"id\": 10,\n      \"admissionNumber\": \"2025/CS/00042\",\n      \"rollNumber\": \"CS-A-001\",\n      \"currentSemester\": 1,\n      \"section\": \"A\",\n      \"institution\": {\n        \"id\": 1,\n        \"name\": \"Example University\"\n      },\n      \"course\": {\n        \"id\": 1,\n        \"name\": \"B.Sc. Computer Science\"\n      }\n    },\n    \"status\": \"INACTIVE\"\n  },\n  \"temporaryPassword\": \"JOHN2025\",\n  \"note\": \"User must change password on first login\"\n}"
+            },
+            {
+              "name": "Create Teacher Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"roleId\": 2,\n  \"institutionId\": 1,\n  \"teacherData\": {\n    \"designation\": \"Professor\",\n    \"specialization\": \"Computer Science\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/users",
+                  "host": ["{{api_url}}"],
+                  "path": ["users"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 43,\n    \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"edverseId\": \"DPS-T25-P9X7\",\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"role\": {\n      \"id\": 2,\n      \"roleName\": \"teacher\"\n    },\n    \"teacher\": {\n      \"id\": 5,\n      \"employeeId\": \"EMP-2025-00015\",\n      \"designation\": \"Professor\",\n      \"specialization\": \"Computer Science\",\n      \"institution\": {\n        \"id\": 1,\n        \"name\": \"Example University\"\n      }\n    },\n    \"status\": \"INACTIVE\"\n  },\n  \"temporaryPassword\": \"JANE2025\",\n  \"note\": \"User must change password on first login\"\n}"
+            }
+          ]
         },
         {
           "name": "Update Current User Profile",
@@ -729,28 +1276,6 @@
                   "description": "Teacher UUID"
                 }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create New Teacher",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Purva\",\n  \"lastName\": \"Smith\", \n  \"email\": \"purva.smith@edverse.edu\",\n  \"phone\": \"+1-555-0123\",\n  \"institutionId\": 1,\n  \"employeeId\": \"EMP004\",\n  \"designation\": \"Professor\"\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/teachers",
-              "host": ["{{api_url}}"],
-              "path": ["teachers"]
             }
           },
           "response": []
@@ -1803,6 +2328,253 @@
               "body": "{\n  \"success\": true,\n  \"data\": {\n    \"reportCards\": [\n      {\n        \"studentInfo\": {\n          \"name\": \"John Doe\",\n          \"edverseId\": \"EDV-S-2024-000001\",\n          \"admissionNumber\": \"2024/001\",\n          \"rollNumber\": \"CS101\"\n        },\n        \"performanceSummary\": {\n          \"sgpa\": 8.5,\n          \"cgpa\": 8.2,\n          \"overallGrade\": \"A\",\n          \"overallStatus\": \"PASSED\"\n        }\n      }\n    ],\n    \"summary\": {\n      \"totalStudents\": 30,\n      \"generated\": 30,\n      \"failed\": 0,\n      \"averageSgpa\": 7.8,\n      \"averageAttendance\": 85.5,\n      \"passCount\": 28,\n      \"failCount\": 2,\n      \"gradeDistribution\": [\n        { \"grade\": \"A+\", \"count\": 3, \"percentage\": 10 },\n        { \"grade\": \"A\", \"count\": 8, \"percentage\": 26.67 },\n        { \"grade\": \"B+\", \"count\": 10, \"percentage\": 33.33 },\n        { \"grade\": \"B\", \"count\": 5, \"percentage\": 16.67 },\n        { \"grade\": \"C\", \"count\": 2, \"percentage\": 6.67 },\n        { \"grade\": \"F\", \"count\": 2, \"percentage\": 6.67 }\n      ]\n    },\n    \"studentSummaries\": [\n      {\n        \"studentId\": 1,\n        \"studentName\": \"John Doe\",\n        \"admissionNumber\": \"2024/001\",\n        \"rollNumber\": \"CS101\",\n        \"sgpa\": 8.5,\n        \"cgpa\": 8.2,\n        \"attendancePercentage\": 90,\n        \"overallGrade\": \"A\",\n        \"overallStatus\": \"PASSED\",\n        \"classRank\": 5,\n        \"reportCardNumber\": \"RC-1-1-3-M5K2L9\"\n      }\n    ],\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"batchId\": \"BATCH-1-3-M5K2L9ABC\"\n  }\n}"
             }
           ]
+        },
+        {
+          "name": "Create Assignment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Data Structures Assignment 1\",\n    \"description\": \"Implement a linked list\",\n    \"subjectId\": 1,\n    \"courseId\": 1,\n    \"dueDate\": \"2025-01-15\",\n    \"totalMarks\": 100\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/assignments",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "assignments"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher Assignments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/assignments",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "assignments"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Examination",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Mid-Term Examination\",\n    \"subjectId\": 1,\n    \"courseId\": 1,\n    \"examDate\": \"2025-02-15\",\n    \"totalMarks\": 100,\n    \"passingMarks\": 40,\n    \"examType\": \"MID_TERM\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "examinations"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Teacher Examinations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "examinations"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"studentId\": 1,\n    \"subjectId\": 1,\n    \"date\": \"2025-01-10\",\n    \"status\": \"PRESENT\",\n    \"remarks\": \"On time\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/attendance",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "attendance"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Mark Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"subjectId\": 1,\n    \"date\": \"2025-01-10\",\n    \"attendanceRecords\": [\n        { \"studentId\": 1, \"status\": \"PRESENT\" },\n        { \"studentId\": 2, \"status\": \"ABSENT\" },\n        { \"studentId\": 3, \"status\": \"LATE\" }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/attendance/bulk",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "attendance", "bulk"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enter Exam Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"studentId\": 1,\n    \"marksObtained\": 85,\n    \"remarks\": \"Good performance\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results"
+              ],
+              "variable": [
+                { "key": "user_uuid", "value": "{{teacher_uuid}}" },
+                { "key": "examId", "value": "1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Enter Exam Results",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"results\": [\n        { \"studentId\": 1, \"marksObtained\": 85 },\n        { \"studentId\": 2, \"marksObtained\": 72 },\n        { \"studentId\": 3, \"marksObtained\": 90 }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results/bulk",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results",
+                "bulk"
+              ],
+              "variable": [
+                { "key": "user_uuid", "value": "{{teacher_uuid}}" },
+                { "key": "examId", "value": "1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Exam Results",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/results",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "results"
+              ],
+              "variable": [
+                { "key": "user_uuid", "value": "{{teacher_uuid}}" },
+                { "key": "examId", "value": "1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pending Submissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/submissions/pending?limit=10",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "submissions", "pending"],
+              "query": [{ "key": "limit", "value": "10" }],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Students At Risk",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/students/at-risk?limit=20",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "students", "at-risk"],
+              "query": [{ "key": "limit", "value": "20" }],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Subjects to Teacher",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"subjectIds\": [1, 2, 3],\n    \"academicYearId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/assign-subjects",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "assign-subjects"],
+              "variable": [{ "key": "user_uuid", "value": "{{teacher_uuid}}" }]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -1830,6 +2602,24 @@
                 {
                   "key": "search",
                   "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "gradeLevel",
+                  "value": "10",
+                  "description": "Filter by grade level / class (e.g., 10, 12, Grade 5)",
+                  "disabled": true
+                },
+                {
+                  "key": "section",
+                  "value": "A",
+                  "description": "Filter by section (e.g., A, B, C)",
+                  "disabled": true
+                },
+                {
+                  "key": "courseId",
+                  "value": "1",
+                  "description": "Filter by course/program ID",
                   "disabled": true
                 },
                 {
@@ -1861,28 +2651,6 @@
                   "description": "Student UUID"
                 }
               ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create New Student",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\", \n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+1234567890\",\n  \"institutionId\": 1,\n  \"programId\": 1,\n  \"admissionNumber\": \"ADM009\",\n  \"rollNumber\": \"ROLL001\",\n  \"admissionDate\": \"2025-01-01\",\n  \"currentSemester\": 1,\n  \"currentYear\": 1,\n  \"gradeLevel\": \"Grade 1\",\n  \"section\": \"A\",\n  \"studentType\": \"REGULAR\",\n  \"residentialStatus\": \"DAY_SCHOLAR\",\n  \"transportRequired\": false,\n  \"emergencyContactName\": \"Emergency Contact\",\n  \"emergencyContactPhone\": \"+1234567890\",\n  \"bloodGroup\": \"O+\",\n  \"medicalConditions\": \"None\"\n}"
-            },
-            "url": {
-              "raw": "{{api_url}}/students",
-              "host": ["{{api_url}}"],
-              "path": ["students"]
             }
           },
           "response": []
@@ -2173,6 +2941,329 @@
               "body": "{\n  \"success\": true,\n  \"data\": {\n    \"studentInfo\": {\n      \"name\": \"John Doe\",\n      \"edverseId\": \"EDV-S-2024-000001\",\n      \"admissionNumber\": \"2024/001\",\n      \"rollNumber\": \"CS101\",\n      \"courseName\": \"B.Sc. Computer Science\",\n      \"courseCode\": \"BSCS\",\n      \"currentSemester\": 3,\n      \"currentYear\": 2,\n      \"section\": \"A\",\n      \"institutionName\": \"Example University\"\n    },\n    \"semesterInfo\": {\n      \"semesterId\": 3,\n      \"semesterName\": \"Semester 3\",\n      \"semesterNumber\": 3,\n      \"academicYear\": \"2024-25\",\n      \"startDate\": \"2024-07-01\",\n      \"endDate\": \"2024-12-31\"\n    },\n    \"subjectRecords\": [\n      {\n        \"subjectName\": \"Data Structures\",\n        \"subjectCode\": \"CS201\",\n        \"credits\": 4,\n        \"marksObtained\": 85,\n        \"maxMarks\": 100,\n        \"percentage\": 85,\n        \"grade\": \"A\",\n        \"gradePoints\": 3.7,\n        \"status\": \"PASSED\",\n        \"teacherRemarks\": \"Good performance\"\n      },\n      {\n        \"subjectName\": \"Database Management\",\n        \"subjectCode\": \"CS202\",\n        \"credits\": 3,\n        \"marksObtained\": 78,\n        \"maxMarks\": 100,\n        \"percentage\": 78,\n        \"grade\": \"B+\",\n        \"gradePoints\": 3.3,\n        \"status\": \"PASSED\"\n      }\n    ],\n    \"examSummaries\": [\n      {\n        \"examType\": \"MID_TERM\",\n        \"examName\": \"Mid-Term Examination\",\n        \"totalMarks\": 50,\n        \"marksObtained\": 42,\n        \"percentage\": 84,\n        \"grade\": \"A\",\n        \"rank\": 5\n      },\n      {\n        \"examType\": \"FINAL\",\n        \"examName\": \"Final Examination\",\n        \"totalMarks\": 100,\n        \"marksObtained\": 85,\n        \"percentage\": 85,\n        \"grade\": \"A\"\n      }\n    ],\n    \"attendanceSummary\": {\n      \"totalClasses\": 120,\n      \"classesAttended\": 108,\n      \"classesAbsent\": 12,\n      \"percentage\": 90,\n      \"status\": \"excellent\"\n    },\n    \"performanceSummary\": {\n      \"sgpa\": 8.5,\n      \"cgpa\": 8.2,\n      \"totalCreditsEarned\": 20,\n      \"totalCreditsAttempted\": 20,\n      \"classRank\": 5,\n      \"totalStudents\": 60,\n      \"percentile\": 91.67,\n      \"overallGrade\": \"A\",\n      \"overallStatus\": \"PASSED\"\n    },\n    \"remarks\": {\n      \"classTeacherRemarks\": \"Excellent student with consistent performance\",\n      \"strengths\": [\"Problem solving\", \"Teamwork\", \"Communication\"],\n      \"areasForImprovement\": [\"Time management\"]\n    },\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"reportCardNumber\": \"RC-1-123-3-M5K2L9\"\n  }\n}"
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Courses & Classes",
+      "item": [
+        {
+          "name": "Get All Courses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/courses?institutionId=1",
+              "host": ["{{api_url}}"],
+              "path": ["courses"],
+              "query": [
+                { "key": "institutionId", "value": "1" },
+                { "key": "status", "value": "ACTIVE", "disabled": true },
+                { "key": "degreeType", "value": "BACHELORS", "disabled": true }
+              ]
+            },
+            "description": "Get all courses/programs. Filter by institution, status, or degree type."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Course by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/courses/:id",
+              "host": ["{{api_url}}"],
+              "path": ["courses", ":id"],
+              "variable": [{ "key": "id", "value": "1" }]
+            },
+            "description": "Get a single course with its subjects"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Courses with Sections",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/courses/with-sections?institutionId=1",
+              "host": ["{{api_url}}"],
+              "path": ["courses", "with-sections"],
+              "query": [{ "key": "institutionId", "value": "1" }]
+            },
+            "description": "Get all courses with their sections.\n\nExample response:\n```json\n{\n  \"courseId\": 1,\n  \"courseName\": \"B.Sc. Computer Science\",\n  \"sections\": [\n    { \"sectionName\": \"A\", \"studentCount\": 60, \"classTeacher\": \"Dr. Sharma\" },\n    { \"sectionName\": \"B\", \"studentCount\": 55, \"classTeacher\": \"Mr. Kumar\" }\n  ]\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Course Sections",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/courses/:id/sections",
+              "host": ["{{api_url}}"],
+              "path": ["courses", ":id", "sections"],
+              "variable": [{ "key": "id", "value": "1" }]
+            },
+            "description": "Get detailed sections for a specific course with year/semester breakdown"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Class Sections (Subject-based)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/class-sections?institutionId=1",
+              "host": ["{{api_url}}"],
+              "path": ["class-sections"],
+              "query": [
+                { "key": "institutionId", "value": "1" },
+                { "key": "semesterId", "value": "1", "disabled": true },
+                { "key": "courseId", "value": "1", "disabled": true },
+                { "key": "teacherId", "value": "1", "disabled": true },
+                { "key": "status", "value": "ACTIVE", "disabled": true }
+              ]
+            },
+            "description": "Get all class sections (subject-based).\n\nThese are sections for specific subjects in a semester, assigned to a teacher.\n\nExample response:\n```json\n{\n  \"id\": 1,\n  \"sectionName\": \"A\",\n  \"maxCapacity\": 60,\n  \"currentEnrollment\": 55,\n  \"subject\": { \"name\": \"Data Structures\", \"code\": \"CS201\" },\n  \"course\": { \"name\": \"B.Sc. Computer Science\" },\n  \"semester\": { \"name\": \"Semester 3\" },\n  \"teacher\": { \"name\": \"Dr. Sharma\" }\n}\n```"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Subjects Management",
+      "item": [
+        {
+          "name": "Get All Subjects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/subjects",
+              "host": ["{{api_url}}"],
+              "path": ["subjects"]
+            },
+            "description": "Get all subjects. Optionally filter by courseId, institutionId, or status.\n\n**Query Parameters:**\n- courseId (optional) - Filter by course\n- institutionId (optional) - Filter by institution\n- status (optional) - Filter by status"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subject by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/subjects/:id",
+              "host": ["{{api_url}}"],
+              "path": ["subjects", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Subject ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subjects by Course",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/subjects/course/:courseId",
+              "host": ["{{api_url}}"],
+              "path": ["subjects", "course", ":courseId"],
+              "variable": [
+                {
+                  "key": "courseId",
+                  "value": "1",
+                  "description": "Course ID"
+                }
+              ]
+            },
+            "description": "Get all subjects for a specific course/program"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Subject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Data Structures\",\n    \"code\": \"CS201\",\n    \"credits\": 4,\n    \"courseId\": 1,\n    \"description\": \"Introduction to data structures and algorithms\",\n    \"semesterNumber\": 3\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/subjects",
+              "host": ["{{api_url}}"],
+              "path": ["subjects"]
+            },
+            "description": "Create a new subject. Admin only."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Subject",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Advanced Data Structures\",\n    \"credits\": 5\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/subjects/:id",
+              "host": ["{{api_url}}"],
+              "path": ["subjects", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Subject ID"
+                }
+              ]
+            },
+            "description": "Update a subject. Admin only."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Subject",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/subjects/:id",
+              "host": ["{{api_url}}"],
+              "path": ["subjects", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Subject ID"
+                }
+              ]
+            },
+            "description": "Delete a subject (soft delete). Admin only."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subjects Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/subjects/stats/overview?institutionId=1",
+              "host": ["{{api_url}}"],
+              "path": ["subjects", "stats", "overview"],
+              "query": [
+                {
+                  "key": "institutionId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Get subjects statistics. Admin only."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Institutions",
+      "item": [
+        {
+          "name": "Create Institution",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Delhi Public School\",\n    \"type\": \"SCHOOL\",\n    \"code\": \"DPS\",\n    \"city\": \"New Delhi\",\n    \"state\": \"Delhi\",\n    \"country\": \"India\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/institutions",
+              "host": ["{{api_url}}"],
+              "path": ["institutions"]
+            },
+            "description": "Create a new institution. Super admin only.\n\n**Code Field:**\n- Optional: If not provided, auto-generated from name\n- Must be 2-4 uppercase alphanumeric characters\n\n**Type Options:** SCHOOL, COLLEGE, UNIVERSITY, INSTITUTE"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Institutions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/institutions/public",
+              "host": ["{{api_url}}"],
+              "path": ["institutions", "public"]
+            },
+            "description": "Get all public institutions for registration dropdown. No authentication required."
+          },
+          "response": []
         }
       ]
     },

@@ -114,6 +114,7 @@ model Institution {
   performanceMetrics PerformanceMetrics[]
   systemAlerts    SystemAlert[]
   gradingConfig   InstitutionGradingConfig?
+  idConfig        InstitutionIdConfig?
 
   @@map("institutions")
 }
@@ -174,6 +175,49 @@ model InstitutionGradingConfig {
   institution             Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   
   @@map("institution_grading_configs")
+}
+
+// Institution ID Format Configuration
+// Allows each institution to define their own ID formats
+model InstitutionIdConfig {
+  id                      Int      @id @default(autoincrement())
+  institutionId           Int      @unique @map("institution_id")
+  
+  // ID Format Templates
+  // Available placeholders: {YEAR}, {YY}, {INST}, {COURSE}, {BRANCH}, {SECTION}, {SEQ:N}, {MONTH}, {MM}
+  admissionNumberFormat   String   @default("{YEAR}/{COURSE}/{SEQ:5}") @map("admission_number_format") @db.VarChar(100)
+  rollNumberFormat        String   @default("{COURSE}-{SECTION}-{SEQ:3}") @map("roll_number_format") @db.VarChar(100)
+  teacherEmployeeIdFormat String   @default("EMP-{YEAR}-{SEQ:5}") @map("teacher_employee_id_format") @db.VarChar(100)
+  staffEmployeeIdFormat   String   @default("STF-{YEAR}-{SEQ:5}") @map("staff_employee_id_format") @db.VarChar(100)
+  
+  // Sequence Configuration
+  sequenceResetPolicy     SequenceResetPolicy @default(YEARLY) @map("sequence_reset_policy")
+  
+  // Current Sequence Counters (reset based on policy)
+  admissionSeqYear        Int      @default(0) @map("admission_seq_year")
+  admissionSeqCounter     Int      @default(0) @map("admission_seq_counter")
+  rollSeqYear             Int      @default(0) @map("roll_seq_year")
+  rollSeqCounter          Int      @default(0) @map("roll_seq_counter")
+  teacherSeqYear          Int      @default(0) @map("teacher_seq_year")
+  teacherSeqCounter       Int      @default(0) @map("teacher_seq_counter")
+  staffSeqYear            Int      @default(0) @map("staff_seq_year")
+  staffSeqCounter         Int      @default(0) @map("staff_seq_counter")
+  
+  // Metadata
+  isActive                Boolean  @default(true) @map("is_active")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  institution             Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  
+  @@map("institution_id_configs")
+}
+
+enum SequenceResetPolicy {
+  YEARLY    // Reset sequence every year
+  NEVER     // Never reset, continuously incrementing
+  MONTHLY   // Reset sequence every month
 }
 
 // Core System Enums

@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   Patch,
-  Post,
   Query,
   UseGuards,
 } from '@nestjs/common'
@@ -15,7 +14,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { UserWithRelations } from '../types/auth.types'
 import {
-  CreateStudentDto,
   PaginationDto,
   ReportCardQueryDto,
   UpdateStudentDto,
@@ -45,12 +43,8 @@ export class StudentsController {
     return this.studentsService.findByUuid(userUuid, user)
   }
 
-  @Post()
-  @UseGuards(RolesGuard)
-  @Roles('super_admin', 'admin')
-  async create(@Body() createStudentDto: CreateStudentDto) {
-    return this.studentsService.create(createStudentDto)
-  }
+  // NOTE: POST /students has been removed. Use POST /users with roleId=student instead.
+  // This unified approach handles EdVerse ID generation and profile creation in one step.
 
   @Patch(':user_uuid')
   @UseGuards(RolesGuard)

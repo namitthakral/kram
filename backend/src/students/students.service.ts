@@ -43,6 +43,9 @@ export class StudentsService {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       search,
+      gradeLevel,
+      section,
+      courseId,
     } = paginationDto
 
     const skip = (page - 1) * limit
@@ -64,6 +67,9 @@ export class StudentsService {
       institutionId?: number
       isActive?: boolean
       status?: { not: 'SUSPENDED' }
+      gradeLevel?: string
+      section?: string
+      courseId?: number
     } = {
       status: { not: 'SUSPENDED' }, // Exclude soft deleted students
     }
@@ -74,6 +80,15 @@ export class StudentsService {
         { user: { name: { contains: search } } },
         { user: { email: { contains: search } } },
       ]
+    }
+    if (gradeLevel) {
+      where.gradeLevel = gradeLevel
+    }
+    if (section) {
+      where.section = section
+    }
+    if (courseId) {
+      where.courseId = courseId
     }
 
     // Get students with pagination

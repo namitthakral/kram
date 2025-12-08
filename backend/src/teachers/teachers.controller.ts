@@ -32,7 +32,6 @@ import {
 import {
   AssignSubjectsDto,
   BatchReportCardDto,
-  CreateTeacherDto,
   TeacherQueryDto,
   UpdateTeacherDto,
 } from './dto/teacher.dto'
@@ -43,12 +42,8 @@ import { TeachersService } from './teachers.service'
 export class TeachersController {
   constructor(private readonly teachersService: TeachersService) {}
 
-  @Post()
-  @UseGuards(RolesGuard)
-  @Roles('super_admin', 'admin')
-  create(@Body() createTeacherDto: CreateTeacherDto) {
-    return this.teachersService.create(createTeacherDto)
-  }
+  // NOTE: POST /teachers has been removed. Use POST /users with roleId=teacher instead.
+  // This unified approach handles EdVerse ID generation and profile creation in one step.
 
   @Get()
   @UseGuards(RolesGuard)

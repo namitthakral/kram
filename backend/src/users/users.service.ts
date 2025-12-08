@@ -1,16 +1,25 @@
 import { Prisma } from '.prisma/client'
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
 import * as bcrypt from 'bcryptjs'
+import { IdGenerationService } from '../id-generation/id-generation.service'
 import { PrismaService } from '../prisma/prisma.service'
+import {
+  generateEdVerseId,
+  generateTemporaryPassword,
+} from '../utils/edverse-id.util'
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerationService: IdGenerationService
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     // Check if email already exists
@@ -35,35 +44,350 @@ export class UsersService {
       }
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 12)
+    // Get role to determine what profile to create
+    const role = await this.prisma.role.findUnique({
+      where: { id: createUserDto.roleId },
+    })
 
-    // Create user
-    const user = await this.prisma.user.create({
-      data: {
-        roleId: createUserDto.roleId,
-        email: createUserDto.email,
-        passwordHash: hashedPassword,
-        phone: createUserDto.phoneNumber,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
-        name: `${createUserDto.firstName} ${createUserDto.lastName}`,
-        emailVerified: createUserDto.isVerified || false,
-        accountLocked: createUserDto.accountLocked || false,
-        status: createUserDto.status || 'ACTIVE',
-      },
+    if (!role) {
+      throw new NotFoundException('Role not found')
+    }
+
+    // Get institution for EdVerse ID generation
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: createUserDto.institutionId },
+      select: { id: true, code: true },
+    })
+
+    if (!institution) {
+      throw new NotFoundException('Institution not found')
+    }
+
+    if (!institution.code) {
+      throw new BadRequestException(
+        'Institution code not configured. Please contact administrator.'
+      )
+    }
+
+    // Validate role-specific data is provided
+    this.validateRoleSpecificData(role.roleName, createUserDto)
+
+    // Generate EdVerse ID
+    const currentYear = new Date().getFullYear()
+    const edverseId = generateEdVerseId(
+      institution.code,
+      role.roleName,
+      currentYear
+    )
+
+    // Generate temporary password if not provided
+    const finalPassword =
+      createUserDto.password ||
+      generateTemporaryPassword(createUserDto.firstName, createUserDto.lastName)
+    const hashedPassword = await bcrypt.hash(finalPassword, 12)
+    const isTemporaryPassword = !createUserDto.password
+
+    // Create user and role-specific profile in a transaction
+    const result = await this.prisma.$transaction(async tx => {
+      // Create base user
+      const user = await tx.user.create({
+        data: {
+          roleId: createUserDto.roleId,
+          email: createUserDto.email,
+          passwordHash: hashedPassword,
+          phone: createUserDto.phoneNumber,
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          name: `${createUserDto.firstName} ${createUserDto.lastName}`,
+          edverseId,
+          emailVerified: createUserDto.isVerified || false,
+          accountLocked: createUserDto.accountLocked || false,
+          status: isTemporaryPassword
+            ? 'INACTIVE'
+            : createUserDto.status || 'ACTIVE',
+          isTemporaryPassword,
+          mustChangePassword: isTemporaryPassword,
+        },
+      })
+
+      // Create role-specific profile
+      let profile: unknown = null
+
+      switch (role.roleName) {
+        case 'student':
+          if (createUserDto.studentData || role.roleName === 'student') {
+            const studentData = createUserDto.studentData || {}
+
+            // Get course code for ID generation
+            let courseCode = 'GEN'
+            if (studentData.courseId) {
+              const course = await tx.course.findUnique({
+                where: { id: studentData.courseId },
+                select: { code: true },
+              })
+              if (course?.code) {
+                courseCode = course.code
+              }
+            }
+
+            // Generate IDs using IdGenerationService (outside transaction for atomic sequences)
+            const admissionNumber =
+              await this.idGenerationService.generateAdmissionNumber({
+                institutionId: createUserDto.institutionId,
+                courseCode,
+                section: studentData.section,
+                customValue: studentData.admissionNumber,
+              })
+
+            const rollNumber =
+              await this.idGenerationService.generateRollNumber({
+                institutionId: createUserDto.institutionId,
+                courseCode,
+                section: studentData.section,
+                customValue: studentData.rollNumber,
+              })
+
+            profile = await tx.student.create({
+              data: {
+                userId: user.id,
+                institutionId: createUserDto.institutionId,
+                courseId: studentData.courseId,
+                admissionNumber,
+                rollNumber,
+                admissionDate: studentData.admissionDate
+                  ? new Date(studentData.admissionDate)
+                  : null,
+                currentSemester: studentData.currentSemester,
+                currentYear: studentData.currentYear,
+                gradeLevel: studentData.gradeLevel,
+                section: studentData.section,
+                studentType: studentData.studentType || 'REGULAR',
+                residentialStatus:
+                  studentData.residentialStatus || 'DAY_SCHOLAR',
+                transportRequired: studentData.transportRequired || false,
+                emergencyContactName: studentData.emergencyContactName,
+                emergencyContactPhone: studentData.emergencyContactPhone,
+                bloodGroup: studentData.bloodGroup,
+                medicalConditions: studentData.medicalConditions,
+              },
+            })
+          }
+          break
+
+        case 'teacher':
+          if (createUserDto.teacherData || role.roleName === 'teacher') {
+            const teacherData = createUserDto.teacherData || {}
+
+            // Generate employee ID using IdGenerationService
+            const employeeId =
+              await this.idGenerationService.generateTeacherEmployeeId({
+                institutionId: createUserDto.institutionId,
+                customValue: teacherData.employeeId,
+              })
+
+            profile = await tx.teacher.create({
+              data: {
+                userId: user.id,
+                institutionId: createUserDto.institutionId,
+                employeeId,
+                designation: teacherData.designation,
+                specialization: teacherData.specialization,
+                qualification: teacherData.qualification,
+                experienceYears: teacherData.experienceYears,
+                joinDate: teacherData.joinDate
+                  ? new Date(teacherData.joinDate)
+                  : null,
+                salary: teacherData.salary,
+                employmentType: teacherData.employmentType || 'FULL_TIME',
+                officeLocation: teacherData.officeLocation,
+                officeHours: teacherData.officeHours,
+                researchInterests: teacherData.researchInterests,
+                publications: teacherData.publications,
+              },
+            })
+          }
+          break
+
+        case 'staff':
+          if (createUserDto.staffData) {
+            const staffData = createUserDto.staffData
+
+            // Generate employee ID using IdGenerationService
+            const employeeId =
+              await this.idGenerationService.generateStaffEmployeeId({
+                institutionId: createUserDto.institutionId,
+                customValue: staffData.employeeId,
+              })
+
+            profile = await tx.staff.create({
+              data: {
+                userId: user.id,
+                institutionId: createUserDto.institutionId,
+                employeeId,
+                staffType: staffData.staffType,
+                designation: staffData.designation,
+                department: staffData.department,
+                joinDate: staffData.joinDate
+                  ? new Date(staffData.joinDate)
+                  : null,
+                salary: staffData.salary,
+                employmentType: staffData.employmentType || 'FULL_TIME',
+                workingHours: staffData.workingHours,
+                qualifications: staffData.qualifications,
+                experience: staffData.experience,
+                emergencyContact: staffData.emergencyContact,
+                address: staffData.address,
+              },
+            })
+          }
+          break
+
+        case 'parent':
+          if (createUserDto.parentData?.childEdverseId) {
+            // Find the child student by EdVerse ID
+            const childUser = await tx.user.findUnique({
+              where: { edverseId: createUserDto.parentData.childEdverseId },
+              include: { student: true },
+            })
+
+            if (!childUser || !childUser.student) {
+              throw new NotFoundException(
+                'Student not found with the provided EdVerse ID'
+              )
+            }
+
+            profile = await tx.parent.create({
+              data: {
+                userId: user.id,
+                studentId: childUser.student.id,
+                relation:
+                  (createUserDto.parentData.relation as
+                    | 'FATHER'
+                    | 'MOTHER'
+                    | 'GUARDIAN'
+                    | 'OTHER') || 'GUARDIAN',
+                isPrimaryContact:
+                  createUserDto.parentData.isPrimaryContact ?? true,
+                occupation: createUserDto.parentData.occupation,
+                annualIncome: createUserDto.parentData.annualIncome,
+                educationLevel: createUserDto.parentData.educationLevel,
+              },
+            })
+          } else {
+            throw new BadRequestException(
+              'parentData with childEdverseId is required for parent role'
+            )
+          }
+          break
+
+        // Admin and super_admin don't need additional profiles
+        case 'admin':
+        case 'super_admin':
+          // No additional profile needed
+          break
+
+        default:
+          // For any other roles, no additional profile
+          break
+      }
+
+      return {
+        user,
+        profile,
+        generatedPassword: isTemporaryPassword ? finalPassword : null,
+      }
+    })
+
+    // Fetch complete user with all relations
+    const completeUser = await this.prisma.user.findUnique({
+      where: { id: result.user.id },
       include: {
         role: true,
-        student: true,
-        teacher: true,
-        parent: true,
-        staff: true,
+        student: {
+          include: {
+            institution: { select: { id: true, name: true, type: true } },
+            course: { select: { id: true, name: true, code: true } },
+          },
+        },
+        teacher: {
+          include: {
+            institution: { select: { id: true, name: true, type: true } },
+          },
+        },
+        parent: {
+          include: {
+            student: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    edverseId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        staff: {
+          include: {
+            institution: { select: { id: true, name: true, type: true } },
+          },
+        },
       },
     })
 
     // Remove passwordHash from response
-    delete user.passwordHash
-    return user
+    if (completeUser) {
+      delete completeUser.passwordHash
+    }
+
+    return {
+      success: true,
+      message: 'User created successfully',
+      data: completeUser,
+      ...(result.generatedPassword && {
+        temporaryPassword: result.generatedPassword,
+        note: 'User must change password on first login',
+      }),
+    }
+  }
+
+  private validateRoleSpecificData(
+    roleName: string,
+    createUserDto: CreateUserDto
+  ) {
+    switch (roleName) {
+      case 'student':
+        // studentData is optional - admissionNumber/rollNumber auto-generated
+        break
+
+      case 'teacher':
+        // teacherData is optional - employeeId auto-generated
+        break
+
+      case 'staff':
+        if (
+          !createUserDto.staffData?.staffType ||
+          !createUserDto.staffData?.designation
+        ) {
+          throw new BadRequestException(
+            'staffData with staffType and designation is required for staff role'
+          )
+        }
+        break
+
+      case 'parent':
+        if (!createUserDto.parentData?.childEdverseId) {
+          throw new BadRequestException(
+            'parentData with childEdverseId is required for parent role'
+          )
+        }
+        break
+
+      // admin, super_admin don't require additional data
+    }
   }
 
   async findAll(query: UserQueryDto) {

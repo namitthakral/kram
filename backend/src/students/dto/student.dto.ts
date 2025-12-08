@@ -189,6 +189,19 @@ export class PaginationDto {
   @IsString()
   @IsOptional()
   search?: string
+
+  @IsString()
+  @IsOptional()
+  gradeLevel?: string
+
+  @IsString()
+  @IsOptional()
+  section?: string
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsNumber()
+  courseId?: number
 }
 
 export class ReportCardQueryDto {

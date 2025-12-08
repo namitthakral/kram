@@ -265,3 +265,61 @@ export function generateTemporaryPassword(
 
   return `${paddedPrefix}${year}`
 }
+
+/**
+ * Generate Admission Number for a student
+ * Format: {YEAR}/{COURSE_CODE}/{SEQUENCE}
+ * Example: "2025/CS/00042"
+ *
+ * @param year - Admission year
+ * @param courseCode - Course code (e.g., "CS", "ECE")
+ * @param sequence - Sequence number (will be padded to 5 digits)
+ * @returns Admission number string
+ */
+export function generateAdmissionNumber(
+  year: number,
+  courseCode: string,
+  sequence: number
+): string {
+  const paddedSequence = sequence.toString().padStart(5, '0')
+  return `${year}/${courseCode.toUpperCase()}/${paddedSequence}`
+}
+
+/**
+ * Generate Roll Number for a student
+ * Format: {COURSE_CODE}-{SECTION}-{SEQUENCE}
+ * Example: "CS-A-001"
+ *
+ * @param courseCode - Course code (e.g., "CS", "ECE")
+ * @param section - Section (e.g., "A", "B")
+ * @param sequence - Sequence number (will be padded to 3 digits)
+ * @returns Roll number string
+ */
+export function generateRollNumber(
+  courseCode: string,
+  section: string,
+  sequence: number
+): string {
+  const paddedSequence = sequence.toString().padStart(3, '0')
+  return `${courseCode.toUpperCase()}-${section.toUpperCase()}-${paddedSequence}`
+}
+
+/**
+ * Generate Employee ID for a teacher or staff member
+ * Format: {PREFIX}-{YEAR}-{SEQUENCE}
+ * Example: "EMP-2025-00015" for teacher, "STF-2025-00008" for staff
+ *
+ * @param type - 'teacher' or 'staff'
+ * @param year - Year of joining
+ * @param sequence - Sequence number (will be padded to 5 digits)
+ * @returns Employee ID string
+ */
+export function generateEmployeeId(
+  type: 'teacher' | 'staff',
+  year: number,
+  sequence: number
+): string {
+  const prefix = type === 'teacher' ? 'EMP' : 'STF'
+  const paddedSequence = sequence.toString().padStart(5, '0')
+  return `${prefix}-${year}-${paddedSequence}`
+}

@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
-import { ThrottlerModule } from '@nestjs/throttler'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ThrottlerModule } from '@nestjs/throttler'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
 import { CoursesModule } from './courses/courses.module'
+import { IdGenerationModule } from './id-generation/id-generation.module'
 import { InstitutionsModule } from './institutions/institutions.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { StudentsModule } from './students/students.module'
@@ -44,6 +45,9 @@ import { UsersModule } from './users/users.module'
 
     // Database
     PrismaModule,
+
+    // ID Generation (Global)
+    IdGenerationModule,
 
     // Feature modules
     AuthModule,

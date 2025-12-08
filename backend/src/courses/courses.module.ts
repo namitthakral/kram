@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common'
+import { ClassSectionsController } from './class-sections.controller'
+import { CoursesController } from './courses.controller'
+import { CoursesService } from './courses.service'
 import { SubjectsController } from './subjects.controller'
 import { SubjectsService } from './subjects.service'
 
 /**
  * Courses Module
- * 
- * Note: "Courses" in database = "Subjects" in Indian education context
- * This module provides Subject CRUD APIs for managing academic subjects
+ *
+ * Manages:
+ * - Courses/Programs (e.g., B.Sc. Computer Science, Class 10)
+ * - Subjects/Papers (e.g., Data Structures, Physics)
+ * - Class Sections (subject-based sections with teachers)
  */
 @Module({
-  controllers: [SubjectsController],
-  providers: [SubjectsService],
-  exports: [SubjectsService],
+  controllers: [CoursesController, ClassSectionsController, SubjectsController],
+  providers: [CoursesService, SubjectsService],
+  exports: [CoursesService, SubjectsService],
 })
 export class CoursesModule {}
