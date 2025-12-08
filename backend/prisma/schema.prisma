@@ -359,6 +359,7 @@ model Teacher {
   classTeacher      ClassTeacher[]
   examResults       ExamResult[]
   examinations      Examination[]
+  questionPapers    QuestionPaper[]
   submissions       Submission[]
   teacherSubjects   TeacherSubject[]
   substitutions     TeacherSubstitution[] @relation("TeacherSubstitute")
@@ -498,27 +499,28 @@ model Enrollment {
 }
 
 model Examination {
-  id                  Int          @id @default(autoincrement())
-  subjectId           Int          @map("subject_id")
-  semesterId          Int          @map("semester_id")
-  examName            String       @map("exam_name") @db.VarChar(100)
-  examType            ExamType     @map("exam_type")
-  examDate            DateTime?    @map("exam_date") @db.Date
-  startTime           DateTime?    @map("start_time") @db.Time(6)
-  durationMinutes     Int?         @map("duration_minutes")
-  totalMarks          Int          @map("total_marks")
-  passingMarks        Int?         @map("passing_marks")
-  weightagePercentage Decimal?     @map("weightage_percentage") @db.Decimal(5, 2)
+  id                  Int            @id @default(autoincrement())
+  subjectId           Int            @map("subject_id")
+  semesterId          Int            @map("semester_id")
+  examName            String         @map("exam_name") @db.VarChar(100)
+  examType            ExamType       @map("exam_type")
+  examDate            DateTime?      @map("exam_date") @db.Date
+  startTime           DateTime?      @map("start_time") @db.Time(6)
+  durationMinutes     Int?           @map("duration_minutes")
+  totalMarks          Int            @map("total_marks")
+  passingMarks        Int?           @map("passing_marks")
+  weightagePercentage Decimal?       @map("weightage_percentage") @db.Decimal(5, 2)
   instructions        String?
-  venue               String?      @db.VarChar(100)
-  status              ExamStatus   @default(SCHEDULED)
-  createdBy           Int          @map("created_by")
-  createdAt           DateTime     @default(now()) @map("created_at")
-  updatedAt           DateTime     @updatedAt @map("updated_at")
+  venue               String?        @db.VarChar(100)
+  status              ExamStatus     @default(SCHEDULED)
+  createdBy           Int            @map("created_by")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
   results             ExamResult[]
-  creator             Teacher      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  semester            Semester     @relation(fields: [semesterId], references: [id])
-  subject             Subject      @relation(fields: [subjectId], references: [id])
+  questionPaper       QuestionPaper?
+  creator             Teacher        @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  semester            Semester       @relation(fields: [semesterId], references: [id])
+  subject             Subject        @relation(fields: [subjectId], references: [id])
 
   @@map("examinations")
 }
@@ -542,6 +544,71 @@ model ExamResult {
 
   @@unique([examId, studentId], name: "unique_result")
   @@map("exam_results")
+}
+
+model QuestionPaper {
+  id             Int                 @id @default(autoincrement())
+  examinationId  Int                 @unique @map("examination_id")
+  title          String              @db.VarChar(200)
+  instructions   String?
+  totalQuestions Int                 @default(0) @map("total_questions")
+  totalMarks     Int                 @map("total_marks")
+  status         QuestionPaperStatus @default(DRAFT)
+  createdBy      Int                 @map("created_by")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  examination    Examination         @relation(fields: [examinationId], references: [id], onDelete: Cascade)
+  creator        Teacher             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  sections       QuestionSection[]
+
+  @@map("question_papers")
+}
+
+model QuestionSection {
+  id              Int           @id @default(autoincrement())
+  questionPaperId Int           @map("question_paper_id")
+  sectionName     String        @map("section_name") @db.VarChar(50)
+  instructions    String?
+  totalMarks      Int           @default(0) @map("total_marks")
+  sortOrder       Int           @default(0) @map("sort_order")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  questionPaper   QuestionPaper @relation(fields: [questionPaperId], references: [id], onDelete: Cascade)
+  questions       Question[]
+
+  @@map("question_sections")
+}
+
+model Question {
+  id              Int             @id @default(autoincrement())
+  sectionId       Int             @map("section_id")
+  questionText    String          @map("question_text")
+  questionType    QuestionType    @map("question_type")
+  marks           Int
+  negativeMarks   Decimal?        @map("negative_marks") @db.Decimal(4, 2)
+  difficultyLevel DifficultyLevel @default(MEDIUM) @map("difficulty_level")
+  correctAnswer   String?         @map("correct_answer")
+  answerHint      String?         @map("answer_hint")
+  imageUrl        String?         @map("image_url") @db.VarChar(500)
+  sortOrder       Int             @default(0) @map("sort_order")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  section         QuestionSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  options         QuestionOption[]
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id          Int      @id @default(autoincrement())
+  questionId  Int      @map("question_id")
+  optionText  String   @map("option_text")
+  optionLabel String   @map("option_label") @db.VarChar(5)
+  isCorrect   Boolean  @default(false) @map("is_correct")
+  sortOrder   Int      @default(0) @map("sort_order")
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_options")
 }
 
 model Assignment {
@@ -1826,4 +1893,28 @@ enum ApplicationStatus {
   REJECTED
   CANCELLED
   COMPLETED
+}
+
+enum QuestionPaperStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MCQ
+  MCQ_MULTI
+  TRUE_FALSE
+  FILL_BLANK
+  SHORT_ANSWER
+  LONG_ANSWER
+  NUMERICAL
+  MATCH_FOLLOWING
+}
+
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
 }

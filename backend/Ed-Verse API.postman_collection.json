@@ -2037,6 +2037,555 @@
           "response": []
         },
         {
+          "name": "Create Question Paper",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Midterm Examination - Data Structures\",\n  \"instructions\": \"Answer all questions. Time: 2 hours.\",\n  \"totalMarks\": 100\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/question-paper",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "question-paper"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                }
+              ]
+            },
+            "description": "Create an empty question paper for an examination. Add sections and questions separately."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Full Question Paper",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"examinationId\": 1,\n  \"title\": \"Final Exam - Data Structures\",\n  \"instructions\": \"Answer all questions. Time: 3 hours.\",\n  \"sections\": [\n    {\n      \"sectionName\": \"Section A - MCQ\",\n      \"instructions\": \"Choose the correct option. Each question carries 2 marks.\",\n      \"questions\": [\n        {\n          \"questionText\": \"What is the time complexity of binary search?\",\n          \"questionType\": \"MCQ\",\n          \"marks\": 2,\n          \"negativeMarks\": 0.5,\n          \"difficultyLevel\": \"EASY\",\n          \"options\": [\n            { \"optionLabel\": \"A\", \"optionText\": \"O(n)\", \"isCorrect\": false },\n            { \"optionLabel\": \"B\", \"optionText\": \"O(log n)\", \"isCorrect\": true },\n            { \"optionLabel\": \"C\", \"optionText\": \"O(n^2)\", \"isCorrect\": false },\n            { \"optionLabel\": \"D\", \"optionText\": \"O(1)\", \"isCorrect\": false }\n          ]\n        },\n        {\n          \"questionText\": \"Which data structure uses LIFO?\",\n          \"questionType\": \"MCQ\",\n          \"marks\": 2,\n          \"options\": [\n            { \"optionLabel\": \"A\", \"optionText\": \"Queue\", \"isCorrect\": false },\n            { \"optionLabel\": \"B\", \"optionText\": \"Stack\", \"isCorrect\": true },\n            { \"optionLabel\": \"C\", \"optionText\": \"Array\", \"isCorrect\": false },\n            { \"optionLabel\": \"D\", \"optionText\": \"Tree\", \"isCorrect\": false }\n          ]\n        }\n      ]\n    },\n    {\n      \"sectionName\": \"Section B - Short Answer\",\n      \"instructions\": \"Answer in 2-3 sentences.\",\n      \"questions\": [\n        {\n          \"questionText\": \"Explain the difference between stack and queue.\",\n          \"questionType\": \"SHORT_ANSWER\",\n          \"marks\": 5,\n          \"difficultyLevel\": \"MEDIUM\"\n        }\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/full",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers", "full"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                }
+              ]
+            },
+            "description": "Create a complete question paper with sections and questions in one request.\n\n**Question Types:**\n- MCQ, MCQ_MULTI, TRUE_FALSE, FILL_BLANK\n- SHORT_ANSWER, LONG_ANSWER, NUMERICAL, MATCH_FOLLOWING\n\n**Difficulty Levels:** EASY, MEDIUM, HARD"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Question Paper",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/examinations/:examId/question-paper",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "question-paper"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                }
+              ]
+            },
+            "description": "Get question paper by examination ID with all sections and questions."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Question Paper",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Exam Title\",\n  \"instructions\": \"Updated instructions\",\n  \"status\": \"READY\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/:paperId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers", ":paperId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "paperId",
+                  "value": "1",
+                  "description": "Question Paper ID"
+                }
+              ]
+            },
+            "description": "Update question paper details.\n\n**Status Options:** DRAFT, READY, PUBLISHED, ARCHIVED"
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Question Paper",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/:paperId/publish",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "question-papers",
+                ":paperId",
+                "publish"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "paperId",
+                  "value": "1",
+                  "description": "Question Paper ID"
+                }
+              ]
+            },
+            "description": "Publish a question paper. Once published, students can view it (without answers)."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Question Paper",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/:paperId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers", ":paperId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "paperId",
+                  "value": "1",
+                  "description": "Question Paper ID"
+                }
+              ]
+            },
+            "description": "Delete a question paper. Cannot delete published papers."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Section",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionName\": \"Section C - Long Answer\",\n  \"instructions\": \"Answer in detail with examples.\",\n  \"sortOrder\": 3\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/:paperId/sections",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "question-papers",
+                ":paperId",
+                "sections"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "paperId",
+                  "value": "1",
+                  "description": "Question Paper ID"
+                }
+              ]
+            },
+            "description": "Add a new section to a question paper."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Section",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionName\": \"Section A - Multiple Choice\",\n  \"instructions\": \"Updated instructions\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/sections/:sectionId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "sections", ":sectionId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "sectionId",
+                  "value": "1",
+                  "description": "Section ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Section",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/sections/:sectionId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "sections", ":sectionId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "sectionId",
+                  "value": "1",
+                  "description": "Section ID"
+                }
+              ]
+            },
+            "description": "Delete a section and all its questions."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionText\": \"What is a linked list?\",\n  \"questionType\": \"SHORT_ANSWER\",\n  \"marks\": 5,\n  \"difficultyLevel\": \"EASY\",\n  \"answerHint\": \"Think about nodes and pointers\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/sections/:sectionId/questions",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "sections",
+                ":sectionId",
+                "questions"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "sectionId",
+                  "value": "1",
+                  "description": "Section ID"
+                }
+              ]
+            },
+            "description": "Add a question to a section.\n\n**Question Types:**\n- MCQ, MCQ_MULTI (multiple correct), TRUE_FALSE\n- FILL_BLANK, SHORT_ANSWER, LONG_ANSWER\n- NUMERICAL, MATCH_FOLLOWING"
+          },
+          "response": []
+        },
+        {
+          "name": "Add MCQ Question with Options",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionText\": \"Which sorting algorithm has the best average case time complexity?\",\n  \"questionType\": \"MCQ\",\n  \"marks\": 2,\n  \"negativeMarks\": 0.5,\n  \"difficultyLevel\": \"MEDIUM\",\n  \"options\": [\n    { \"optionLabel\": \"A\", \"optionText\": \"Bubble Sort - O(n^2)\", \"isCorrect\": false },\n    { \"optionLabel\": \"B\", \"optionText\": \"Quick Sort - O(n log n)\", \"isCorrect\": true },\n    { \"optionLabel\": \"C\", \"optionText\": \"Selection Sort - O(n^2)\", \"isCorrect\": false },\n    { \"optionLabel\": \"D\", \"optionText\": \"Insertion Sort - O(n^2)\", \"isCorrect\": false }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/sections/:sectionId/questions",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "sections",
+                ":sectionId",
+                "questions"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "sectionId",
+                  "value": "1",
+                  "description": "Section ID"
+                }
+              ]
+            },
+            "description": "Add an MCQ question with options in one request."
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Add Questions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questions\": [\n    {\n      \"questionText\": \"Define an array.\",\n      \"questionType\": \"SHORT_ANSWER\",\n      \"marks\": 3,\n      \"difficultyLevel\": \"EASY\"\n    },\n    {\n      \"questionText\": \"Explain recursion with an example.\",\n      \"questionType\": \"LONG_ANSWER\",\n      \"marks\": 10,\n      \"difficultyLevel\": \"HARD\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/sections/:sectionId/questions/bulk",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "sections",
+                ":sectionId",
+                "questions",
+                "bulk"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "sectionId",
+                  "value": "1",
+                  "description": "Section ID"
+                }
+              ]
+            },
+            "description": "Add multiple questions to a section at once."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Question",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionText\": \"Updated question text\",\n  \"marks\": 5,\n  \"difficultyLevel\": \"HARD\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/questions/:questionId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "questions", ":questionId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "questionId",
+                  "value": "1",
+                  "description": "Question ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Question",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/questions/:questionId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "questions", ":questionId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "questionId",
+                  "value": "1",
+                  "description": "Question ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Option to Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionLabel\": \"E\",\n  \"optionText\": \"None of the above\",\n  \"isCorrect\": false\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/questions/:questionId/options",
+              "host": ["{{api_url}}"],
+              "path": [
+                "teachers",
+                ":user_uuid",
+                "questions",
+                ":questionId",
+                "options"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "questionId",
+                  "value": "1",
+                  "description": "Question ID"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Option",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionText\": \"Updated option text\",\n  \"isCorrect\": true\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/options/:optionId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "options", ":optionId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                { "key": "optionId", "value": "1", "description": "Option ID" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Option",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/options/:optionId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "options", ":optionId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                { "key": "optionId", "value": "1", "description": "Option ID" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Pending Submissions",
           "request": {
             "method": "GET",
@@ -2718,6 +3267,44 @@
               ]
             },
             "description": "Get student's recent assignments and tests with submission status, grades, and scores."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Exam Question Paper",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/examinations/:examId/question-paper",
+              "host": ["{{api_url}}"],
+              "path": [
+                "students",
+                ":user_uuid",
+                "examinations",
+                ":examId",
+                "question-paper"
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                },
+                {
+                  "key": "examId",
+                  "value": "1",
+                  "description": "Examination ID"
+                }
+              ]
+            },
+            "description": "Get published question paper for an examination. Only available for published papers. Correct answers and hints are hidden from students."
           },
           "response": []
         },
