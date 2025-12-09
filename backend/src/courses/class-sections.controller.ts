@@ -1,8 +1,9 @@
-import { Controller, Get, ParseIntPipe, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { CoursesService } from './courses.service'
+import { ClassSectionQueryDto } from './dto/class-section.dto'
 
 /**
  * Class Sections Controller
@@ -42,23 +43,13 @@ export class ClassSectionsController {
    */
   @Get()
   @Roles('super_admin', 'admin', 'teacher')
-  async findAll(
-    @Query('institutionId', new ParseIntPipe({ optional: true }))
-    institutionId?: number,
-    @Query('semesterId', new ParseIntPipe({ optional: true }))
-    semesterId?: number,
-    @Query('courseId', new ParseIntPipe({ optional: true }))
-    courseId?: number,
-    @Query('teacherId', new ParseIntPipe({ optional: true }))
-    teacherId?: number,
-    @Query('status') status?: string
-  ) {
+  async findAll(@Query() query: ClassSectionQueryDto) {
     return this.coursesService.getClassSections({
-      institutionId,
-      semesterId,
-      courseId,
-      teacherId,
-      status,
+      institutionId: query.institutionId,
+      semesterId: query.semesterId,
+      courseId: query.courseId,
+      teacherId: query.teacherId,
+      status: query.status,
     })
   }
 }

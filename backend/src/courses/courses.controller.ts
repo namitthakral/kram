@@ -10,6 +10,10 @@ import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { CoursesService } from './courses.service'
+import {
+  CourseQueryDto,
+  CoursesWithSectionsQueryDto,
+} from './dto/course-query.dto'
 
 @Controller('courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,13 +26,12 @@ export class CoursesController {
    */
   @Get()
   @Roles('super_admin', 'admin', 'teacher')
-  async findAll(
-    @Query('institutionId', new ParseIntPipe({ optional: true }))
-    institutionId?: number,
-    @Query('status') status?: string,
-    @Query('degreeType') degreeType?: string
-  ) {
-    return this.coursesService.findAll({ institutionId, status, degreeType })
+  async findAll(@Query() query: CourseQueryDto) {
+    return this.coursesService.findAll({
+      institutionId: query.institutionId,
+      status: query.status,
+      degreeType: query.degreeType,
+    })
   }
 
   /**
@@ -47,11 +50,8 @@ export class CoursesController {
    */
   @Get('with-sections')
   @Roles('super_admin', 'admin', 'teacher')
-  async getCoursesWithSections(
-    @Query('institutionId', new ParseIntPipe({ optional: true }))
-    institutionId?: number
-  ) {
-    return this.coursesService.getCoursesWithSections(institutionId)
+  async getCoursesWithSections(@Query() query: CoursesWithSectionsQueryDto) {
+    return this.coursesService.getCoursesWithSections(query.institutionId)
   }
 
   /**

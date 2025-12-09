@@ -392,3 +392,19 @@ export class RoomQueryDto {
   @IsString()
   building?: string
 }
+
+// ============ Timetable View Query DTOs ============
+
+/**
+ * Query DTO for timetable view endpoints (by class, teacher, room)
+ * Requires semesterId to filter entries
+ */
+export class TimetableViewQueryDto {
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined
+    const parsed = parseInt(value, 10)
+    return isNaN(parsed) ? undefined : parsed
+  })
+  @IsNumber()
+  semesterId: number
+}

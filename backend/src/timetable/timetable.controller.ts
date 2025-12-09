@@ -21,6 +21,7 @@ import {
   RoomQueryDto,
   TimeSlotQueryDto,
   TimetableQueryDto,
+  TimetableViewQueryDto,
   UpdateRoomDto,
   UpdateTimeSlotDto,
   UpdateTimetableEntryDto,
@@ -174,12 +175,12 @@ export class TimetableController {
   async getTimetableByClass(
     @Param('courseId', ParseIntPipe) courseId: number,
     @Param('section') section: string,
-    @Query('semesterId', ParseIntPipe) semesterId: number
+    @Query() query: TimetableViewQueryDto
   ) {
     return this.timetableService.getTimetableByClass(
       courseId,
       section,
-      semesterId
+      query.semesterId
     )
   }
 
@@ -191,9 +192,12 @@ export class TimetableController {
   @Roles('super_admin', 'admin', 'teacher')
   async getTimetableByTeacher(
     @Param('teacherId', ParseIntPipe) teacherId: number,
-    @Query('semesterId', ParseIntPipe) semesterId: number
+    @Query() query: TimetableViewQueryDto
   ) {
-    return this.timetableService.getTimetableByTeacher(teacherId, semesterId)
+    return this.timetableService.getTimetableByTeacher(
+      teacherId,
+      query.semesterId
+    )
   }
 
   /**
@@ -204,9 +208,9 @@ export class TimetableController {
   @Roles('super_admin', 'admin', 'teacher')
   async getTimetableByRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Query('semesterId', ParseIntPipe) semesterId: number
+    @Query() query: TimetableViewQueryDto
   ) {
-    return this.timetableService.getTimetableByRoom(roomId, semesterId)
+    return this.timetableService.getTimetableByRoom(roomId, query.semesterId)
   }
 
   /**

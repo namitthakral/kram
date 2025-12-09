@@ -1,30 +1,31 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
+  Post,
   Query,
   UseGuards,
-  HttpStatus,
-  HttpCode,
 } from '@nestjs/common'
+import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { Roles } from '../auth/decorators/roles.decorator'
-import { SubjectsService } from './subjects.service'
+import { SubjectQueryDto, SubjectStatsQueryDto } from './dto/subject-query.dto'
 import { CreateSubjectDto, UpdateSubjectDto } from './dto/subject.dto'
+import { SubjectsService } from './subjects.service'
 
 /**
  * Subjects Controller
- * 
+ *
  * In Indian education system terminology:
  * - Subject/Paper = Individual academic subject (e.g., Data Structures, English, Physics)
  * - This controller manages subjects that students study
- * 
+ *
  * Database: Works with the 'courses' table
  * API: Exposes as 'subjects' for better UX in Indian context
  */
@@ -39,12 +40,12 @@ export class SubjectsController {
    */
   @Get()
   @Roles('super_admin', 'admin', 'teacher')
-  async findAll(
-    @Query('courseId', new ParseIntPipe({ optional: true })) courseId?: number,
-    @Query('institutionId', new ParseIntPipe({ optional: true })) institutionId?: number,
-    @Query('status') status?: string,
-  ) {
-    return this.subjectsService.findAll({ courseId, institutionId, status })
+  async findAll(@Query() query: SubjectQueryDto) {
+    return this.subjectsService.findAll({
+      courseId: query.courseId,
+      institutionId: query.institutionId,
+      status: query.status,
+    })
   }
 
   /**
@@ -85,7 +86,7 @@ export class SubjectsController {
   @Roles('super_admin', 'admin')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateSubjectDto: UpdateSubjectDto,
+    @Body() updateSubjectDto: UpdateSubjectDto
   ) {
     return this.subjectsService.update(id, updateSubjectDto)
   }
@@ -107,8 +108,7 @@ export class SubjectsController {
    */
   @Get('stats/overview')
   @Roles('super_admin', 'admin')
-  async getStats(@Query('institutionId', ParseIntPipe) institutionId?: number) {
-    return this.subjectsService.getStats(institutionId)
+  async getStats(@Query() query: SubjectStatsQueryDto) {
+    return this.subjectsService.getStats(query.institutionId)
   }
 }
-
