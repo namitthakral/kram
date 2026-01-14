@@ -13,6 +13,7 @@ import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../providers/assignment_provider.dart';
+import 'create_assignment_screen.dart';
 import 'assignment_form_screen.dart';
 
 /// Screen to display and manage all assignments for a teacher
@@ -353,11 +354,16 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     );
   }
 
-  void _navigateToCreate() {
-    Navigator.push(
+  Future<void> _navigateToCreate() async {
+    final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (context) => const AssignmentFormScreen()),
-    ).then((_) => _loadData());
+      MaterialPageRoute(
+        builder: (context) => const CreateAssignmentScreen(),
+      ),
+    );
+    if (result == true) {
+      await _loadData();
+    }
   }
 
   void _navigateToEdit(int assignmentId) {

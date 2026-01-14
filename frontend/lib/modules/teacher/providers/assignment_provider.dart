@@ -1,27 +1,44 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../core/services/class_section_service.dart';
+import '../../../core/services/courses_service.dart';
 import '../models/assignment_models.dart';
 import '../services/teacher_service.dart';
 
 /// Provider for managing assignment state and operations
 class AssignmentProvider with ChangeNotifier {
   final TeacherService _teacherService = TeacherService();
+  final CoursesService _coursesService = CoursesService();
+  final ClassSectionService _classSectionService = ClassSectionService();
 
   List<Assignment> _assignments = [];
-  List<Course> _courses = [];
-  List<Section> _sections = [];
+  List<Subject> _subjects = [];
+  List<ClassSection> _classSections = [];
+  List<ClassSection> _allClassSections = []; // Store all to filter later
   bool _isLoading = false;
   String? _error;
   String? _selectedCourseFilter;
   String? _selectedStatusFilter;
 
   List<Assignment> get assignments => _assignments;
-  List<Course> get courses => _courses;
-  List<Section> get sections => _sections;
+  List<Subject> get subjects => _subjects;
+  List<ClassSection> get classSections => _classSections;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get selectedCourseFilter => _selectedCourseFilter;
   String? get selectedStatusFilter => _selectedStatusFilter;
+
+  // Legacy getters for backward compatibility
+  List<Course> get courses => _subjects
+      .map((s) => Course(id: s.id, courseName: s.name, courseCode: s.code))
+      .toList();
+  List<Section> get sections => _classSections
+      .map((cs) => Section(
+            id: cs.id,
+            sectionName: cs.sectionName,
+            courseId: cs.subjectId,
+          ))
+      .toList();
 
   /// Load all assignments for a teacher
   Future<void> loadAssignments(String userUuid) async {
@@ -48,27 +65,69 @@ class AssignmentProvider with ChangeNotifier {
     }
   }
 
-  /// Load teacher's courses for dropdown
+  /// Load teacher's class sections and extract subjects (legacy method)
+  /// This is kept for backward compatibility but does nothing
+  /// Use loadClassSectionsForTeacher(teacherId) instead
   Future<void> loadCourses(String userUuid) async {
+    // This method is deprecated - call loadClassSectionsForTeacher instead
+    debugPrint('loadCourses called but is deprecated. Use loadClassSectionsForTeacher instead.');
+  }
+
+  /// Load class sections and subjects for a teacher
+  /// Call this method with the teacher ID to populate dropdowns
+  Future<void> loadClassSectionsForTeacher(int teacherId) async {
     try {
-      _courses = await _teacherService.getTeacherCourses(userUuid);
+      // Get all class sections for this teacher
+      final sectionsData = await _classSectionService.getClassSections(
+        teacherId: teacherId,
+        status: 'ACTIVE',
+      );
+
+      // Convert to ClassSection objects
+      _allClassSections = sectionsData
+          .map((sectionJson) =>
+              ClassSection.fromJson(sectionJson as Map<String, dynamic>))
+          .toList();
+
+      // Extract unique subjects from class sections
+      final subjectMap = <int, Subject>{};
+      for (final section in _allClassSections) {
+        if (!subjectMap.containsKey(section.subjectId)) {
+          subjectMap[section.subjectId] = Subject(
+            id: section.subjectId,
+            name: section.subjectName,
+            code: '',
+          );
+        }
+      }
+      _subjects = subjectMap.values.toList();
+
+      // Initially, no class sections are shown (until subject is selected)
+      _classSections = [];
+
       notifyListeners();
     } on Exception catch (e) {
-      debugPrint('Error loading courses: $e');
+      debugPrint('Error loading class sections: $e');
+      _subjects = [];
+      _classSections = [];
+      _allClassSections = [];
+      notifyListeners();
     }
   }
 
-  /// Load sections for a specific course
+  /// Filter class sections by subject
+  /// Call this when a subject is selected to show relevant class sections
+  void filterClassSectionsBySubject(int subjectId) {
+    _classSections = _allClassSections
+        .where((section) => section.subjectId == subjectId)
+        .toList();
+    notifyListeners();
+  }
+
+  /// Load sections for a specific course (legacy method for compatibility)
   Future<void> loadSectionsForCourse(String userUuid, int courseId) async {
-    try {
-      _sections = await _teacherService.getSectionsForCourse(
-        userUuid,
-        courseId,
-      );
-      notifyListeners();
-    } on Exception catch (e) {
-      debugPrint('Error loading sections: $e');
-    }
+    // This now filters the already-loaded class sections
+    filterClassSectionsBySubject(courseId);
   }
 
   /// Create a new assignment

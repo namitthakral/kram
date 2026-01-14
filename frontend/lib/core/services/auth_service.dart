@@ -39,11 +39,16 @@ class AuthService {
           AppConstants.accessTokenKey,
           loginResponse.accessToken,
         );
+        log('💾 Stored access token');
+
         if (loginResponse.refreshToken != null) {
           await _storage.write(
             AppConstants.refreshTokenKey,
             loginResponse.refreshToken!,
           );
+          log('💾 Stored refresh token');
+        } else {
+          log('⚠️ No refresh token received from backend');
         }
 
         // Calculate and store token expiry time
@@ -54,11 +59,13 @@ class AuthService {
           AppConstants.tokenExpiryKey,
           expiryTime.toIso8601String(),
         );
+        log('💾 Stored token expiry: $expiryTime');
 
         await _storage.write(
           AppConstants.userKey,
           jsonEncode(loginResponse.user.toJson()),
         );
+        log('✅ Login successful for user: ${loginResponse.user.email}');
 
         return loginResponse;
       } else {
@@ -193,7 +200,11 @@ class AuthService {
 
       if (response.statusCode == 200) {
         log('✅ Refresh token API call successful');
-        final tokens = AuthTokens.fromJson(response.data);
+
+        // Backend returns { tokens: { accessToken, refreshToken, expiresIn } }
+        // Extract the tokens object from the response
+        final tokensData = response.data['tokens'] ?? response.data;
+        final tokens = AuthTokens.fromJson(tokensData);
 
         // Store new access token
         await _storage.write(AppConstants.accessTokenKey, tokens.accessToken);

@@ -434,4 +434,200 @@ export class CoursesService {
       count: classSections.length,
     }
   }
+
+  /**
+   * Get students enrolled in a specific class section
+   * Returns only students who are enrolled in the subject taught by this section
+   */
+  async getClassSectionStudents(sectionId: number) {
+    // First, find the class section
+    const classSection = await this.prisma.classSection.findUnique({
+      where: { id: sectionId },
+      include: {
+        subject: {
+          include: {
+            course: true,
+          },
+        },
+        semester: true,
+      },
+    })
+
+    if (!classSection) {
+      throw new NotFoundException(`Class section with ID ${sectionId} not found`)
+    }
+
+    // Get all enrollments for this subject and semester
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: {
+        subjectId: classSection.subjectId,
+        semesterId: classSection.semesterId,
+        enrollmentStatus: 'ENROLLED',
+        // Also filter by section if the student has a section attribute
+        student: {
+          courseId: classSection.subject.courseId,
+          section: classSection.sectionName,
+          status: 'ACTIVE',
+        },
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                uuid: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        student: {
+          rollNumber: 'asc',
+        },
+      },
+    })
+
+    return {
+      success: true,
+      data: {
+        section: {
+          id: classSection.id,
+          sectionName: classSection.sectionName,
+          subject: {
+            id: classSection.subject.id,
+            name: classSection.subject.subjectName,
+            code: classSection.subject.subjectCode,
+          },
+          course: classSection.subject.course
+            ? {
+                id: classSection.subject.course.id,
+                name: classSection.subject.course.name,
+                code: classSection.subject.course.code,
+              }
+            : null,
+          semester: {
+            id: classSection.semester.id,
+            name: classSection.semester.semesterName,
+            semesterNumber: classSection.semester.semesterNumber,
+          },
+        },
+        students: enrollments.map(enrollment => ({
+          id: enrollment.student.id,
+          userId: enrollment.student.userId,
+          uuid: enrollment.student.user.uuid,
+          name: enrollment.student.user.name,
+          email: enrollment.student.user.email,
+          rollNumber: enrollment.student.rollNumber,
+          admissionNumber: enrollment.student.admissionNumber,
+          section: enrollment.student.section,
+          enrollmentId: enrollment.id,
+          enrollmentDate: enrollment.enrollmentDate,
+          enrollmentStatus: enrollment.enrollmentStatus,
+        })),
+        count: enrollments.length,
+      },
+    }
+  }
+
+  /**
+   * Get attendance records for a specific class section and date
+   * Returns attendance records for students in the section on the specified date
+   */
+  async getClassSectionAttendance(sectionId: number, date: string) {
+    // First, verify the class section exists
+    const classSection = await this.prisma.classSection.findUnique({
+      where: { id: sectionId },
+      include: {
+        subject: {
+          include: {
+            course: true,
+          },
+        },
+        semester: true,
+      },
+    })
+
+    if (!classSection) {
+      throw new NotFoundException(`Class section with ID ${sectionId} not found`)
+    }
+
+    // Parse the date
+    const attendanceDate = new Date(date)
+
+    // Get all attendance records for this section on the specified date
+    const attendanceRecords = await this.prisma.attendance.findMany({
+      where: {
+        sectionId,
+        date: attendanceDate,
+      },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                uuid: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        student: {
+          rollNumber: 'asc',
+        },
+      },
+    })
+
+    return {
+      success: true,
+      data: {
+        section: {
+          id: classSection.id,
+          sectionName: classSection.sectionName,
+          subject: {
+            id: classSection.subject.id,
+            name: classSection.subject.subjectName,
+            code: classSection.subject.subjectCode,
+          },
+          course: classSection.subject.course
+            ? {
+                id: classSection.subject.course.id,
+                name: classSection.subject.course.name,
+                code: classSection.subject.course.code,
+              }
+            : null,
+          semester: {
+            id: classSection.semester.id,
+            name: classSection.semester.semesterName,
+            semesterNumber: classSection.semester.semesterNumber,
+          },
+        },
+        date: attendanceDate,
+        attendance: attendanceRecords.map(record => ({
+          id: record.id,
+          studentId: record.studentId,
+          student: {
+            id: record.student.id,
+            userId: record.student.userId,
+            uuid: record.student.user.uuid,
+            name: record.student.user.name,
+            email: record.student.user.email,
+            rollNumber: record.student.rollNumber,
+            admissionNumber: record.student.admissionNumber,
+          },
+          status: record.status,
+          remarks: record.remarks,
+          markedAt: record.markedAt,
+        })),
+        count: attendanceRecords.length,
+      },
+    }
+  }
 }

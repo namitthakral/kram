@@ -17,12 +17,17 @@ import 'modules/library/providers/library_tab_provider.dart';
 import 'modules/parent/providers/parent_dashboard_provider.dart';
 import 'modules/parent/providers/parent_tab_provider.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
+import 'modules/student/providers/report_card_provider.dart';
 import 'modules/student/providers/student_dashboard_provider.dart';
 import 'modules/teacher/providers/assignment_provider.dart';
 import 'modules/teacher/providers/examination_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
+import 'modules/teacher/providers/question_paper_provider.dart';
 import 'modules/teacher/providers/teacher_dashboard_provider.dart';
+import 'modules/teacher/providers/timetable_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
+import 'provider/courses_provider.dart';
+import 'provider/teachers_provider.dart';
 import 'provider/bottom_nav_provider.dart';
 import 'provider/dashboard/favourite_provider.dart';
 import 'provider/language_provider.dart';
@@ -117,6 +122,21 @@ void main() async {
         ),
         ChangeNotifierProvider<GradingConfigProvider>(
           create: (_) => GradingConfigProvider(),
+        ),
+        ChangeNotifierProvider<ReportCardProvider>(
+          create: (_) => ReportCardProvider(),
+        ),
+        ChangeNotifierProvider<TimetableProvider>(
+          create: (_) => TimetableProvider(),
+        ),
+        ChangeNotifierProvider<QuestionPaperProvider>(
+          create: (_) => QuestionPaperProvider(),
+        ),
+        ChangeNotifierProvider<CoursesProvider>(
+          create: (_) => CoursesProvider(),
+        ),
+        ChangeNotifierProvider<TeachersProvider>(
+          create: (_) => TeachersProvider(),
         ),
       ],
       child: const EdVerseApp(),

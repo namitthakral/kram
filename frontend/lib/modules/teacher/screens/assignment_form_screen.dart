@@ -262,7 +262,7 @@ class _AssignmentFormScreenState extends State<AssignmentFormScreen> {
     label: context.translate('instructions_optional'),
     controller: _instructionsController,
     hintText: context.translate('instructions_hint'),
-    // //prefixIcon: const Icon(Icons.list),
+    //prefixIcon: const Icon(Icons.list),
     maxLines: 3,
   );
 
@@ -436,7 +436,7 @@ class _AssignmentFormScreenState extends State<AssignmentFormScreen> {
     final provider = context.read<AssignmentProvider>();
 
     final dto = CreateAssignmentDto(
-      courseId: _selectedCourse!.id,
+      subjectId: _selectedCourse!.id,
       sectionId: _selectedSection?.id,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),

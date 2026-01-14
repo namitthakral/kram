@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/services/class_section_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
@@ -14,18 +15,107 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../models/attendance_models.dart';
 import '../providers/attendance_provider.dart';
 
-class MarkAttendanceScreen extends StatelessWidget {
+class MarkAttendanceScreen extends StatefulWidget {
   const MarkAttendanceScreen({super.key});
+
+  @override
+  State<MarkAttendanceScreen> createState() => _MarkAttendanceScreenState();
+}
+
+class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
+  List<ClassInfo>? _availableClasses;
+  bool _isLoadingClasses = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load class sections when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadClassSections();
+    });
+  }
+
+  Future<void> _loadClassSections() async {
+    setState(() {
+      _isLoadingClasses = true;
+    });
+
+    try {
+      final loginProvider = context.read<LoginProvider>();
+      final teacherId = loginProvider.currentUser?.teacher?.id;
+
+      if (teacherId == null) {
+        setState(() {
+          _availableClasses = [];
+          _isLoadingClasses = false;
+        });
+        return;
+      }
+
+      final classSectionService = ClassSectionService();
+      final sections = await classSectionService.getClassSections(
+        teacherId: teacherId,
+        status: 'ACTIVE',
+      );
+
+      final classList = <ClassInfo>[];
+      for (final section in sections) {
+        final sectionMap = section as Map<String, dynamic>;
+        final sectionId = sectionMap['id'] as int?;
+        final sectionName = sectionMap['sectionName'] as String? ?? '';
+        final subject = sectionMap['subject'] as Map<String, dynamic>?;
+        final course = sectionMap['course'] as Map<String, dynamic>?;
+        final currentEnrollment = sectionMap['currentEnrollment'] as int? ?? 0;
+
+        if (sectionId != null && subject != null) {
+          final subjectName = subject['name'] as String? ?? 'Unknown';
+          final courseId = subject['courseId'] as int? ?? 0;
+          final courseName = course?['name'] as String? ?? 'Unknown';
+
+          classList.add(
+            ClassInfo(
+              id: sectionId.toString(),
+              name: '$courseName - $subjectName ($sectionName)',
+              totalStudents: currentEnrollment,
+              courseId: courseId,
+              sectionName: sectionName,
+              sectionId: sectionId,
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        _availableClasses = classList;
+        _isLoadingClasses = false;
+      });
+    } catch (e) {
+      print('Error loading class sections: $e');
+      setState(() {
+        _availableClasses = [];
+        _isLoadingClasses = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
     create: (_) => AttendanceProvider(),
-    child: const _MarkAttendanceContent(),
+    child: _MarkAttendanceContent(
+      availableClasses: _availableClasses,
+      isLoadingClasses: _isLoadingClasses,
+    ),
   );
 }
 
 class _MarkAttendanceContent extends StatelessWidget {
-  const _MarkAttendanceContent();
+  const _MarkAttendanceContent({
+    required this.availableClasses,
+    required this.isLoadingClasses,
+  });
+
+  final List<ClassInfo>? availableClasses;
+  final bool isLoadingClasses;
 
   @override
   Widget build(BuildContext context) {
@@ -98,8 +188,9 @@ class _MarkAttendanceContent extends StatelessWidget {
                   Expanded(
                     child: _CompactClassCard(
                       selectedClass: provider.selectedClass,
-                      availableClasses: provider.availableClasses,
+                      availableClasses: availableClasses ?? [],
                       onClassSelected: provider.setSelectedClass,
+                      isLoading: isLoadingClasses,
                     ),
                   ),
                 ],
@@ -217,7 +308,22 @@ class _MarkAttendanceContent extends StatelessWidget {
               CustomElevatedButton(
                 text: 'Save Changes',
                 onPressed: () async {
-                  final success = await provider.saveAttendance();
+                  final teacherUuid = user?.uuid;
+                  final teacherId = teacher?.id;
+
+                  if (teacherUuid == null || teacherId == null) {
+                    showCustomSnackbar(
+                      message: 'Unable to identify teacher',
+                      type: SnackbarType.warning,
+                    );
+                    return;
+                  }
+
+                  final success = await provider.saveAttendance(
+                    teacherUuid,
+                    teacherId,
+                  );
+
                   if (context.mounted) {
                     if (success) {
                       showCustomSnackbar(
@@ -349,11 +455,13 @@ class _CompactClassCard extends StatelessWidget {
     required this.selectedClass,
     required this.availableClasses,
     required this.onClassSelected,
+    this.isLoading = false,
   });
 
   final ClassInfo? selectedClass;
   final List<ClassInfo> availableClasses;
   final ValueChanged<ClassInfo> onClassSelected;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -403,18 +511,27 @@ class _CompactClassCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            selectedClass?.name ?? 'Select',
-            style: TextStyle(
-              fontSize: AppTheme.fontSizeLg,
-              fontWeight: AppTheme.fontWeightBold,
-              color:
-                  selectedClass != null
-                      ? CustomAppColors.slate800
-                      : CustomAppColors.slate400,
-            ),
-          ),
-          if (selectedClass != null)
+          isLoading
+              ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: CustomAppColors.primaryBlue,
+                ),
+              )
+              : Text(
+                selectedClass?.name ?? 'Select',
+                style: TextStyle(
+                  fontSize: AppTheme.fontSizeLg,
+                  fontWeight: AppTheme.fontWeightBold,
+                  color:
+                      selectedClass != null
+                          ? CustomAppColors.slate800
+                          : CustomAppColors.slate400,
+                ),
+              ),
+          if (selectedClass != null && !isLoading)
             Text(
               '${selectedClass!.totalStudents} students',
               style: const TextStyle(

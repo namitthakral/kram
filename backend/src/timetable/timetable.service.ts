@@ -78,7 +78,7 @@ export class TimetableService {
 
     return {
       success: true,
-      data: timeSlots.map(this.formatTimeSlot),
+      data: timeSlots.map(this.formatTimeSlot.bind(this)),
       count: timeSlots.length,
     }
   }
@@ -379,7 +379,7 @@ export class TimetableService {
 
     return {
       success: true,
-      data: entries.map(this.formatTimetableEntry),
+      data: entries.map(this.formatTimetableEntry.bind(this)),
       count: entries.length,
     }
   }

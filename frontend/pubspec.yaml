@@ -33,6 +33,8 @@ dependencies:
   # PDF generation and printing
   pdf: ^3.11.1
   path_provider: ^2.1.5
+  # File picker for attachments
+  file_picker: ^8.1.6
 
 dev_dependencies:
   flutter_launcher_icons: '^0.14.3'

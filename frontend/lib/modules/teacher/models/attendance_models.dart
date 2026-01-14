@@ -1,4 +1,4 @@
-enum AttendanceStatus { present, absent }
+enum AttendanceStatus { present, absent, late, excused }
 
 class StudentAttendance {
   StudentAttendance({
@@ -30,10 +30,16 @@ class ClassInfo {
     required this.id,
     required this.name,
     required this.totalStudents,
+    required this.courseId,
+    required this.sectionName,
+    this.sectionId,
   });
   final String id;
   final String name;
   final int totalStudents;
+  final int courseId;
+  final String sectionName;
+  final int? sectionId; // The actual ClassSection database ID
 }
 
 class AttendanceSummary {

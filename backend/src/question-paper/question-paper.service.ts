@@ -120,7 +120,7 @@ export class QuestionPaperService {
     }
 
     // Create question paper with sections and questions in a transaction
-    const questionPaper = await this.prisma.$transaction(async tx => {
+    const questionPaper = await this.prisma.$transaction(async (tx: PrismaService) => {
       // Create question paper
       const paper = await tx.questionPaper.create({
         data: {

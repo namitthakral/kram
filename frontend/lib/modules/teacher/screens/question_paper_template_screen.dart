@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/services/class_section_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../utils/custom_colors.dart';
 import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
@@ -36,9 +38,6 @@ class _QuestionPaperTemplateScreenState
   final _examNameController = TextEditingController(
     text: 'Mid-Term Examination',
   );
-  final _classNameController = TextEditingController(text: 'Class 10');
-  final _sectionController = TextEditingController(text: 'A');
-  final _subjectController = TextEditingController(text: 'Mathematics');
   final _dateController = TextEditingController(text: '15th December, 2024');
   final _durationController = TextEditingController(text: '3 Hours');
   final _maxMarksController = TextEditingController(text: '100');
@@ -50,12 +49,30 @@ class _QuestionPaperTemplateScreenState
         '4. Read each question carefully before answering.',
   );
 
+  // Dropdown data
+  List<Map<String, dynamic>> _availableClassSections = [];
+  Map<int, String> _subjectsMap = {}; // subjectId -> subjectName
+  Map<int, String> _coursesMap = {}; // courseId -> courseName
+  Map<int, List<String>> _sectionsMap = {}; // subjectId -> list of sections
+
+  // Selected values
+  int? _selectedSubjectId;
+  int? _selectedCourseId;
+  String? _selectedSection;
+
+  bool _isLoadingData = false;
+
   // Sections
   final List<QuestionSection> sections = [];
 
   @override
   void initState() {
     super.initState();
+    // Load class sections when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadClassSections();
+    });
+
     // Add default sections
     sections.addAll([
       QuestionSection(
@@ -88,14 +105,87 @@ class _QuestionPaperTemplateScreenState
     ]);
   }
 
+  Future<void> _loadClassSections() async {
+    setState(() {
+      _isLoadingData = true;
+    });
+
+    try {
+      final loginProvider = context.read<LoginProvider>();
+      final teacherId = loginProvider.currentUser?.teacher?.id;
+
+      if (teacherId == null) {
+        setState(() {
+          _availableClassSections = [];
+          _isLoadingData = false;
+        });
+        return;
+      }
+
+      final classSectionService = ClassSectionService();
+      final sections = await classSectionService.getClassSections(
+        teacherId: teacherId,
+        status: 'ACTIVE',
+      );
+
+      // Process the data to extract subjects, courses, and sections
+      final subjectsMap = <int, String>{};
+      final coursesMap = <int, String>{};
+      final sectionsMap = <int, Set<String>>{};
+
+      for (final section in sections) {
+        final sectionMap = section as Map<String, dynamic>;
+        final subject = sectionMap['subject'] as Map<String, dynamic>?;
+        final course = sectionMap['course'] as Map<String, dynamic>?;
+        final sectionName = sectionMap['sectionName'] as String? ?? '';
+
+        if (subject != null) {
+          final subjectId = subject['id'] as int?;
+          final subjectName = subject['name'] as String? ?? 'Unknown';
+          final courseId = subject['courseId'] as int?;
+
+          if (subjectId != null) {
+            subjectsMap[subjectId] = subjectName;
+
+            // Initialize sections set for this subject if not exists
+            if (!sectionsMap.containsKey(subjectId)) {
+              sectionsMap[subjectId] = <String>{};
+            }
+            if (sectionName.isNotEmpty) {
+              sectionsMap[subjectId]!.add(sectionName);
+            }
+          }
+
+          if (courseId != null && course != null) {
+            final courseName = course['name'] as String? ?? 'Unknown';
+            coursesMap[courseId] = courseName;
+          }
+        }
+      }
+
+      setState(() {
+        _availableClassSections = sections.cast<Map<String, dynamic>>();
+        _subjectsMap = subjectsMap;
+        _coursesMap = coursesMap;
+        _sectionsMap = sectionsMap.map(
+          (key, value) => MapEntry(key, value.toList()..sort()),
+        );
+        _isLoadingData = false;
+      });
+    } on Exception catch (e) {
+      print('Error loading class sections: $e');
+      setState(() {
+        _availableClassSections = [];
+        _isLoadingData = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _schoolNameController.dispose();
     _schoolAddressController.dispose();
     _examNameController.dispose();
-    _classNameController.dispose();
-    _sectionController.dispose();
-    _subjectController.dispose();
     _dateController.dispose();
     _durationController.dispose();
     _maxMarksController.dispose();
@@ -111,78 +201,83 @@ class _QuestionPaperTemplateScreenState
 
     showDialog<void>(
       context: context,
-      builder: (context) => CustomFormDialog(
-        title: 'Add Section',
-        subtitle: 'Create a new section for the question paper',
-        headerIcon: Icons.add_box,
-        confirmText: 'Add',
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomTextField(
-              controller: sectionNameController,
-              label: 'Section Name',
-              hintText: 'e.g., Section A - Multiple Choice',
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: descriptionController,
-              label: 'Description (Optional)',
-              hintText: 'e.g., Choose the correct answer',
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (sectionNameController.text.isNotEmpty) {
-                  final numQuestions =
-                      int.tryParse(questionsController.text) ?? 1;
-                  setState(() {
-                    sections.add(
-                      QuestionSection(
-                        sectionName: sectionNameController.text,
-                        questions: List.generate(
-                          numQuestions,
-                          (index) => Question(
-                            questionText: 'Question ${index + 1} here',
-                          ),
-                        ),
-                        marksPerQuestion:
-                            int.tryParse(marksController.text) ?? 1,
-                        description:
-                            descriptionController.text.isEmpty
-                                ? null
-                                : descriptionController.text,
-                      ),
-                    );
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        ),
-        onConfirm: () {
-          if (sectionNameController.text.isNotEmpty) {
-            final numQuestions = int.tryParse(questionsController.text) ?? 1;
-            setState(() {
-              sections.add(
-                QuestionSection(
-                  sectionName: sectionNameController.text,
-                  questions: List.generate(
-                    numQuestions,
-                    (index) => Question(questionText: 'Question ${index + 1} here'),
-                  ),
-                  marksPerQuestion: int.tryParse(marksController.text) ?? 1,
-                  description: descriptionController.text.isEmpty
-                      ? null
-                      : descriptionController.text,
+      builder:
+          (context) => CustomFormDialog(
+            title: 'Add Section',
+            subtitle: 'Create a new section for the question paper',
+            headerIcon: Icons.add_box,
+            confirmText: 'Add',
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CustomTextField(
+                  controller: sectionNameController,
+                  label: 'Section Name',
+                  hintText: 'e.g., Section A - Multiple Choice',
                 ),
-              );
-            });
-            Navigator.pop(context);
-          }
-        },
-      ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: descriptionController,
+                  label: 'Description (Optional)',
+                  hintText: 'e.g., Choose the correct answer',
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (sectionNameController.text.isNotEmpty) {
+                      final numQuestions =
+                          int.tryParse(questionsController.text) ?? 1;
+                      setState(() {
+                        sections.add(
+                          QuestionSection(
+                            sectionName: sectionNameController.text,
+                            questions: List.generate(
+                              numQuestions,
+                              (index) => Question(
+                                questionText: 'Question ${index + 1} here',
+                              ),
+                            ),
+                            marksPerQuestion:
+                                int.tryParse(marksController.text) ?? 1,
+                            description:
+                                descriptionController.text.isEmpty
+                                    ? null
+                                    : descriptionController.text,
+                          ),
+                        );
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+            onConfirm: () {
+              if (sectionNameController.text.isNotEmpty) {
+                final numQuestions =
+                    int.tryParse(questionsController.text) ?? 1;
+                setState(() {
+                  sections.add(
+                    QuestionSection(
+                      sectionName: sectionNameController.text,
+                      questions: List.generate(
+                        numQuestions,
+                        (index) => Question(
+                          questionText: 'Question ${index + 1} here',
+                        ),
+                      ),
+                      marksPerQuestion: int.tryParse(marksController.text) ?? 1,
+                      description:
+                          descriptionController.text.isEmpty
+                              ? null
+                              : descriptionController.text,
+                    ),
+                  );
+                });
+                Navigator.pop(context);
+              }
+            },
+          ),
     );
   }
 
@@ -200,140 +295,121 @@ class _QuestionPaperTemplateScreenState
 
     showDialog<void>(
       context: context,
-      builder: (context) => CustomFormDialog(
-        title: 'Edit Section',
-        subtitle: 'Modify section details',
-        headerIcon: Icons.edit,
-        confirmText: 'Save',
-        maxWidth: 550,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+      builder:
+          (context) => CustomFormDialog(
+            title: 'Edit Section',
+            subtitle: 'Modify section details',
+            headerIcon: Icons.edit,
+            maxWidth: 550,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton.icon(
-                  onPressed: () async {
-                    final confirm = await CustomDialog.showConfirmation(
-                      context: context,
-                      title: 'Delete Section',
-                      message: 'Are you sure you want to delete this section?',
-                      confirmText: 'Delete',
-                      confirmColor: AppTheme.danger,
-                      icon: Icons.delete,
-                      iconColor: AppTheme.danger,
-                    );
-                    if (confirm == true && context.mounted) {
-                      setState(() {
-                        sections.removeAt(sectionIndex);
-                      });
-                      Navigator.pop(context);
-                    }
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        final confirm = await CustomDialog.showConfirmation(
+                          context: context,
+                          title: 'Delete Section',
+                          message:
+                              'Are you sure you want to delete this section?',
+                          confirmText: 'Delete',
+                          confirmColor: AppTheme.danger,
+                          icon: Icons.delete,
+                          iconColor: AppTheme.danger,
+                        );
+                        if (confirm == true && context.mounted) {
+                          setState(() {
+                            sections.removeAt(sectionIndex);
+                          });
+                          Navigator.pop(context);
+                        }
+                      },
+                      icon: const Icon(Icons.delete, size: 18),
+                      label: const Text('Delete Section'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.danger,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                CustomTextField(
+                  controller: sectionNameController,
+                  label: 'Section Name',
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: descriptionController,
+                  label: 'Description (Optional)',
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      sections[sectionIndex] = QuestionSection(
+                        sectionName: sectionNameController.text,
+                        questions: section.questions,
+                        marksPerQuestion:
+                            int.tryParse(marksController.text) ?? 1,
+                        description:
+                            descriptionController.text.isEmpty
+                                ? null
+                                : descriptionController.text,
+                      );
+                    });
+                    Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.delete, size: 18),
-                  label: const Text('Delete Section'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.danger,
-                  ),
+                  child: const Text('Save'),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            CustomTextField(
-              controller: sectionNameController,
-              label: 'Section Name',
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: descriptionController,
-              label: 'Description (Optional)',
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  sections[sectionIndex] = QuestionSection(
-                    sectionName: sectionNameController.text,
-                    questions: section.questions,
-                    marksPerQuestion: int.tryParse(marksController.text) ?? 1,
-                    description:
-                        descriptionController.text.isEmpty
-                            ? null
-                            : descriptionController.text,
-                  );
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-        onConfirm: () {
-          setState(() {
-            sections[sectionIndex] = QuestionSection(
-              sectionName: sectionNameController.text,
-              questions: section.questions,
-              marksPerQuestion: int.tryParse(marksController.text) ?? 1,
-              description: descriptionController.text.isEmpty
-                  ? null
-                  : descriptionController.text,
-            );
-          });
-          Navigator.pop(context);
-        },
-      ),
+            onConfirm: () {
+              setState(() {
+                sections[sectionIndex] = QuestionSection(
+                  sectionName: sectionNameController.text,
+                  questions: section.questions,
+                  marksPerQuestion: int.tryParse(marksController.text) ?? 1,
+                  description:
+                      descriptionController.text.isEmpty
+                          ? null
+                          : descriptionController.text,
+                );
+              });
+              Navigator.pop(context);
+            },
+          ),
     );
   }
 
   void _editQuestion(int sectionIndex, int questionIndex) {
     final question = sections[sectionIndex].questions[questionIndex];
-    final questionController = TextEditingController(
-      text: question.questionText,
-    );
-    final customMarksController = TextEditingController(
-      text: question.customMarks?.toString() ?? '',
-    );
 
     showDialog<void>(
       context: context,
-      builder: (context) => CustomFormDialog(
-        title: 'Edit Question ${questionIndex + 1}',
-        subtitle: 'Modify question text and marks',
-        headerIcon: Icons.quiz,
-        confirmText: 'Save',
-        maxWidth: 550,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomTextField(
-              controller: questionController,
-              label: 'Question',
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            CustomTextField(
-              controller: customMarksController,
-              label: 'Custom Marks (Optional)',
-              hintText: 'Default: ${sections[sectionIndex].marksPerQuestion}',
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        onConfirm: () {
-          setState(() {
-            sections[sectionIndex].questions[questionIndex] = Question(
-              questionText: questionController.text,
-              customMarks: customMarksController.text.isEmpty
-                  ? null
-                  : int.tryParse(customMarksController.text),
-            );
-          });
-          Navigator.pop(context);
-        },
-      ),
+      builder:
+          (context) => _QuestionEditDialog(
+            question: question,
+            questionNumber: questionIndex + 1,
+            defaultMarks: sections[sectionIndex].marksPerQuestion,
+            onSave: (updatedQuestion) {
+              setState(() {
+                sections[sectionIndex].questions[questionIndex] =
+                    updatedQuestion;
+              });
+            },
+          ),
     );
   }
 
   void _previewPaper() {
+    final subjectName =
+        _selectedSubjectId != null
+            ? _subjectsMap[_selectedSubjectId] ?? ''
+            : '';
+    final courseName =
+        _selectedCourseId != null ? _coursesMap[_selectedCourseId] ?? '' : '';
+
     Navigator.push<void>(
       context,
       MaterialPageRoute(
@@ -343,9 +419,9 @@ class _QuestionPaperTemplateScreenState
                 schoolName: _schoolNameController.text,
                 schoolAddress: _schoolAddressController.text,
                 examName: _examNameController.text,
-                className: _classNameController.text,
-                section: _sectionController.text,
-                subject: _subjectController.text,
+                className: courseName,
+                section: _selectedSection ?? '',
+                subject: subjectName,
                 date: _dateController.text,
                 duration: _durationController.text,
                 maxMarks: int.tryParse(_maxMarksController.text) ?? 100,
@@ -359,6 +435,192 @@ class _QuestionPaperTemplateScreenState
 
   int _calculateTotalMarks() =>
       sections.fold(0, (sum, section) => sum + section.totalMarks);
+
+  Widget _buildSubjectDropdown() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Subject',
+        style: TextStyle(
+          fontWeight: AppTheme.fontWeightBold,
+          fontSize: AppTheme.fontSizeSm,
+          color: AppTheme.slate800,
+        ),
+      ),
+      const SizedBox(height: 6),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          border: Border.all(color: CustomAppColors.lightGrey01),
+          borderRadius: BorderRadius.circular(15),
+          color: CustomAppColors.slate50,
+        ),
+        child:
+            _isLoadingData
+                ? const SizedBox(
+                  height: 48,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+                : DropdownButton<int>(
+                  isExpanded: true,
+                  value: _selectedSubjectId,
+                  underline: const SizedBox(),
+                  hint: const Text(
+                    'Select subject',
+                    style: TextStyle(
+                      fontSize: AppTheme.fontSizeBase,
+                      color: CustomAppColors.grey01,
+                    ),
+                  ),
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                  style: const TextStyle(
+                    fontSize: AppTheme.fontSizeBase,
+                    color: AppTheme.slate800,
+                  ),
+                  items:
+                      _subjectsMap.entries
+                          .map(
+                            (entry) => DropdownMenuItem<int>(
+                              value: entry.key,
+                              child: Text(entry.value),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (subjectId) {
+                    setState(() {
+                      _selectedSubjectId = subjectId;
+                      _selectedSection = null; // Reset section
+
+                      // Find course ID for this subject
+                      if (subjectId != null) {
+                        for (final section in _availableClassSections) {
+                          final subject =
+                              section['subject'] as Map<String, dynamic>?;
+                          if (subject != null && subject['id'] == subjectId) {
+                            _selectedCourseId = subject['courseId'] as int?;
+                            break;
+                          }
+                        }
+                      }
+                    });
+                  },
+                ),
+      ),
+    ],
+  );
+
+  Widget _buildCourseDisplay() {
+    final courseName =
+        _selectedCourseId != null
+            ? _coursesMap[_selectedCourseId] ?? 'Unknown'
+            : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Class',
+          style: TextStyle(
+            fontWeight: AppTheme.fontWeightBold,
+            fontSize: AppTheme.fontSizeSm,
+            color: AppTheme.slate800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: CustomAppColors.lightGrey01),
+            borderRadius: BorderRadius.circular(15),
+            color: CustomAppColors.slate50,
+          ),
+          child: Text(
+            courseName ?? 'Select subject first',
+            style: TextStyle(
+              fontSize: AppTheme.fontSizeBase,
+              color:
+                  courseName != null
+                      ? AppTheme.slate800
+                      : CustomAppColors.grey01,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionDropdown() {
+    final availableSections =
+        _selectedSubjectId != null
+            ? (_sectionsMap[_selectedSubjectId] ?? [])
+            : <String>[];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Section',
+          style: TextStyle(
+            fontWeight: AppTheme.fontWeightBold,
+            fontSize: AppTheme.fontSizeSm,
+            color: AppTheme.slate800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: CustomAppColors.lightGrey01),
+            borderRadius: BorderRadius.circular(15),
+            color: CustomAppColors.slate50,
+          ),
+          child: DropdownButton<String>(
+            isExpanded: true,
+            value: _selectedSection,
+            underline: const SizedBox(),
+            hint: Text(
+              _selectedSubjectId == null
+                  ? 'Select subject first'
+                  : 'Select section',
+              style: const TextStyle(
+                fontSize: AppTheme.fontSizeBase,
+                color: CustomAppColors.grey01,
+              ),
+            ),
+            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+            style: const TextStyle(
+              fontSize: AppTheme.fontSizeBase,
+              color: AppTheme.slate800,
+            ),
+            items:
+                availableSections
+                    .map(
+                      (section) => DropdownMenuItem<String>(
+                        value: section,
+                        child: Text(section),
+                      ),
+                    )
+                    .toList(),
+            onChanged:
+                _selectedSubjectId == null
+                    ? null
+                    : (section) {
+                      setState(() {
+                        _selectedSection = section;
+                      });
+                    },
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -437,38 +699,25 @@ class _QuestionPaperTemplateScreenState
                     controller: _schoolNameController,
                   ),
                   const SizedBox(height: 16),
-                  CustomTextField(
-                    label: 'School Address',
-                    controller: _schoolAddressController,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 16),
+                  // CustomTextField(
+                  //   label: 'School Address',
+                  //   controller: _schoolAddressController,
+                  //   maxLines: 2,
+                  // ),
+                  // const SizedBox(height: 16),
                   CustomTextField(
                     label: 'Examination Name',
                     controller: _examNameController,
                   ),
                   const SizedBox(height: 16),
+                  _buildSubjectDropdown(),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Class',
-                          controller: _classNameController,
-                        ),
-                      ),
+                      Expanded(child: _buildCourseDisplay()),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: CustomTextField(
-                          label: 'Section',
-                          controller: _sectionController,
-                        ),
-                      ),
+                      Expanded(child: _buildSectionDropdown()),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    label: 'Subject',
-                    controller: _subjectController,
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -592,15 +841,24 @@ class _QuestionPaperTemplateScreenState
                     flex: 2,
                     child: ElevatedButton.icon(
                       onPressed: () async {
+                        final subjectName =
+                            _selectedSubjectId != null
+                                ? _subjectsMap[_selectedSubjectId] ?? ''
+                                : '';
+                        final courseName =
+                            _selectedCourseId != null
+                                ? _coursesMap[_selectedCourseId] ?? ''
+                                : '';
+
                         try {
                           await PdfTemplateService.generateQuestionPaperPdf(
                             QuestionPaperTemplate(
                               schoolName: _schoolNameController.text,
                               schoolAddress: _schoolAddressController.text,
                               examName: _examNameController.text,
-                              className: _classNameController.text,
-                              section: _sectionController.text,
-                              subject: _subjectController.text,
+                              className: courseName,
+                              section: _selectedSection ?? '',
+                              subject: subjectName,
                               date: _dateController.text,
                               duration: _durationController.text,
                               maxMarks:
@@ -757,6 +1015,371 @@ class _QuestionPaperTemplateScreenState
       ),
     );
   }
+}
+
+// Question Edit Dialog
+class _QuestionEditDialog extends StatefulWidget {
+  const _QuestionEditDialog({
+    required this.question,
+    required this.questionNumber,
+    required this.defaultMarks,
+    required this.onSave,
+  });
+
+  final Question question;
+  final int questionNumber;
+  final int defaultMarks;
+  final void Function(Question) onSave;
+
+  @override
+  State<_QuestionEditDialog> createState() => _QuestionEditDialogState();
+}
+
+class _QuestionEditDialogState extends State<_QuestionEditDialog> {
+  late TextEditingController _questionController;
+  late TextEditingController _customMarksController;
+  late TextEditingController _imagePlaceholderController;
+  late QuestionType _questionType;
+  late bool _hasImage;
+  final List<TextEditingController> _optionControllers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _questionController = TextEditingController(
+      text: widget.question.questionText,
+    );
+    _customMarksController = TextEditingController(
+      text: widget.question.customMarks?.toString() ?? '',
+    );
+    _imagePlaceholderController = TextEditingController(
+      text: widget.question.imagePlaceholder ?? '',
+    );
+    _questionType = widget.question.type;
+    _hasImage = widget.question.hasImage;
+
+    // Initialize MCQ options
+    if (widget.question.mcqOptions != null) {
+      for (final option in widget.question.mcqOptions!) {
+        _optionControllers.add(TextEditingController(text: option));
+      }
+    } else if (_questionType == QuestionType.mcq) {
+      // Default 4 options for new MCQ questions
+      for (var i = 0; i < 4; i++) {
+        _optionControllers.add(TextEditingController());
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _questionController.dispose();
+    _customMarksController.dispose();
+    _imagePlaceholderController.dispose();
+    for (final controller in _optionControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addOption() {
+    setState(() {
+      _optionControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeOption(int index) {
+    if (_optionControllers.length > 2) {
+      setState(() {
+        _optionControllers[index].dispose();
+        _optionControllers.removeAt(index);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => CustomFormDialog(
+    title: 'Edit Question ${widget.questionNumber}',
+    subtitle: 'Configure question details',
+    headerIcon: Icons.quiz,
+    content: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Question Type Switch
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: CustomAppColors.slate50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: CustomAppColors.lightGrey01),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Question Type',
+                  style: TextStyle(
+                    fontSize: AppTheme.fontSizeSm,
+                    fontWeight: AppTheme.fontWeightBold,
+                    color: AppTheme.slate800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTypeOption(
+                        icon: Icons.edit_note,
+                        label: 'Written',
+                        isSelected: _questionType == QuestionType.written,
+                        onTap: () {
+                          setState(() {
+                            _questionType = QuestionType.written;
+                            _optionControllers.clear();
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildTypeOption(
+                        icon: Icons.radio_button_checked,
+                        label: 'MCQ',
+                        isSelected: _questionType == QuestionType.mcq,
+                        onTap: () {
+                          setState(() {
+                            _questionType = QuestionType.mcq;
+                            if (_optionControllers.isEmpty) {
+                              for (var i = 0; i < 4; i++) {
+                                _optionControllers.add(TextEditingController());
+                              }
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Has Image Switch
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: CustomAppColors.slate50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: CustomAppColors.lightGrey01),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.image, size: 20, color: AppTheme.slate600),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Include Image/Diagram',
+                    style: TextStyle(
+                      fontSize: AppTheme.fontSizeBase,
+                      fontWeight: AppTheme.fontWeightMedium,
+                      color: AppTheme.slate800,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: _hasImage,
+                  onChanged: (value) {
+                    setState(() {
+                      _hasImage = value;
+                    });
+                  },
+                  activeThumbColor: AppTheme.blue500,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Question Text
+          CustomTextField(
+            controller: _questionController,
+            label: 'Question Text',
+            maxLines: 3,
+            hintText: 'Enter the question...',
+          ),
+
+          const SizedBox(height: 16),
+
+          // Image Placeholder (if image is enabled)
+          if (_hasImage) ...[
+            CustomTextField(
+              controller: _imagePlaceholderController,
+              label: 'Image Placeholder Text (Optional)',
+              hintText: 'e.g., [Diagram will be inserted here]',
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // MCQ Options (if MCQ type)
+          if (_questionType == QuestionType.mcq) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Answer Options',
+                  style: TextStyle(
+                    fontSize: AppTheme.fontSizeSm,
+                    fontWeight: AppTheme.fontWeightBold,
+                    color: AppTheme.slate800,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: _addOption,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Option'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.blue500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ..._optionControllers.asMap().entries.map((entry) {
+              final index = entry.key;
+              final controller = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppTheme.blue500.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(
+                          String.fromCharCode(65 + index), // A, B, C, D
+                          style: const TextStyle(
+                            fontWeight: AppTheme.fontWeightBold,
+                            color: AppTheme.blue500,
+                            fontSize: AppTheme.fontSizeSm,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: CustomTextField(
+                        controller: controller,
+                        hintText: 'Option ${String.fromCharCode(65 + index)}',
+                      ),
+                    ),
+                    if (_optionControllers.length > 2)
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => _removeOption(index),
+                        color: AppTheme.danger,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                  ],
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+          ],
+
+          // Custom Marks
+          CustomTextField(
+            controller: _customMarksController,
+            label: 'Custom Marks (Optional)',
+            hintText: 'Default: ${widget.defaultMarks}',
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      ),
+    ),
+    onConfirm: () {
+      final mcqOptions =
+          _questionType == QuestionType.mcq
+              ? _optionControllers
+                  .map((c) => c.text.trim())
+                  .where((text) => text.isNotEmpty)
+                  .toList()
+              : null;
+
+      final updatedQuestion = Question(
+        questionText: _questionController.text,
+        customMarks:
+            _customMarksController.text.isEmpty
+                ? null
+                : int.tryParse(_customMarksController.text),
+        type: _questionType,
+        hasImage: _hasImage,
+        imagePlaceholder:
+            _hasImage && _imagePlaceholderController.text.isNotEmpty
+                ? _imagePlaceholderController.text
+                : null,
+        mcqOptions: mcqOptions,
+      );
+
+      widget.onSave(updatedQuestion);
+      Navigator.pop(context);
+    },
+  );
+
+  Widget _buildTypeOption({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(10),
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color:
+            isSelected
+                ? AppTheme.blue500.withValues(alpha: 0.1)
+                : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelected ? AppTheme.blue500 : CustomAppColors.lightGrey01,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: AppTheme.fontSizeSm,
+              fontWeight:
+                  isSelected
+                      ? AppTheme.fontWeightBold
+                      : AppTheme.fontWeightMedium,
+              color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // Preview Screen
@@ -993,28 +1616,102 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
     final marks = question.customMarks ?? defaultMarks;
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$number. ',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          // Question number and text
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$number. ',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  question.questionText,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(border: Border.all()),
+                child: Text(
+                  '[$marks]',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Text(
-              question.questionText,
-              style: const TextStyle(fontSize: 13),
+
+          // Image placeholder (if exists)
+          if (question.hasImage) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Container(
+                width: double.infinity,
+                height: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[400]!),
+                  color: Colors.grey[100],
+                ),
+                child: Center(
+                  child: Text(
+                    question.imagePlaceholder ?? '[Image/Diagram]',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(border: Border.all()),
-            child: Text(
-              '[$marks]',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ],
+
+          // MCQ Options (if MCQ type)
+          if (question.type == QuestionType.mcq &&
+              question.mcqOptions != null) ...[
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...question.mcqOptions!.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final option = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${String.fromCharCode(65 + index)}. ',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          Expanded(
+                            child: Text(
+                              option,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

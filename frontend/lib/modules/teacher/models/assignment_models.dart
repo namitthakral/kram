@@ -64,7 +64,7 @@ class Assignment {
 
 class CreateAssignmentDto {
   CreateAssignmentDto({
-    required this.courseId,
+    required this.subjectId,
     required this.title,
     required this.description,
     required this.maxMarks,
@@ -74,7 +74,7 @@ class CreateAssignmentDto {
     this.instructions,
     this.status = 'DRAFT',
   });
-  final int courseId;
+  final int subjectId;
   final int? sectionId;
   final String title;
   final String description;
@@ -85,7 +85,7 @@ class CreateAssignmentDto {
   final String status;
 
   Map<String, dynamic> toJson() => {
-    'courseId': courseId,
+    'subjectId': subjectId,
     if (sectionId != null) 'sectionId': sectionId,
     'title': title,
     'description': description,
@@ -126,6 +126,73 @@ class UpdateAssignmentDto {
   };
 }
 
+// Subject model - represents academic subjects like Mathematics, History, etc.
+class Subject {
+  Subject({
+    required this.id,
+    required this.name,
+    required this.code,
+  });
+
+  factory Subject.fromJson(Map<String, dynamic> json) => Subject(
+    id: json['id'] as int,
+    name: json['name'] as String,
+    code: (json['code'] ?? json['subjectCode'] ?? '') as String,
+  );
+  final int id;
+  final String name;
+  final String code;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Subject && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+}
+
+// Class section model - represents a class with subject and section info
+class ClassSection {
+  ClassSection({
+    required this.id,
+    required this.subjectId,
+    required this.subjectName,
+    required this.sectionName,
+    required this.displayName,
+  });
+
+  factory ClassSection.fromJson(Map<String, dynamic> json) {
+    final sectionName = json['sectionName'] as String;
+    final subject = json['subject'] as Map<String, dynamic>?;
+    final course = json['course'] as Map<String, dynamic>?;
+
+    final subjectName = subject?['name'] as String? ?? 'Unknown Subject';
+    final courseName = course?['name'] as String? ?? '';
+    final subjectId = subject?['id'] as int? ?? 0;
+
+    // Format: "B.Sc. CS - Mathematics (A)"
+    final displayName = courseName.isNotEmpty
+        ? '$courseName - $subjectName ($sectionName)'
+        : '$subjectName ($sectionName)';
+
+    return ClassSection(
+      id: json['id'] as int,
+      subjectId: subjectId,
+      subjectName: subjectName,
+      sectionName: sectionName,
+      displayName: displayName,
+    );
+  }
+
+  final int id;
+  final int subjectId;
+  final String subjectName;
+  final String sectionName;
+  final String displayName;
+}
+
+// Legacy models for backward compatibility
 class Course {
   Course({
     required this.id,
@@ -135,8 +202,10 @@ class Course {
 
   factory Course.fromJson(Map<String, dynamic> json) => Course(
     id: json['id'] as int,
-    courseName: json['courseName'] as String,
-    courseCode: json['courseCode'] as String,
+    // Handle both 'courseName' (old) and 'name' (backend) field names
+    courseName: (json['courseName'] ?? json['name']) as String,
+    // Handle both 'courseCode' (old) and 'code' (backend) field names
+    courseCode: (json['courseCode'] ?? json['code'] ?? '') as String,
   );
   final int id;
   final String courseName;
@@ -150,11 +219,27 @@ class Section {
     required this.courseId,
   });
 
-  factory Section.fromJson(Map<String, dynamic> json) => Section(
-    id: json['id'] as int,
-    sectionName: json['sectionName'] as String,
-    courseId: json['courseId'] as int,
-  );
+  factory Section.fromJson(Map<String, dynamic> json) {
+    // Extract courseId from nested structure or direct field
+    int courseId;
+    if (json['courseId'] != null) {
+      // Direct field (old format)
+      courseId = json['courseId'] as int;
+    } else if (json['subject'] != null) {
+      // Nested structure (new format from class-sections API)
+      final subject = json['subject'] as Map<String, dynamic>;
+      // Use the courseId field from subject instead of nested course.id
+      courseId = subject['courseId'] as int;
+    } else {
+      throw Exception('Unable to extract courseId from Section data');
+    }
+
+    return Section(
+      id: json['id'] as int,
+      sectionName: json['sectionName'] as String,
+      courseId: courseId,
+    );
+  }
   final int id;
   final String sectionName;
   final int courseId;

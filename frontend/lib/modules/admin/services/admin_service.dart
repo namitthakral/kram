@@ -301,4 +301,371 @@ class AdminService {
       throw Exception('Failed to reset grading configuration: $e');
     }
   }
+
+  // ==================== USER MANAGEMENT ====================
+
+  /// Create institutional user
+  ///
+  /// Endpoint: POST /admin/users
+  Future<Map<String, dynamic>> createInstitutionalUser(
+    Map<String, dynamic> userData,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/admin/users',
+        data: userData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create user',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw Exception('User already exists');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to create user: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to create user: $e');
+    }
+  }
+
+  /// Get all users with filters
+  ///
+  /// Endpoint: GET /admin/users
+  Future<Map<String, dynamic>> getAllUsers({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    int? roleId,
+    String? status,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      if (roleId != null) {
+        queryParams['roleId'] = roleId.toString();
+      }
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+      if (sortBy != null && sortBy.isNotEmpty) {
+        queryParams['sortBy'] = sortBy;
+      }
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        queryParams['sortOrder'] = sortOrder;
+      }
+
+      final response = await _apiService.dio.get(
+        '/admin/users',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load users',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load users: $e');
+    }
+  }
+
+  /// Get users statistics
+  ///
+  /// Endpoint: GET /admin/users/stats
+  Future<Map<String, dynamic>> getUsersStats() async {
+    try {
+      final response = await _apiService.dio.get('/admin/users/stats');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load user statistics',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load user statistics: $e');
+    }
+  }
+
+  /// Get users by role
+  ///
+  /// Endpoint: GET /admin/users/role/:roleId
+  Future<Map<String, dynamic>> getUsersByRole(
+    int roleId, {
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      final response = await _apiService.dio.get(
+        '/admin/users/role/$roleId',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load users by role',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load users by role: $e');
+    }
+  }
+
+  /// Get user by UUID
+  ///
+  /// Endpoint: GET /admin/users/:user_uuid
+  Future<Map<String, dynamic>> getUserByUuid(String userUuid) async {
+    try {
+      final response = await _apiService.dio.get('/admin/users/$userUuid');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load user',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('User not found');
+      }
+      throw Exception('Failed to load user: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to load user: $e');
+    }
+  }
+
+  /// Get user by EdVerse ID
+  ///
+  /// Endpoint: GET /admin/users/edverse-id/:edverseId
+  Future<Map<String, dynamic>> getUserByEdverseId(String edverseId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/admin/users/edverse-id/$edverseId',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load user',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('User not found with EdVerse ID: $edverseId');
+      }
+      throw Exception('Failed to load user: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to load user: $e');
+    }
+  }
+
+  /// Update user
+  ///
+  /// Endpoint: PATCH /admin/users/:user_uuid
+  Future<Map<String, dynamic>> updateUser(
+    String userUuid,
+    Map<String, dynamic> updateData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/admin/users/$userUuid',
+        data: updateData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update user',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('User not found');
+      } else if (e.response?.statusCode == 409) {
+        throw Exception('Email already exists');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to update user: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to update user: $e');
+    }
+  }
+
+  /// Delete user (soft delete)
+  ///
+  /// Endpoint: DELETE /admin/users/:user_uuid
+  Future<void> deleteUser(String userUuid) async {
+    try {
+      final response = await _apiService.dio.delete('/admin/users/$userUuid');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete user',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('User not found');
+      }
+      throw Exception('Failed to delete user: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to delete user: $e');
+    }
+  }
+
+  /// Hard delete user (permanent deletion)
+  ///
+  /// Endpoint: DELETE /admin/users/:user_uuid/hard
+  Future<void> hardDeleteUser(String userUuid) async {
+    try {
+      final response = await _apiService.dio.delete(
+        '/admin/users/$userUuid/hard',
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to permanently delete user',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('User not found');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception('Forbidden - Super admin access required');
+      }
+      throw Exception('Failed to permanently delete user: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to permanently delete user: $e');
+    }
+  }
+
+  /// Bulk import users
+  ///
+  /// Endpoint: POST /admin/users/bulk-import
+  Future<Map<String, dynamic>> bulkImportUsers(
+    List<Map<String, dynamic>> users,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/admin/users/bulk-import',
+        data: users,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to bulk import users',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to bulk import users: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to bulk import users: $e');
+    }
+  }
+
+  /// Unlock user account
+  ///
+  /// Endpoint: POST /admin/users/:user_uuid/unlock
+  Future<Map<String, dynamic>> unlockUserAccount(String userUuid) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/admin/users/$userUuid/unlock',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to unlock user account',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('User not found');
+      }
+      throw Exception('Failed to unlock user account: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to unlock user account: $e');
+    }
+  }
 }

@@ -401,14 +401,39 @@ class StudentService {
   ///
   /// [page] - Page number for pagination
   /// [limit] - Items per page
+  /// [courseId] - Optional filter by course/class
+  /// [section] - Optional filter by section
+  /// [stream] - Optional filter by stream
+  /// [search] - Optional search term
   Future<Map<String, dynamic>> getAllStudents({
     int page = 1,
     int limit = 10,
+    int? courseId,
+    String? section,
+    String? stream,
+    String? search,
   }) async {
     try {
+      final queryParams = <String, dynamic>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+      if (courseId != null) {
+        queryParams['courseId'] = courseId.toString();
+      }
+      if (section != null && section.isNotEmpty) {
+        queryParams['section'] = section;
+      }
+      if (stream != null && stream.isNotEmpty) {
+        queryParams['stream'] = stream;
+      }
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+
       final response = await _apiService.dio.get(
         '/students',
-        queryParameters: {'page': page.toString(), 'limit': limit.toString()},
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -430,6 +455,60 @@ class StudentService {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load students',
+      );
+    }
+  }
+
+  /// Get student report card
+  ///
+  /// Endpoint: GET /students/:user_uuid/report-card
+  ///
+  /// [userUuid] - Student's user UUID
+  /// [semesterId] - Optional semester ID filter
+  /// [academicYearId] - Optional academic year ID filter
+  /// [includeExamDetails] - Optional flag to include exam details
+  Future<Map<String, dynamic>> getReportCard(
+    String userUuid, {
+    int? semesterId,
+    int? academicYearId,
+    bool? includeExamDetails,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (semesterId != null) {
+        queryParams['semesterId'] = semesterId.toString();
+      }
+      if (academicYearId != null) {
+        queryParams['academicYearId'] = academicYearId.toString();
+      }
+      if (includeExamDetails != null) {
+        queryParams['includeExamDetails'] = includeExamDetails.toString();
+      }
+
+      final response = await _apiService.dio.get(
+        '/students/$userUuid/report-card',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load report card',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load report card',
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load report card',
       );
     }
   }

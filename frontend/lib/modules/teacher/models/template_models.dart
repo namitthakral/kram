@@ -83,22 +83,38 @@ class TimetableSlot {
 }
 
 class SubjectPeriod {
-  SubjectPeriod({required this.subject, this.teacher, this.room});
+  SubjectPeriod({
+    required this.subject,
+    this.teacher,
+    this.room,
+    this.subjectId,
+    this.teacherId,
+    this.roomId,
+  });
 
   factory SubjectPeriod.fromJson(Map<String, dynamic> json) => SubjectPeriod(
     subject: json['subject'] as String,
     teacher: json['teacher'] as String?,
     room: json['room'] as String?,
+    subjectId: json['subjectId'] as int?,
+    teacherId: json['teacherId'] as int?,
+    roomId: json['roomId'] as int?,
   );
 
   final String subject;
   final String? teacher;
   final String? room;
+  final int? subjectId;
+  final int? teacherId;
+  final int? roomId;
 
   Map<String, dynamic> toJson() => {
     'subject': subject,
     'teacher': teacher,
     'room': room,
+    'subjectId': subjectId,
+    'teacherId': teacherId,
+    'roomId': roomId,
   };
 }
 
@@ -200,19 +216,52 @@ class QuestionSection {
   };
 }
 
+enum QuestionType {
+  written, // Descriptive/written answer questions
+  mcq, // Multiple choice questions
+}
+
 class Question {
-  Question({required this.questionText, this.customMarks});
+  Question({
+    required this.questionText,
+    this.customMarks,
+    this.type = QuestionType.written,
+    this.hasImage = false,
+    this.imagePlaceholder,
+    this.mcqOptions,
+  });
 
   factory Question.fromJson(Map<String, dynamic> json) => Question(
     questionText: json['questionText'] as String,
     customMarks: json['customMarks'] as int?,
+    type:
+        json['type'] != null
+            ? QuestionType.values.firstWhere(
+              (e) => e.toString() == 'QuestionType.${json['type']}',
+              orElse: () => QuestionType.written,
+            )
+            : QuestionType.written,
+    hasImage: json['hasImage'] as bool? ?? false,
+    imagePlaceholder: json['imagePlaceholder'] as String?,
+    mcqOptions:
+        json['mcqOptions'] != null
+            ? (json['mcqOptions'] as List).cast<String>()
+            : null,
   );
 
   final String questionText;
   final int? customMarks;
+  final QuestionType type;
+  final bool hasImage;
+  final String? imagePlaceholder; // Text to show in image placeholder
+  final List<String>? mcqOptions; // Options for MCQ questions
 
   Map<String, dynamic> toJson() => {
     'questionText': questionText,
     'customMarks': customMarks,
+    'type': type.toString().split('.').last,
+    'hasImage': hasImage,
+    'imagePlaceholder': imagePlaceholder,
+    'mcqOptions': mcqOptions,
   };
 }

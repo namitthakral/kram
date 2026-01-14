@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -51,5 +51,41 @@ export class ClassSectionsController {
       teacherId: query.teacherId,
       status: query.status,
     })
+  }
+
+  /**
+   * Get students enrolled in a specific class section
+   *
+   * Returns only students who are enrolled in the subject taught by this section
+   * This is useful for marking attendance, as only enrolled students can be marked
+   *
+   * @param sectionId - The ClassSection ID
+   * @returns List of enrolled students with their details
+   */
+  @Get(':sectionId/students')
+  @Roles('super_admin', 'admin', 'teacher')
+  async getEnrolledStudents(@Param('sectionId') sectionId: string) {
+    return this.coursesService.getClassSectionStudents(parseInt(sectionId, 10))
+  }
+
+  /**
+   * Get attendance records for a specific class section and date
+   *
+   * Returns attendance records for all students in the section on the specified date
+   *
+   * @param sectionId - The ClassSection ID
+   * @param date - Date in YYYY-MM-DD format (query parameter)
+   * @returns List of attendance records with student details
+   */
+  @Get(':sectionId/attendance')
+  @Roles('super_admin', 'admin', 'teacher')
+  async getAttendanceByDate(
+    @Param('sectionId') sectionId: string,
+    @Query('date') date: string,
+  ) {
+    return this.coursesService.getClassSectionAttendance(
+      parseInt(sectionId, 10),
+      date,
+    )
   }
 }

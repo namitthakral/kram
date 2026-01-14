@@ -8,6 +8,7 @@ import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import 'create_assignment_screen.dart';
 import '../widgets/stat_card.dart';
 import 'enter_marks_screen.dart';
 import 'mark_attendance_screen.dart';
@@ -180,7 +181,12 @@ class AcademicManagementScreen extends StatelessWidget {
                   icon: Icons.assignment_rounded,
                   color: CustomAppColors.warning,
                   onTap: () {
-                    // TODO: Navigate to create assignment
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreateAssignmentScreen(),
+                      ),
+                    );
                   },
                 ),
               ],

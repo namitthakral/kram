@@ -160,7 +160,8 @@ class _ConfirmationDialog extends StatelessWidget {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 450),
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -268,7 +269,8 @@ class _InfoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Dialog(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    child: Padding(
+    child: Container(
+      constraints: const BoxConstraints(maxWidth: 450),
       padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
