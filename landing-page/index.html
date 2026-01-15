@@ -1,0 +1,2143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kram - Modern Education Management Platform</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='system-ui,sans-serif' font-size='55' font-weight='700' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="Kram is a comprehensive educational management platform built for Indian schools, colleges, and universities. Streamline academics, attendance, fees, and more."
+    />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --color-bg: #0a0a0f;
+        --color-bg-elevated: #12121a;
+        --color-bg-card: #1a1a24;
+        --color-primary: #6366f1;
+        --color-primary-light: #818cf8;
+        --color-accent: #f472b6;
+        --color-accent-secondary: #22d3ee;
+        --color-text: #f8fafc;
+        --color-text-muted: #94a3b8;
+        --color-text-dim: #64748b;
+        --color-border: rgba(255, 255, 255, 0.08);
+        --color-glow: rgba(99, 102, 241, 0.4);
+        --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+        --font-sans:
+          'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Background Effects */
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+        background-size: 60px 60px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .bg-gradient {
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 50% at 50% -20%,
+            rgba(99, 102, 241, 0.15),
+            transparent
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 80% 60%,
+            rgba(244, 114, 182, 0.08),
+            transparent
+          ),
+          radial-gradient(
+            ellipse 50% 30% at 20% 80%,
+            rgba(34, 211, 238, 0.06),
+            transparent
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* Navigation */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 1rem 2rem;
+        backdrop-filter: blur(20px);
+        background: rgba(10, 10, 15, 0.8);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        background: linear-gradient(
+          135deg,
+          var(--color-text),
+          var(--color-primary-light)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2.5rem;
+        list-style: none;
+      }
+
+      .nav-links a {
+        color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s ease;
+        position: relative;
+      }
+
+      .nav-links a::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--color-primary);
+        transition: width 0.3s ease;
+      }
+
+      .nav-links a:hover {
+        color: var(--color-text);
+      }
+
+      .nav-links a:hover::after {
+        width: 100%;
+      }
+
+      .nav-cta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--color-text-muted);
+      }
+
+      .btn-ghost:hover {
+        color: var(--color-text);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .btn-primary {
+        background: var(--color-primary);
+        color: white;
+        box-shadow: 0 0 30px var(--color-glow);
+      }
+
+      .btn-primary:hover {
+        background: var(--color-primary-light);
+        transform: translateY(-2px);
+        box-shadow: 0 0 40px var(--color-glow);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+      }
+
+      .btn-outline:hover {
+        border-color: var(--color-primary);
+        background: rgba(99, 102, 241, 0.1);
+      }
+
+      /* Hero Section */
+      .hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8rem 2rem 4rem;
+        z-index: 1;
+      }
+
+      .hero-content {
+        max-width: 900px;
+        text-align: center;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 100px;
+        font-size: 0.85rem;
+        color: var(--color-primary-light);
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.8s ease forwards;
+      }
+
+      .hero-badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: var(--color-primary);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(1.2);
+        }
+      }
+
+      .hero h1 {
+        font-family: var(--font-display);
+        font-size: clamp(2.75rem, 7vw, 4.5rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        letter-spacing: -0.03em;
+        animation: fadeInUp 0.8s ease 0.1s forwards;
+        opacity: 0;
+      }
+
+      .hero h1 span {
+        background: linear-gradient(
+          135deg,
+          var(--color-primary-light),
+          var(--color-accent)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero p {
+        font-size: 1.25rem;
+        color: var(--color-text-muted);
+        max-width: 600px;
+        margin: 0 auto 2.5rem;
+        animation: fadeInUp 0.8s ease 0.2s forwards;
+        opacity: 0;
+      }
+
+      .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 0.8s ease 0.3s forwards;
+        opacity: 0;
+      }
+
+      .hero-buttons .btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Stats Section */
+      .stats {
+        position: relative;
+        z-index: 1;
+        padding: 4rem 2rem;
+        border-top: 1px solid var(--color-border);
+        border-bottom: 1px solid var(--color-border);
+        background: rgba(18, 18, 26, 0.5);
+        backdrop-filter: blur(10px);
+      }
+
+      .stats-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 3rem;
+        text-align: center;
+      }
+
+      .stat-item {
+        padding: 1rem;
+      }
+
+      .stat-number {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          var(--color-text),
+          var(--color-primary-light)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
+
+      /* Features Section */
+      .features {
+        position: relative;
+        z-index: 1;
+        padding: 8rem 2rem;
+      }
+
+      .section-header {
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto 5rem;
+      }
+
+      .section-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--color-primary-light);
+        margin-bottom: 1rem;
+      }
+
+      .section-title {
+        font-family: var(--font-display);
+        font-size: clamp(1.875rem, 4vw, 3rem);
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+      }
+
+      .section-title span {
+        color: var(--color-primary-light);
+      }
+
+      .section-desc {
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+      }
+
+      .features-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .feature-card {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          var(--color-primary),
+          var(--color-accent)
+        );
+        opacity: 0;
+        transition: opacity 0.4s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .feature-card:hover::before {
+        opacity: 1;
+      }
+
+      .feature-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.15),
+          rgba(244, 114, 182, 0.08)
+        );
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        color: var(--color-primary-light);
+      }
+
+      .feature-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .feature-card h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+
+      .feature-card p {
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+
+      /* Roles Section */
+      .roles {
+        position: relative;
+        z-index: 1;
+        padding: 8rem 2rem;
+        background: var(--color-bg-elevated);
+      }
+
+      .roles-grid {
+        max-width: 900px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      @media (max-width: 900px) {
+        .roles-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .roles-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .role-card {
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: all 0.4s ease;
+      }
+
+      .role-card:hover {
+        transform: scale(1.02);
+        border-color: var(--color-primary);
+      }
+
+      .role-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.12),
+          rgba(244, 114, 182, 0.06)
+        );
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        color: var(--color-primary-light);
+      }
+
+      .role-avatar svg {
+        width: 26px;
+        height: 26px;
+      }
+
+      .role-card h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .role-card p {
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+        line-height: 1.5;
+      }
+
+      /* AI Insights Section */
+      .ai-section {
+        position: relative;
+        z-index: 1;
+        padding: 8rem 2rem;
+        overflow: hidden;
+      }
+
+      .ai-section::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(
+          circle,
+          rgba(99, 102, 241, 0.15) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .ai-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .ai-header {
+        text-align: center;
+        margin-bottom: 4rem;
+      }
+
+      .ai-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.2),
+          rgba(244, 114, 182, 0.2)
+        );
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--color-primary-light);
+        margin-bottom: 1.5rem;
+      }
+
+      .ai-badge svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .ai-header h2 {
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+      }
+
+      .ai-header h2 span {
+        background: linear-gradient(
+          135deg,
+          var(--color-primary) 0%,
+          var(--color-accent) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .ai-header p {
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.7;
+      }
+
+      .ai-features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+      }
+
+      @media (max-width: 900px) {
+        .ai-features {
+          grid-template-columns: 1fr;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+      }
+
+      .ai-card {
+        background: linear-gradient(
+          135deg,
+          var(--color-bg-card),
+          var(--color-bg-elevated)
+        );
+        border: 1px solid var(--color-border);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.4s ease;
+      }
+
+      .ai-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(99, 102, 241, 0.4);
+        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1);
+      }
+
+      .ai-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        border-radius: 16px;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.2),
+          rgba(244, 114, 182, 0.1)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-primary-light);
+      }
+
+      .ai-card h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+
+      .ai-card p {
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      /* Indian Education Section */
+      .india {
+        position: relative;
+        z-index: 1;
+        padding: 8rem 2rem;
+        background: var(--color-bg-elevated);
+      }
+
+      .india-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 4rem;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .india-content {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+      }
+
+      .india-text h2 {
+        font-family: var(--font-display);
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+      }
+
+      .india-text h2 span {
+        color: #f97316;
+      }
+
+      .india-text p {
+        color: var(--color-text-muted);
+        margin-bottom: 2rem;
+        font-size: 1.05rem;
+      }
+
+      .terminology-table {
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .terminology-table table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 450px;
+      }
+
+      .terminology-table th,
+      .terminology-table td {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        border-bottom: 1px solid var(--color-border);
+        white-space: nowrap;
+      }
+
+      .terminology-table th {
+        background: rgba(99, 102, 241, 0.1);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-primary-light);
+      }
+
+      .terminology-table td {
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+      }
+
+      .terminology-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .terminology-table td:first-child {
+        color: var(--color-text);
+        font-weight: 500;
+      }
+
+      /* CTA Section */
+      .cta {
+        position: relative;
+        z-index: 1;
+        padding: 8rem 2rem;
+        text-align: center;
+      }
+
+      .cta-container {
+        max-width: 700px;
+        margin: 0 auto;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.1),
+          rgba(244, 114, 182, 0.05)
+        );
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 24px;
+        padding: 4rem 3rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(99, 102, 241, 0.1) 0%,
+          transparent 50%
+        );
+        animation: rotate 20s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .cta h2 {
+        font-family: var(--font-display);
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        position: relative;
+      }
+
+      .cta p {
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        position: relative;
+      }
+
+      .cta .btn {
+        position: relative;
+        padding: 1rem 2.5rem;
+        font-size: 1rem;
+      }
+
+      /* Footer */
+      footer {
+        position: relative;
+        z-index: 1;
+        padding: 4rem 2rem 2.5rem;
+        border-top: 1px solid var(--color-border);
+        background: var(--color-bg-elevated);
+        text-align: center;
+      }
+
+      .footer-container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .footer-brand {
+        margin-bottom: 2rem;
+      }
+
+      .footer-brand .logo {
+        margin-bottom: 1rem;
+        display: inline-block;
+        font-size: 2rem;
+      }
+
+      .footer-brand p {
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+
+      .footer-links {
+        margin-bottom: 2.5rem;
+      }
+
+      .footer-links ul {
+        list-style: none;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--color-text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+
+      .footer-links a:hover {
+        color: var(--color-primary-light);
+      }
+
+      .footer-bottom {
+        padding-top: 2rem;
+        border-top: 1px solid var(--color-border);
+      }
+
+      .footer-bottom p {
+        color: var(--color-text-dim);
+        font-size: 0.85rem;
+      }
+
+      /* Mobile Menu */
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--color-text);
+        cursor: pointer;
+        padding: 0.5rem;
+        z-index: 1001;
+        transition: all 0.3s ease;
+      }
+
+      .mobile-menu-btn:hover {
+        color: var(--color-primary-light);
+      }
+
+      .mobile-menu-btn svg {
+        display: block;
+      }
+
+      @media (max-width: 900px) {
+        .nav-links {
+          position: fixed;
+          top: 0;
+          right: -100%;
+          height: 100vh;
+          width: 320px;
+          max-width: 85vw;
+          background: linear-gradient(
+            135deg,
+            var(--color-bg-elevated),
+            var(--color-bg)
+          );
+          backdrop-filter: blur(20px);
+          border-left: 1px solid var(--color-border);
+          box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+          flex-direction: column;
+          gap: 0;
+          padding: 0;
+          transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 1000;
+          overflow-y: auto;
+        }
+
+        .nav-links.active {
+          right: 0;
+        }
+
+        .nav-links::before {
+          content: '';
+          display: block;
+          padding: 2rem 2rem 1rem;
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(
+            135deg,
+            var(--color-primary) 0%,
+            var(--color-accent) 100%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          border-bottom: 1px solid var(--color-border);
+          content: 'Menu';
+        }
+
+        .nav-links li {
+          width: 100%;
+          opacity: 0;
+          transform: translateX(30px);
+          transition: all 0.3s ease;
+        }
+
+        .nav-links.active li {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        .nav-links.active li:nth-child(1) {
+          transition-delay: 0.1s;
+        }
+        .nav-links.active li:nth-child(2) {
+          transition-delay: 0.15s;
+        }
+        .nav-links.active li:nth-child(3) {
+          transition-delay: 0.2s;
+        }
+        .nav-links.active li:nth-child(4) {
+          transition-delay: 0.25s;
+        }
+
+        .nav-links a {
+          display: flex;
+          align-items: center;
+          padding: 1.25rem 2rem;
+          font-size: 1rem;
+          color: var(--color-text-muted);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all 0.3s ease;
+          position: relative;
+        }
+
+        .nav-links a::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 0;
+          background: linear-gradient(
+            180deg,
+            var(--color-primary),
+            var(--color-accent)
+          );
+          transition: height 0.3s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:active {
+          color: var(--color-text);
+          background: rgba(99, 102, 241, 0.05);
+          padding-left: 2.5rem;
+        }
+
+        .nav-links a:hover::before {
+          height: 100%;
+        }
+
+        .nav-links a::after {
+          display: none;
+        }
+
+        .mobile-menu-btn {
+          display: block;
+        }
+
+        .mobile-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
+          z-index: 999;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .mobile-overlay.active {
+          display: block;
+          opacity: 1;
+        }
+      }
+
+      /* Scroll animations */
+      .fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease;
+      }
+
+      .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Intro Animation */
+      /* Intro Animation */
+      .intro-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--color-bg);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .intro-overlay::before {
+        content: '';
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(
+          circle,
+          var(--color-primary) 0%,
+          transparent 70%
+        );
+        opacity: 0.15;
+        filter: blur(80px);
+        animation: pulseGlow 2s ease-in-out infinite;
+      }
+
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.15;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.25;
+        }
+      }
+
+      .intro-overlay.fade-out {
+        animation: introExit 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      @keyframes introExit {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+
+      .intro-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .intro-grid {
+        display: flex;
+        justify-content: center;
+        gap: clamp(1.5rem, 5vw, 4rem);
+      }
+
+      .intro-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .intro-letter {
+        font-family: var(--font-display);
+        font-size: clamp(3.5rem, 12vw, 8rem);
+        font-weight: 700;
+        line-height: 1;
+        color: var(--color-text);
+        opacity: 0;
+        filter: blur(20px);
+        transform: translateY(30px);
+      }
+
+      .intro-item:nth-child(1) .intro-letter {
+        animation: letterIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+      }
+      .intro-item:nth-child(2) .intro-letter {
+        animation: letterIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+      }
+      .intro-item:nth-child(3) .intro-letter {
+        animation: letterIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+      }
+      .intro-item:nth-child(4) .intro-letter {
+        animation: letterIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+      }
+
+      @keyframes letterIn {
+        to {
+          opacity: 1;
+          filter: blur(0);
+          transform: translateY(0);
+        }
+      }
+
+      .intro-word {
+        font-family: var(--font-sans);
+        font-size: clamp(0.75rem, 2vw, 1rem);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: var(--color-text-muted);
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      .intro-item:nth-child(1) .intro-word {
+        animation: wordIn 0.6s ease 0.7s forwards;
+      }
+      .intro-item:nth-child(2) .intro-word {
+        animation: wordIn 0.6s ease 0.85s forwards;
+      }
+      .intro-item:nth-child(3) .intro-word {
+        animation: wordIn 0.6s ease 1s forwards;
+      }
+      .intro-item:nth-child(4) .intro-word {
+        animation: wordIn 0.6s ease 1.15s forwards;
+      }
+
+      @keyframes wordIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .intro-line {
+        position: absolute;
+        bottom: -3rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--color-primary),
+          var(--color-accent),
+          transparent
+        );
+        animation: lineExpand 0.8s cubic-bezier(0.4, 0, 0.2, 1) 1.4s forwards;
+      }
+
+      @keyframes lineExpand {
+        to {
+          width: min(400px, 80vw);
+        }
+      }
+
+      .intro-tagline {
+        position: absolute;
+        bottom: -5.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-family: var(--font-sans);
+        font-size: clamp(0.8rem, 2vw, 0.95rem);
+        color: var(--color-text-dim);
+        opacity: 0;
+        animation: taglineIn 0.6s ease 1.8s forwards;
+      }
+
+      @keyframes taglineIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      body.loading {
+        overflow: hidden;
+      }
+
+      @media (max-width: 480px) {
+        .intro-grid {
+          gap: 1rem;
+        }
+
+        .intro-word {
+          font-size: 0.65rem;
+          letter-spacing: 0.1em;
+        }
+
+        .intro-line {
+          bottom: -2rem;
+        }
+
+        .intro-tagline {
+          bottom: -4rem;
+          font-size: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="loading">
+    <!-- Intro Animation -->
+    <div class="intro-overlay" id="intro">
+      <div class="intro-content">
+        <div class="intro-grid">
+          <div class="intro-item">
+            <span class="intro-letter">K</span>
+            <span class="intro-word">Know</span>
+          </div>
+          <div class="intro-item">
+            <span class="intro-letter">R</span>
+            <span class="intro-word">Reflect</span>
+          </div>
+          <div class="intro-item">
+            <span class="intro-letter">A</span>
+            <span class="intro-word">Aspire</span>
+          </div>
+          <div class="intro-item">
+            <span class="intro-letter">M</span>
+            <span class="intro-word">Move</span>
+          </div>
+        </div>
+        <div class="intro-line"></div>
+        <p class="intro-tagline">Education Management, Reimagined</p>
+      </div>
+    </div>
+
+    <div class="bg-grid"></div>
+    <div class="bg-gradient"></div>
+
+    <!-- Navigation -->
+    <nav>
+      <div class="nav-container">
+        <a href="#top" class="logo">Kram</a>
+        <ul class="nav-links" id="navLinks">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#ai">Smart AI</a></li>
+          <li><a href="#roles">Who It's For</a></li>
+          <li><a href="#india">Indian Education</a></li>
+        </ul>
+        <button
+          class="mobile-menu-btn"
+          id="mobileMenuBtn"
+          aria-label="Toggle menu"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <!-- Hero Section -->
+    <section class="hero" id="top">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span></span>
+          Built for Indian Educational Institutions
+        </div>
+        <h1>Education Management, <span>Reimagined</span></h1>
+        <p>
+          A comprehensive platform for schools, colleges, and universities.
+          Streamline academics, attendance, fees, library, and communication—all
+          in one place.
+        </p>
+        <div class="hero-buttons">
+          <a href="#contact" class="btn btn-primary">Request Demo</a>
+          <a href="#features" class="btn btn-outline">Explore Features</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+      <div class="stats-container">
+        <div class="stat-item fade-in">
+          <div class="stat-number">6</div>
+          <div class="stat-label">User Roles Supported</div>
+        </div>
+        <div class="stat-item fade-in">
+          <div class="stat-number">15+</div>
+          <div class="stat-label">Core Modules</div>
+        </div>
+        <div class="stat-item fade-in">
+          <div class="stat-number">3</div>
+          <div class="stat-label">Platforms (Web, iOS, Android)</div>
+        </div>
+        <div class="stat-item fade-in">
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Indian Education Focused</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+      <div class="section-header fade-in">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">
+          Everything you need to <span>manage</span> education
+        </h2>
+        <p class="section-desc">
+          From admissions to graduation, Kram handles every aspect of
+          educational institution management.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+              <path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5" />
+            </svg>
+          </div>
+          <h3>Academic Management</h3>
+          <p>
+            Complete student lifecycle management from admission to graduation
+            with courses, subjects, and enrollment tracking.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+              />
+              <rect x="9" y="3" width="6" height="4" rx="1" />
+              <path d="M9 14l2 2 4-4" />
+            </svg>
+          </div>
+          <h3>Attendance Tracking</h3>
+          <p>
+            Real-time attendance marking with comprehensive analytics, reports,
+            and automated notifications to parents.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              />
+              <polyline points="14,2 14,8 20,8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <line x1="10" y1="9" x2="8" y2="9" />
+            </svg>
+          </div>
+          <h3>Assessment & Grading</h3>
+          <p>
+            Create assignments, schedule examinations, and manage comprehensive
+            grading with detailed performance analytics.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M12 8v8" />
+              <path d="M8 12h8" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </div>
+          <h3>Fee Management</h3>
+          <p>
+            Define fee structures, track collections, manage payment schedules,
+            and generate receipts automatically.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
+              />
+              <line x1="8" y1="7" x2="15" y2="7" />
+              <line x1="8" y1="11" x2="13" y2="11" />
+            </svg>
+          </div>
+          <h3>Library System</h3>
+          <p>
+            Complete book cataloging, issue/return management, reservations, and
+            overdue tracking with fine calculation.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <rect x="7" y="14" width="3" height="3" rx="0.5" />
+              <rect x="14" y="14" width="3" height="3" rx="0.5" />
+            </svg>
+          </div>
+          <h3>Timetable Scheduling</h3>
+          <p>
+            Automated timetable generation with intelligent conflict detection
+            and resource optimization.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+              />
+              <line x1="8" y1="8" x2="16" y2="8" />
+              <line x1="8" y1="12" x2="13" y2="12" />
+            </svg>
+          </div>
+          <h3>Communication Hub</h3>
+          <p>
+            Notices, announcements, and direct messaging between teachers,
+            students, and parents.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+              <circle cx="18" cy="8" r="2" />
+              <circle cx="12" cy="2" r="2" fill="currentColor" />
+              <circle cx="6" cy="12" r="2" />
+            </svg>
+          </div>
+          <h3>Analytics Dashboard</h3>
+          <p>
+            Comprehensive insights and reports for administrators, teachers, and
+            management decision-making.
+          </p>
+        </div>
+        <div class="feature-card fade-in">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M9 22V12h6v10" />
+              <line x1="3" y1="9" x2="12" y2="2" />
+              <line x1="12" y1="2" x2="21" y2="9" />
+            </svg>
+          </div>
+          <h3>Multi-Institution Support</h3>
+          <p>
+            Manage multiple schools, colleges, or university branches from a
+            single unified platform.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI Insights Section -->
+    <section class="ai-section" id="ai">
+      <div class="ai-container">
+        <div class="ai-header fade-in">
+          <div class="ai-badge">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" />
+              <path d="M12 11v4" />
+              <path d="M8 15h8" />
+              <rect x="6" y="15" width="12" height="7" rx="2" />
+            </svg>
+            Powered by AI
+          </div>
+          <h2>Smart Insights for <span>Smarter Decisions</span></h2>
+          <p>
+            Our AI analyzes academic performance, interests, and trends to
+            provide personalized recommendations for every student's future.
+          </p>
+        </div>
+
+        <div class="ai-features">
+          <div class="ai-card fade-in">
+            <div class="ai-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            </div>
+            <h3>Stream Selection</h3>
+            <p>
+              AI recommends the best streams (Science, Commerce, Arts) based on
+              student aptitude, grades, and interests.
+            </p>
+          </div>
+
+          <div class="ai-card fade-in">
+            <div class="ai-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
+              </svg>
+            </div>
+            <h3>College Recommendations</h3>
+            <p>
+              Get personalized college suggestions matching academic profile,
+              location preferences, and career aspirations.
+            </p>
+          </div>
+
+          <div class="ai-card fade-in">
+            <div class="ai-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path d="M12 20V10" />
+                <path d="M18 20V4" />
+                <path d="M6 20v-4" />
+                <circle cx="12" cy="6" r="2" />
+                <path d="M12 6l4-2" />
+              </svg>
+            </div>
+            <h3>Career Path Insights</h3>
+            <p>
+              Discover potential career paths aligned with strengths and market
+              trends through predictive analytics.
+            </p>
+          </div>
+
+          <div class="ai-card fade-in">
+            <div class="ai-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8" />
+                <path d="M12 17v4" />
+                <path d="M7 8h2" />
+                <path d="M7 12h4" />
+                <circle cx="16" cy="10" r="2" />
+              </svg>
+            </div>
+            <h3>Classroom Insights</h3>
+            <p>
+              Real-time AI suggestions on class engagement, learning gaps, and
+              teaching effectiveness to improve outcomes.
+            </p>
+          </div>
+
+          <div class="ai-card fade-in">
+            <div class="ai-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <path d="M14 2v6h6" />
+                <path d="M9 15l2 2 4-4" />
+              </svg>
+            </div>
+            <h3>Smart Exam Generator</h3>
+            <p>
+              AI creates balanced question papers based on syllabus coverage,
+              difficulty levels, and past performance patterns.
+            </p>
+          </div>
+
+          <div class="ai-card fade-in">
+            <div class="ai-icon">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                />
+                <path d="M14 2v6h6" />
+                <path d="M16 13H8" />
+                <path d="M16 17H8" />
+                <path d="M10 9H8" />
+              </svg>
+            </div>
+            <h3>Automated Reports</h3>
+            <p>
+              Generate comprehensive student reports, progress summaries, and
+              analytics with one click using AI.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roles Section -->
+    <section class="roles" id="roles">
+      <div class="section-header fade-in">
+        <div class="section-label">For Everyone</div>
+        <h2 class="section-title">
+          Designed for <span>every</span> stakeholder
+        </h2>
+        <p class="section-desc">
+          Role-based access ensures everyone gets exactly what they need.
+        </p>
+      </div>
+
+      <div class="roles-grid">
+        <div class="role-card fade-in">
+          <div class="role-avatar">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <h3>Administrators</h3>
+          <p>
+            Full control over institution settings, user management, courses,
+            and system-wide configurations.
+          </p>
+        </div>
+        <div class="role-card fade-in">
+          <div class="role-avatar">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="7" r="4" />
+              <path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2" />
+              <path d="M8 11l2 2 4-4" />
+            </svg>
+          </div>
+          <h3>Teachers</h3>
+          <p>
+            Manage classes, mark attendance, create assignments, grade students,
+            and communicate with parents.
+          </p>
+        </div>
+        <div class="role-card fade-in">
+          <div class="role-avatar">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="7" r="4" />
+              <path d="M5.5 21v-2a6.5 6.5 0 0 1 13 0v2" />
+              <path d="M12 14v4" />
+              <path d="M10 16h4" />
+            </svg>
+          </div>
+          <h3>Students</h3>
+          <p>
+            View schedules, submit assignments, check grades, access library,
+            and request gate passes.
+          </p>
+        </div>
+        <div class="role-card fade-in">
+          <div class="role-avatar">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <circle cx="16" cy="4" r="3" />
+            </svg>
+          </div>
+          <h3>Parents</h3>
+          <p>
+            Monitor child's attendance, academic performance, fee status, and
+            communicate with teachers.
+          </p>
+        </div>
+        <div class="role-card fade-in">
+          <div class="role-avatar">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path
+                d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
+              />
+              <path d="M8 7h6" />
+              <path d="M8 11h4" />
+            </svg>
+          </div>
+          <h3>Librarians</h3>
+          <p>
+            Manage book inventory, process issue/returns, handle reservations,
+            and track overdue items.
+          </p>
+        </div>
+        <div class="role-card fade-in">
+          <div class="role-avatar">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <h3>Staff</h3>
+          <p>
+            Handle administrative tasks, manage gate passes, and support daily
+            operations.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Indian Education Section -->
+    <section class="india" id="india">
+      <div class="india-content">
+        <div class="india-text fade-in">
+          <h2>Built for <span>India's</span> Education System</h2>
+          <p>
+            Kram uses terminology and workflows familiar to Indian educational
+            institutions. No more adapting foreign software to local needs—we
+            speak your language from day one.
+          </p>
+          <a href="#contact" class="btn btn-primary">Learn More</a>
+        </div>
+        <div class="terminology-table fade-in">
+          <table>
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Meaning</th>
+                <th>Examples</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Course</td>
+                <td>Degree/Stream/Program</td>
+                <td>B.Sc. CS, Commerce, Arts</td>
+              </tr>
+              <tr>
+                <td>Subject</td>
+                <td>Academic Paper</td>
+                <td>Physics, Data Structures</td>
+              </tr>
+              <tr>
+                <td>Semester</td>
+                <td>Academic Term</td>
+                <td>Fall 2024, Spring 2025</td>
+              </tr>
+              <tr>
+                <td>Section</td>
+                <td>Class Division</td>
+                <td>Section A, Section B</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="contact">
+      <div class="cta-container fade-in">
+        <h2>Ready to transform your institution?</h2>
+        <p>
+          Join the future of educational management. Get started with Kram
+          today.
+        </p>
+        <a href="mailto:care@kramedu.in" class="btn btn-primary"
+          >Contact Us →</a
+        >
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-container">
+        <div class="footer-brand">
+          <a href="#top" class="logo">Kram</a>
+          <p>
+            A comprehensive educational management platform built for Indian
+            schools, colleges, and universities.
+          </p>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2026 Kram. Made for Indian educational institutions.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Mobile menu toggle
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn')
+      const navLinks = document.getElementById('navLinks')
+      const mobileOverlay = document.getElementById('mobileOverlay')
+
+      function toggleMenu() {
+        navLinks.classList.toggle('active')
+        mobileOverlay.classList.toggle('active')
+      }
+
+      function closeMenu() {
+        navLinks.classList.remove('active')
+        mobileOverlay.classList.remove('active')
+      }
+
+      mobileMenuBtn?.addEventListener('click', toggleMenu)
+      mobileOverlay?.addEventListener('click', closeMenu)
+
+      // Close menu when clicking nav links
+      navLinks?.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', closeMenu)
+      })
+
+      // Intro animation
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const intro = document.getElementById('intro')
+          intro.classList.add('fade-out')
+          document.body.classList.remove('loading')
+
+          // Remove intro from DOM after fade
+          setTimeout(() => {
+            intro.remove()
+          }, 1000)
+        }, 3600) // Total intro duration
+      })
+
+      // Scroll animations
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px',
+      }
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible')
+          }
+        })
+      }, observerOptions)
+
+      document.querySelectorAll('.fade-in').forEach(el => {
+        observer.observe(el)
+      })
+
+      // Smooth scroll for navigation links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault()
+          const target = document.querySelector(this.getAttribute('href'))
+          if (target) {
+            target.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            })
+          }
+        })
+      })
+
+      // Navbar background on scroll
+      window.addEventListener('scroll', () => {
+        const nav = document.querySelector('nav')
+        if (window.scrollY > 50) {
+          nav.style.background = 'rgba(10, 10, 15, 0.95)'
+        } else {
+          nav.style.background = 'rgba(10, 10, 15, 0.8)'
+        }
+      })
+    </script>
+  </body>
+</html>
