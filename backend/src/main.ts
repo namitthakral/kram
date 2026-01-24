@@ -19,6 +19,9 @@ async function bootstrap() {
       /^http:\/\/127\.0\.0\.1:\d+$/, // Allow any 127.0.0.1 port
       /^http:\/\/10\.0\.2\.2:\d+$/, // Allow Android emulator
       /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // Allow local network IPs
+      /^https?:\/\/.*\.elasticbeanstalk\.com$/, // Allow EB domains
+      /^https?:\/\/.*\.cloudfront\.net$/, // Allow CloudFront
+      'https://kramedu.in', // Production domain
     ],
     credentials: true,
   })
@@ -47,9 +50,10 @@ async function bootstrap() {
   })
 
   const port = process.env.PORT || 3000
-  await app.listen(port)
+  await app.listen(port, '0.0.0.0')
 
   console.log(`🚀 Ed-verse NestJS server running on port ${port}`)
+  console.log(`🔐 Listening on 0.0.0.0:${port}`)
   console.log(`📊 Health check: http://localhost:${port}/health`)
   console.log(`🔌 API endpoint: http://localhost:${port}/api`)
   console.log(`📚 API docs: http://localhost:${port}/api/docs`)
