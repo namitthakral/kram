@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ServeStaticModule } from '@nestjs/serve-static'
 import { ThrottlerModule } from '@nestjs/throttler'
+import { join } from 'path'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
 import { CoursesModule } from './courses/courses.module'
@@ -21,6 +23,16 @@ import { UsersModule } from './users/users.module'
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+    }),
+
+    // Serve Flutter web app at /dashboard
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'public', 'dashboard'),
+      serveRoot: '/dashboard',
+      serveStaticOptions: {
+        index: ['index.html'],
+        fallthrough: false,
+      },
     }),
 
     // Event-driven architecture

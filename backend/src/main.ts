@@ -7,8 +7,26 @@ import { AppModule } from './app.module'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  // Security middleware
-  app.use(helmet())
+  // Security middleware with Flutter-compatible CSP
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+          imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+          connectSrc: ["'self'", 'https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://www.gstatic.com'],
+          workerSrc: ["'self'", 'blob:'],
+          childSrc: ["'self'", 'blob:'],
+          frameSrc: ["'self'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false, // Required for Flutter web
+      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    })
+  )
   app.use(compression())
 
   // Enable CORS

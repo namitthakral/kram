@@ -46,9 +46,37 @@ JWT_SECRET="kLwCEfoXnjyHVsjQi+BdIB5EOE35DOiYXzeT9oNYAcLbom/vt+qLaGrk0SDaSAfW"
 NODE_ENV="production"
 ```
 
-## Part 2: Configure Backend for EB
+## Part 2: Build Flutter Frontend for Web
 
-### 2.1 Update `package.json`
+The Flutter frontend is served from the backend at `/dashboard`. Before deploying, you must build the Flutter web app.
+
+### 2.1 Build Flutter Web App
+
+From the **project root** directory:
+
+```bash
+# Build Flutter web and copy to backend/public/dashboard
+npm run build:frontend:deploy
+
+# Or run the script directly
+./scripts/build-frontend.sh
+```
+
+This script will:
+1. Build the Flutter web app with `--base-href "/dashboard/"`
+2. Copy the build output to `backend/public/dashboard/`
+
+### 2.2 Verify the Build
+
+After building, you should have files in `backend/public/dashboard/`:
+```bash
+ls backend/public/dashboard/
+# Should show: index.html, main.dart.js, flutter.js, assets/, etc.
+```
+
+## Part 3: Configure Backend for EB
+
+### 3.1 Update `package.json`
 
 Ensure Prisma is in **dependencies** (not devDependencies):
 
@@ -56,7 +84,8 @@ Ensure Prisma is in **dependencies** (not devDependencies):
 {
   "dependencies": {
     "prisma": "^6.19.0",
-    "@prisma/client": "^6.19.0"
+    "@prisma/client": "^6.19.0",
+    "@nestjs/serve-static": "^4.0.2"
   },
   "scripts": {
     "build": "npm run build:schema && npx prisma generate && nest build",
@@ -65,13 +94,13 @@ Ensure Prisma is in **dependencies** (not devDependencies):
 }
 ```
 
-### 2.2 Create/Verify `Procfile`
+### 3.2 Create/Verify `Procfile`
 
 ```
 web: npm run start:prod
 ```
 
-### 2.3 Create `.ebignore`
+### 3.3 Create `.ebignore`
 
 ```
 node_modules/
@@ -83,7 +112,7 @@ dist/
 .env.*.local
 ```
 
-### 2.4 Update `src/main.ts` - CORS Configuration
+### 3.4 Update `src/main.ts` - CORS Configuration
 
 Ensure your app listens on all interfaces and includes the EB URL in CORS:
 
@@ -109,9 +138,9 @@ async function bootstrap() {
 }
 ```
 
-## Part 3: Deploy to Elastic Beanstalk
+## Part 4: Deploy to Elastic Beanstalk
 
-### 3.1 Initialize EB Application
+### 4.1 Initialize EB Application
 
 ```bash
 cd /path/to/ed-verse/backend
@@ -128,7 +157,7 @@ eb init
 # - SSH: No (unless you need debugging access)
 ```
 
-### 3.2 Create Environment
+### 4.2 Create Environment
 
 ```bash
 # Create a new environment
@@ -141,7 +170,7 @@ eb create kram-backend-prod \
 # Wait for "Successfully launched environment" message
 ```
 
-### 3.3 Set Environment Variables
+### 4.3 Set Environment Variables
 
 Once the environment is created and **Status is Ready**:
 
@@ -154,7 +183,7 @@ eb setenv \
 # This will restart the environment (takes ~5 minutes)
 ```
 
-### 3.4 Configure Security Groups for RDS Access
+### 4.4 Configure Security Groups for RDS Access
 
 Your EB instances need permission to connect to RDS.
 
@@ -183,9 +212,9 @@ aws ec2 authorize-security-group-ingress \
   --source-group <EB_SECURITY_GROUP_ID>
 ```
 
-## Part 4: Run Database Migrations
+## Part 5: Run Database Migrations
 
-### 4.1 Option A: SSH into EB Instance (if SSH enabled)
+### 5.1 Option A: SSH into EB Instance (if SSH enabled)
 
 ```bash
 eb ssh
@@ -199,7 +228,7 @@ npx prisma db seed  # If you have seed data
 exit
 ```
 
-### 4.2 Option B: Run Migrations Locally (Temporary)
+### 5.2 Option B: Run Migrations Locally (Temporary)
 
 ```bash
 # In your local backend directory
@@ -209,9 +238,9 @@ npx prisma migrate deploy
 npx prisma db seed  # If you have seed data
 ```
 
-## Part 5: Verify Deployment
+## Part 6: Verify Deployment
 
-### 5.1 Check Environment Status
+### 6.1 Check Environment Status
 
 ```bash
 eb status
@@ -221,7 +250,7 @@ eb status
 # - Health: Ok or Green
 ```
 
-### 5.2 View Application Logs
+### 6.2 View Application Logs
 
 ```bash
 # Stream logs in real-time
@@ -231,7 +260,7 @@ eb logs --stream
 eb logs
 ```
 
-### 5.3 Test the API
+### 6.3 Test the API and Dashboard
 
 ```bash
 # Get your environment URL
@@ -242,9 +271,12 @@ curl http://your-environment.elasticbeanstalk.com/health
 
 # Test API
 curl http://your-environment.elasticbeanstalk.com/api/v1/auth/health
+
+# Access Flutter Dashboard
+# Open in browser: http://your-environment.elasticbeanstalk.com/dashboard
 ```
 
-## Part 6: Common Commands
+## Part 7: Common Commands
 
 ### Deployment
 
@@ -317,7 +349,7 @@ eb terminate kram-backend-prod
 # This is done through AWS Console
 ```
 
-## Part 7: Troubleshooting
+## Part 8: Troubleshooting
 
 ### Issue: Health is Red / 5xx Errors
 
@@ -359,7 +391,33 @@ eb logs
 2. Add `npx prisma generate` to build script
 3. Run migrations on the instance
 
-## Part 8: Best Practices
+### Issue: Flutter Dashboard Not Loading
+
+**Symptoms:** 404 error when accessing `/dashboard`
+
+**Fix:**
+1. Ensure you built the Flutter web app before deploying:
+   ```bash
+   npm run build:frontend:deploy
+   ```
+2. Verify `backend/public/dashboard/index.html` exists
+3. Check that `public/` is NOT in `.ebignore`
+4. Redeploy: `eb deploy`
+
+### Issue: Flutter App Shows Blank Page
+
+**Symptoms:** Dashboard loads but shows nothing
+
+**Fix:**
+1. Check browser console for errors
+2. Ensure base-href is correct (`/dashboard/`)
+3. Rebuild with correct base-href:
+   ```bash
+   cd frontend
+   flutter build web --release --base-href "/dashboard/"
+   ```
+
+## Part 9: Best Practices
 
 1. **Never commit `.env` files** - Use EB environment variables
 2. **Always use a dedicated AWS profile** - Avoid mixing personal/work credentials
@@ -369,7 +427,7 @@ eb logs
 6. **Test locally first** - Always test with Docker or local setup
 7. **Backup database** - Take RDS snapshots before major migrations
 
-## Part 9: Cost Optimization
+## Part 10: Cost Optimization
 
 ### Free Tier Eligible
 - EC2 t3.micro (750 hours/month for 12 months)

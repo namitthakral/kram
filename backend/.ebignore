@@ -1,7 +1,27 @@
+# Dependencies (will be installed on EB)
 node_modules/
+
+# Environment files
 .env
-.git/
-*.log
-dist/
 .env.local
 .env.*.local
+
+# Git
+.git/
+
+# Logs
+*.log
+
+# Build output - NOT ignored, we deploy pre-built files
+# dist/
+
+# Test files
+*.spec.ts
+test/
+
+# Documentation
+*.md
+!README.md
+
+# DO NOT ignore public/ - contains Flutter web build
+# public/
