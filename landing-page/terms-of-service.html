@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terms of Service - Kram Education Management</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-family='system-ui,sans-serif' font-size='55' font-weight='700' fill='white' text-anchor='middle'%3EK%3C/text%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="Terms of Service for Kram - Education Management Platform"
+    />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --color-bg: #0a0a0f;
+        --color-bg-elevated: #12121a;
+        --color-bg-card: #1a1a24;
+        --color-primary: #6366f1;
+        --color-primary-light: #818cf8;
+        --color-accent: #f472b6;
+        --color-text: #f8fafc;
+        --color-text-muted: #94a3b8;
+        --color-text-dim: #64748b;
+        --color-border: rgba(255, 255, 255, 0.08);
+        --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+        --font-sans:
+          'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.6;
+      }
+
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+        background-size: 60px 60px;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 1rem 2rem;
+        backdrop-filter: blur(20px);
+        background: rgba(10, 10, 15, 0.95);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        background: linear-gradient(
+          135deg,
+          var(--color-text),
+          var(--color-primary-light)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        background: var(--color-primary);
+        color: white;
+      }
+
+      .btn:hover {
+        background: var(--color-primary-light);
+        transform: translateY(-2px);
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 8rem 2rem 4rem;
+      }
+
+      h1 {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(
+          135deg,
+          var(--color-primary-light),
+          var(--color-accent)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .last-updated {
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 3rem;
+      }
+
+      h2 {
+        font-family: var(--font-display);
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--color-primary-light);
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        color: var(--color-text-muted);
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        line-height: 1.8;
+      }
+
+      ul {
+        margin-bottom: 1rem;
+        margin-left: 1.5rem;
+      }
+
+      li {
+        color: var(--color-text-muted);
+        margin-bottom: 0.5rem;
+        line-height: 1.7;
+      }
+
+      a {
+        color: var(--color-primary-light);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        position: relative;
+        z-index: 1;
+        padding: 2rem;
+        border-top: 1px solid var(--color-border);
+        text-align: center;
+        margin-top: 4rem;
+      }
+
+      footer p {
+        color: var(--color-text-dim);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+
+    <!-- Navigation -->
+    <nav>
+      <div class="nav-container">
+        <a href="index.html" class="logo">Kram</a>
+        <a href="index.html" class="btn">Back to Home</a>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content">
+      <h1>Terms of Service</h1>
+      <p class="last-updated">Last Updated: January 19, 2026</p>
+
+      <p>
+        Welcome to Kram. These Terms of Service ("Terms") govern your access to
+        and use of Kram's education management platform, including our website,
+        mobile applications, and related services (collectively, the
+        "Service"). By accessing or using our Service, you agree to be bound by
+        these Terms.
+      </p>
+
+      <h2>1. Acceptance of Terms</h2>
+      <p>
+        By creating an account, accessing, or using Kram, you acknowledge that
+        you have read, understood, and agree to be bound by these Terms and our
+        Privacy Policy. If you do not agree to these Terms, you may not use our
+        Service.
+      </p>
+
+      <h2>2. Eligibility and Account Registration</h2>
+
+      <h3>2.1 Institutional Accounts</h3>
+      <p>
+        Kram is designed for use by educational institutions (schools, colleges,
+        universities) and their authorized users. Institutional administrators
+        are responsible for:
+      </p>
+      <ul>
+        <li>Providing accurate institution information during registration</li>
+        <li>Managing user accounts and access permissions</li>
+        <li>Ensuring compliance with these Terms by all users</li>
+        <li>Maintaining the security of their institutional account</li>
+      </ul>
+
+      <h3>2.2 Individual User Accounts</h3>
+      <p>
+        Individual users (administrators, teachers, students, parents, staff)
+        access the platform through their institution. You agree to:
+      </p>
+      <ul>
+        <li>Provide accurate and current information</li>
+        <li>Maintain the confidentiality of your login credentials</li>
+        <li>Notify us immediately of any unauthorized access</li>
+        <li>Be responsible for all activities under your account</li>
+      </ul>
+
+      <h2>3. Permitted Use</h2>
+      <p>You may use Kram only for lawful purposes and in accordance with these Terms. You agree NOT to:</p>
+      <ul>
+        <li>Violate any applicable laws or regulations</li>
+        <li>Infringe upon the rights of others</li>
+        <li>Upload viruses, malware, or malicious code</li>
+        <li>Attempt to gain unauthorized access to the Service</li>
+        <li>Interfere with or disrupt the Service or servers</li>
+        <li>Scrape, harvest, or collect user data without permission</li>
+        <li>Use the Service for any commercial purpose without authorization</li>
+        <li>Reverse engineer or attempt to extract source code</li>
+        <li>Remove or alter any proprietary notices or labels</li>
+      </ul>
+
+      <h2>4. Service Description and Availability</h2>
+
+      <h3>4.1 Features</h3>
+      <p>Kram provides education management tools including but not limited to:</p>
+      <ul>
+        <li>Student and academic records management</li>
+        <li>Attendance tracking and reporting</li>
+        <li>Fee management and payment processing</li>
+        <li>Library management system</li>
+        <li>Timetable scheduling</li>
+        <li>Assessment and grading tools</li>
+        <li>Communication and notification systems</li>
+        <li>AI-powered insights and recommendations</li>
+      </ul>
+
+      <h3>4.2 Service Availability</h3>
+      <p>
+        While we strive for 99.9% uptime, we do not guarantee that the Service
+        will be uninterrupted, timely, secure, or error-free. We reserve the
+        right to modify, suspend, or discontinue any part of the Service with or
+        without notice.
+      </p>
+
+      <h2>5. Data and Content</h2>
+
+      <h3>5.1 Your Data</h3>
+      <p>
+        You retain ownership of all data you input into Kram ("Your Data"). By
+        using the Service, you grant us a limited license to store, process, and
+        display Your Data solely for the purpose of providing the Service.
+      </p>
+
+      <h3>5.2 Our Content</h3>
+      <p>
+        All content, features, and functionality of the Service (including but
+        not limited to text, graphics, logos, icons, images, software, and AI
+        models) are owned by Kram and are protected by copyright, trademark, and
+        other intellectual property laws.
+      </p>
+
+      <h3>5.3 Data Security and Backups</h3>
+      <p>
+        While we implement industry-standard security measures and perform
+        regular backups, you are responsible for maintaining your own backups of
+        critical data. We are not liable for data loss except as required by law.
+      </p>
+
+      <h2>6. Payment and Fees</h2>
+
+      <h3>6.1 Subscription Plans</h3>
+      <p>
+        Kram offers various subscription plans for institutions. Pricing,
+        features, and billing terms will be communicated during the signup
+        process or through separate agreements.
+      </p>
+
+      <h3>6.2 Payment Terms</h3>
+      <ul>
+        <li>Fees are billed in advance on a monthly or annual basis</li>
+        <li>Payment is due upon invoice receipt</li>
+        <li>We accept payments via bank transfer, UPI, and credit/debit cards</li>
+        <li>Late payments may result in service suspension</li>
+      </ul>
+
+      <h3>6.3 Refund Policy</h3>
+      <p>
+        Refunds are handled on a case-by-case basis. Please contact us at
+        <a href="mailto:care@kramedu.in">care@kramedu.in</a> for refund requests.
+      </p>
+
+      <h2>7. Intellectual Property Rights</h2>
+      <p>
+        Kram and its original content, features, and functionality are owned by
+        Kram and are protected by international copyright, trademark, patent,
+        trade secret, and other intellectual property laws.
+      </p>
+
+      <h2>8. Third-Party Services</h2>
+      <p>
+        Our Service may integrate with third-party services (payment gateways,
+        email providers, etc.). Your use of such services is subject to their
+        respective terms and conditions. We are not responsible for third-party
+        services or their content.
+      </p>
+
+      <h2>9. Limitation of Liability</h2>
+      <p>
+        To the maximum extent permitted by law, Kram, its affiliates, officers,
+        employees, agents, partners, and licensors shall not be liable for any
+        indirect, incidental, special, consequential, or punitive damages,
+        including but not limited to loss of profits, data, use, goodwill, or
+        other intangible losses, resulting from:
+      </p>
+      <ul>
+        <li>Your use or inability to use the Service</li>
+        <li>Any unauthorized access to or use of our servers</li>
+        <li>Any interruption or cessation of transmission</li>
+        <li>Any bugs, viruses, or malware transmitted through the Service</li>
+        <li>Any errors or omissions in any content</li>
+        <li>Any loss or damage of any kind incurred as a result of your use of the Service</li>
+      </ul>
+
+      <h2>10. Indemnification</h2>
+      <p>
+        You agree to indemnify, defend, and hold harmless Kram and its affiliates
+        from any claims, damages, losses, liabilities, and expenses (including
+        legal fees) arising from:
+      </p>
+      <ul>
+        <li>Your use of the Service</li>
+        <li>Your violation of these Terms</li>
+        <li>Your violation of any rights of another party</li>
+        <li>Your Data or content submitted through the Service</li>
+      </ul>
+
+      <h2>11. Termination</h2>
+
+      <h3>11.1 By You</h3>
+      <p>
+        You may terminate your account at any time by contacting us at
+        <a href="mailto:care@kramedu.in">care@kramedu.in</a>. Upon termination, you will lose access to the Service.
+      </p>
+
+      <h3>11.2 By Us</h3>
+      <p>We may suspend or terminate your access to the Service:</p>
+      <ul>
+        <li>For violation of these Terms</li>
+        <li>For non-payment of fees</li>
+        <li>For fraudulent or illegal activities</li>
+        <li>For prolonged inactivity</li>
+        <li>At our discretion, with or without notice</li>
+      </ul>
+
+      <h3>11.3 Effect of Termination</h3>
+      <p>
+        Upon termination, you may request an export of Your Data within 30 days.
+        After this period, we may delete Your Data unless required by law to
+        retain it.
+      </p>
+
+      <h2>12. Disclaimers</h2>
+      <p>
+        THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF
+        ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+        WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+        NON-INFRINGEMENT, OR COURSE OF PERFORMANCE.
+      </p>
+
+      <h2>13. Governing Law and Dispute Resolution</h2>
+      <p>
+        These Terms shall be governed by and construed in accordance with the
+        laws of India. Any disputes arising from these Terms or your use of the
+        Service shall be subject to the exclusive jurisdiction of the courts
+        located in [Your City/State], India.
+      </p>
+
+      <h2>14. Changes to Terms</h2>
+      <p>
+        We reserve the right to modify these Terms at any time. We will notify
+        you of significant changes via email or through the Service. Your
+        continued use of the Service after such modifications constitutes your
+        acceptance of the updated Terms.
+      </p>
+
+      <h2>15. General Provisions</h2>
+
+      <h3>15.1 Entire Agreement</h3>
+      <p>
+        These Terms constitute the entire agreement between you and Kram
+        regarding your use of the Service.
+      </p>
+
+      <h3>15.2 Severability</h3>
+      <p>
+        If any provision of these Terms is found to be unenforceable, the
+        remaining provisions will remain in full force and effect.
+      </p>
+
+      <h3>15.3 Waiver</h3>
+      <p>
+        Our failure to enforce any right or provision of these Terms will not be
+        considered a waiver of those rights.
+      </p>
+
+      <h3>15.4 Assignment</h3>
+      <p>
+        You may not assign or transfer these Terms or your account without our
+        prior written consent. We may assign these Terms at any time.
+      </p>
+
+      <h2>16. Contact Information</h2>
+      <p>
+        If you have any questions about these Terms, please contact us:
+      </p>
+      <p>
+        <strong>Email:</strong> <a href="mailto:care@kramedu.in">care@kramedu.in</a><br />
+        <strong>Website:</strong> <a href="https://kramedu.in">kramedu.in</a>
+      </p>
+
+      <h2>17. Acknowledgment</h2>
+      <p>
+        By using Kram, you acknowledge that you have read, understood, and agree
+        to be bound by these Terms of Service and our Privacy Policy.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>© 2026 Kram. Made for Indian educational institutions.</p>
+      <p>
+        <a href="index.html">Home</a> |
+        <a href="privacy-policy.html">Privacy Policy</a> |
+        <a href="terms-of-service.html">Terms of Service</a>
+      </p>
+    </footer>
+  </body>
+</html>
+

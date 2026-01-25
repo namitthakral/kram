@@ -485,6 +485,63 @@
         line-height: 1.7;
       }
 
+      /* Feature Tabs */
+      .feature-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+      }
+
+      .feature-tab {
+        padding: 0.75rem 1.75rem;
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: 50px;
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .feature-tab svg {
+        width: 18px;
+        height: 18px;
+        transition: all 0.3s ease;
+      }
+
+      .feature-tab:hover {
+        border-color: var(--color-primary);
+        color: var(--color-text);
+      }
+
+      .feature-tab.active {
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.15),
+          rgba(244, 114, 182, 0.08)
+        );
+        border-color: var(--color-primary);
+        color: var(--color-primary-light);
+      }
+
+      .feature-tab.active svg {
+        color: var(--color-primary-light);
+      }
+
+      .feature-tab-content {
+        display: none;
+      }
+
+      .feature-tab-content.active {
+        display: block;
+      }
+
       /* Roles Section */
       .roles {
         position: relative;
@@ -1341,7 +1398,7 @@
           <li><a href="#features">Features</a></li>
           <li><a href="#ai">Smart AI</a></li>
           <li><a href="#roles">Who It's For</a></li>
-          <li><a href="#india">Indian Education</a></li>
+          <li><a href="#about">About</a></li>
         </ul>
         <button
           class="mobile-menu-btn"
@@ -1424,230 +1481,157 @@
         </p>
       </div>
 
-      <div class="features-grid">
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5" />
+      <!-- Feature Tabs -->
+      <div style="max-width: 1200px; margin: 0 auto;">
+        <div class="feature-tabs fade-in">
+          <button class="feature-tab active" data-tab="academic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
             </svg>
-          </div>
-          <h3>Academic Management</h3>
-          <p>
-            Complete student lifecycle management from admission to graduation
-            with courses, subjects, and enrollment tracking.
-          </p>
+            Academic
+          </button>
+          <button class="feature-tab" data-tab="admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            Administrative
+          </button>
+          <button class="feature-tab" data-tab="operations">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6m0 6v6M5.93 5.93l4.24 4.24m5.66 5.66l4.24 4.24M1 12h6m6 0h6M5.93 18.07l4.24-4.24m5.66-5.66l4.24-4.24"/>
+            </svg>
+            Operations
+          </button>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
-              />
-              <rect x="9" y="3" width="6" height="4" rx="1" />
-              <path d="M9 14l2 2 4-4" />
-            </svg>
+
+        <!-- Academic Tab -->
+        <div class="feature-tab-content active" id="academic">
+          <div class="features-grid">
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                  <path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5" />
+                </svg>
+              </div>
+              <h3>Academic Management</h3>
+              <p>Complete student lifecycle management from admission to graduation with courses, subjects, and enrollment tracking.</p>
+            </div>
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                  <rect x="9" y="3" width="6" height="4" rx="1" />
+                  <path d="M9 14l2 2 4-4" />
+                </svg>
+              </div>
+              <h3>Attendance Tracking</h3>
+              <p>Real-time attendance marking with comprehensive analytics, reports, and automated notifications to parents.</p>
+            </div>
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14,2 14,8 20,8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <line x1="10" y1="9" x2="8" y2="9" />
+                </svg>
+              </div>
+              <h3>Assessment & Grading</h3>
+              <p>Create assignments, schedule examinations, and manage comprehensive grading with detailed performance analytics.</p>
+            </div>
           </div>
-          <h3>Attendance Tracking</h3>
-          <p>
-            Real-time attendance marking with comprehensive analytics, reports,
-            and automated notifications to parents.
-          </p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              />
-              <polyline points="14,2 14,8 20,8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <line x1="10" y1="9" x2="8" y2="9" />
-            </svg>
+
+        <!-- Administrative Tab -->
+        <div class="feature-tab-content" id="admin">
+          <div class="features-grid">
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M12 8v8" />
+                  <path d="M8 12h8" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </div>
+              <h3>Fee Management</h3>
+              <p>Define fee structures, track collections, manage payment schedules, and generate receipts automatically.</p>
+            </div>
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <rect x="7" y="14" width="3" height="3" rx="0.5" />
+                  <rect x="14" y="14" width="3" height="3" rx="0.5" />
+                </svg>
+              </div>
+              <h3>Timetable Scheduling</h3>
+              <p>Automated timetable generation with intelligent conflict detection and resource optimization.</p>
+            </div>
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <path d="M9 22V12h6v10" />
+                  <line x1="3" y1="9" x2="12" y2="2" />
+                  <line x1="12" y1="2" x2="21" y2="9" />
+                </svg>
+              </div>
+              <h3>Multi-Institution Support</h3>
+              <p>Manage multiple schools, colleges, or university branches from a single unified platform.</p>
+            </div>
           </div>
-          <h3>Assessment & Grading</h3>
-          <p>
-            Create assignments, schedule examinations, and manage comprehensive
-            grading with detailed performance analytics.
-          </p>
         </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="2" y="4" width="20" height="16" rx="2" />
-              <path d="M12 8v8" />
-              <path d="M8 12h8" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
+
+        <!-- Operations Tab -->
+        <div class="feature-tab-content" id="operations">
+          <div class="features-grid">
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                  <line x1="8" y1="7" x2="15" y2="7" />
+                  <line x1="8" y1="11" x2="13" y2="11" />
+                </svg>
+              </div>
+              <h3>Library System</h3>
+              <p>Complete book cataloging, issue/return management, reservations, and overdue tracking with fine calculation.</p>
+            </div>
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <line x1="8" y1="8" x2="16" y2="8" />
+                  <line x1="8" y1="12" x2="13" y2="12" />
+                </svg>
+              </div>
+              <h3>Communication Hub</h3>
+              <p>Notices, announcements, and direct messaging between teachers, students, and parents.</p>
+            </div>
+            <div class="feature-card fade-in">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                  <circle cx="18" cy="8" r="2" />
+                  <circle cx="12" cy="2" r="2" fill="currentColor" />
+                  <circle cx="6" cy="12" r="2" />
+                </svg>
+              </div>
+              <h3>Analytics Dashboard</h3>
+              <p>Comprehensive insights and reports for administrators, teachers, and management decision-making.</p>
+            </div>
           </div>
-          <h3>Fee Management</h3>
-          <p>
-            Define fee structures, track collections, manage payment schedules,
-            and generate receipts automatically.
-          </p>
-        </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
-              />
-              <line x1="8" y1="7" x2="15" y2="7" />
-              <line x1="8" y1="11" x2="13" y2="11" />
-            </svg>
-          </div>
-          <h3>Library System</h3>
-          <p>
-            Complete book cataloging, issue/return management, reservations, and
-            overdue tracking with fine calculation.
-          </p>
-        </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <rect x="7" y="14" width="3" height="3" rx="0.5" />
-              <rect x="14" y="14" width="3" height="3" rx="0.5" />
-            </svg>
-          </div>
-          <h3>Timetable Scheduling</h3>
-          <p>
-            Automated timetable generation with intelligent conflict detection
-            and resource optimization.
-          </p>
-        </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-              />
-              <line x1="8" y1="8" x2="16" y2="8" />
-              <line x1="8" y1="12" x2="13" y2="12" />
-            </svg>
-          </div>
-          <h3>Communication Hub</h3>
-          <p>
-            Notices, announcements, and direct messaging between teachers,
-            students, and parents.
-          </p>
-        </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
-              <circle cx="18" cy="8" r="2" />
-              <circle cx="12" cy="2" r="2" fill="currentColor" />
-              <circle cx="6" cy="12" r="2" />
-            </svg>
-          </div>
-          <h3>Analytics Dashboard</h3>
-          <p>
-            Comprehensive insights and reports for administrators, teachers, and
-            management decision-making.
-          </p>
-        </div>
-        <div class="feature-card fade-in">
-          <div class="feature-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <path d="M9 22V12h6v10" />
-              <line x1="3" y1="9" x2="12" y2="2" />
-              <line x1="12" y1="2" x2="21" y2="9" />
-            </svg>
-          </div>
-          <h3>Multi-Institution Support</h3>
-          <p>
-            Manage multiple schools, colleges, or university branches from a
-            single unified platform.
-          </p>
         </div>
       </div>
     </section>
@@ -1825,7 +1809,6 @@
     <!-- Roles Section -->
     <section class="roles" id="roles">
       <div class="section-header fade-in">
-        <div class="section-label">For Everyone</div>
         <h2 class="section-title">
           Designed for <span>every</span> stakeholder
         </h2>
@@ -1980,6 +1963,82 @@
       </div>
     </section>
 
+    <!-- About Section -->
+    <section class="features" id="about" style="background: var(--color-bg-elevated);">
+      <div class="section-header fade-in">
+        <div class="section-label">About Kram</div>
+        <h2 class="section-title">
+          Building the <span>future</span> of education management
+        </h2>
+        <p class="section-desc">
+          Empowering Indian institutions with technology that understands their needs.
+        </p>
+      </div>
+
+      <!-- Story Section -->
+      <div style="max-width: 1100px; margin: 0 auto 5rem;">
+        <div class="feature-card fade-in" style="padding: 3rem; text-align: center; background: linear-gradient(135deg, var(--color-bg-card), var(--color-bg)); border: 1px solid rgba(99, 102, 241, 0.2);">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(244, 114, 182, 0.1)); margin-bottom: 1.5rem;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-primary-light);">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h3 style="font-size: 1.75rem; margin-bottom: 1.5rem; font-family: var(--font-display);">Our Story</h3>
+          <p style="font-size: 1.05rem; line-height: 1.9; color: var(--color-text-muted); max-width: 800px; margin: 0 auto;">
+            <strong style="color: var(--color-primary-light);">Kram</strong> (meaning "sequence" or "order" in Sanskrit) was born from a simple observation: educational institutions across India were struggling with fragmented systems that didn't understand their unique needs. From the way we organize semesters and sections to how we track attendance and manage fees—everything felt foreign.
+          </p>
+          <p style="font-size: 1.05rem; line-height: 1.9; color: var(--color-text-muted); max-width: 800px; margin: 1.5rem auto 0;">
+            We built Kram to change that. A unified platform that speaks the language of Indian education, understands its workflows, and simplifies every aspect of institutional management—from admissions to graduation.
+          </p>
+        </div>
+      </div>
+
+      <!-- Mission & Values Grid -->
+      <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
+          <div class="feature-card fade-in" style="text-align: center; padding: 2.5rem 2rem;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(244, 114, 182, 0.08)); margin-bottom: 1.5rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-primary-light);">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.35rem; margin-bottom: 1rem; font-weight: 600;">Our Mission</h3>
+            <p style="color: var(--color-text-muted); line-height: 1.8;">
+              To empower every educational institution in India with modern, efficient, and affordable technology that transforms the learning experience.
+            </p>
+          </div>
+
+          <div class="feature-card fade-in" style="text-align: center; padding: 2.5rem 2rem;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(244, 114, 182, 0.08)); margin-bottom: 1.5rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-primary-light);">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.35rem; margin-bottom: 1rem; font-weight: 600;">Our Vision</h3>
+            <p style="color: var(--color-text-muted); line-height: 1.8;">
+              To become the most trusted education management platform in India, enabling institutions to focus on what matters most—education.
+            </p>
+          </div>
+
+          <div class="feature-card fade-in" style="text-align: center; padding: 2.5rem 2rem;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 70px; height: 70px; border-radius: 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(244, 114, 182, 0.08)); margin-bottom: 1.5rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--color-primary-light);">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <h3 style="font-size: 1.35rem; margin-bottom: 1rem; font-weight: 600;">Our Values</h3>
+            <p style="color: var(--color-text-muted); line-height: 1.8;">
+              Innovation, simplicity, reliability, and a deep commitment to understanding the unique needs of Indian education.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Indian Education Section -->
     <section class="india" id="india">
       <div class="india-content">
@@ -1990,7 +2049,6 @@
             institutions. No more adapting foreign software to local needs—we
             speak your language from day one.
           </p>
-          <a href="#contact" class="btn btn-primary">Learn More</a>
         </div>
         <div class="terminology-table fade-in">
           <table>
@@ -2051,6 +2109,16 @@
             A comprehensive educational management platform built for Indian
             schools, colleges, and universities.
           </p>
+        </div>
+
+        <div class="footer-links">
+          <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="terms-of-service.html">Terms of Service</a></li>
+            <li><a href="mailto:care@kramedu.in">Contact</a></li>
+          </ul>
         </div>
 
         <div class="footer-bottom">
@@ -2137,6 +2205,25 @@
         } else {
           nav.style.background = 'rgba(10, 10, 15, 0.8)'
         }
+      })
+
+      // Feature Tabs
+      document.querySelectorAll('.feature-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.dataset.tab
+
+          // Remove active class from all tabs and contents
+          document.querySelectorAll('.feature-tab').forEach(t => {
+            t.classList.remove('active')
+          })
+          document.querySelectorAll('.feature-tab-content').forEach(content => {
+            content.classList.remove('active')
+          })
+
+          // Add active class to clicked tab and corresponding content
+          tab.classList.add('active')
+          document.getElementById(targetTab).classList.add('active')
+        })
       })
     </script>
   </body>
