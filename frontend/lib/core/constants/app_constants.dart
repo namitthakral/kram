@@ -6,7 +6,7 @@ class AppConstants {
   // API Configuration
   // For local development, use: 'http://localhost:3000' or 'http://192.168.1.11:3000'
   // For production EB deployment:
-  static const String baseUrl = 'http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com';
+  static const String baseUrl = 'https://kramedu.in';
   static const String apiVersion = '/api';
   static const Duration apiTimeout = Duration(seconds: 30);
 

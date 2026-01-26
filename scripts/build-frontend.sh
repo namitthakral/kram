@@ -24,7 +24,7 @@ flutter pub get
 
 # Build Flutter web with base-href for /dashboard
 echo "🌐 Building Flutter for web..."
-flutter build web --release --base-href "/dashboard/"
+flutter build web --release --base-href "/"
 
 # Create output directory if it doesn't exist
 echo "📁 Preparing output directory..."

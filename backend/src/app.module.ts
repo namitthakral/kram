@@ -25,13 +25,17 @@ import { UsersModule } from './users/users.module'
       envFilePath: '.env',
     }),
 
-    // Serve Flutter web app at /dashboard
+    // Serve Flutter web app at root
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'public', 'dashboard'),
-      serveRoot: '/dashboard',
+      exclude: ['/api/(.*)', '/health'],
       serveStaticOptions: {
         index: ['index.html'],
-        fallthrough: false,
+        fallthrough: true, // Allow falling through to other controllers (like API) if file not found
+        setHeaders: (res) => {
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+        },
       },
     }),
 

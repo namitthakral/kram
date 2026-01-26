@@ -207,6 +207,33 @@ Create a PostgreSQL RDS instance in the AWS Console:
 
 Note the RDS endpoint: `your-db.xxxxxx.ap-south-1.rds.amazonaws.com`
 
+Note the RDS endpoint: `your-db.xxxxxx.ap-south-1.rds.amazonaws.com`
+
+---
+
+## CloudFront & SSL Setup (Required for Production)
+
+To serve the application with HTTPS and a custom domain (`dashboard.kramedu.in`), we use AWS CloudFront in front of Elastic Beanstalk.
+
+### 1. Request Certificate (ACM)
+**Region: US East (N. Virginia) - us-east-1** (CRITICAL: Must be us-east-1 for CloudFront)
+1. Request public certificate for `dashboard.kramedu.in`.
+2. Validate via DNS (Route 53).
+
+### 2. Create CloudFront Distribution
+1. **Origin Domain**: Your Elastic Beanstalk URL.
+2. **Protocol**: HTTP Only (CloudFront -> EB).
+3. **Viewer Protocol**: Redirect HTTP to HTTPS.
+4. **Allowed Methods**: GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE.
+5. **Cache Policy**: `CachingDisabled` (to prevent stale API/App data).
+6. **Alternate Domain Name**: `dashboard.kramedu.in`.
+7. **Custom SSL Certificate**: Select the ACM certificate created above.
+
+### 3. Configure DNS (Route 53)
+1. Create/Edit `dashboard.kramedu.in` A record.
+2. Enable **Alias**.
+3. Route to **CloudFront Distribution**.
+
 ---
 
 ## Deployment Steps
@@ -300,11 +327,12 @@ After successful deployment, your application will be accessible at:
 
 | Endpoint | URL |
 |----------|-----|
-| **Base URL** | `http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com` |
-| **API** | `http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com/api` |
+| **Dashboard (CloudFront)** | `https://dashboard.kramedu.in` |
+| **API (Direct EB)** | `http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com/api` |
 | **Health Check** | `http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com/health` |
-| **Flutter Dashboard** | `http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com/dashboard` |
 | **API Docs** | `http://ed-verse-api.eba-dx3z9kvh.ap-south-1.elasticbeanstalk.com/api/docs` |
+
+> **Note**: The Dashboard is served via HTTPS through CloudFront. The API is accessed directly or via CloudFront depending on the configuration, but for this setup, the Flutter app accesses the API via the EB URL (or CloudFront if `/api` behavior is configured).
 
 ---
 

@@ -24,7 +24,7 @@ echo -e "${GREEN}========================================${NC}"
 # Step 1: Build Flutter Web
 echo -e "\n${YELLOW}[1/4] Building Flutter web app...${NC}"
 cd "$FRONTEND_DIR"
-flutter build web --base-href "/dashboard/"
+flutter build web --base-href "/"
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Flutter build completed${NC}"
 else

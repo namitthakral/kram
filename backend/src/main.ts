@@ -13,11 +13,24 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            'https://static.cloudflareinsights.com',
+            'https://www.gstatic.com',
+          ],
           styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
           fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-          connectSrc: ["'self'", 'https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://www.gstatic.com'],
+        connectSrc: [
+            "'self'",
+            'https://fonts.googleapis.com',
+            'https://fonts.gstatic.com',
+            'https://www.gstatic.com',
+            'https://static.cloudflareinsights.com',
+            'https://*.elasticbeanstalk.com',
+          ],
           workerSrc: ["'self'", 'blob:'],
           childSrc: ["'self'", 'blob:'],
           frameSrc: ["'self'"],
