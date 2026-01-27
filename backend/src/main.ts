@@ -30,6 +30,9 @@ async function bootstrap() {
             'https://www.gstatic.com',
             'https://static.cloudflareinsights.com',
             'https://*.elasticbeanstalk.com',
+            'https://api.kramedu.in',        // Allow API calls
+            'https://dashboard.kramedu.in',  // Allow self-reference
+            'https://kramedu.in',            // Allow main domain
           ],
           workerSrc: ["'self'", 'blob:'],
           childSrc: ["'self'", 'blob:'],
@@ -53,6 +56,8 @@ async function bootstrap() {
       /^https?:\/\/.*\.elasticbeanstalk\.com$/, // Allow EB domains
       /^https?:\/\/.*\.cloudfront\.net$/, // Allow CloudFront
       'https://kramedu.in', // Production domain
+      'https://dashboard.kramedu.in', // Dashboard subdomain
+      'https://api.kramedu.in', // API subdomain
     ],
     credentials: true,
   })
@@ -66,8 +71,7 @@ async function bootstrap() {
     })
   )
 
-  // Global prefix for all routes
-  app.setGlobalPrefix('api')
+  // No global prefix - routes are at root level (e.g., /auth/login, /students)
 
   // Health check endpoint
   app.getHttpAdapter().get('/health', (req, res) => {
@@ -86,8 +90,8 @@ async function bootstrap() {
   console.log(`🚀 Ed-verse NestJS server running on port ${port}`)
   console.log(`🔐 Listening on 0.0.0.0:${port}`)
   console.log(`📊 Health check: http://localhost:${port}/health`)
-  console.log(`🔌 API endpoint: http://localhost:${port}/api`)
-  console.log(`📚 API docs: http://localhost:${port}/api/docs`)
+  console.log(`🔌 API endpoints: http://localhost:${port}/auth/login, /students, etc.`)
+  console.log(`🎨 Dashboard: http://localhost:${port}/`)
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
 }
 
