@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../modules/ai_assistant/views/ai_chat_screen.dart';
 import '../provider/bottom_nav_provider.dart';
 import '../provider/login_signup/login_provider.dart';
 import '../utils/platform_helper.dart';
@@ -19,6 +20,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -46,11 +49,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => const _HomeScreenContent();
+  Widget build(BuildContext context) =>
+      _HomeScreenContent(scaffoldKey: _scaffoldKey);
 }
 
 class _HomeScreenContent extends StatelessWidget {
-  const _HomeScreenContent();
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  const _HomeScreenContent({required this.scaffoldKey});
 
   /// Check if should use bottom bar (mobile platforms or mobile screen sizes)
   bool _shouldUseBottomBar(BuildContext context) {
@@ -77,16 +82,40 @@ class _HomeScreenContent extends StatelessWidget {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
+      final fab = FloatingActionButton(
+        onPressed: () {
+          scaffoldKey.currentState?.openEndDrawer();
+        },
+        backgroundColor: const Color(0xFF6366F1),
+        child: const Icon(Icons.auto_awesome, color: Colors.white),
+      );
+
       // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
       if (_shouldUseBottomBar(context)) {
         return Scaffold(
+          key: scaffoldKey,
           body: navProvider.pages[navProvider.currentIndex],
           bottomNavigationBar: const CustomBottomNavBar(),
+          floatingActionButton: fab,
+          endDrawer: const Drawer(
+            width: 380, // Slightly wider for chat
+            child: AiChatScreen(),
+          ),
+          drawerEnableOpenDragGesture: false, // Prevent accidental swipe
         );
       }
 
       // Desktop/Tablet (other platforms or larger screens) → Use Overlay Rail
-      return const Scaffold(body: _HomeScreenWithRail());
+      return Scaffold(
+        key: scaffoldKey,
+        body: const _HomeScreenWithRail(),
+        floatingActionButton: fab,
+        endDrawer: const Drawer(
+          width: 400, // Wide drawer for desktop
+          child: AiChatScreen(),
+        ),
+        drawerEnableOpenDragGesture: false,
+      );
     },
   );
 }

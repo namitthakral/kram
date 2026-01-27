@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { join } from 'path'
+import { AiModule } from './ai/ai.module'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
 import { CoursesModule } from './courses/courses.module'
@@ -77,6 +78,7 @@ import { UsersModule } from './users/users.module'
     InstitutionsModule,
     TimetableModule,
     QuestionPaperModule,
+    AiModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
