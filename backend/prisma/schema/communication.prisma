@@ -1,72 +1,61 @@
 // ============================================================================
-// NOTICE BOARD AND COMMUNICATION MODELS
+// UNIFIED COMMUNICATION MODELS (Phase 2: Merged notices & announcements)
 // ============================================================================
 
-model Notice {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  title             String           @db.VarChar(200)
+model Communication {
+  id                Int                      @id @default(autoincrement())
+  institutionId     Int                      @map("institution_id")
+  title             String                   @db.VarChar(200)
   content           String
-  noticeType        NoticeType       @map("notice_type")
-  priority          NoticePriority   @default(MEDIUM)
-  targetAudience    String[]         // Array of roles: ["student", "teacher", "parent"]
-  departmentIds     Int[]            @map("department_ids") // Specific departments if applicable
-  programIds        Int[]            @map("program_ids")    // Specific programs if applicable
-  classIds          Int[]            @map("class_ids")      // Specific classes if applicable
-  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
-  publishDate       DateTime         @default(now()) @map("publish_date")
-  expiryDate        DateTime?        @map("expiry_date")
-  isActive          Boolean          @default(true) @map("is_active")
-  isPinned          Boolean          @default(false) @map("is_pinned")
-  createdBy         Int              @map("created_by")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  communicationType CommunicationType        @map("communication_type")
+  priority          CommunicationPriority    @default(MEDIUM)
+  targetAudience    String[]                 // Array of roles: ["student", "teacher", "parent"]
+  
+  // Optional targeting fields (for granular control)
+  departmentIds     Int[]                    @map("department_ids") // Specific departments
+  programIds        Int[]                    @map("program_ids")    // Specific programs
+  classIds          Int[]                    @map("class_ids")      // Specific classes
+  
+  // Flags and metadata
+  isEmergency       Boolean                  @default(false) @map("is_emergency")
+  isPinned          Boolean                  @default(false) @map("is_pinned")
+  isActive          Boolean                  @default(true) @map("is_active")
+  
+  // Attachments and dates
+  attachmentUrl     String?                  @map("attachment_url") @db.VarChar(500)
+  publishDate       DateTime                 @default(now()) @map("publish_date")
+  expiryDate        DateTime?                @map("expiry_date")
+  
+  // Audit fields
+  createdBy         Int                      @map("created_by")
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
 
   // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  readReceipts      NoticeReadReceipt[]
+  institution       Institution              @relation(fields: [institutionId], references: [id])
+  creator           User                     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  readReceipts      CommunicationReadReceipt[]
 
-  @@map("notices")
+  @@map("communications")
 }
 
-model NoticeReadReceipt {
+model CommunicationReadReceipt {
   id                Int              @id @default(autoincrement())
-  noticeId          Int              @map("notice_id")
+  communicationId   Int              @map("communication_id")
   userId            Int              @map("user_id")
   readAt            DateTime         @default(now()) @map("read_at")
 
   // Relations
-  notice            Notice           @relation(fields: [noticeId], references: [id])
+  communication     Communication    @relation(fields: [communicationId], references: [id], onDelete: Cascade)
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([noticeId, userId], name: "unique_notice_read")
-  @@map("notice_read_receipts")
+  @@unique([communicationId, userId], name: "unique_communication_read")
+  @@map("communication_read_receipts")
 }
 
-model Announcement {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  title             String           @db.VarChar(200)
-  content           String
-  announcementType  AnnouncementType @map("announcement_type")
-  priority          NoticePriority   @default(MEDIUM)
-  targetAudience    String[]         // Array of roles
-  isEmergency       Boolean          @default(false) @map("is_emergency")
-  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
-  publishDate       DateTime         @default(now()) @map("publish_date")
-  expiryDate        DateTime?        @map("expiry_date")
-  isActive          Boolean          @default(true) @map("is_active")
-  createdBy         Int              @map("created_by")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-
-  @@map("announcements")
-}
+// ============================================================================
+// MESSAGING SYSTEM (unchanged)
+// ============================================================================
 
 model Message {
   id                Int              @id @default(autoincrement())
@@ -126,8 +115,12 @@ model GroupMember {
   @@map("group_members")
 }
 
-// Communication Enums
-enum NoticeType {
+// ============================================================================
+// UNIFIED COMMUNICATION ENUMS
+// ============================================================================
+
+// Merged from NoticeType and AnnouncementType
+enum CommunicationType {
   GENERAL
   ACADEMIC
   EXAMINATION
@@ -136,23 +129,21 @@ enum NoticeType {
   HOLIDAY
   EMERGENCY
   MAINTENANCE
-}
-
-enum AnnouncementType {
-  GENERAL
-  ACADEMIC
-  EVENT
   ACHIEVEMENT
   ALERT
-  EMERGENCY
 }
 
-enum NoticePriority {
+// Renamed from NoticePriority (was shared by both)
+enum CommunicationPriority {
   LOW
   MEDIUM
   HIGH
   URGENT
 }
+
+// ============================================================================
+// MESSAGING ENUMS (unchanged)
+// ============================================================================
 
 enum MessageType {
   PERSONAL

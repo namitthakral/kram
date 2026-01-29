@@ -40,10 +40,8 @@ model Student {
   payments              Payment[]
   bookIssues            BookIssue[]
   bookReservations      BookReservation[]
-  libraryTransactions   LibraryTransaction[]
   gatePasses            GatePass[]
   studentProgress       StudentProgress[]
-  attendanceSummary     AttendanceSummary[]
   careerGuidance        CareerGuidance[]
   applications          Application[]
 

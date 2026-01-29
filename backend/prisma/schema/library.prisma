@@ -32,7 +32,6 @@ model Book {
   addedByUser       User             @relation(fields: [addedBy], references: [id], onDelete: Cascade)
   issues            BookIssue[]
   reservations      BookReservation[]
-  libraryTransactions LibraryTransaction[]
 
   @@map("books")
 }
@@ -98,25 +97,6 @@ model BookReservation {
 
   @@unique([bookId, studentId], name: "unique_book_reservation")
   @@map("book_reservations")
-}
-
-model LibraryTransaction {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  transactionType   TransactionType  @map("transaction_type")
-  bookId            Int?             @map("book_id")
-  amount            Decimal?         @db.Decimal(8, 2)
-  description       String           @db.VarChar(200)
-  transactionDate   DateTime         @default(now()) @map("transaction_date")
-  processedBy       Int              @map("processed_by")
-  createdAt         DateTime         @default(now()) @map("created_at")
-
-  // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  book              Book?            @relation(fields: [bookId], references: [id])
-  processor         User             @relation(fields: [processedBy], references: [id], onDelete: Cascade)
-
-  @@map("library_transactions")
 }
 
 model LibrarySettings {
