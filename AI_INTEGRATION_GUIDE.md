@@ -4,18 +4,15 @@ This document details the architecture and usage of the AI Assistant module inte
 
 ## 🧠 Architecture Overview
 
-The AI system is designed using a **Multi-Provider Architecture** (Strategy Pattern) on the backend, enhanced with a **Context Retrieval System** (RAG) for personalized responses.
+The AI system is designed using a **Multi-Provider Architecture** (Strategy Pattern) on the backend, enhanced with a **Smart Context Retrieval System (RAG)** for personalized and data-aware responses.
 
 ### 1. Backend (`/backend/src/ai`)
 *   **Module**: `AiModule`
-*   **Service**: `AiService` acts as the "Context" or switchboard. It reads the environment configuration and selects the appropriate provider strategy at runtime.
-*   **Context System (`ContextService`)**: 
-    *   **Purpose**: Fetches real-time data from the database (Prisma) to give the AI "memory" of the user.
-    *   **Data Points**: User Profile, Role (Student/Teacher), Recent Grades, Attendance, and Timetable.
-    *   **Privacy**: Data is fetched securely based on the authenticated `userId`.
-*   **Controller**: `AiController` (`POST /api/ai/chat`)
-    *   Accepts `prompt` and optional `userId`.
-    *   Orchestrates the flow: `Request -> Fetch Context -> Prepend to Prompt -> Call AI -> Return Response`.
+*   **Service**: `AiService` acts as the orchestrator. It manages the chat flow and AI provider selection.
+*   **Smart Context System (`ContextService` + `SchemaHelper`)**: 
+    *   **Purpose**: Gives the AI access to **all system tables** via a dynamically generated schema map and on-demand SQL queries.
+    *   **Mechanism**: A 2-Step RAG workflow (Plan -> Query -> Answer).
+    *   **Data Points**: Access to the entire database schema (read-only) tailored to the user's needs.
 *   **Providers**:
     *   `GeminiProvider`: Uses `@google/generative-ai` (Default, Model: **gemini-2.5-flash-lite**).
     *   `OpenAIProvider`: Uses `openai`.
@@ -56,69 +53,42 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 
 ---
 
-## 🔍 Context Retrieval System (RAG Lite)
-The "Context Awareness" feature works as follows:
+## 🔍 Smart Context System (Advanced RAG)
+The system uses a **Text-to-Query** workflow to access data dynamically:
 
-1.  **User Asks**: "How did I do in my last Math exam?"
-2.  **Frontend**: Sends `prompt: "How did I..."` + `userId: 123`.
-3.  **Backend (`ContextService`)**:
-    *   Queries `Prisma` for Student ID 123.
-    *   Retrieves: `Name: Deepak`, `Exam: Math (Score: 95/100, Grade: A)`.
-4.  **AI Input**:
-    ```text
-    Current User Profile:
-    - Name: Deepak
-    - Role: Student
-    - Recent Exams: Math (95/100, Grade A)
+1.  **Planning Phase**: 
+    - The AI receives the user's question along with a **Compact Schema Map** of the database.
+    - It analyzes if it needs specific data to answer the question.
+    - **Outcome**: It either generates a SQL `SELECT` query or decides to answer directly.
 
-    User Question: How did I do in my last Math exam?
-    ```
-5.  **AI Output**: "You did excellent, Deepak! You scored 95/100 (Grade A) in your Math exam."
+2.  **Execution Phase**:
+    - If a query is generated, the backend executes it securely (Read-Only).
+    - Example Query: `SELECT count(*) FROM students WHERE course_id = 5`
 
----
+3.  **Answer Phase**:
+    - The retrieved data is fed back to the AI.
+    - The AI generates the final, natural language response for the user.
 
-### 🌟 Advanced Capabilities (New!)
+### 🌟 Context Capabilities
 
-The system is now "Role-Aware" and supports:
-
-*   **👨‍👩‍👧 Parents**:
-    *   Can ask: *"How is my child doing?"*
-    *   AI sees: Child's Attendance, Exams, and Upcoming Assignments.
-    *   Result: Summary report of the child's progress.
-
-*   **📚 Study Helper**:
-    *   Can ask: *"What should I study for Biology?"*
-    *   AI sees: The **Syllabus** and **Subject List**.
-    *   Result: Targeted study advice based on the actual curriculum.
-
-*   **📝 Assignments**:
-    *   Can ask: *"What homework do I have due?"*
-    *   AI sees: Pending **Assignments** with due dates.
-    *   Result: Usage lists upcoming deadlines.
+The AI is now **"System-Aware"** and supports complex questions like:
+*   *"How many students are enrolled in B.Sc Computer Science?"*
+*   *"What is the class average for the Data Structures exam?"*
+*   *"List all pending assignments for my child."* (Parent View)
+*   *"Show me the syllabus for the next Math module."*
 
 ---
 
 ## 🚀 How to Extend
 
-### Adding New Data to Context (New Generic System)
-The system now uses a **Generic Algorithm**. You no longer need to write complex string formatting code.
+### 1. Adding New Data Support
+You generally **don't need to do anything**! 
+Because the system reads the `prisma/schema.prisma` file dynamically via `SchemaHelper`, any new tables or fields you add to the database are automatically visible to the AI.
 
-1.  Open `backend/src/ai/context.service.ts`.
-2.  Locate the `CONTEXT_CONFIG` object.
-3.  Add the Prisma Relation you want to include.
-    ```typescript
-    student: {
-      // ... existing
-      libraryBooks: true, // Just add this!
-      fees: true
-    }
-    ```
-4.  **Done!** The generic algorithm will automatically fetch, format, and inject this data into the AI prompt.
-
-### Adding a New Provider
+### 2. Adding a New Provider
 1.  **Create Provider**: Create a new class in `backend/src/ai/providers/` implementing `AiProvider`.
-2.  **Register**: Add to `backend/src/ai/ai.module.ts`.
-3.  **Update Switch**: Update `backend/src/ai/ai.service.ts`.
+2.  **Register**: Add (and export) the provider in `backend/src/ai/ai.module.ts`.
+3.  **Update Switch**: Update the provider selection logic in `backend/src/ai/ai.service.ts`.
 
 ---
 

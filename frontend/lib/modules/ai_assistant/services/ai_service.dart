@@ -1,16 +1,14 @@
 import 'package:dio/dio.dart';
-import '../models/chat_message.dart';
+
 import '../../../../core/services/api_service.dart';
+import '../models/chat_message.dart';
 
 class AiService {
   final Dio _dio = ApiService().dio;
 
   Future<ChatMessage> sendMessage(String message, {int? userId}) async {
     try {
-      final response = await _dio.post(
-        '/ai/chat',
-        data: {'prompt': message, if (userId != null) 'userId': userId},
-      );
+      final response = await _dio.post('/ai/chat', data: {'message': message});
 
       final responseText = response.data['response'] as String;
 

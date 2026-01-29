@@ -1,4 +1,5 @@
-import { Prisma } from '.prisma/client'
+import { Prisma } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 import {
   BadRequestException,
   ConflictException,
@@ -2951,8 +2952,8 @@ export class TeachersService {
       attendance?: Array<{ status: string }>
       submissions?: Array<unknown>
       examResults: Array<{
-        exam: { totalMarks: number | Prisma.Decimal }
-        marksObtained: number | Prisma.Decimal
+        exam: { totalMarks: number | Decimal }
+        marksObtained: number | Decimal
       }>
     },
     _teacherId: number

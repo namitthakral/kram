@@ -1,193 +1,167 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
-import { Role, User } from '@prisma/client'
 
 @Injectable()
 export class ContextService {
-  private readonly logger = new Logger(ContextService.name)
+    private readonly logger = new Logger(ContextService.name)
 
-  // Configuration: Defines what data to fetch for each role
-  // This makes the system "Generic" - to add more context, just add fields here.
-  private readonly CONTEXT_CONFIG = {
-    student: {
-      institution: { select: { name: true } },
-      course: {
-        select: {
-          name: true,
-          subjects: {
+    constructor(private readonly prisma: PrismaService) {}
+
+    async getUserContext(userId: number): Promise<string> {
+        try {
+            const baseUser = await this.prisma.user.findUnique({
+                where: { id: userId },
+                include: { role: true },
+            })
+
+            if (!baseUser) return 'Unknown user.'
+
+            const roleName = baseUser.role.roleName.toLowerCase()
+            let context = `User: ${baseUser.firstName} ${baseUser.lastName} | Role: ${baseUser.role.roleName}`
+
+            if (roleName === 'student') {
+                context += await this.getStudentContext(userId)
+            } else if (roleName === 'teacher') {
+                context += await this.getTeacherContext(userId)
+            } else if (roleName === 'parent') {
+                context += await this.getParentContext(userId)
+            } else if (roleName === 'admin') {
+                context += await this.getAdminContext(userId)
+            }
+
+            return context
+        } catch (error) {
+            this.logger.error(`Error fetching context for user ${userId}`, error)
+            return ''
+        }
+    }
+
+    private async getStudentContext(userId: number): Promise<string> {
+        const student = await this.prisma.student.findUnique({
+            where: { userId },
             select: {
-                 subjectName: true,
-                 subjectCode: true,
-                 syllabus: true
-            }
-          }
-        }
-      },
-      attendanceSummary: true,
-      enrollments: true,
-      academicHistory: true,
-    },
-    teacher: {
-      institution: { select: { name: true } },
-      classSections: {
-        select: {
-          sectionName: true,
-          subject: {
-             select: {
-                subjectName: true,
-                subjectCode: true,
-                enrollments: {
+                id: true,
+                admissionNumber: true,
+                currentSemester: true,
+                currentYear: true,
+                gradeLevel: true,
+                section: true,
+                institution: { select: { name: true } },
+                course: { select: { name: true } },
+            },
+        })
+
+        if (!student) return ''
+
+        const parts = [
+            `\nInstitution: ${student.institution.name}`,
+            student.course ? `Course: ${student.course.name}` : null,
+            student.currentSemester ? `Semester: ${student.currentSemester}` : null,
+            student.currentYear ? `Year: ${student.currentYear}` : null,
+            student.gradeLevel ? `Grade: ${student.gradeLevel}` : null,
+            student.section ? `Section: ${student.section}` : null,
+            `Admission#: ${student.admissionNumber}`,
+        ]
+
+        return parts.filter(Boolean).join(' | ')
+    }
+
+    private async getTeacherContext(userId: number): Promise<string> {
+        const teacher = await this.prisma.teacher.findUnique({
+            where: { userId },
+            select: {
+                id: true,
+                employeeId: true,
+                designation: true,
+                specialization: true,
+                institution: { select: { name: true } },
+                classSections: {
+                    where: { status: 'ACTIVE' },
                     select: {
-                        student: {
-                            select: {
-                                admissionNumber: true,
-                                user: { select: { firstName: true, lastName: true } }
-                            }
-                        }
-                    }
-                }
-             }
-          }
-        }
-      }
-    },
-    parent: {
-      student: { // The child
-        select: {
-           user: { select: { firstName: true, lastName: true } }, // Name
-           institution: { select: { name: true } },
-           course: { select: { name: true } },
-           attendanceSummary: true
-        }
-      }
-    }
-  }
-
-  constructor(private readonly prisma: PrismaService) {}
-
-  async getUserContext(userId: number): Promise<string> {
-    try {
-      // 1. Fetch User with Role
-      const baseUser = await this.prisma.user.findUnique({
-        where: { id: userId },
-        include: { role: true }
-      })
-
-      if (!baseUser) return ''
-
-      // 2. Determine Role and Config
-      const roleName = baseUser.role.roleName.toLowerCase()
-      let roleData = null
-
-      if (roleName === 'student') {
-        roleData = await this.prisma.student.findUnique({
-          where: { userId: userId },
-          select: this.CONTEXT_CONFIG.student as any
+                        sectionName: true,
+                        currentEnrollment: true,
+                        subject: { select: { subjectName: true, subjectCode: true } },
+                    },
+                    take: 10,
+                },
+            },
         })
-        // Fetch separate lists that depend on dynamic filters (like Assignments) if needed
-        // but for now, we rely on the generic fetch.
-        // Actually, to make it truly 'Generic Algo', we should try to rely on the Tree.
-        // If Assignments are not directly linked to Student in schema, we might need a specific fetch.
-        // Let's stick to the user's request: "Generic Algorithm".
 
-      } else if (roleName === 'teacher') {
-        roleData = await this.prisma.teacher.findUnique({
-          where: { userId: userId },
-          select: this.CONTEXT_CONFIG.teacher as any
-        })
-      } else if (roleName === 'parent') {
-        roleData = await this.prisma.parent.findUnique({
-          where: { userId: userId },
-          select: this.CONTEXT_CONFIG.parent as any
-        })
-      }
+        if (!teacher) return ''
 
-      // 3. Build Context String
-      let context = `Current User Profile:\n`
-      context += `- Name: ${baseUser.firstName} ${baseUser.lastName}\n`
-      context += `- Role: ${baseUser.role.roleName}\n`
-      context += `- Status: ${baseUser.status}\n\n`
+        const sections = teacher.classSections
+            .map(s => `${s.subject.subjectCode}:${s.sectionName}(${s.currentEnrollment})`)
+            .join(', ')
 
-      if (roleData) {
-        context += `Role Specific Data:\n`
-        context += this.formatDataToContext(roleData)
-      }
+        const parts = [
+            `\nInstitution: ${teacher.institution.name}`,
+            teacher.designation ? `Designation: ${teacher.designation}` : null,
+            `Employee#: ${teacher.employeeId}`,
+            sections ? `Sections: [${sections}]` : null,
+        ]
 
-      // 4. Append Computed/Dynamic Data (The "Smart" part)
-      // Some things like "Assignments due next week" are hard to do with just 'include'.
-      // Only generic way to do that is if we fetched *all* assignments and filtered in js.
-      // For now, this is a good balance.
-
-      return context
-
-    } catch (error) {
-      this.logger.error(`Error fetching generic context for user ${userId}`, error)
-      return ''
-    }
-  }
-
-  // The "Generic Context Algorithm"
-  // Recursively traverses any JSON object and turns it into readable context text.
-  private formatDataToContext(data: any, depth = 0): string {
-    if (!data) return ''
-
-    let output = ''
-    const indent = '  '.repeat(depth)
-    const bullet = depth > 0 ? '- ' : ''
-
-    // Handle Array (List of items)
-    if (Array.isArray(data)) {
-        if (data.length === 0) return `${indent}${bullet}(None)\n`
-
-        // Limit large lists
-        const limit = 5
-        data.slice(0, limit).forEach(item => {
-            output += this.formatDataToContext(item, depth + 1)
-        })
-        if (data.length > limit) output += `${indent}  ...and ${data.length - limit} more\n`
-        return output
+        return parts.filter(Boolean).join(' | ')
     }
 
-    // Handle Object (Dictionaries)
-    if (typeof data === 'object' && data !== null) {
-        // Check if it's a Date
-        if (data instanceof Date) return `${indent}${bullet}${data.toISOString().split('T')[0]}\n`
+    private async getParentContext(userId: number): Promise<string> {
+        const parent = await this.prisma.parent.findUnique({
+            where: { userId },
+            select: {
+                relation: true,
+                student: {
+                    select: {
+                        admissionNumber: true,
+                        user: { select: { firstName: true, lastName: true } },
+                        institution: { select: { name: true } },
+                        course: { select: { name: true } },
+                        currentSemester: true,
+                        gradeLevel: true,
+                    },
+                },
+            },
+        })
 
-        for (const [key, value] of Object.entries(data)) {
-            // Filter out internal IDs and excessive implementation details to save tokens
-            if (this.isIgnoredField(key)) continue
+        if (!parent) return ''
 
-            // If value is primitive, print line. If object/array, recurse.
-            if (value && typeof value === 'object' && !((value as any) instanceof Date)) {
-                 // Header for nested section
-                 output += `${indent}- ${this.formatKey(key)}:\n`
-                 output += this.formatDataToContext(value, depth + 1)
-            } else {
-                 if (value !== null && value !== undefined && value !== '') {
-                    output += `${indent}- ${this.formatKey(key)}: ${value}\n`
-                 }
+        const child = parent.student
+        const parts = [
+            `\nRelation: ${parent.relation}`,
+            `Child: ${child.user.firstName} ${child.user.lastName}`,
+            `Institution: ${child.institution.name}`,
+            child.course ? `Course: ${child.course.name}` : null,
+            child.currentSemester ? `Semester: ${child.currentSemester}` : null,
+            child.gradeLevel ? `Grade: ${child.gradeLevel}` : null,
+        ]
+
+        return parts.filter(Boolean).join(' | ')
+    }
+
+    private async getAdminContext(userId: number): Promise<string> {
+        const staff = await this.prisma.staff.findUnique({
+            where: { userId },
+            select: { institution: { select: { id: true, name: true } } },
+        })
+
+        const institutionName = staff?.institution?.name
+        const institutionId = staff?.institution?.id
+
+        if (!institutionId) {
+            const teacher = await this.prisma.teacher.findUnique({
+                where: { userId },
+                select: { institution: { select: { id: true, name: true } } },
+            })
+            if (teacher) {
+                return `\nInstitution: ${teacher.institution.name}`
             }
+            return '\nAdmin user (no institution linked)'
         }
-        return output
+
+        const [studentCount, teacherCount, courseCount] = await Promise.all([
+            this.prisma.student.count({ where: { institutionId, status: 'ACTIVE' } }),
+            this.prisma.teacher.count({ where: { institutionId, status: 'ACTIVE' } }),
+            this.prisma.course.count({ where: { institutionId, status: 'ACTIVE' } }),
+        ])
+
+        return `\nInstitution: ${institutionName} | Students: ${studentCount} | Teachers: ${teacherCount} | Courses: ${courseCount}`
     }
-
-    // Handle Primitive
-    return `${indent}${bullet}${data}\n`
-  }
-
-  private isIgnoredField(key: string): boolean {
-    const ignored = [
-      'id', 'userId', 'password', 'hash', 'createdAt', 'updatedAt',
-      'institutionId', 'courseId', 'programId', 'sectionId',
-      'uuid', 'edverseId', 'roleId', 'passwordHash',
-      'emailVerified', 'phoneVerified', 'twoFactorEnabled',
-      'loginAttempts', 'accountLocked', 'isTemporaryPassword'
-    ]
-    return ignored.includes(key)
-  }
-
-  private formatKey(key: string): string {
-    // CamelCase to Sentence Case (e.g., 'admissionNumber' -> 'Admission Number')
-    return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
-  }
 }

@@ -1,35 +1,20 @@
-import { Body, Controller, Logger, Post, ValidationPipe } from '@nestjs/common'
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
+import { Body, Controller, Post, UseGuards, ValidationPipe } from '@nestjs/common'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { UserWithRelations } from '../types/auth.types'
 import { AiService } from './ai.service'
-import { ContextService } from './context.service'
-
-class ChatDto {
-    @IsString()
-    @IsNotEmpty()
-    prompt: string
-
-    @IsNumber()
-    @IsOptional()
-    userId?: number
-}
+import { ChatDto } from './dto/chat.dto'
 
 @Controller('ai')
+@UseGuards(JwtAuthGuard)
 export class AiController {
-    private readonly logger = new Logger(AiController.name)
-
-    constructor(
-        private readonly aiService: AiService,
-        private readonly contextService: ContextService
-    ) { }
+    constructor(private readonly aiService: AiService) {}
 
     @Post('chat')
-    async chat(@Body(new ValidationPipe()) chatDto: ChatDto) {
-        let context = ''
-        if (chatDto.userId) {
-            this.logger.debug(`Fetching context for user ${chatDto.userId}`)
-            context = await this.contextService.getUserContext(chatDto.userId)
-        }
-
-        return this.aiService.chat(chatDto.prompt, context)
+    async chat(
+        @CurrentUser() user: UserWithRelations,
+        @Body(new ValidationPipe({ transform: true })) chatDto: ChatDto,
+    ) {
+        return this.aiService.chat(user, chatDto.message, chatDto.conversationHistory)
     }
 }
