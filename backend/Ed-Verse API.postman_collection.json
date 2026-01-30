@@ -2796,6 +2796,126 @@
           "response": []
         },
         {
+          "name": "Get Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/attendance/records?sectionId=1&startDate=2026-01-01&endDate=2026-01-31&status=ABSENT&limit=50&offset=0&sortBy=date&sortOrder=desc",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "attendance", "records"],
+              "query": [
+                {
+                  "key": "sectionId",
+                  "value": "1",
+                  "description": "Filter by section ID",
+                  "disabled": true
+                },
+                {
+                  "key": "studentId",
+                  "value": "",
+                  "description": "Filter by student ID",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01",
+                  "description": "Start date (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-31",
+                  "description": "End date (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "ABSENT",
+                  "description": "Filter by status: PRESENT, ABSENT, LATE, EXCUSED",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of records per page (default: 50)"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Pagination offset (default: 0)"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "date",
+                  "description": "Sort by: date, student, section, status (default: date)"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort order: asc, desc (default: desc)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                }
+              ]
+            },
+            "description": "Query and retrieve attendance records with comprehensive filtering, pagination, and sorting options.\n\n**Use Cases:**\n- Review all attendance marked for a specific date/date range\n- Find attendance records for a specific student across classes\n- Filter by section to see all attendance for a class\n- Search for all ABSENT records to follow up\n- Generate custom attendance reports\n\n**Query Parameters (all optional):**\n- `sectionId`: Filter by specific class section\n- `studentId`: Filter by specific student\n- `startDate`: Filter from this date (YYYY-MM-DD)\n- `endDate`: Filter until this date (YYYY-MM-DD)\n- `status`: Filter by PRESENT, ABSENT, LATE, or EXCUSED\n- `limit`: Records per page (default: 50, max: 100)\n- `offset`: Pagination offset (default: 0)\n- `sortBy`: Sort field - date, student, section, status (default: date)\n- `sortOrder`: asc or desc (default: desc)\n\n**Response includes:**\n- Total count of matching records\n- Pagination info (limit, offset)\n- Array of attendance records with:\n  - Student details (name, uuid, admission number)\n  - Section details (name, subject, semester)\n  - Attendance status and remarks\n  - Timestamp (markedAt)\n\n**Authorization:**\n- Only returns attendance for sections assigned to this teacher"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/teachers/:user_uuid/attendance/records?status=ABSENT&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": ["teachers", ":user_uuid", "attendance", "records"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "ABSENT"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "user_uuid",
+                      "value": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"total\": 45,\n  \"limit\": 10,\n  \"offset\": 0,\n  \"records\": [\n    {\n      \"id\": 123,\n      \"date\": \"2026-01-30T00:00:00.000Z\",\n      \"status\": \"ABSENT\",\n      \"remarks\": \"Sick leave\",\n      \"markedAt\": \"2026-01-30T09:15:00.000Z\",\n      \"student\": {\n        \"id\": 45,\n        \"name\": \"John Doe\",\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n        \"admissionNumber\": \"2024001\",\n        \"rollNumber\": \"CS101-01\"\n      },\n      \"section\": {\n        \"id\": 1,\n        \"name\": \"Section A\",\n        \"subject\": {\n          \"name\": \"Mathematics\",\n          \"code\": \"MATH101\"\n        },\n        \"semester\": {\n          \"name\": \"Semester 1\",\n          \"number\": 1,\n          \"status\": \"ACTIVE\"\n        }\n      }\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
           "name": "Generate Batch Report Cards",
           "request": {
             "method": "POST",
@@ -4647,7 +4767,7 @@
     },
     {
       "key": "api_url",
-      "value": "{{base_url}}/api",
+      "value": "{{base_url}}",
       "type": "string"
     },
     {

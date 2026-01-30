@@ -400,7 +400,8 @@ export class ProgressCalculator {
   }
 
   /**
-   * Recalculate all metrics and return complete progress data using institution config
+   * Recalculate all metrics for a single student (wrapper around batch method)
+   * DEPRECATED: Use calculateProgressBatch for better performance
    */
   static async calculateCompleteProgress(
     prisma: PrismaService,
@@ -418,39 +419,120 @@ export class ProgressCalculator {
     gradePoints: Decimal
     status: string
   }> {
-    // Get institution's grading configuration
+    // Use the optimized batch method for single student
+    const resultsMap = await this.calculateProgressBatch(
+      prisma,
+      [studentId],
+      subjectId,
+      semesterId,
+      academicYearId,
+      institutionId
+    )
+
+    const result = resultsMap.get(studentId)
+    if (!result) {
+      throw new Error(`Could not calculate progress for student ${studentId}`)
+    }
+
+    return result
+  }
+
+  /**
+   * OPTIMIZED: Calculate progress for multiple students in batch
+   * Eliminates N+1 queries by processing all students at once
+   */
+  static async calculateProgressBatch(
+    prisma: PrismaService,
+    studentIds: number[],
+    subjectId: number,
+    semesterId: number,
+    academicYearId: number,
+    institutionId: number
+  ): Promise<
+    Map<
+      number,
+      {
+        attendancePercentage: Decimal
+        assignmentScore: Decimal
+        examScore: Decimal
+        participationScore: Decimal
+        overallGrade: string
+        gradePoints: Decimal
+        status: string
+      }
+    >
+  > {
+    if (studentIds.length === 0) {
+      return new Map()
+    }
+
+    // Get institution's grading configuration once
     const config = await this.getGradingConfig(prisma, institutionId)
 
-    // Calculate all metrics
-    const attendancePercentage = await this.calculateAttendance(
-      prisma,
-      studentId,
-      subjectId,
-      semesterId
+    // Batch query all data using database views
+    const [attendanceData, assignmentData, examData] = await Promise.all([
+      // Use attendance summary view
+      prisma.$queryRaw<
+        Array<{
+          student_id: number
+          attendance_percentage: number
+        }>
+      >`
+        SELECT student_id, attendance_percentage
+        FROM student_attendance_summary
+        WHERE student_id = ANY(${studentIds}::int[])
+          AND subject_id = ${subjectId}
+          AND semester_id = ${semesterId}
+      `,
+
+      // Use assignment score summary view
+      prisma.$queryRaw<
+        Array<{
+          student_id: number
+          average_score_percentage: number
+        }>
+      >`
+        SELECT student_id, average_score_percentage
+        FROM assignment_score_summary
+        WHERE student_id = ANY(${studentIds}::int[])
+          AND subject_id = ${subjectId}
+          AND semester_id = ${semesterId}
+      `,
+
+      // Use exam score summary view
+      prisma.$queryRaw<
+        Array<{
+          student_id: number
+          average_score_percentage: number
+        }>
+      >`
+        SELECT student_id, average_score_percentage
+        FROM exam_score_summary
+        WHERE student_id = ANY(${studentIds}::int[])
+          AND subject_id = ${subjectId}
+          AND semester_id = ${semesterId}
+      `,
+    ])
+
+    // Create lookup maps
+    const attendanceMap = new Map(
+      attendanceData.map(d => [d.student_id, d.attendance_percentage || 0])
+    )
+    const assignmentMap = new Map(
+      assignmentData.map(d => [d.student_id, d.average_score_percentage || 0])
+    )
+    const examMap = new Map(
+      examData.map(d => [d.student_id, d.average_score_percentage || 0])
     )
 
-    const assignmentScore = await this.calculateAssignmentScore(
-      prisma,
-      studentId,
-      subjectId,
-      semesterId
-    )
+    // Calculate progress for each student
+    const results = new Map()
+    for (const studentId of studentIds) {
+      const attendancePercentage = attendanceMap.get(studentId) || 0
+      const assignmentScore = assignmentMap.get(studentId) || 0
+      const examScore = examMap.get(studentId) || 0
+      const participationScore = attendancePercentage // Use attendance as proxy
 
-    const examScore = await this.calculateExamScore(
-      prisma,
-      studentId,
-      subjectId,
-      semesterId
-    )
-
-    const participationScore = await this.calculateParticipationScore(
-      prisma,
-      studentId,
-      subjectId,
-      semesterId
-    )
-
-    // Calculate overall grade using institution's config
     const overallGrade = this.calculateOverallGrade(
       attendancePercentage,
       assignmentScore,
@@ -461,7 +543,6 @@ export class ProgressCalculator {
 
     const gradePoints = this.gradeToPoints(overallGrade, config)
 
-    // Determine status using institution's thresholds
     const status = this.determineStatus(
       attendancePercentage,
       assignmentScore,
@@ -470,7 +551,7 @@ export class ProgressCalculator {
       config
     )
 
-    return {
+      results.set(studentId, {
       attendancePercentage: new Decimal(attendancePercentage),
       assignmentScore: new Decimal(assignmentScore),
       examScore: new Decimal(examScore),
@@ -478,6 +559,9 @@ export class ProgressCalculator {
       overallGrade,
       gradePoints: new Decimal(gradePoints),
       status,
+      })
     }
+
+    return results
   }
 }
