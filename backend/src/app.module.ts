@@ -8,6 +8,7 @@ import { join } from 'path'
 import { AiModule } from './ai/ai.module'
 import { AdminModule } from './admin/admin.module'
 import { AuthModule } from './auth/auth.module'
+import { CommunicationsModule } from './communications/communications.module'
 import { CoursesModule } from './courses/courses.module'
 import { IdGenerationModule } from './id-generation/id-generation.module'
 import { InstitutionsModule } from './institutions/institutions.module'
@@ -79,6 +80,7 @@ import { UsersModule } from './users/users.module'
     TimetableModule,
     QuestionPaperModule,
     AiModule,
+    CommunicationsModule,
   ],
 })
 export class AppModule { }

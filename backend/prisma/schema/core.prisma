@@ -32,17 +32,15 @@ model User {
   parent            Parent?
   staff             Staff?
   payments          Payment[]
-  noticesCreated    Notice[]
-  announcementsCreated Announcement[]
+  communicationsCreated Communication[]
   messagesSent      Message[]        @relation("MessageSender")
   messagesReceived  Message[]        @relation("MessageReceiver")
   groupsCreated     MessageGroup[]
   groupMemberships  GroupMember[]
-  noticeReadReceipts NoticeReadReceipt[]
+  communicationReadReceipts CommunicationReadReceipt[]
   booksAdded        Book[]
   bookIssues        BookIssue[]      @relation("BookIssuer")
   bookReturns       BookIssue[]      @relation("BookReturner")
-  libraryTransactions LibraryTransaction[]
   visitorPassApprovals VisitorPass[]
   staffAttendanceMarked StaffAttendance[]
   staffLeaveApprovals StaffLeave[]
@@ -54,7 +52,6 @@ model User {
   substitutionRequests TeacherSubstitution[] @relation("SubstitutionRequester")
   substitutionApprovals TeacherSubstitution[] @relation("SubstitutionApprover")
   applicationApprovals Application[]
-  dashboardStats    DashboardStats[]
   systemAlertsResolved SystemAlert[]
 
   @@map("users")
@@ -99,8 +96,7 @@ model Institution {
   staff           Staff[]
   academicYears   AcademicYear[]
   feeStructures   FeeStructure[]
-  notices         Notice[]
-  announcements   Announcement[]
+  communications  Communication[]
   messageGroups   MessageGroup[]
   books           Book[]
   librarySettings LibrarySettings[]
@@ -110,8 +106,6 @@ model Institution {
   timeTables      TimeTable[]
   timeSlots       TimeSlot[]
   rooms           Room[]
-  dashboardStats  DashboardStats[]
-  performanceMetrics PerformanceMetrics[]
   systemAlerts    SystemAlert[]
   gradingConfig   InstitutionGradingConfig?
   idConfig        InstitutionIdConfig?

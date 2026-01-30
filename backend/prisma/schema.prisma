@@ -48,17 +48,15 @@ model User {
   parent            Parent?
   staff             Staff?
   payments          Payment[]
-  noticesCreated    Notice[]
-  announcementsCreated Announcement[]
+  communicationsCreated Communication[]
   messagesSent      Message[]        @relation("MessageSender")
   messagesReceived  Message[]        @relation("MessageReceiver")
   groupsCreated     MessageGroup[]
   groupMemberships  GroupMember[]
-  noticeReadReceipts NoticeReadReceipt[]
+  communicationReadReceipts CommunicationReadReceipt[]
   booksAdded        Book[]
   bookIssues        BookIssue[]      @relation("BookIssuer")
   bookReturns       BookIssue[]      @relation("BookReturner")
-  libraryTransactions LibraryTransaction[]
   visitorPassApprovals VisitorPass[]
   staffAttendanceMarked StaffAttendance[]
   staffLeaveApprovals StaffLeave[]
@@ -70,7 +68,6 @@ model User {
   substitutionRequests TeacherSubstitution[] @relation("SubstitutionRequester")
   substitutionApprovals TeacherSubstitution[] @relation("SubstitutionApprover")
   applicationApprovals Application[]
-  dashboardStats    DashboardStats[]
   systemAlertsResolved SystemAlert[]
 
   @@map("users")
@@ -115,8 +112,7 @@ model Institution {
   staff           Staff[]
   academicYears   AcademicYear[]
   feeStructures   FeeStructure[]
-  notices         Notice[]
-  announcements   Announcement[]
+  communications  Communication[]
   messageGroups   MessageGroup[]
   books           Book[]
   librarySettings LibrarySettings[]
@@ -126,8 +122,6 @@ model Institution {
   timeTables      TimeTable[]
   timeSlots       TimeSlot[]
   rooms           Room[]
-  dashboardStats  DashboardStats[]
-  performanceMetrics PerformanceMetrics[]
   systemAlerts    SystemAlert[]
   gradingConfig   InstitutionGradingConfig?
   idConfig        InstitutionIdConfig?
@@ -308,7 +302,6 @@ model Semester {
   academicRecords   AcademicRecord[]
   studentFees       StudentFee[]
   studentProgress   StudentProgress[]
-  attendanceSummary AttendanceSummary[]
   timeTables        TimeTable[]
 
   @@map("semesters")
@@ -378,7 +371,6 @@ model Subject {
   timetables      TimeTable[]
   teacherSubjects TeacherSubject[]
   studentProgress StudentProgress[]
-  attendanceSummary AttendanceSummary[]
 
   @@map("subjects")
 }
@@ -473,10 +465,8 @@ model Student {
   payments              Payment[]
   bookIssues            BookIssue[]
   bookReservations      BookReservation[]
-  libraryTransactions   LibraryTransaction[]
   gatePasses            GatePass[]
   studentProgress       StudentProgress[]
-  attendanceSummary     AttendanceSummary[]
   careerGuidance        CareerGuidance[]
   applications          Application[]
 
@@ -1029,70 +1019,55 @@ enum PaymentStatus {
 }
 
 
-model Notice {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  title             String           @db.VarChar(200)
+model Communication {
+  id                Int                      @id @default(autoincrement())
+  institutionId     Int                      @map("institution_id")
+  title             String                   @db.VarChar(200)
   content           String
-  noticeType        NoticeType       @map("notice_type")
-  priority          NoticePriority   @default(MEDIUM)
-  targetAudience    String[]         // Array of roles: ["student", "teacher", "parent"]
-  departmentIds     Int[]            @map("department_ids") // Specific departments if applicable
-  programIds        Int[]            @map("program_ids")    // Specific programs if applicable
-  classIds          Int[]            @map("class_ids")      // Specific classes if applicable
-  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
-  publishDate       DateTime         @default(now()) @map("publish_date")
-  expiryDate        DateTime?        @map("expiry_date")
-  isActive          Boolean          @default(true) @map("is_active")
-  isPinned          Boolean          @default(false) @map("is_pinned")
-  createdBy         Int              @map("created_by")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  communicationType CommunicationType        @map("communication_type")
+  priority          CommunicationPriority    @default(MEDIUM)
+  targetAudience    String[]                 // Array of roles: ["student", "teacher", "parent"]
+  
+  // Optional targeting fields (for granular control)
+  departmentIds     Int[]                    @map("department_ids") // Specific departments
+  programIds        Int[]                    @map("program_ids")    // Specific programs
+  classIds          Int[]                    @map("class_ids")      // Specific classes
+  
+  // Flags and metadata
+  isEmergency       Boolean                  @default(false) @map("is_emergency")
+  isPinned          Boolean                  @default(false) @map("is_pinned")
+  isActive          Boolean                  @default(true) @map("is_active")
+  
+  // Attachments and dates
+  attachmentUrl     String?                  @map("attachment_url") @db.VarChar(500)
+  publishDate       DateTime                 @default(now()) @map("publish_date")
+  expiryDate        DateTime?                @map("expiry_date")
+  
+  // Audit fields
+  createdBy         Int                      @map("created_by")
+  createdAt         DateTime                 @default(now()) @map("created_at")
+  updatedAt         DateTime                 @updatedAt @map("updated_at")
 
   // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  readReceipts      NoticeReadReceipt[]
+  institution       Institution              @relation(fields: [institutionId], references: [id])
+  creator           User                     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  readReceipts      CommunicationReadReceipt[]
 
-  @@map("notices")
+  @@map("communications")
 }
 
-model NoticeReadReceipt {
+model CommunicationReadReceipt {
   id                Int              @id @default(autoincrement())
-  noticeId          Int              @map("notice_id")
+  communicationId   Int              @map("communication_id")
   userId            Int              @map("user_id")
   readAt            DateTime         @default(now()) @map("read_at")
 
   // Relations
-  notice            Notice           @relation(fields: [noticeId], references: [id])
+  communication     Communication    @relation(fields: [communicationId], references: [id], onDelete: Cascade)
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([noticeId, userId], name: "unique_notice_read")
-  @@map("notice_read_receipts")
-}
-
-model Announcement {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  title             String           @db.VarChar(200)
-  content           String
-  announcementType  AnnouncementType @map("announcement_type")
-  priority          NoticePriority   @default(MEDIUM)
-  targetAudience    String[]         // Array of roles
-  isEmergency       Boolean          @default(false) @map("is_emergency")
-  attachmentUrl     String?          @map("attachment_url") @db.VarChar(500)
-  publishDate       DateTime         @default(now()) @map("publish_date")
-  expiryDate        DateTime?        @map("expiry_date")
-  isActive          Boolean          @default(true) @map("is_active")
-  createdBy         Int              @map("created_by")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  creator           User             @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-
-  @@map("announcements")
+  @@unique([communicationId, userId], name: "unique_communication_read")
+  @@map("communication_read_receipts")
 }
 
 model Message {
@@ -1153,8 +1128,8 @@ model GroupMember {
   @@map("group_members")
 }
 
-// Communication Enums
-enum NoticeType {
+// Merged from NoticeType and AnnouncementType
+enum CommunicationType {
   GENERAL
   ACADEMIC
   EXAMINATION
@@ -1163,18 +1138,12 @@ enum NoticeType {
   HOLIDAY
   EMERGENCY
   MAINTENANCE
-}
-
-enum AnnouncementType {
-  GENERAL
-  ACADEMIC
-  EVENT
   ACHIEVEMENT
   ALERT
-  EMERGENCY
 }
 
-enum NoticePriority {
+// Renamed from NoticePriority (was shared by both)
+enum CommunicationPriority {
   LOW
   MEDIUM
   HIGH
@@ -1241,7 +1210,6 @@ model Book {
   addedByUser       User             @relation(fields: [addedBy], references: [id], onDelete: Cascade)
   issues            BookIssue[]
   reservations      BookReservation[]
-  libraryTransactions LibraryTransaction[]
 
   @@map("books")
 }
@@ -1307,25 +1275,6 @@ model BookReservation {
 
   @@unique([bookId, studentId], name: "unique_book_reservation")
   @@map("book_reservations")
-}
-
-model LibraryTransaction {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  transactionType   TransactionType  @map("transaction_type")
-  bookId            Int?             @map("book_id")
-  amount            Decimal?         @db.Decimal(8, 2)
-  description       String           @db.VarChar(200)
-  transactionDate   DateTime         @default(now()) @map("transaction_date")
-  processedBy       Int              @map("processed_by")
-  createdAt         DateTime         @default(now()) @map("created_at")
-
-  // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  book              Book?            @relation(fields: [bookId], references: [id])
-  processor         User             @relation(fields: [processedBy], references: [id], onDelete: Cascade)
-
-  @@map("library_transactions")
 }
 
 model LibrarySettings {
@@ -1858,75 +1807,6 @@ model StudentProgress {
   @@map("student_progress")
 }
 
-model DashboardStats {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  userId            Int?             @map("user_id") // For user-specific stats
-  statType          String           @map("stat_type") @db.VarChar(50) // "attendance", "performance", "fees", etc.
-  statName          String           @map("stat_name") @db.VarChar(100)
-  statValue         Decimal          @map("stat_value") @db.Decimal(15, 2)
-  statUnit          String?          @map("stat_unit") @db.VarChar(20) // "percentage", "count", "amount"
-  period            String?          @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
-  periodStart       DateTime?        @map("period_start")
-  periodEnd         DateTime?        @map("period_end")
-  metadata          Json?            // Additional data as JSON
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  user              User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("dashboard_stats")
-}
-
-model PerformanceMetrics {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  metricType        MetricType       @map("metric_type")
-  metricName        String           @map("metric_name") @db.VarChar(100)
-  value             Decimal          @db.Decimal(15, 4)
-  targetValue       Decimal?         @map("target_value") @db.Decimal(15, 4)
-  unit              String?          @db.VarChar(20)
-  period            String           @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
-  periodStart       DateTime         @map("period_start")
-  periodEnd         DateTime         @map("period_end")
-  category          String?          @db.VarChar(50) // "academic", "financial", "operational"
-  subcategory       String?          @db.VarChar(50) // "attendance", "grades", "fees", "enrollment"
-  metadata          Json?            // Additional data as JSON
-  createdAt         DateTime         @default(now()) @map("created_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-
-  @@map("performance_metrics")
-}
-
-model AttendanceSummary {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  subjectId         Int              @map("subject_id")
-  semesterId        Int              @map("semester_id")
-  totalClasses      Int              @map("total_classes")
-  attendedClasses   Int              @map("attended_classes")
-  absentClasses     Int              @map("absent_classes")
-  lateClasses       Int              @map("late_classes")
-  excusedAbsences   Int              @map("excused_absences")
-  attendancePercentage Decimal       @map("attendance_percentage") @db.Decimal(5, 2)
-  periodStart       DateTime         @map("period_start")
-  periodEnd         DateTime         @map("period_end")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject           Subject          @relation(fields: [subjectId], references: [id])
-  semester          Semester         @relation(fields: [semesterId], references: [id])
-
-  @@unique([studentId, subjectId, semesterId, periodStart], name: "unique_attendance_summary")
-  @@map("attendance_summary")
-}
-
 model CareerGuidance {
   id                Int              @id @default(autoincrement())
   studentId         Int              @map("student_id")
@@ -2010,15 +1890,6 @@ enum ProgressStatus {
   NEEDS_IMPROVEMENT
   AT_RISK
   FAILING
-}
-
-enum MetricType {
-  COUNT
-  PERCENTAGE
-  AVERAGE
-  SUM
-  RATIO
-  TREND
 }
 
 enum AlertSeverity {
