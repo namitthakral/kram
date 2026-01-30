@@ -53,17 +53,14 @@ async function main() {
     `✅ Created ${classSections.length} class sections and enrollments`
   )
 
-  // Create notices and announcements
-  console.log('Creating notices and announcements...')
-  const notices = await createNotices(
+  // Create communications (unified notices and announcements)
+  console.log('Creating communications...')
+  const communications = await createCommunications(
     institution.id,
     superAdmin.id,
     librarian.id
   )
-  const announcements = await createAnnouncements(institution.id, superAdmin.id)
-  console.log(
-    `✅ Created ${notices.length} notices and ${announcements.length} announcements`
-  )
+  console.log(`✅ Created ${communications.length} communications`)
 
   // Create library data
   console.log('Creating library data...')
@@ -101,14 +98,6 @@ async function main() {
   console.log(
     `✅ Created ${timeSlots.length} time slots, ${rooms.length} rooms, ${timetables.length} timetable entries`
   )
-
-  // Create dashboard stats
-  console.log('Creating dashboard stats...')
-  const dashboardStats = await createDashboardStats(
-    institution.id,
-    students.length
-  )
-  console.log(`✅ Created ${dashboardStats.length} dashboard statistics`)
 
   // Create teacher dashboard test data
   console.log('Creating teacher dashboard test data...')
@@ -843,13 +832,13 @@ async function createEnrollments(
   }
 }
 
-async function createNotices(
+async function createCommunications(
   institutionId: number,
   adminId: number,
   librarianId: number
 ) {
   return await Promise.all([
-    prisma.notice.upsert({
+    prisma.communication.upsert({
       where: { id: 1 },
       update: {},
       create: {
@@ -857,16 +846,17 @@ async function createNotices(
         title: 'Welcome to Fall 2024 Semester',
         content:
           'Welcome all students to the Fall 2024 semester. Classes begin on August 15th.',
-        noticeType: 'GENERAL',
+        communicationType: 'GENERAL',
         priority: 'HIGH',
         targetAudience: ['student', 'teacher', 'parent'],
         publishDate: new Date('2024-08-01'),
         isActive: true,
         isPinned: true,
+        isEmergency: false,
         createdBy: adminId,
       },
     }),
-    prisma.notice.upsert({
+    prisma.communication.upsert({
       where: { id: 2 },
       update: {},
       create: {
@@ -874,33 +864,67 @@ async function createNotices(
         title: 'Library Hours Update',
         content:
           'The library will be open from 8 AM to 10 PM during the semester.',
-        noticeType: 'GENERAL',
+        communicationType: 'GENERAL',
         priority: 'MEDIUM',
         targetAudience: ['student', 'teacher'],
         publishDate: new Date('2024-08-05'),
         isActive: true,
         isPinned: false,
+        isEmergency: false,
         createdBy: librarianId,
       },
     }),
-  ])
-}
-
-async function createAnnouncements(institutionId: number, adminId: number) {
-  return await Promise.all([
-    prisma.announcement.upsert({
-      where: { id: 1 },
+    prisma.communication.upsert({
+      where: { id: 3 },
       update: {},
       create: {
         institutionId,
         title: 'New Computer Lab Opening',
         content:
           'We are excited to announce the opening of our new state-of-the-art computer lab.',
-        announcementType: 'GENERAL',
+        communicationType: 'ACHIEVEMENT',
         priority: 'HIGH',
         targetAudience: ['student', 'teacher'],
         isEmergency: false,
+        isPinned: true,
         publishDate: new Date('2024-08-10'),
+        isActive: true,
+        createdBy: adminId,
+      },
+    }),
+    prisma.communication.upsert({
+      where: { id: 4 },
+      update: {},
+      create: {
+        institutionId,
+        title: 'Emergency: Campus Closure Due to Weather',
+        content:
+          'Due to severe weather conditions, the campus will be closed tomorrow. All classes are cancelled.',
+        communicationType: 'EMERGENCY',
+        priority: 'URGENT',
+        targetAudience: ['student', 'teacher', 'parent', 'staff'],
+        isEmergency: true,
+        isPinned: true,
+        publishDate: new Date('2024-09-01'),
+        isActive: true,
+        createdBy: adminId,
+      },
+    }),
+    prisma.communication.upsert({
+      where: { id: 5 },
+      update: {},
+      create: {
+        institutionId,
+        title: 'Mid-Semester Examination Schedule',
+        content:
+          'The mid-semester examinations will be held from October 15-20. Please check your individual timetables.',
+        communicationType: 'EXAMINATION',
+        priority: 'HIGH',
+        targetAudience: ['student', 'parent'],
+        isPinned: true,
+        isEmergency: false,
+        publishDate: new Date('2024-09-15'),
+        expiryDate: new Date('2024-10-20'),
         isActive: true,
         createdBy: adminId,
       },
@@ -1218,43 +1242,6 @@ async function createTimetableData(
   return { timeSlots, rooms, timetables }
 }
 
-async function createDashboardStats(
-  institutionId: number,
-  studentCount: number
-) {
-  return await Promise.all([
-    prisma.dashboardStats.upsert({
-      where: { id: 1 },
-      update: {},
-      create: {
-        institutionId,
-        statType: 'attendance',
-        statName: 'Overall Attendance Rate',
-        statValue: 85.5,
-        statUnit: 'percentage',
-        period: 'monthly',
-        periodStart: new Date('2024-08-01'),
-        periodEnd: new Date('2024-08-31'),
-        metadata: { department: 'Computer Science', semester: 'Fall 2024' },
-      },
-    }),
-    prisma.dashboardStats.upsert({
-      where: { id: 2 },
-      update: {},
-      create: {
-        institutionId,
-        statType: 'enrollment',
-        statName: 'Total Students',
-        statValue: studentCount,
-        statUnit: 'count',
-        period: 'yearly',
-        periodStart: new Date('2024-08-01'),
-        periodEnd: new Date('2025-07-31'),
-      },
-    }),
-  ])
-}
-
 function printSummary(studentCount: number, parentCount: number) {
   console.log('\n📋 Sample Accounts Created:')
   console.log('Super Admin: admin@edverse.edu / admin123!')
@@ -1276,12 +1263,11 @@ function printSummary(studentCount: number, parentCount: number) {
   console.log(`- ${studentCount} students with ${parentCount} parents`)
   console.log('- 1 teacher + 2 staff members (including librarian)')
   console.log('- 2 class sections with enrollments')
-  console.log('- 2 notices + 1 announcement')
+  console.log('- 5 communications (unified notices & announcements)')
   console.log('- 2 books with library settings')
   console.log('- 2 fee structures with student fees')
   console.log('- 1 assignment + 1 examination')
   console.log('- 2 time slots + 2 rooms + 1 timetable entry')
-  console.log('- 2 dashboard statistics')
   console.log('- Teacher dashboard data (attendance, grades, performance)')
 }
 

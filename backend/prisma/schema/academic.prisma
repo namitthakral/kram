@@ -50,7 +50,6 @@ model Semester {
   academicRecords   AcademicRecord[]
   studentFees       StudentFee[]
   studentProgress   StudentProgress[]
-  attendanceSummary AttendanceSummary[]
   timeTables        TimeTable[]
 
   @@map("semesters")
@@ -120,7 +119,6 @@ model Subject {
   timetables      TimeTable[]
   teacherSubjects TeacherSubject[]
   studentProgress StudentProgress[]
-  attendanceSummary AttendanceSummary[]
 
   @@map("subjects")
 }

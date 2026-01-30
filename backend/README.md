@@ -8,14 +8,17 @@ A comprehensive NestJS-based backend API for educational institution management,
 - **🔐 Authentication & Authorization** - JWT-based auth with role-based access control (RBAC)
 - **👥 Multi-Institution Support** - Manage multiple schools/colleges from one platform
 - **🎓 Academic Management** - Complete student lifecycle from admission to graduation
-- **📚 Subject Management** - Handle courses (degree programs) and subjects (academic papers)
+- **📚 Course & Subject Management** - Handle courses (degree programs) and subjects (academic papers)
 - **📊 Attendance Tracking** - Real-time attendance with analytics and reports
 - **📝 Assessment System** - Assignments, examinations, and grading
 - **💰 Fee Management** - Fee structures, collections, payment tracking
-- **📖 Library System** - Book management, issue/return, reservations
-- **🗓️ Timetable Scheduling** - Automated timetable with conflict detection
-- **💬 Communication Hub** - Notices, announcements, messaging
-- **📈 Analytics Dashboard** - Comprehensive insights and reports
+- **📖 Library System** - Book cataloging, issue/return, reservations
+- **🗓️ Timetable Management** - Automated scheduling with conflict detection
+- **💬 Communications Hub** - Unified communications (notices, announcements, alerts) with read tracking
+- **🆔 EdVerse ID System** - Unique institution-wide ID generation
+- **📋 Question Paper Generator** - Automated question paper generation
+- **🚪 Gate Pass Management** - Digital gate pass requests and approvals
+- **📈 Analytics Dashboard** - Built-in analytics for students and teachers
 
 ### Technical Features
 - **Type Safety** - Full TypeScript implementation
@@ -107,37 +110,50 @@ This backend follows **NestJS's modular architecture** pattern with clear separa
 ```
 src/
 ├── auth/                   # Authentication & authorization
-│   ├── guards/            # Auth guards (JWT, Roles)
-│   ├── decorators/        # Custom decorators
-│   ├── strategies/        # Passport strategies
+│   ├── guards/            # Auth guards (JWT, Roles, Student, Teacher, Parent)
+│   ├── decorators/        # Custom decorators (CurrentUser, Public, Roles)
+│   ├── strategies/        # Passport strategies (JWT)
 │   └── dto/              # Auth DTOs
 │
 ├── users/                 # User management
-│   ├── users.controller.ts
-│   ├── users.service.ts
-│   ├── users.module.ts
+├── admin/                 # Administrative functions
+├── students/              # Student management
+│   ├── services/         # Progress updater service
+│   └── utils/            # Grading config & progress calculator
+│
+├── teachers/              # Teacher management
+│   └── dto/              # Assignment, Attendance, Exam DTOs
+│
+├── courses/               # Course & subject management
+│   ├── courses.controller.ts
+│   ├── subjects.controller.ts
+│   ├── class-sections.controller.ts
 │   └── dto/
 │
-├── students/              # Student management
-├── teachers/              # Teacher management
-├── courses/               # Subject management (academic papers)
-├── attendance/            # Attendance tracking
-├── assignments/           # Assignment system
-├── examinations/          # Examination system
-├── fees/                  # Fee management
-├── library/               # Library system
-├── timetable/             # Scheduling
-├── communication/         # Notices & messages
-├── analytics/             # Dashboard & reports
+├── institutions/          # Institution management
+├── communications/        # Unified communications (notices, announcements, alerts)
+│   ├── communications.controller.ts
+│   ├── communications.service.ts
+│   └── dto/              # Create, Update, Query DTOs
 │
-├── prisma/                # Database
+├── timetable/             # Scheduling & timetable management
+├── question-paper/        # Question paper generation
+├── id-generation/         # EdVerse ID generation system
+│   ├── id-generation.service.ts
+│   ├── sequence.service.ts
+│   └── id-config-cache.service.ts
+│
+├── prisma/                # Database access layer
 │   ├── prisma.module.ts
 │   └── prisma.service.ts
 │
 ├── common/                # Shared resources
-│   ├── filters/           # Exception filters
-│   ├── interceptors/      # Response interceptors
-│   └── pipes/            # Validation pipes
+│   ├── dto/              # Common DTOs
+│   └── types/            # TypeScript type definitions
+│
+├── utils/                 # Utility functions
+│   ├── edverse-id.util.ts
+│   └── id-template.util.ts
 │
 └── main.ts                # Application entry point
 ```
@@ -247,15 +263,50 @@ This system uses terminology familiar to Indian educational institutions:
 - `assignments` - Course assignments
 - `submissions` - Student assignment submissions
 
-#### **Administration**
+#### **Communications**
+- `communications` - Unified communications (notices, announcements, alerts)
+- `communication_read_receipts` - Read tracking for communications
+- `messages` - Direct messages between users
+- `message_groups` - Group messaging
+- `group_members` - Group membership
+
+#### **Fee & Payments**
 - `fee_structures` - Fee definitions by course
 - `student_fees` - Individual student fee records
 - `payments` - Fee payment transactions
+
+#### **Library Management**
 - `books` - Library book catalog
+- `book_categories` - Book categorization
 - `book_issues` - Book issue/return records
+- `book_reservations` - Book reservation requests
+- `library_settings` - Library configuration
+
+#### **Staff Management**
+- `staff_attendance` - Staff attendance records
+- `staff_leave` - Leave requests and approvals
+- `staff_assignments` - Staff duty assignments
+
+#### **Gate Pass System**
+- `gate_passes` - Student gate pass requests
+- `gate_pass_settings` - Gate pass configuration
+- `visitor_passes` - Visitor entry passes
+
+#### **Timetable & Scheduling**
 - `timetables` - Class schedules
-- `notices` - Important notices
-- `announcements` - General announcements
+- `time_slots` - Time slot definitions
+- `rooms` - Room/classroom management
+- `teacher_subjects` - Teacher-subject assignments
+- `teacher_substitutions` - Substitute teacher tracking
+- `class_teachers` - Class teacher assignments
+
+#### **Advanced Features**
+- `student_progress` - Comprehensive student progress tracking
+- `career_guidance` - Career counseling records
+- `applications` - Student application forms
+- `system_alerts` - System-wide alerts and notifications
+- `institution_grading_config` - Institution-specific grading rules
+- `institution_id_config` - EdVerse ID generation configuration
 
 ## 🔌 API Endpoints
 
@@ -327,26 +378,133 @@ PATCH  /api/attendance/:id         Update attendance
 GET    /api/attendance/summary     Attendance summary
 ```
 
-### Assignments
+### Courses & Subjects
 
 ```
-GET    /api/assignments            List assignments
-GET    /api/assignments/:id        Get assignment details
-POST   /api/assignments            Create assignment (Teacher)
-PATCH  /api/assignments/:id        Update assignment
-DELETE /api/assignments/:id        Delete assignment
-POST   /api/assignments/:id/submit Submit assignment (Student)
+GET    /api/courses                List all courses
+GET    /api/courses/with-sections  List courses with sections
+GET    /api/courses/:id            Get course details
+GET    /api/courses/:id/sections   Get sections for a course
+
+GET    /api/subjects               List all subjects
+GET    /api/subjects/:id           Get subject details
+GET    /api/subjects/course/:id    Get subjects for a course
+POST   /api/subjects               Create subject (Admin)
+PATCH  /api/subjects/:id           Update subject (Admin)
+DELETE /api/subjects/:id           Delete subject (Admin)
+GET    /api/subjects/stats/overview    Subject statistics
+
+GET    /api/class-sections         List all class sections
+GET    /api/class-sections/:id/students     Get section students
+GET    /api/class-sections/:id/attendance   Get section attendance
 ```
 
-### Examinations
+### Communications (Unified Notices, Announcements & Alerts)
 
 ```
-GET    /api/examinations           List exams
-GET    /api/examinations/:id       Get exam details
-POST   /api/examinations           Create exam (Admin/Teacher)
-PATCH  /api/examinations/:id       Update exam
-DELETE /api/examinations/:id       Delete exam
-POST   /api/examinations/:id/results    Post exam results
+POST   /api/communications                Create communication
+GET    /api/communications                List all (with filtering)
+GET    /api/communications/unread         Get unread communications
+GET    /api/communications/:id            Get communication details
+PUT    /api/communications/:id            Update communication
+DELETE /api/communications/:id            Delete communication
+POST   /api/communications/:id/read       Mark as read
+GET    /api/communications/:id/stats      Get read statistics
+```
+
+**Query Parameters for GET /api/communications:**
+- `type` - Filter by type (NOTICE, ANNOUNCEMENT, ALERT, etc.)
+- `priority` - Filter by priority (LOW, MEDIUM, HIGH, URGENT)
+- `targetAudience` - Filter by role (student, teacher, parent, etc.)
+- `isEmergency` - Filter emergency communications
+- `isPinned` - Filter pinned communications
+- `isActive` - Filter active/inactive
+- `institutionId` - Filter by institution
+- `search` - Search in title and content
+- `startDate` / `endDate` - Filter by date range
+- `page` / `limit` - Pagination
+
+### Institutions
+
+```
+GET    /api/institutions           List institutions (Admin)
+GET    /api/institutions/:id       Get institution details
+POST   /api/institutions           Create institution (Super Admin)
+PATCH  /api/institutions/:id       Update institution (Admin)
+DELETE /api/institutions/:id       Delete institution (Super Admin)
+```
+
+### Timetable
+
+```
+GET    /api/timetable              List timetables
+GET    /api/timetable/:id          Get timetable details
+POST   /api/timetable              Create timetable (Admin)
+PATCH  /api/timetable/:id          Update timetable
+DELETE /api/timetable/:id          Delete timetable
+```
+
+### Question Papers
+
+```
+GET    /api/question-paper         List question papers
+GET    /api/question-paper/:id     Get question paper details
+POST   /api/question-paper         Generate question paper (Teacher)
+PATCH  /api/question-paper/:id     Update question paper
+DELETE /api/question-paper/:id     Delete question paper
+```
+
+### Assignments & Examinations (via Teachers Module)
+
+**Assignments:**
+```
+POST   /api/teachers/:uuid/assignments              Create assignment
+GET    /api/teachers/:uuid/assignments              List assignments
+GET    /api/teachers/:uuid/assignments/:id          Get assignment details
+PATCH  /api/teachers/:uuid/assignments/:id          Update assignment
+DELETE /api/teachers/:uuid/assignments/:id          Delete assignment
+GET    /api/teachers/:uuid/submissions/pending      Get pending submissions
+```
+
+**Examinations:**
+```
+POST   /api/teachers/:uuid/examinations             Create examination
+GET    /api/teachers/:uuid/examinations             List examinations
+GET    /api/teachers/:uuid/examinations/:id         Get examination details
+PATCH  /api/teachers/:uuid/examinations/:id         Update examination
+DELETE /api/teachers/:uuid/examinations/:id         Delete examination
+POST   /api/teachers/:uuid/examinations/:id/results      Post result
+POST   /api/teachers/:uuid/examinations/:id/results/bulk Post bulk results
+GET    /api/teachers/:uuid/examinations/:id/results      Get all results
+PATCH  /api/teachers/:uuid/examinations/:id/results/:id  Update result
+DELETE /api/teachers/:uuid/examinations/:id/results/:id  Delete result
+```
+
+**Attendance:**
+```
+POST   /api/teachers/:uuid/attendance               Mark attendance
+POST   /api/teachers/:uuid/attendance/bulk          Mark bulk attendance
+PATCH  /api/teachers/:uuid/attendance/:id           Update attendance
+DELETE /api/teachers/:uuid/attendance/:id           Delete attendance
+GET    /api/teachers/:uuid/attendance-summary       Get attendance summary
+GET    /api/teachers/:uuid/attendance-trends        Get attendance trends
+```
+
+**Analytics & Reports:**
+```
+GET    /api/teachers/:uuid/dashboard-stats          Teacher dashboard stats
+GET    /api/teachers/:uuid/subject-performance      Subject performance
+GET    /api/teachers/:uuid/grade-distribution       Grade distribution
+GET    /api/teachers/:uuid/recent-activity          Recent activity
+GET    /api/teachers/:uuid/students/at-risk         At-risk students
+POST   /api/teachers/:uuid/report-cards/generate    Generate report cards
+```
+
+### Admin Functions
+
+```
+GET    /api/admin/grading-config           Get grading configuration
+POST   /api/admin/grading-config           Update grading configuration
 ```
 
 ### Health Check
@@ -355,6 +513,27 @@ POST   /api/examinations/:id/results    Post exam results
 GET    /health                     Server health status
 GET    /api                        API information
 ```
+
+## 📦 Available Modules
+
+The backend is organized into the following feature modules:
+
+| Module | Description | Controllers |
+|--------|-------------|-------------|
+| `AuthModule` | Authentication & authorization | `auth.controller.ts` |
+| `UsersModule` | User management | `users.controller.ts` |
+| `AdminModule` | Administrative functions | `admin.controller.ts` |
+| `StudentsModule` | Student management & analytics | `students.controller.ts` |
+| `TeachersModule` | Teacher management, assignments, exams | `teachers.controller.ts` |
+| `CoursesModule` | Courses, subjects, class sections | `courses.controller.ts`, `subjects.controller.ts`, `class-sections.controller.ts` |
+| `InstitutionsModule` | Institution management | `institutions.controller.ts` |
+| `CommunicationsModule` | Unified communications system | `communications.controller.ts` |
+| `TimetableModule` | Timetable & scheduling | `timetable.controller.ts` |
+| `QuestionPaperModule` | Question paper generation | `question-paper.controller.ts` |
+| `IdGenerationModule` | EdVerse ID generation | (Service only) |
+| `PrismaModule` | Database access layer | (Service only) |
+
+**Note:** Some features mentioned in older documentation (like separate `assignments`, `examinations`, `attendance`, `fees`, `library`, `analytics` modules) are **integrated into the main modules** (Students, Teachers) rather than being separate modules. The database schema supports these features, but they are accessed through the Students and Teachers controllers.
 
 ## 🔐 Authentication & Authorization
 
@@ -452,6 +631,7 @@ Staff:        staff@edverse.edu      / staff123!
 ### Sample Data Includes
 
 - 1 Institution (Ed-verse University)
+- 7 Roles (Super Admin, Admin, Teacher, Student, Parent, Librarian, Staff)
 - 1 Course (B.Sc. Computer Science)
 - 3 Subjects (Programming, Data Structures, Web Development)
 - 5 Students with enrollments
@@ -459,26 +639,33 @@ Staff:        staff@edverse.edu      / staff123!
 - 2 Class sections
 - Sample attendance records
 - Sample assignments and exams
-- Fee structures
-- Library books
-- Notices and announcements
+- Fee structures and payments
+- Library books and categories
+- Communications (notices, announcements, alerts)
+- Timetable entries
+- Academic records
 
-## 🗄️ Database Commands
+## 🗄️ Database Management
+
+### Database Commands
 
 ```bash
 # Build combined schema from modular files
 npm run build:schema
 
-# Generate Prisma client
+# Generate Prisma client (after schema changes)
 npm run db:generate
 
-# Push schema to database (no migrations)
+# Push schema to database (development only)
 npm run db:push
 
 # Create a new migration
 npm run db:migrate
 
-# Reset database (WARNING: Deletes all data!)
+# Apply pending migrations
+npx prisma migrate deploy
+
+# Reset database (WARNING: Deletes all data and re-seeds!)
 npm run db:reset
 
 # Open Prisma Studio (Database GUI)
@@ -487,6 +674,46 @@ npm run db:studio
 # Seed database with sample data
 npm run db:seed
 ```
+
+### Database Schema Organization
+
+The Prisma schema is organized into modular files under `/prisma/schema/` for better maintainability:
+
+- `core.prisma` - User, Role, Institution
+- `academic.prisma` - Academic years, semesters, courses, subjects
+- `users.prisma` - Student, Teacher, Parent, Staff profiles
+- `academics-operations.prisma` - Attendance, enrollments, academic records
+- `assessment.prisma` - Assignments, examinations, submissions
+- `communication.prisma` - Communications, messages, groups
+- `fee.prisma` - Fee structures and payments
+- `library.prisma` - Library books and management
+- `timetable.prisma` - Timetable and scheduling
+- `gate-pass.prisma` - Gate pass and visitor management
+- `enums.prisma` - All enum definitions
+
+After modifying any schema file, run:
+```bash
+npm run build:schema  # Combines all files into schema.prisma
+npm run db:generate   # Regenerates Prisma Client
+```
+
+### Recent Database Changes
+
+**Phase 1 - Removed Redundant Analytics Tables (January 2026)**
+- ❌ Removed `dashboard_stats` - Computed on-the-fly
+- ❌ Removed `attendance_summary` - Computed on-the-fly
+- ❌ Removed `performance_metrics` - Computed on-the-fly
+
+**Phase 2 - Unified Communications (January 2026)**
+- ❌ Removed separate `notices` and `announcements` tables
+- ✅ Added unified `communications` table with type field
+- ✅ Added `communication_read_receipts` for read tracking
+- ✅ Supports types: NOTICE, ANNOUNCEMENT, ALERT, UPDATE, REMINDER, EVENT
+- ✅ Priority levels: LOW, MEDIUM, HIGH, URGENT
+- ✅ Target audience filtering by role
+- ✅ Emergency flag for critical communications
+- ✅ Pin/unpin functionality
+- ✅ Publish date and expiry date support
 
 ## 🧪 Testing
 
@@ -614,15 +841,19 @@ All API responses follow a consistent format:
 
 ## 🛡️ Security Features
 
-- **JWT Authentication** - Secure token-based auth
-- **Password Hashing** - bcrypt with 12 rounds
-- **Rate Limiting** - Prevent brute force attacks
+- **JWT Authentication** - Secure token-based auth with refresh tokens
+- **Password Hashing** - bcrypt with configurable rounds
+- **Rate Limiting** - ThrottlerModule prevents brute force attacks (100 req/min)
 - **CORS Configuration** - Controlled cross-origin access
-- **Helmet Middleware** - Security headers
-- **Input Validation** - class-validator on all inputs
+- **Helmet Middleware** - Security headers for HTTP responses
+- **Input Validation** - class-validator on all DTOs
 - **SQL Injection Protection** - Prisma parameterized queries
 - **XSS Protection** - Sanitized outputs
-- **Role-Based Access** - Granular permissions
+- **Role-Based Access Control (RBAC)** - Granular permissions via guards
+- **Account Security** - Login attempts tracking, account locking
+- **Two-Factor Auth Support** - 2FA fields in user model
+- **Email/Phone Verification** - Verification status tracking
+- **Temporary Password Flow** - Force password change on first login
 
 ## 🐛 Troubleshooting
 
@@ -683,12 +914,65 @@ JWT_SECRET="your-secret-key-here-make-it-long-and-random"
 
 This project is licensed under the MIT License.
 
+## 📊 API Statistics
+
+- **Total Endpoints:** 50+ RESTful endpoints
+- **Modules:** 12 feature modules
+- **Controllers:** 13 controllers
+- **Database Tables:** 50+ with full relationships
+- **Authentication:** JWT with role-based access control
+- **Validation:** 100% DTOs validated with class-validator
+
+## 🎯 Best Practices Implemented
+
+- ✅ **Modular Architecture** - Clear separation of concerns with NestJS modules
+- ✅ **Type Safety** - Full TypeScript implementation with Prisma Client
+- ✅ **Error Handling** - Global exception filters and custom exceptions
+- ✅ **Input Validation** - DTOs with class-validator decorators
+- ✅ **Security First** - JWT, rate limiting, CORS, Helmet
+- ✅ **Clean Code** - Consistent naming conventions and structure
+- ✅ **Database Migrations** - Version-controlled schema changes
+- ✅ **Seed Data** - Comprehensive sample data for testing
+- ✅ **Documentation** - Inline comments and README files
+
+## 🔄 Recent Changes (January 2026)
+
+### Phase 1: Database Optimization
+- Removed `dashboard_stats`, `attendance_summary`, `performance_metrics`
+- These are now computed on-demand for better data accuracy
+- Reduced database complexity and maintenance overhead
+
+### Phase 2: Communications Unification
+- Merged `notices` and `announcements` into unified `communications` table
+- Added comprehensive filtering and querying capabilities
+- Implemented read tracking with `communication_read_receipts`
+- Support for multiple communication types: NOTICE, ANNOUNCEMENT, ALERT, UPDATE, REMINDER, EVENT
+- Priority levels: LOW, MEDIUM, HIGH, URGENT
+- Target audience filtering by role
+- Emergency flag for critical communications
+- Publish and expiry date support
+
+### New API Additions
+- ✅ Communications API (8 endpoints)
+- ✅ Question Paper Generation API
+- ✅ EdVerse ID Generation System
+- ✅ Enhanced Student Progress Tracking
+- ✅ Staff Management APIs
+
 ## 🆘 Support
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/namitthakral/ed-verse/issues)
-- **Documentation**: Check the `/docs` folder
+- **Documentation**: Check this README and inline code documentation
 - **Email**: support@edverse.edu
+
+## 🎓 Learn More
+
+- **NestJS Documentation**: https://docs.nestjs.com/
+- **Prisma Documentation**: https://www.prisma.io/docs/
+- **TypeScript Handbook**: https://www.typescriptlang.org/docs/
 
 ---
 
 **Built with ❤️ for educational institutions worldwide**
+
+*Empowering schools, colleges, and universities with modern, scalable technology.*

@@ -32,75 +32,6 @@ model StudentProgress {
   @@map("student_progress")
 }
 
-model DashboardStats {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  userId            Int?             @map("user_id") // For user-specific stats
-  statType          String           @map("stat_type") @db.VarChar(50) // "attendance", "performance", "fees", etc.
-  statName          String           @map("stat_name") @db.VarChar(100)
-  statValue         Decimal          @map("stat_value") @db.Decimal(15, 2)
-  statUnit          String?          @map("stat_unit") @db.VarChar(20) // "percentage", "count", "amount"
-  period            String?          @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
-  periodStart       DateTime?        @map("period_start")
-  periodEnd         DateTime?        @map("period_end")
-  metadata          Json?            // Additional data as JSON
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-  user              User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("dashboard_stats")
-}
-
-model PerformanceMetrics {
-  id                Int              @id @default(autoincrement())
-  institutionId     Int              @map("institution_id")
-  metricType        MetricType       @map("metric_type")
-  metricName        String           @map("metric_name") @db.VarChar(100)
-  value             Decimal          @db.Decimal(15, 4)
-  targetValue       Decimal?         @map("target_value") @db.Decimal(15, 4)
-  unit              String?          @db.VarChar(20)
-  period            String           @db.VarChar(20) // "daily", "weekly", "monthly", "yearly"
-  periodStart       DateTime         @map("period_start")
-  periodEnd         DateTime         @map("period_end")
-  category          String?          @db.VarChar(50) // "academic", "financial", "operational"
-  subcategory       String?          @db.VarChar(50) // "attendance", "grades", "fees", "enrollment"
-  metadata          Json?            // Additional data as JSON
-  createdAt         DateTime         @default(now()) @map("created_at")
-
-  // Relations
-  institution       Institution      @relation(fields: [institutionId], references: [id])
-
-  @@map("performance_metrics")
-}
-
-model AttendanceSummary {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  subjectId         Int              @map("subject_id")
-  semesterId        Int              @map("semester_id")
-  totalClasses      Int              @map("total_classes")
-  attendedClasses   Int              @map("attended_classes")
-  absentClasses     Int              @map("absent_classes")
-  lateClasses       Int              @map("late_classes")
-  excusedAbsences   Int              @map("excused_absences")
-  attendancePercentage Decimal       @map("attendance_percentage") @db.Decimal(5, 2)
-  periodStart       DateTime         @map("period_start")
-  periodEnd         DateTime         @map("period_end")
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject           Subject          @relation(fields: [subjectId], references: [id])
-  semester          Semester         @relation(fields: [semesterId], references: [id])
-
-  @@unique([studentId, subjectId, semesterId, periodStart], name: "unique_attendance_summary")
-  @@map("attendance_summary")
-}
-
 model CareerGuidance {
   id                Int              @id @default(autoincrement())
   studentId         Int              @map("student_id")
@@ -184,15 +115,6 @@ enum ProgressStatus {
   NEEDS_IMPROVEMENT
   AT_RISK
   FAILING
-}
-
-enum MetricType {
-  COUNT
-  PERCENTAGE
-  AVERAGE
-  SUM
-  RATIO
-  TREND
 }
 
 enum AlertSeverity {

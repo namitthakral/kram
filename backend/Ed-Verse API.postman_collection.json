@@ -4312,6 +4312,304 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Communications",
+      "description": "Unified communications system for notices, announcements, and alerts with read tracking",
+      "item": [
+        {
+          "name": "Create Communication",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Important: Semester End Examination Schedule\",\n  \"content\": \"The semester end examinations will commence from March 15th, 2026. Please refer to the detailed timetable on the notice board.\",\n  \"communicationType\": \"NOTICE\",\n  \"priority\": \"HIGH\",\n  \"targetAudience\": [\"student\", \"teacher\"],\n  \"isEmergency\": false,\n  \"isPinned\": true,\n  \"institutionId\": 1,\n  \"publishDate\": \"2026-03-01T00:00:00.000Z\",\n  \"expiryDate\": \"2026-03-31T23:59:59.999Z\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/communications",
+              "host": ["{{api_url}}"],
+              "path": ["communications"]
+            },
+            "description": "Create a new communication (notice, announcement, or alert)"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Important: Semester End Examination Schedule\",\n  \"content\": \"The semester end examinations will commence from March 15th, 2026.\",\n  \"communicationType\": \"NOTICE\",\n  \"priority\": \"HIGH\",\n  \"targetAudience\": [\"student\", \"teacher\"],\n  \"isEmergency\": false,\n  \"isPinned\": true,\n  \"institutionId\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/communications",
+                  "host": ["{{api_url}}"],
+                  "path": ["communications"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"title\": \"Important: Semester End Examination Schedule\",\n  \"content\": \"The semester end examinations will commence from March 15th, 2026.\",\n  \"communicationType\": \"NOTICE\",\n  \"priority\": \"HIGH\",\n  \"targetAudience\": [\"student\", \"teacher\"],\n  \"isEmergency\": false,\n  \"isPinned\": true,\n  \"institutionId\": 1,\n  \"publishDate\": \"2026-03-01T00:00:00.000Z\",\n  \"expiryDate\": \"2026-03-31T23:59:59.999Z\",\n  \"isActive\": true,\n  \"createdBy\": 2,\n  \"createdAt\": \"2026-01-29T10:00:00.000Z\",\n  \"updatedAt\": \"2026-01-29T10:00:00.000Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Communications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications?institutionId=1&isActive=true&page=1&limit=10",
+              "host": ["{{api_url}}"],
+              "path": ["communications"],
+              "query": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Filter by institution ID"
+                },
+                {
+                  "key": "type",
+                  "value": "NOTICE",
+                  "description": "Filter by type (NOTICE, ANNOUNCEMENT, ALERT, UPDATE, REMINDER, EVENT)",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH",
+                  "description": "Filter by priority (LOW, MEDIUM, HIGH, URGENT)",
+                  "disabled": true
+                },
+                {
+                  "key": "targetAudience",
+                  "value": "student",
+                  "description": "Filter by target audience role",
+                  "disabled": true
+                },
+                {
+                  "key": "isEmergency",
+                  "value": "true",
+                  "description": "Filter emergency communications",
+                  "disabled": true
+                },
+                {
+                  "key": "isPinned",
+                  "value": "true",
+                  "description": "Filter pinned communications",
+                  "disabled": true
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "description": "Filter active/inactive communications"
+                },
+                {
+                  "key": "search",
+                  "value": "exam",
+                  "description": "Search in title and content",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01",
+                  "description": "Filter by publish date (from)",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-12-31",
+                  "description": "Filter by publish date (to)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                }
+              ]
+            },
+            "description": "Get all communications with advanced filtering and pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Communications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/unread?institutionId=1",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "unread"],
+              "query": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Optional: Filter by institution (uses user's institution if not provided)"
+                }
+              ]
+            },
+            "description": "Get all unread communications for the current authenticated user"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/communications/unread",
+                  "host": ["{{api_url}}"],
+                  "path": ["communications", "unread"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"count\": 5,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"title\": \"Important: Semester End Examination Schedule\",\n      \"content\": \"The semester end examinations will commence from March 15th, 2026.\",\n      \"communicationType\": \"NOTICE\",\n      \"priority\": \"HIGH\",\n      \"isPinned\": true,\n      \"isEmergency\": false,\n      \"publishDate\": \"2026-03-01T00:00:00.000Z\",\n      \"createdAt\": \"2026-01-29T10:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Communication by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/1",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "1"]
+            },
+            "description": "Get a single communication by ID with full details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Communication",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated: Semester End Examination Schedule\",\n  \"isPinned\": false,\n  \"expiryDate\": \"2026-04-15T23:59:59.999Z\"\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/communications/1",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "1"]
+            },
+            "description": "Update a communication (only creator can update)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Communication",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/1",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "1"]
+            },
+            "description": "Delete a communication (only creator can delete)"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Communication as Read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/1/read",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "1", "read"]
+            },
+            "description": "Mark a communication as read for the current user"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/communications/1/read",
+                  "host": ["{{api_url}}"],
+                  "path": ["communications", "1", "read"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Marked as read\",\n  \"readReceipt\": {\n    \"id\": 1,\n    \"communicationId\": 1,\n    \"userId\": 5,\n    \"readAt\": \"2026-01-29T15:30:00.000Z\",\n    \"communication\": {\n      \"id\": 1,\n      \"title\": \"Important: Semester End Examination Schedule\"\n    },\n    \"user\": {\n      \"id\": 5,\n      \"name\": \"John Doe\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Read Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/1/stats",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "1", "stats"]
+            },
+            "description": "Get read statistics for a communication (who has read it)"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/communications/1/stats",
+                  "host": ["{{api_url}}"],
+                  "path": ["communications", "1", "stats"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"communicationId\": 1,\n  \"title\": \"Important: Semester End Examination Schedule\",\n  \"totalReads\": 45,\n  \"readBy\": [\n    {\n      \"id\": 1,\n      \"userId\": 5,\n      \"readAt\": \"2026-01-29T15:30:00.000Z\",\n      \"user\": {\n        \"id\": 5,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\"\n      }\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
     }
   ],
   "auth": {
