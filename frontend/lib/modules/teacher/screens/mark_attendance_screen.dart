@@ -89,7 +89,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
         _availableClasses = classList;
         _isLoadingClasses = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       print('Error loading class sections: $e');
       setState(() {
         _availableClasses = [];
@@ -511,16 +511,14 @@ class _CompactClassCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          isLoading
-              ? const SizedBox(
+          if (isLoading) const SizedBox(
                 height: 20,
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: CustomAppColors.primaryBlue,
                 ),
-              )
-              : Text(
+              ) else Text(
                 selectedClass?.name ?? 'Select',
                 style: TextStyle(
                   fontSize: AppTheme.fontSizeLg,

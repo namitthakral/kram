@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -13,7 +15,7 @@ import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../providers/examination_provider.dart';
-import 'examination_form_screen.dart';
+
 
 /// Screen to display and manage all examinations for a teacher
 class ExaminationsListScreen extends StatefulWidget {
@@ -342,19 +344,13 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
   }
 
   void _navigateToCreate() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ExaminationFormScreen()),
-    ).then((_) => _loadData());
+    context.pushNamed('create_exam').then((_) => _loadData());
   }
 
   void _navigateToEdit(int examId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExaminationFormScreen(examinationId: examId),
-      ),
-    ).then((_) => _loadData());
+    context
+        .pushNamed('edit_exam', pathParameters: {'id': examId.toString()})
+        .then((_) => _loadData());
   }
 
   Future<void> _confirmDelete(int examId) async {

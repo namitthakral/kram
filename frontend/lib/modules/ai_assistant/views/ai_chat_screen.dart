@@ -8,8 +8,8 @@ import '../services/ai_service.dart';
 import '../widgets/ai_quick_actions.dart';
 
 class AiChatScreen extends StatefulWidget {
-  final bool isFullScreen;
   const AiChatScreen({super.key, this.isFullScreen = false});
+  final bool isFullScreen;
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
@@ -57,7 +57,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
         });
         _scrollToBottom();
       }
-    } catch (e) {
+    } on Exception catch (_) {
       if (mounted) {
         setState(() {
           _messages.add(
@@ -218,10 +218,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
         ),
         // Quick Actions
         if (!_isLoading)
-          AiQuickActions(
-            role: userRole,
-            onActionSelected: (action) => _handleSubmitted(action),
-          ),
+          AiQuickActions(role: userRole, onActionSelected: _handleSubmitted),
         // Loading Indicator
         if (_isLoading) _buildLoadingIndicator(),
 

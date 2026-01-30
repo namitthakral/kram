@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../utils/custom_colors.dart';
+import '../../utils/responsive_utils.dart';
 
-import '../../../utils/custom_colors.dart';
-import '../../../utils/responsive_utils.dart';
-
-class StatCard extends StatelessWidget {
-  const StatCard({
+/// A reusable statistics card for dashboards
+class DashboardStatCard extends StatelessWidget {
+  const DashboardStatCard({
     required this.title,
     required this.value,
     required this.subtitle,
@@ -13,6 +13,7 @@ class StatCard extends StatelessWidget {
     required this.icon,
     super.key,
   });
+
   final String title;
   final String value;
   final String subtitle;
@@ -25,7 +26,6 @@ class StatCard extends StatelessWidget {
     final isMobile = context.isMobile;
 
     return DecoratedBox(
-      // padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: backgroundColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
@@ -98,7 +98,6 @@ class StatCard extends StatelessWidget {
                     fontSize: isMobile ? 24 : 36,
                     fontWeight: FontWeight.bold,
                     color: backgroundColor,
-                    // color: const Color(0xFF1e293b),
                   ),
                 ),
                 Text(
@@ -111,6 +110,93 @@ class StatCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A widget to display system health metrics (e.g. for Super Admin)
+class SystemHealthWidget extends StatelessWidget {
+  const SystemHealthWidget({required this.healthPercentage, super.key});
+
+  final double healthPercentage;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        healthPercentage > 90
+            ? Colors.green
+            : healthPercentage > 70
+            ? Colors.orange
+            : Colors.red;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'System Health',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748b),
+                ),
+              ),
+              Icon(Icons.monitor_heart_outlined, color: color),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${healthPercentage.toStringAsFixed(1)}%',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'Operational',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748b),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: healthPercentage / 100,
+              backgroundColor: color.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 8,
             ),
           ),
         ],

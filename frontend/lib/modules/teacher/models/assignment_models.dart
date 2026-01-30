@@ -128,11 +128,7 @@ class UpdateAssignmentDto {
 
 // Subject model - represents academic subjects like Mathematics, History, etc.
 class Subject {
-  Subject({
-    required this.id,
-    required this.name,
-    required this.code,
-  });
+  Subject({required this.id, required this.name, required this.code});
 
   factory Subject.fromJson(Map<String, dynamic> json) => Subject(
     id: json['id'] as int,
@@ -157,6 +153,7 @@ class ClassSection {
   ClassSection({
     required this.id,
     required this.subjectId,
+    required this.courseId,
     required this.subjectName,
     required this.sectionName,
     required this.displayName,
@@ -170,15 +167,18 @@ class ClassSection {
     final subjectName = subject?['name'] as String? ?? 'Unknown Subject';
     final courseName = course?['name'] as String? ?? '';
     final subjectId = subject?['id'] as int? ?? 0;
+    final courseId = subject?['courseId'] as int? ?? 0;
 
     // Format: "B.Sc. CS - Mathematics (A)"
-    final displayName = courseName.isNotEmpty
-        ? '$courseName - $subjectName ($sectionName)'
-        : '$subjectName ($sectionName)';
+    final displayName =
+        courseName.isNotEmpty
+            ? '$courseName - $subjectName ($sectionName)'
+            : '$subjectName ($sectionName)';
 
     return ClassSection(
       id: json['id'] as int,
       subjectId: subjectId,
+      courseId: courseId,
       subjectName: subjectName,
       sectionName: sectionName,
       displayName: displayName,
@@ -187,6 +187,7 @@ class ClassSection {
 
   final int id;
   final int subjectId;
+  final int courseId;
   final String subjectName;
   final String sectionName;
   final String displayName;

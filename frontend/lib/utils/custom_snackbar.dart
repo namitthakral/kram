@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'extensions.dart';
 import 'global_constants.dart';
 
-enum SnackbarType { success, warning /* error, warning, info */ }
+enum SnackbarType { success, warning, error }
 
 void showCustomSnackbar({required String message, required SnackbarType type}) {
   Color backgroundColor;
@@ -16,11 +16,11 @@ void showCustomSnackbar({required String message, required SnackbarType type}) {
       textColor = const Color(0xFF00D261);
       icon = Icons.check_circle;
       break;
-    // case SnackbarType.error:
-    //   backgroundColor = Colors.red.shade100;
-    //   textColor = Colors.red.shade800;
-    //   icon = Icons.error;
-    //   break;
+    case SnackbarType.error:
+      backgroundColor = Colors.red.shade100;
+      textColor = Colors.red.shade800;
+      icon = Icons.error;
+      break;
     case SnackbarType.warning:
       backgroundColor = const Color(0xFFFFF8E9);
       textColor = const Color(0xFFE68C00);

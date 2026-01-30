@@ -13,8 +13,8 @@ import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../providers/assignment_provider.dart';
-import 'create_assignment_screen.dart';
 import 'assignment_form_screen.dart';
+import 'create_assignment_screen.dart';
 
 /// Screen to display and manage all assignments for a teacher
 class AssignmentsListScreen extends StatefulWidget {

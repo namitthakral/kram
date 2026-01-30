@@ -36,9 +36,7 @@ class _ManualQuestionTemplateWidgetState
       sections.add(
         QuestionSection(
           sectionName: 'Section A',
-          questions: [
-            Question(questionText: 'Question 1 here'),
-          ],
+          questions: [Question(questionText: 'Question 1 here')],
           marksPerQuestion: 1,
         ),
       );
@@ -55,121 +53,125 @@ class _ManualQuestionTemplateWidgetState
 
     showDialog<void>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: AlertDialog(
+      builder:
+          (context) => Dialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            insetPadding: EdgeInsets.zero,
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.blue500.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.add_box,
-                    color: AppTheme.blue500,
-                    size: 20,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                insetPadding: EdgeInsets.zero,
+                contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                title: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.blue500.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.add_box,
+                        color: AppTheme.blue500,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Add Section',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextField(
+                        controller: sectionNameController,
+                        label: 'Section Name',
+                        hintText: 'e.g., Section A - Multiple Choice',
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: descriptionController,
+                        label: 'Description (Optional)',
+                        hintText: 'e.g., Choose the correct answer',
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              controller: marksController,
+                              label: 'Marks per Question',
+                              hintText: '1',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomTextField(
+                              controller: questionsController,
+                              label: 'Number of Questions',
+                              hintText: '5',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Add Section',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: sectionNameController,
-                label: 'Section Name',
-                hintText: 'e.g., Section A - Multiple Choice',
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: descriptionController,
-                label: 'Description (Optional)',
-                hintText: 'e.g., Choose the correct answer',
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      controller: marksController,
-                      label: 'Marks per Question',
-                      hintText: '1',
-                      keyboardType: TextInputType.number,
-                    ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CustomTextField(
-                      controller: questionsController,
-                      label: 'Number of Questions',
-                      hintText: '5',
-                      keyboardType: TextInputType.number,
+                  ElevatedButton(
+                    onPressed: () {
+                      if (sectionNameController.text.isNotEmpty) {
+                        final numQuestions =
+                            int.tryParse(questionsController.text) ?? 1;
+                        setState(() {
+                          sections.add(
+                            QuestionSection(
+                              sectionName: sectionNameController.text,
+                              questions: List.generate(
+                                numQuestions,
+                                (index) => Question(
+                                  questionText: 'Question ${index + 1} here',
+                                ),
+                              ),
+                              marksPerQuestion:
+                                  int.tryParse(marksController.text) ?? 1,
+                              description:
+                                  descriptionController.text.isEmpty
+                                      ? null
+                                      : descriptionController.text,
+                            ),
+                          );
+                        });
+                        Navigator.pop(context);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.blue500,
+                      foregroundColor: Colors.white,
                     ),
+                    child: const Text('Add'),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (sectionNameController.text.isNotEmpty) {
-                final numQuestions = int.tryParse(questionsController.text) ?? 1;
-                setState(() {
-                  sections.add(
-                    QuestionSection(
-                      sectionName: sectionNameController.text,
-                      questions: List.generate(
-                        numQuestions,
-                        (index) => Question(
-                          questionText: 'Question ${index + 1} here',
-                        ),
-                      ),
-                      marksPerQuestion: int.tryParse(marksController.text) ?? 1,
-                      description: descriptionController.text.isEmpty
-                          ? null
-                          : descriptionController.text,
-                    ),
-                  );
-                });
-                Navigator.pop(context);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.blue500,
-              foregroundColor: Colors.white,
             ),
-            child: const Text('Add'),
           ),
-        ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -187,105 +189,108 @@ class _ManualQuestionTemplateWidgetState
 
     showDialog<void>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: AlertDialog(
+      builder:
+          (context) => Dialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            insetPadding: EdgeInsets.zero,
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.blue500.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.edit,
-                    color: AppTheme.blue500,
-                    size: 20,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                insetPadding: EdgeInsets.zero,
+                contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                title: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.blue500.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.edit,
+                        color: AppTheme.blue500,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Edit Section',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: AppTheme.danger),
+                      onPressed: () {
+                        setState(() {
+                          sections.removeAt(sectionIndex);
+                        });
+                        Navigator.pop(context);
+                      },
+                      tooltip: 'Delete Section',
+                    ),
+                  ],
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextField(
+                        controller: sectionNameController,
+                        label: 'Section Name',
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: descriptionController,
+                        label: 'Description (Optional)',
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: marksController,
+                        label: 'Marks per Question',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Edit Section',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        sections[sectionIndex] = QuestionSection(
+                          sectionName: sectionNameController.text,
+                          questions: section.questions,
+                          marksPerQuestion:
+                              int.tryParse(marksController.text) ?? 1,
+                          description:
+                              descriptionController.text.isEmpty
+                                  ? null
+                                  : descriptionController.text,
+                        );
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.blue500,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Save'),
+                  ),
+                ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: AppTheme.danger),
-              onPressed: () {
-                setState(() {
-                  sections.removeAt(sectionIndex);
-                });
-                Navigator.pop(context);
-              },
-              tooltip: 'Delete Section',
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: sectionNameController,
-                label: 'Section Name',
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: descriptionController,
-                label: 'Description (Optional)',
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: marksController,
-                label: 'Marks per Question',
-                keyboardType: TextInputType.number,
-              ),
-            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                sections[sectionIndex] = QuestionSection(
-                  sectionName: sectionNameController.text,
-                  questions: section.questions,
-                  marksPerQuestion: int.tryParse(marksController.text) ?? 1,
-                  description: descriptionController.text.isEmpty
-                      ? null
-                      : descriptionController.text,
-                );
-              });
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.blue500,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Save'),
-          ),
-        ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -300,301 +305,290 @@ class _ManualQuestionTemplateWidgetState
 
     showDialog<void>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: AlertDialog(
+      builder:
+          (context) => Dialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            insetPadding: EdgeInsets.zero,
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.blue500.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.quiz,
-                    color: AppTheme.blue500,
-                    size: 20,
-                  ),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Edit Question ${questionIndex + 1}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: AppTheme.danger),
-              onPressed: () {
-                setState(() {
-                  sections[sectionIndex].questions.removeAt(questionIndex);
-                });
-                Navigator.pop(context);
-              },
-              tooltip: 'Delete Question',
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                controller: questionController,
-                label: 'Question',
-                maxLines: 4,
-                hintText: 'Enter the question text...',
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: customMarksController,
-                label: 'Custom Marks (Optional)',
-                hintText: 'Default: ${sections[sectionIndex].marksPerQuestion}',
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                sections[sectionIndex].questions[questionIndex] = Question(
-                  questionText: questionController.text,
-                  customMarks: customMarksController.text.isEmpty
-                      ? null
-                      : int.tryParse(customMarksController.text),
-                );
-              });
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.blue500,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Save'),
-          ),
-        ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  int _calculateTotalMarks() => sections.fold(
-        0,
-        (sum, section) => sum + section.totalMarks,
-      );
-
-  int _calculateTotalQuestions() => sections.fold(
-        0,
-        (sum, section) => sum + section.questions.length,
-      );
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Create Questions'),
-          backgroundColor: AppTheme.blue500,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          actions: [
-            TextButton.icon(
-              onPressed: () {
-                Navigator.pop(context, sections);
-              },
-              icon: const Icon(Icons.check, color: Colors.white),
-              label: const Text(
-                'Save',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Info banner
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.blue500.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppTheme.blue500.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
+                insetPadding: EdgeInsets.zero,
+                contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                title: Row(
                   children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: AppTheme.blue500,
-                      size: 20,
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.blue500.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.quiz,
+                        color: AppTheme.blue500,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Manual Question Template',
-                            style: TextStyle(
-                              fontSize: AppTheme.fontSizeBase,
-                              fontWeight: AppTheme.fontWeightBold,
-                              color: AppTheme.blue500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Create questions without header info. Questions can be filled manually after printing.',
-                            style: TextStyle(
-                              fontSize: AppTheme.fontSizeSm,
-                              color: AppTheme.slate600,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'Edit Question ${questionIndex + 1}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: AppTheme.danger),
+                      onPressed: () {
+                        setState(() {
+                          sections[sectionIndex].questions.removeAt(
+                            questionIndex,
+                          );
+                        });
+                        Navigator.pop(context);
+                      },
+                      tooltip: 'Delete Question',
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-
-              // Stats
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.dashboard,
-                      label: 'Sections',
-                      value: sections.length.toString(),
-                      color: AppTheme.blue500,
-                    ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CustomTextField(
+                        controller: questionController,
+                        label: 'Question',
+                        maxLines: 4,
+                        hintText: 'Enter the question text...',
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: customMarksController,
+                        label: 'Custom Marks (Optional)',
+                        hintText:
+                            'Default: ${sections[sectionIndex].marksPerQuestion}',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.quiz,
-                      label: 'Questions',
-                      value: _calculateTotalQuestions().toString(),
-                      color: Colors.purple,
-                    ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.stars,
-                      label: 'Total Marks',
-                      value: _calculateTotalMarks().toString(),
-                      color: Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Sections header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Question Sections',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.slate800,
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _addSection,
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        sections[sectionIndex]
+                            .questions[questionIndex] = Question(
+                          questionText: questionController.text,
+                          customMarks:
+                              customMarksController.text.isEmpty
+                                  ? null
+                                  : int.tryParse(customMarksController.text),
+                        );
+                      });
+                      Navigator.pop(context);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.blue500,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
                     ),
-                    icon: const Icon(Icons.add, size: 20),
-                    label: const Text('Add Section'),
+                    child: const Text('Save'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+            ),
+          ),
+    );
+  }
 
-              // Sections list
-              ...List.generate(sections.length, _buildSectionCard),
+  int _calculateTotalMarks() =>
+      sections.fold(0, (sum, section) => sum + section.totalMarks);
+
+  int _calculateTotalQuestions() =>
+      sections.fold(0, (sum, section) => sum + section.questions.length);
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Create Questions'),
+      backgroundColor: AppTheme.blue500,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      actions: [
+        TextButton.icon(
+          onPressed: () {
+            Navigator.pop(context, sections);
+          },
+          icon: const Icon(Icons.check, color: Colors.white),
+          label: const Text('Save', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Info banner
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.blue500.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.blue500.withValues(alpha: 0.3),
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: AppTheme.blue500, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Manual Question Template',
+                        style: TextStyle(
+                          fontSize: AppTheme.fontSizeBase,
+                          fontWeight: AppTheme.fontWeightBold,
+                          color: AppTheme.blue500,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Create questions without header info. Questions can be filled manually after printing.',
+                        style: TextStyle(
+                          fontSize: AppTheme.fontSizeSm,
+                          color: AppTheme.slate600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Stats
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.dashboard,
+                  label: 'Sections',
+                  value: sections.length.toString(),
+                  color: AppTheme.blue500,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.quiz,
+                  label: 'Questions',
+                  value: _calculateTotalQuestions().toString(),
+                  color: Colors.purple,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.stars,
+                  label: 'Total Marks',
+                  value: _calculateTotalMarks().toString(),
+                  color: Colors.orange,
+                ),
+              ),
             ],
           ),
-        ),
-      );
+          const SizedBox(height: 24),
+
+          // Sections header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Question Sections',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.slate800,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _addSection,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.blue500,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('Add Section'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Sections list
+          ...List.generate(sections.length, _buildSectionCard),
+        ],
+      ),
+    ),
+  );
 
   Widget _buildStatCard({
     required IconData icon,
     required String label,
     required String value,
     required Color color,
-  }) =>
-      Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: CustomAppColors.lightGrey01),
+  }) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: CustomAppColors.lightGrey01),
+    ),
+    child: Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
         ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppTheme.slate600,
-              ),
-            ),
-          ],
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: AppTheme.slate600),
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _buildSectionCard(int sectionIndex) {
     final section = sections[sectionIndex];
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ExpansionTile(
         title: Row(
@@ -625,15 +619,16 @@ class _ManualQuestionTemplateWidgetState
             ),
           ],
         ),
-        subtitle: section.description != null
-            ? Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  section.description!,
-                  style: const TextStyle(fontSize: 13),
-                ),
-              )
-            : null,
+        subtitle:
+            section.description != null
+                ? Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    section.description!,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                )
+                : null,
         trailing: IconButton(
           icon: const Icon(Icons.edit, size: 20),
           onPressed: () => _editSection(sectionIndex),
@@ -723,8 +718,10 @@ class _ManualQuestionTemplateWidgetState
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),

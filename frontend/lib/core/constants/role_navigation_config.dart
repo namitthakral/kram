@@ -2,11 +2,33 @@ import 'package:flutter/material.dart';
 
 import '../../models/navigation_item_model.dart';
 import '../../modules/admin/screens/admin_dashboard_screen.dart';
+import '../../modules/admin/screens/admin_reports_screen.dart';
+import '../../modules/admin/screens/fees_management_screen.dart';
+import '../../modules/admin/screens/transport_screen.dart';
+import '../../modules/library/screens/books_management_screen.dart';
+import '../../modules/library/screens/issued_books_screen.dart';
 import '../../modules/library/screens/library_dashboard_screen.dart';
+import '../../modules/parent/screens/announcements_screen.dart';
+import '../../modules/parent/screens/child_progress_screen.dart';
+import '../../modules/parent/screens/fee_payment_screen.dart';
 import '../../modules/parent/screens/parent_dashboard_screen.dart';
+import '../../modules/staff/screens/staff_messages_screen.dart';
+import '../../modules/staff/screens/staff_schedule_screen.dart';
+import '../../modules/student/screens/assignments_screen.dart';
+import '../../modules/student/screens/events_screen.dart';
+import '../../modules/student/screens/my_grades_screen.dart';
 import '../../modules/student/screens/student_dashboard_screen.dart';
+import '../../modules/student/screens/timetable_screen.dart';
+import '../../modules/super_admin/screens/analytics_screen.dart';
+import '../../modules/super_admin/screens/institutions_screen.dart';
+import '../../modules/super_admin/screens/security_screen.dart';
+import '../../modules/super_admin/screens/system_settings_screen.dart';
 import '../../modules/teacher/screens/academic_management_screen.dart';
+import '../../modules/teacher/screens/assignments_list_screen.dart';
+import '../../modules/teacher/screens/examinations_list_screen.dart';
+import '../../modules/teacher/screens/my_classes_screen.dart';
 import '../../modules/teacher/screens/teacher_dashboard_screen.dart';
+import '../../modules/teacher/screens/timetables_list_screen.dart';
 import '../../utils/custom_images.dart';
 import '../../views/dashboard/staff_dashboard_screen.dart';
 import '../../views/dashboard/super_admin_dashboard_screen.dart';
@@ -52,14 +74,24 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconSchedule,
-      iconFilledUrl: CustomImages.iconScheduleFilled,
-      labelKey: 'schedule',
+      iconUrl: CustomImages.iconReport, // Placeholder for My Grades
+      iconFilledUrl: CustomImages.iconReportFilled,
+      labelKey: 'my_grades',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconMessage,
-      iconFilledUrl: CustomImages.iconMessageFilled,
-      labelKey: 'messages',
+      iconUrl: CustomImages.iconSchedule,
+      iconFilledUrl: CustomImages.iconScheduleFilled,
+      labelKey: 'timetable',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconAcademic, // Placeholder for assignments
+      iconFilledUrl: CustomImages.iconAcademicFilled,
+      labelKey: 'assignments',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconDate, // Placeholder for events
+      iconFilledUrl: CustomImages.iconDate,
+      labelKey: 'events',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -70,8 +102,10 @@ class RoleNavigationConfig {
 
   static final List<Widget> _studentPages = [
     const StudentDashboardScreen(),
-    const Center(child: Text('Schedule Screen')), // TODO: Implement
-    const Center(child: Text('Messages Screen')), // TODO: Implement
+    const MyGradesScreen(),
+    const TimetableScreen(),
+    const AssignmentsScreen(),
+    const EventsScreen(),
     const ProfileScreen(),
   ];
 
@@ -83,14 +117,19 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconSchedule,
-      iconFilledUrl: CustomImages.iconScheduleFilled,
-      labelKey: 'children',
+      iconUrl: CustomImages.iconUser, // Placeholder for child progress
+      iconFilledUrl: CustomImages.iconUser,
+      labelKey: 'child_progress',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconShoppingCart, // Placeholder for fees
+      iconFilledUrl: CustomImages.iconShoppingCartFilled,
+      labelKey: 'fee_payment',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconMessage,
       iconFilledUrl: CustomImages.iconMessageFilled,
-      labelKey: 'messages',
+      labelKey: 'announcements',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -101,8 +140,9 @@ class RoleNavigationConfig {
 
   static final List<Widget> _parentPages = [
     const ParentDashboardScreen(),
-    const Center(child: Text('Children Screen')), // TODO: Implement
-    const Center(child: Text('Messages Screen')), // TODO: Implement
+    const ChildProgressScreen(),
+    const FeePaymentScreen(),
+    const AnnouncementsScreen(),
     const ProfileScreen(),
   ];
 
@@ -114,24 +154,36 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconSchedule,
-      iconFilledUrl: CustomImages.iconScheduleFilled,
-      labelKey: 'classes',
+      iconUrl: CustomImages.iconUser,
+      iconFilledUrl: CustomImages.iconUser,
+      labelKey: 'my_classes',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconAcademic,
-      iconFilledUrl: CustomImages.iconAcademicFilled,
-      labelKey: 'academic',
+      iconUrl: CustomImages.iconSchedule,
+      iconFilledUrl: CustomImages.iconScheduleFilled,
+      labelKey: 'timetable',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconReport,
       iconFilledUrl: CustomImages.iconReportFilled,
-      labelKey: 'reports',
+      labelKey: 'examinations', // Can stay as is if Exam List is the view
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconMessage,
-      iconFilledUrl: CustomImages.iconMessageFilled,
-      labelKey: 'messages',
+      iconUrl: CustomImages.iconAcademic,
+      iconFilledUrl: CustomImages.iconAcademicFilled,
+      labelKey: 'assignments', // Can stay as is if Assignment List is the view
+    ),
+    // Replaced 'academic' with explicit items as requested?
+    // Wait, the plan was to link screens. `RoleNavigationConfig` maps keys to screens.
+    // I need to check `getPages` mapping.
+    // The keys 'timetable', 'examinations', 'assignments' must map to the List/View screens.
+    // I see 'academic' maps to `AcademicManagementScreen`.
+    // The user's request implies we should use individual items or ensure 'academic' sub-items work.
+    // If I add Marks, Question Papers, Attendance here, looking at `getPages` order is critical.
+    NavigationItemModel(
+      iconUrl: CustomImages.iconSetting4,
+      iconFilledUrl: CustomImages.iconSetting4,
+      labelKey: 'academic',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -142,12 +194,11 @@ class RoleNavigationConfig {
 
   static final List<Widget> _teacherPages = [
     const TeacherDashboardScreen(),
-    const Center(child: Text('Classes Screen')), // TODO: Implement
+    const MyClassesScreen(),
+    const TimetablesListScreen(),
+    const ExaminationsListScreen(),
+    const AssignmentsListScreen(),
     const AcademicManagementScreen(),
-    const Center(
-      child: Text('Reports Screen\n(Student Reports, Marksheets)'),
-    ), // TODO: Implement
-    const Center(child: Text('Messages Screen')), // TODO: Implement
     const ProfileScreen(),
   ];
 
@@ -177,8 +228,8 @@ class RoleNavigationConfig {
 
   static final List<Widget> _librarianPages = [
     const LibraryDashboardScreen(),
-    const Center(child: Text('Books Management Screen')), // TODO: Implement
-    const Center(child: Text('Issued Books Screen')), // TODO: Implement
+    const BooksManagementScreen(),
+    const IssuedBooksScreen(),
     const ProfileScreen(),
   ];
 
@@ -190,13 +241,33 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconSchedule,
-      iconFilledUrl: CustomImages.iconScheduleFilled,
-      labelKey: 'management',
+      iconUrl: CustomImages.iconProfile, // Placeholder for students
+      iconFilledUrl: CustomImages.iconProfileFilled,
+      labelKey: 'students',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconMessage,
-      iconFilledUrl: CustomImages.iconMessageFilled,
+      iconUrl: CustomImages.iconUser, // Placeholder for staff
+      iconFilledUrl: CustomImages.iconUser,
+      labelKey: 'staff',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconShoppingCart, // Placeholder for fees
+      iconFilledUrl: CustomImages.iconShoppingCartFilled,
+      labelKey: 'fees',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconLocation, // Placeholder for bus/transport
+      iconFilledUrl: CustomImages.iconLocation,
+      labelKey: 'transport',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconAcademic,
+      iconFilledUrl: CustomImages.iconAcademicFilled,
+      labelKey: 'academic',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconReport,
+      iconFilledUrl: CustomImages.iconReportFilled,
       labelKey: 'reports',
     ),
     NavigationItemModel(
@@ -208,8 +279,12 @@ class RoleNavigationConfig {
 
   static final List<Widget> _adminPages = [
     const AdminDashboardScreen(),
-    const Center(child: Text('Management Screen')), // TODO: Implement
-    const Center(child: Text('Reports Screen')), // TODO: Implement
+    const StudentDashboardScreen(), // Reusing for list view
+    const StaffDashboardScreen(), // Reusing for list view
+    const FeesManagementScreen(),
+    const TransportScreen(),
+    const AcademicManagementScreen(),
+    const AdminReportsScreen(),
     const ProfileScreen(),
   ];
 
@@ -239,8 +314,8 @@ class RoleNavigationConfig {
 
   static final List<Widget> _staffPages = [
     const StaffDashboardScreen(),
-    const Center(child: Text('Schedule Screen')), // TODO: Implement
-    const Center(child: Text('Messages Screen')), // TODO: Implement
+    const StaffScheduleScreen(),
+    const StaffMessagesScreen(),
     const ProfileScreen(),
   ];
 
@@ -257,9 +332,19 @@ class RoleNavigationConfig {
       labelKey: 'institutions',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconMessage,
-      iconFilledUrl: CustomImages.iconMessageFilled,
+      iconUrl: CustomImages.iconReport, // Analytics
+      iconFilledUrl: CustomImages.iconReportFilled,
       labelKey: 'analytics',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconSetting4,
+      iconFilledUrl: CustomImages.iconSetting4,
+      labelKey: 'settings',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconLock,
+      iconFilledUrl: CustomImages.iconLock,
+      labelKey: 'security',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -270,8 +355,10 @@ class RoleNavigationConfig {
 
   static final List<Widget> _superAdminPages = [
     const SuperAdminDashboardScreen(),
-    const Center(child: Text('Institutions Screen')), // TODO: Implement
-    const Center(child: Text('Analytics Screen')), // TODO: Implement
+    const InstitutionsScreen(),
+    const AnalyticsScreen(),
+    const SystemSettingsScreen(),
+    const SecurityScreen(),
     const ProfileScreen(),
   ];
 

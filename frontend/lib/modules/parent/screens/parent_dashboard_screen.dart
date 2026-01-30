@@ -8,7 +8,7 @@ import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
-import '../../teacher/widgets/stat_card.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../models/parent_dashboard_models.dart';
 import '../providers/parent_dashboard_provider.dart';
 import '../providers/parent_tab_provider.dart';
@@ -156,7 +156,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       mainAxisSpacing: mainAxisSpacing,
       childAspectRatio: childAspectRatio,
       children: [
-        StatCard(
+        DashboardStatCard(
           title: context.translate('overall_grade'),
           value: provider.childInfo?.overallGrade ?? 'A',
           subtitle: context.translate('excellent_performance'),
@@ -164,7 +164,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           iconColor: const Color(0xFFf59e0b),
           icon: Icons.school,
         ),
-        StatCard(
+        DashboardStatCard(
           title: context.translate('attendance'),
           value: '${provider.childInfo?.attendance ?? 94.5}%',
           subtitle: context.translate('above_average'),
@@ -172,7 +172,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           iconColor: const Color(0xFF10b981),
           icon: Icons.calendar_today,
         ),
-        StatCard(
+        DashboardStatCard(
           title: context.translate('test_average'),
           value: '${provider.testAverage.toInt()}%',
           subtitle: context.translate('last_5_tests'),
@@ -180,7 +180,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           iconColor: const Color(0xFF4F7CFF),
           icon: Icons.analytics,
         ),
-        StatCard(
+        DashboardStatCard(
           title: context.translate('improvement'),
           value: '+${provider.semesterImprovement}%',
           subtitle: context.translate('this_semester'),
@@ -221,7 +221,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-                Text(
+            Text(
               context.translate('recent_academic_activities'),
               style: TextStyle(
                 fontSize: isDesktop ? 18 : 17,
@@ -297,22 +297,23 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           width: double.infinity,
           child: Consumer<ParentTabProvider>(
             builder:
-                (
-                  context,
-                  provider,
-                  child,
-                ) => CustomSlidingSegmentedControl<ParentDashboardTab>(
-                  segments: {
-                    ParentDashboardTab.academicPerformance:
-                        context.translate('academic_performance'),
-                    ParentDashboardTab.attendanceHistory: context.translate('attendance_history'),
-                    ParentDashboardTab.subjectBreakdown: context.translate('subject_breakdown'),
-                  },
-                  initialValue: provider.selectedTab,
-                  onValueChanged: (value) {
-                    provider.updateSelectedTab(value);
-                  },
-                ),
+                (context, provider, child) =>
+                    CustomSlidingSegmentedControl<ParentDashboardTab>(
+                      segments: {
+                        ParentDashboardTab.academicPerformance: context
+                            .translate('academic_performance'),
+                        ParentDashboardTab.attendanceHistory: context.translate(
+                          'attendance_history',
+                        ),
+                        ParentDashboardTab.subjectBreakdown: context.translate(
+                          'subject_breakdown',
+                        ),
+                      },
+                      initialValue: provider.selectedTab,
+                      onValueChanged: (value) {
+                        provider.updateSelectedTab(value);
+                      },
+                    ),
           ),
         ),
         const SizedBox(height: 24),

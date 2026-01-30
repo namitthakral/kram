@@ -195,7 +195,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
     final slotNameController = TextEditingController();
     final mergedLabelController = TextEditingController(text: 'Lunch');
 
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder:
           (context) => StatefulBuilder(
@@ -305,7 +305,8 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                       }
 
                       final loginProvider = context.read<LoginProvider>();
-                      final institutionId = loginProvider.currentUser?.teacher?.institutionId;
+                      final institutionId =
+                          loginProvider.currentUser?.teacher?.institutionId;
 
                       if (institutionId == null) {
                         showCustomSnackbar(
@@ -316,24 +317,34 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                       }
 
                       // Calculate duration in minutes
-                      final startMinutes = startTime!.hour * 60 + startTime!.minute;
+                      final startMinutes =
+                          startTime!.hour * 60 + startTime!.minute;
                       final endMinutes = endTime!.hour * 60 + endTime!.minute;
                       final duration = endMinutes - startMinutes;
 
                       // Determine slot type
-                      final slotType = isMerged
-                          ? (mergedLabelController.text.trim().toLowerCase().contains('lunch')
-                              ? 'LUNCH'
-                              : 'BREAK')
-                          : 'LECTURE';
+                      final slotType =
+                          isMerged
+                              ? (mergedLabelController.text
+                                      .trim()
+                                      .toLowerCase()
+                                      .contains('lunch')
+                                  ? 'LUNCH'
+                                  : 'BREAK')
+                              : 'LECTURE';
 
                       // Format time for database (HH:mm:ss)
-                      final startTimeStr = '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00';
-                      final endTimeStr = '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00';
+                      final startTimeStr =
+                          '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00';
+                      final endTimeStr =
+                          '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00';
 
                       final timeSlotData = {
                         'institutionId': institutionId,
-                        'slotName': isMerged ? mergedLabelController.text.trim() : slotName,
+                        'slotName':
+                            isMerged
+                                ? mergedLabelController.text.trim()
+                                : slotName,
                         'startTime': startTimeStr,
                         'endTime': endTimeStr,
                         'slotType': slotType,
@@ -343,18 +354,23 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                       };
 
                       try {
-                        final result = await _timetableService.createTimeSlot(timeSlotData);
+                        final result = await _timetableService.createTimeSlot(
+                          timeSlotData,
+                        );
 
-                        if (!mounted) return;
+                        if (!mounted) {
+                          return;
+                        }
 
                         setState(() {
                           timeSlots.add(result);
                           final newIndex = timeSlots.length - 1;
 
                           if (isMerged) {
-                            mergedSlots[newIndex] = mergedLabelController.text.trim().isEmpty
-                                ? 'Lunch'
-                                : mergedLabelController.text.trim();
+                            mergedSlots[newIndex] =
+                                mergedLabelController.text.trim().isEmpty
+                                    ? 'Lunch'
+                                    : mergedLabelController.text.trim();
                           }
 
                           timetableData[newIndex] = {};
@@ -431,7 +447,6 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                   title: 'Edit Time Slot ${index + 1}',
                   subtitle: 'Modify the period timing',
                   headerIcon: Icons.edit,
-                  confirmText: 'Save',
                   confirmColor: AppTheme.blue500,
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -515,20 +530,27 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                   onConfirm: () async {
                     if (startTime != null && endTime != null) {
                       // Format time for database (HH:mm:ss)
-                      final startTimeStr = '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00';
-                      final endTimeStr = '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00';
+                      final startTimeStr =
+                          '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}:00';
+                      final endTimeStr =
+                          '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}:00';
 
                       // Calculate duration
-                      final startMinutes = startTime!.hour * 60 + startTime!.minute;
+                      final startMinutes =
+                          startTime!.hour * 60 + startTime!.minute;
                       final endMinutes = endTime!.hour * 60 + endTime!.minute;
                       final duration = endMinutes - startMinutes;
 
                       // Determine slot type
-                      final slotType = isMerged
-                          ? (mergedLabelController.text.trim().toLowerCase().contains('lunch')
-                              ? 'LUNCH'
-                              : 'BREAK')
-                          : 'LECTURE';
+                      final slotType =
+                          isMerged
+                              ? (mergedLabelController.text
+                                      .trim()
+                                      .toLowerCase()
+                                      .contains('lunch')
+                                  ? 'LUNCH'
+                                  : 'BREAK')
+                              : 'LECTURE';
 
                       final updateData = {
                         'startTime': startTimeStr,
@@ -538,9 +560,10 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                       };
 
                       if (isMerged) {
-                        updateData['slotName'] = mergedLabelController.text.trim().isEmpty
-                            ? 'Lunch'
-                            : mergedLabelController.text.trim();
+                        updateData['slotName'] =
+                            mergedLabelController.text.trim().isEmpty
+                                ? 'Lunch'
+                                : mergedLabelController.text.trim();
                       }
 
                       try {
@@ -548,13 +571,12 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                         // For now, just update local state
                         // await _timetableService.updateTimeSlot(currentSlot['id'] as int, updateData);
 
-                        if (!mounted) return;
+                        if (!mounted) {
+                          return;
+                        }
 
                         setState(() {
-                          timeSlots[index] = {
-                            ...currentSlot,
-                            ...updateData,
-                          };
+                          timeSlots[index] = {...currentSlot, ...updateData};
 
                           if (isMerged) {
                             mergedSlots[index] =
@@ -602,7 +624,8 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
   }
 
   Future<void> _removeTimeSlot(int index) async {
-    final slotName = timeSlots[index]['slotName'] as String? ?? 'this time slot';
+    final slotName =
+        timeSlots[index]['slotName'] as String? ?? 'this time slot';
 
     final confirmed = await CustomDialog.showConfirmation(
       context: context,
@@ -710,7 +733,6 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                   title: 'Edit Period',
                   subtitle: '$day ${_formatTimeSlot(timeSlots[slotIndex])}',
                   headerIcon: Icons.schedule,
-                  confirmText: 'Save',
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -840,9 +862,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                         timetableData[slotIndex]![day] = SubjectPeriod(
                           subject: finalSubject!,
                           teacher: finalTeacher,
-                          subjectId: null, // Will be mapped when saving to DB
                           teacherId: foundTeacherId,
-                          roomId: null,
                         );
                       });
                       Navigator.pop(context);
@@ -972,7 +992,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
           type: SnackbarType.warning,
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         showCustomSnackbar(
           message: 'Error saving timetable: $e',

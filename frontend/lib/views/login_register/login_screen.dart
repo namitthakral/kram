@@ -136,7 +136,7 @@ class LoginScreen extends StatelessWidget {
     mainAxisAlignment: MainAxisAlignment.center,
     children: [
       // Large Logo
-      Image.asset('assets/images/app_logo.png', width: 200, height: 200),
+      Image.asset(CustomImages.appLogo, width: 200, height: 200),
       const SizedBox(height: 32),
 
       // // Welcome Text
@@ -170,7 +170,7 @@ class LoginScreen extends StatelessWidget {
       Column(
         children: [
           // Logo with EdVerse text
-          Image.asset('assets/images/app_logo.png', width: 150, height: 150),
+          Image.asset(CustomImages.appLogo, width: 150, height: 150),
           const SizedBox(height: 24),
 
           // Login title

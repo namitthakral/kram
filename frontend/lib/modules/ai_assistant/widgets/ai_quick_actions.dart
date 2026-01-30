@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
 class AiQuickActions extends StatelessWidget {
-  final String role;
-  final Function(String) onActionSelected;
-
   const AiQuickActions({
-    super.key,
     required this.role,
     required this.onActionSelected,
+    super.key,
   });
+  final String role;
+  final Function(String) onActionSelected;
 
   List<String> _getActionsForRole(String role) {
     switch (role.toLowerCase()) {

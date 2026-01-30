@@ -8,12 +8,12 @@ import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../models/dashboard_stats.dart';
 import '../providers/performance_tab_provider.dart';
 import '../providers/teacher_dashboard_provider.dart';
 import '../widgets/chart_widgets.dart';
 import '../widgets/quick_action_button.dart';
-import '../widgets/stat_card.dart';
 import '../widgets/student_activity_card.dart';
 import 'assignments_list_screen.dart';
 import 'examinations_list_screen.dart';
@@ -162,7 +162,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
             mainAxisSpacing: isMobile ? 12 : 16,
             childAspectRatio: isMobile ? 1.3 : 1.5,
             children: [
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('total_students'),
                 value: '$totalStudents',
                 subtitle: context.translate('active_in_classes'),
@@ -170,7 +170,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 iconColor: const Color(0xFF155dfc),
                 icon: Icons.groups,
               ),
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('present_today'),
                 value: '$presentToday',
                 subtitle: context.translate(
@@ -183,7 +183,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 iconColor: const Color(0xFF00a63e),
                 icon: Icons.check_circle,
               ),
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('absent_today'),
                 value: '$absentToday',
                 subtitle: context.translate('requires_follow_up'),
@@ -191,7 +191,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                 iconColor: const Color(0xFFe7000b),
                 icon: Icons.cancel,
               ),
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('avg_attendance'),
                 value: '${avgAttendance.toStringAsFixed(1)}%',
                 subtitle: context.translate('this_month'),

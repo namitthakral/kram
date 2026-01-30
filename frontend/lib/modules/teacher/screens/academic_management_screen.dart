@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -8,12 +9,7 @@ import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-import 'create_assignment_screen.dart';
-import '../widgets/stat_card.dart';
-import 'enter_marks_screen.dart';
-import 'mark_attendance_screen.dart';
-import 'question_paper_template_screen.dart';
-import 'timetable_template_screen.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 
 class AcademicManagementScreen extends StatelessWidget {
   const AcademicManagementScreen({super.key});
@@ -55,7 +51,7 @@ class AcademicManagementScreen extends StatelessWidget {
               mainAxisSpacing: isMobile ? 12 : 16,
               childAspectRatio: isMobile ? 1.3 : 1.5,
               children: const [
-                StatCard(
+                DashboardStatCard(
                   title: 'Assignments',
                   value: '12',
                   subtitle: 'Active assignments',
@@ -63,7 +59,7 @@ class AcademicManagementScreen extends StatelessWidget {
                   iconColor: CustomAppColors.warning,
                   icon: Icons.assignment_turned_in_rounded,
                 ),
-                StatCard(
+                DashboardStatCard(
                   title: 'Exams',
                   value: '3',
                   subtitle: 'Upcoming exams',
@@ -71,7 +67,7 @@ class AcademicManagementScreen extends StatelessWidget {
                   iconColor: CustomAppColors.purple,
                   icon: Icons.quiz_rounded,
                 ),
-                StatCard(
+                DashboardStatCard(
                   title: 'Classes Today',
                   value: '5',
                   subtitle: 'Scheduled classes',
@@ -79,7 +75,7 @@ class AcademicManagementScreen extends StatelessWidget {
                   iconColor: CustomAppColors.blue500,
                   icon: Icons.schedule_rounded,
                 ),
-                StatCard(
+                DashboardStatCard(
                   title: 'Avg Attendance',
                   value: '95%',
                   subtitle: 'This month',
@@ -123,71 +119,37 @@ class AcademicManagementScreen extends StatelessWidget {
                   title: 'Mark\nAttendance',
                   icon: Icons.how_to_reg_rounded,
                   color: CustomAppColors.success,
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MarkAttendanceScreen(),
-                        ),
-                      ),
+                  onTap: () => context.pushNamed('mark_attendance'),
                 ),
                 _ActionGridCard(
                   title: 'Enter\nMarks',
                   icon: Icons.grading_rounded,
                   color: CustomAppColors.pink,
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EnterMarksScreen(),
-                        ),
-                      ),
+                  onTap: () => context.pushNamed('enter_marks'),
                 ),
                 _ActionGridCard(
                   title: 'Create\nExamination',
                   icon: Icons.quiz_rounded,
                   color: CustomAppColors.purple,
-                  onTap: () {
-                    // TODO: Navigate to create exam
-                  },
+                  onTap: () => context.pushNamed('examinations_list'),
                 ),
                 _ActionGridCard(
                   title: 'Create\nTimetable',
                   icon: Icons.calendar_month_rounded,
                   color: CustomAppColors.blue500,
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TimetableTemplateScreen(),
-                        ),
-                      ),
+                  onTap: () => context.pushNamed('timetables_list'),
                 ),
                 _ActionGridCard(
                   title: 'Create\nQuestion Paper',
                   icon: Icons.description_rounded,
                   color: CustomAppColors.purple,
-                  onTap:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => const QuestionPaperTemplateScreen(),
-                        ),
-                      ),
+                  onTap: () => context.pushNamed('create_question_paper'),
                 ),
                 _ActionGridCard(
                   title: 'Create\nAssignment',
                   icon: Icons.assignment_rounded,
                   color: CustomAppColors.warning,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CreateAssignmentScreen(),
-                      ),
-                    );
-                  },
+                  onTap: () => context.pushNamed('assignments_list'),
                 ),
               ],
             ),

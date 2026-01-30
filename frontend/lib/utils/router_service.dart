@@ -3,6 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../modules/teacher/screens/academic_management_screen.dart';
+import '../modules/teacher/screens/assignments_list_screen.dart';
+import '../modules/teacher/screens/create_assignment_screen.dart';
+import '../modules/teacher/screens/attendance_view_screen.dart';
+import '../modules/teacher/screens/enter_marks_screen.dart';
+import '../modules/teacher/screens/examination_form_screen.dart';
+import '../modules/teacher/screens/examinations_list_screen.dart';
+import '../modules/teacher/screens/mark_attendance_screen.dart';
+import '../modules/teacher/screens/marks_list_screen.dart';
+import '../modules/teacher/screens/my_classes_screen.dart';
+import '../modules/teacher/screens/question_paper_template_screen.dart';
+import '../modules/teacher/screens/question_papers_list_screen.dart';
+import '../modules/teacher/screens/students_list_screen.dart';
+import '../modules/teacher/screens/timetable_template_screen.dart';
+import '../modules/teacher/screens/timetable_view_screen.dart';
+import '../modules/teacher/screens/timetables_list_screen.dart';
 import '../views/home_screen.dart';
 import '../views/login_register/login_register_main.dart';
 import '../views/onboarding/onboarding_main.dart';
@@ -51,11 +67,7 @@ class RouterService {
   // Define all routes
   List<RouteBase> get _routes => [
     // Root route - redirects to splash
-    GoRoute(
-      path: '/',
-      name: 'root',
-      redirect: (context, state) => '/splash',
-    ),
+    GoRoute(path: '/', name: 'root', redirect: (context, state) => '/splash'),
     GoRoute(
       path: '/splash',
       name: 'splash',
@@ -78,8 +90,10 @@ class RouterService {
       path: '/home',
       name: 'home',
       pageBuilder:
-          (context, state) =>
-              _buildPageWithTransition(key: state.pageKey, child: const HomeScreen()),
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const HomeScreen(),
+          ),
     ),
     GoRoute(
       path: '/login',
@@ -89,6 +103,186 @@ class RouterService {
             key: state.pageKey,
             child: const LoginRegisterMain(),
           ),
+    ),
+    GoRoute(
+      path: '/academic',
+      name: 'academic_management',
+      pageBuilder:
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const AcademicManagementScreen(),
+          ),
+      routes: [
+        GoRoute(
+          path: 'attendance',
+          name: 'attendance_view',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const AttendanceViewScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'mark',
+              name: 'mark_attendance',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const MarkAttendanceScreen(),
+                  ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'marks',
+          name: 'marks_list',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const MarksListScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'enter',
+              name: 'enter_marks',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const EnterMarksScreen(),
+                  ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'assignments',
+          name: 'assignments_list',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const AssignmentsListScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'create',
+              name: 'create_assignment',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const CreateAssignmentScreen(),
+                  ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'timetables',
+          name: 'timetables_list',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const TimetablesListScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'view',
+              name: 'timetable_view',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const TimetableViewScreen(),
+                  ),
+            ),
+            GoRoute(
+              path: 'create',
+              name: 'create_timetable',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const TimetableTemplateScreen(),
+                  ),
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'classes',
+          name: 'my_classes',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const MyClassesScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: ':className/:sectionId',
+              name: 'class_students',
+              pageBuilder: (context, state) {
+                final className =
+                    state.pathParameters['className'] ?? 'Class';
+                final sectionId =
+                    int.tryParse(state.pathParameters['sectionId'] ?? '') ??
+                    0;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: StudentsListScreen(
+                    className: className,
+                    sectionId: sectionId,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'exams',
+          name: 'examinations_list',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const ExaminationsListScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'create',
+              name: 'create_exam',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const ExaminationFormScreen(),
+                  ),
+            ),
+            GoRoute(
+              path: ':id',
+              name: 'edit_exam',
+              pageBuilder: (context, state) {
+                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: ExaminationFormScreen(examinationId: id),
+                );
+              },
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'question-paper',
+          name: 'question_papers_list',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const QuestionPapersListScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'create',
+              name: 'create_question_paper',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const QuestionPaperTemplateScreen(),
+                  ),
+            ),
+          ],
+        ),
+      ],
     ),
   ];
 
@@ -101,10 +295,7 @@ class RouterService {
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       // Use fade transition for web (no slide), looks more native
-      return FadeTransition(
-        opacity: animation,
-        child: child,
-      );
+      return FadeTransition(opacity: animation, child: child);
     },
     transitionDuration: const Duration(milliseconds: 200),
   );
@@ -119,7 +310,7 @@ class RouterService {
 
   void goToSearch() => router.pushNamed('search');
 
-  void goToLogin() => router.pushNamed('login');
+  void goToLogin() => router.goNamed('login');
 
   void goToCart() => router.pushNamed('cart');
 

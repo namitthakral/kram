@@ -47,7 +47,14 @@ class StudentService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw Exception('Student not found');
+        // Return default empty stats if not found
+        return {
+          'gpa': '0.0',
+          'attendance': 0.0,
+          'totalAssignments': 0,
+          'pendingAssignments': 0,
+          'upcomingEvents': 0,
+        };
       }
       throw ApiErrorHandler.handleDioException(
         e,
@@ -214,6 +221,9 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return [];
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load assignments',
@@ -263,6 +273,9 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {'labels': [], 'datasets': []};
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load performance trends',
@@ -307,6 +320,12 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {
+          'history': [],
+          'summary': {'present': 0, 'absent': 0, 'late': 0},
+        };
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load attendance history',
@@ -339,6 +358,9 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {};
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load subject performance',
@@ -383,6 +405,9 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return [];
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load upcoming events',

@@ -8,7 +8,7 @@ import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
-import '../../teacher/widgets/stat_card.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../providers/admin_analytics_tab_provider.dart';
 import '../providers/admin_dashboard_provider.dart';
 import '../widgets/admin_chart_widgets.dart';
@@ -124,7 +124,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             mainAxisSpacing: isMobile ? 12 : 16,
             childAspectRatio: isMobile ? 1.3 : 1.5,
             children: [
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('total_students'),
                 value: '$totalStudents',
                 subtitle: context.translate('across_all_grades'),
@@ -132,7 +132,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 iconColor: const Color(0xFF3b82f6),
                 icon: Icons.groups,
               ),
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('teachers'),
                 value: '$totalTeachers',
                 subtitle: context.translate('active_faculty'),
@@ -140,7 +140,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 iconColor: const Color(0xFF10b981),
                 icon: Icons.school,
               ),
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('classes'),
                 value: '$totalClasses',
                 subtitle: context.translate('total_sections'),
@@ -148,7 +148,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 iconColor: const Color(0xFF8B5CF6),
                 icon: Icons.class_,
               ),
-              StatCard(
+              DashboardStatCard(
                 title: context.translate('attendance'),
                 value: '${attendanceRate.toStringAsFixed(1)}%',
                 subtitle: context.translate('school_average'),
@@ -625,7 +625,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.rate_review_outlined, size: 64, color: Color(0xFF94a3b8)),
+          const Icon(
+            Icons.rate_review_outlined,
+            size: 64,
+            color: Color(0xFF94a3b8),
+          ),
           const SizedBox(height: 16),
           Text(
             context.translate('performance_reviews'),
@@ -644,5 +648,4 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
     ),
   );
-
 }

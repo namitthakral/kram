@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../utils/router_service.dart';
 import '../../utils/secure_storge.dart';
 import '../constants/app_constants.dart';
 import 'auth_service.dart';
@@ -137,6 +138,9 @@ class ApiService {
                 // Token refresh failed, clear tokens and let user login again
                 await _clearAuthToken();
 
+                // Redirect to login page
+                RouterService().goToLogin();
+
                 // Create a more informative error for session expiry
                 final sessionExpiredError = DioException(
                   requestOptions: originalRequest,
@@ -151,6 +155,9 @@ class ApiService {
               log('🚪 Clearing auth tokens and logging out user...');
               // If refresh token request failed or already refreshing, clear tokens
               await _clearAuthToken();
+
+              // Redirect to login page
+              RouterService().goToLogin();
 
               // Create a more informative error
               final sessionExpiredError = DioException(

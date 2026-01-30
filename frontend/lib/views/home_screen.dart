@@ -31,20 +31,29 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _initializeNavigation() {
+  Future<void> _initializeNavigation() async {
     final loginProvider = context.read<LoginProvider>();
     final navProvider = context.read<BottomNavProvider>();
-    final user = loginProvider.currentUser;
 
-    if (user?.role?.id != null) {
-      navProvider.initializeForRole(user!.role!.id);
+    // Check if user is already loaded
+    if (loginProvider.currentUser?.role?.id != null) {
+      navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
+      return;
+    }
+
+    // If no user loaded, try to restore session
+    // This handles hot restart case where provider state is lost but auth token exists
+    final isLoggedIn = await loginProvider.checkLoginStatus();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (isLoggedIn && loginProvider.currentUser?.role?.id != null) {
+      navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
     } else {
-      // If no role found, redirect to login
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          context.router.goToLogin();
-        }
-      });
+      // If still no valid session/role, redirect to login
+      context.router.goToLogin();
     }
   }
 
@@ -54,8 +63,8 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HomeScreenContent extends StatelessWidget {
-  final GlobalKey<ScaffoldState> scaffoldKey;
   const _HomeScreenContent({required this.scaffoldKey});
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   /// Check if should use bottom bar (mobile platforms or mobile screen sizes)
   bool _shouldUseBottomBar(BuildContext context) {
@@ -90,34 +99,52 @@ class _HomeScreenContent extends StatelessWidget {
         child: const Icon(Icons.auto_awesome, color: Colors.white),
       );
 
-      // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
-      if (_shouldUseBottomBar(context)) {
-        return Scaffold(
-          key: scaffoldKey,
-          body: navProvider.pages[navProvider.currentIndex],
-          bottomNavigationBar: const CustomBottomNavBar(),
-          floatingActionButton: fab,
-          endDrawer: const Drawer(
-            width: 380, // Slightly wider for chat
-            child: AiChatScreen(),
-          ),
-          drawerEnableOpenDragGesture: false, // Prevent accidental swipe
-        );
-      }
-
-      // Desktop/Tablet (other platforms or larger screens) → Use Overlay Rail
-      return Scaffold(
-        key: scaffoldKey,
-        body: const _HomeScreenWithRail(),
-        floatingActionButton: fab,
-        endDrawer: const Drawer(
-          width: 400, // Wide drawer for desktop
-          child: AiChatScreen(),
-        ),
-        drawerEnableOpenDragGesture: false,
+      // Handle back button to navigate to first tab instead of exiting App
+      return PopScope(
+        canPop: navProvider.currentIndex == 0,
+        onPopInvokedWithResult: (bool didPop, result) {
+          if (didPop) {
+            return;
+          }
+          navProvider.setIndex(0);
+        },
+        child: _buildScaffold(context, navProvider, fab),
       );
     },
   );
+
+  Widget _buildScaffold(
+    BuildContext context,
+    BottomNavProvider navProvider,
+    Widget fab,
+  ) {
+    // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
+    if (_shouldUseBottomBar(context)) {
+      return Scaffold(
+        key: scaffoldKey,
+        body: navProvider.pages[navProvider.currentIndex],
+        bottomNavigationBar: const CustomBottomNavBar(),
+        floatingActionButton: fab,
+        endDrawer: const Drawer(
+          width: 380, // Slightly wider for chat
+          child: AiChatScreen(),
+        ),
+        drawerEnableOpenDragGesture: false, // Prevent accidental swipe
+      );
+    }
+
+    // Desktop/Tablet (other platforms or larger screens) → Use Overlay Rail
+    return Scaffold(
+      key: scaffoldKey,
+      body: const _HomeScreenWithRail(),
+      floatingActionButton: fab,
+      endDrawer: const Drawer(
+        width: 400, // Wide drawer for desktop
+        child: AiChatScreen(),
+      ),
+      drawerEnableOpenDragGesture: false,
+    );
+  }
 }
 
 class _HomeScreenWithRail extends StatefulWidget {

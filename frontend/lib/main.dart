@@ -23,12 +23,12 @@ import 'modules/teacher/providers/assignment_provider.dart';
 import 'modules/teacher/providers/examination_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/providers/question_paper_provider.dart';
+import 'modules/teacher/providers/teacher_classes_provider.dart';
 import 'modules/teacher/providers/teacher_dashboard_provider.dart';
 import 'modules/teacher/providers/timetable_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
-import 'provider/courses_provider.dart';
-import 'provider/teachers_provider.dart';
 import 'provider/bottom_nav_provider.dart';
+import 'provider/courses_provider.dart';
 import 'provider/dashboard/favourite_provider.dart';
 import 'provider/language_provider.dart';
 import 'provider/login_signup/login_provider.dart';
@@ -38,6 +38,7 @@ import 'provider/profile/change_password_provider.dart';
 import 'provider/profile/edit_profile_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
+import 'provider/teachers_provider.dart';
 import 'provider/theme_provider.dart';
 import 'utils/global_constants.dart';
 import 'utils/localization/app_localizations.dart';
@@ -137,6 +138,9 @@ void main() async {
         ),
         ChangeNotifierProvider<TeachersProvider>(
           create: (_) => TeachersProvider(),
+        ),
+        ChangeNotifierProvider<TeacherClassesProvider>(
+          create: (_) => TeacherClassesProvider(),
         ),
       ],
       child: const EdVerseApp(),

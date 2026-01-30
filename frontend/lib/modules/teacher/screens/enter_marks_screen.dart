@@ -23,8 +23,25 @@ class EnterMarksScreen extends StatelessWidget {
   );
 }
 
-class _EnterMarksContent extends StatelessWidget {
+class _EnterMarksContent extends StatefulWidget {
   const _EnterMarksContent();
+
+  @override
+  State<_EnterMarksContent> createState() => _EnterMarksContentState();
+}
+
+class _EnterMarksContentState extends State<_EnterMarksContent> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loginProvider = context.read<LoginProvider>();
+      final userUuid = loginProvider.currentUser?.uuid;
+      if (userUuid != null) {
+        context.read<MarksProvider>().loadInitialData(userUuid);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +373,7 @@ class _EnterMarksContent extends StatelessWidget {
     );
 
     if (selectedClass != null) {
-      provider.setSelectedClass(selectedClass);
+      await provider.setSelectedClass(selectedClass);
     }
   }
 

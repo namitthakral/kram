@@ -558,7 +558,8 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             onChanged: (subject) {
               setState(() {
                 _selectedSubject = subject;
-                _selectedClassSection = null; // Reset class when subject changes
+                _selectedClassSection =
+                    null; // Reset class when subject changes
               });
 
               // Filter class sections for the selected subject
@@ -643,8 +644,12 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       setState(() {
         _assignmentType = value;
         // Clear previous selections
-        if (value != 'pdf') _selectedFile = null;
-        if (value != 'manual') _manualTemplateSections = null;
+        if (value != 'pdf') {
+          _selectedFile = null;
+        }
+        if (value != 'manual') {
+          _manualTemplateSections = null;
+        }
       });
     },
     borderRadius: BorderRadius.circular(12),
@@ -734,7 +739,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
           type: SnackbarType.success,
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       showCustomSnackbar(
         message: 'Error picking file: $e',
         type: SnackbarType.warning,
@@ -762,7 +767,9 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   }
 
   int _getTotalQuestions() {
-    if (_manualTemplateSections == null) return 0;
+    if (_manualTemplateSections == null) {
+      return 0;
+    }
     return _manualTemplateSections!.fold(
       0,
       (sum, section) => sum + section.questions.length,
