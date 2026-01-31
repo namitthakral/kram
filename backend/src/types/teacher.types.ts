@@ -69,37 +69,6 @@ export interface TeacherStudentActivity {
   rollNumber: string | null
 }
 
-export interface TeacherAttendanceSummary {
-  period: 'daily' | 'weekly' | 'monthly'
-  startDate: Date
-  endDate: Date
-  summary: {
-    present: number
-    absent: number
-    late: number
-    excused: number
-    total: number
-  }
-  attendancePercentage: number
-  records: TeacherAttendanceRecord[]
-}
-
-export interface TeacherAttendanceRecord {
-  id: number
-  date: Date
-  status: string
-  student: {
-    id: number
-    name: string
-    admissionNumber: string
-  }
-  subject: {
-    name: string
-    code: string
-  }
-  remarks: string | null
-}
-
 // Additional teacher dashboard-related types
 export type TeacherAttendancePeriod = 'daily' | 'weekly' | 'monthly'
 

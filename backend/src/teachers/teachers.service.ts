@@ -31,7 +31,6 @@ import {
   EnhancedTeacherDashboardStats,
   GradeDistributionData,
   SubjectPerformanceData,
-  TeacherAttendanceSummary,
   TeacherDashboardStats,
   TeacherStudentActivity,
 } from '../types/teacher.types'
@@ -968,139 +967,6 @@ export class TeachersService {
     })
   }
 
-  async getAttendanceSummary(
-    teacherId: number,
-    date?: string,
-    period: 'daily' | 'weekly' | 'monthly' = 'daily'
-  ): Promise<TeacherAttendanceSummary> {
-    // Check if teacher exists
-    const teacher = await this.prisma.teacher.findUnique({
-      where: { id: teacherId },
-    })
-
-    if (!teacher) {
-      throw new NotFoundException(`Teacher with ID ${teacherId} not found`)
-    }
-
-    const targetDate = date ? new Date(date) : new Date()
-    let startDate: Date
-    let endDate: Date
-
-    // Calculate date range based on period
-    switch (period) {
-      case 'daily':
-        startDate = new Date(targetDate)
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date(targetDate)
-        endDate.setHours(23, 59, 59, 999)
-        break
-
-      case 'weekly':
-        startDate = new Date(targetDate)
-        startDate.setDate(targetDate.getDate() - targetDate.getDay())
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date(startDate)
-        endDate.setDate(startDate.getDate() + 6)
-        endDate.setHours(23, 59, 59, 999)
-        break
-
-      case 'monthly':
-        startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
-        endDate = new Date(
-          targetDate.getFullYear(),
-          targetDate.getMonth() + 1,
-          0,
-          23,
-          59,
-          59,
-          999
-        )
-        break
-    }
-
-    // Get attendance records
-    const attendanceRecords = await this.prisma.attendance.findMany({
-      where: {
-        section: {
-          teacherId,
-          status: 'ACTIVE',
-        },
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      include: {
-        student: {
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                name: true,
-              },
-            },
-          },
-        },
-        section: {
-          include: {
-            subject: {
-              select: {
-                subjectName: true,
-                subjectCode: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        date: 'desc',
-      },
-    })
-
-    // Group by status
-    const summary = attendanceRecords.reduce(
-      (acc, record) => {
-        acc[record.status.toLowerCase()] =
-          (acc[record.status.toLowerCase()] || 0) + 1
-        acc.total++
-        return acc
-      },
-      { present: 0, absent: 0, late: 0, excused: 0, total: 0 }
-    )
-
-    // Calculate percentage
-    const attendancePercentage =
-      summary.total > 0
-        ? Math.round(
-            ((summary.present + summary.late) / summary.total) * 100 * 10
-          ) / 10
-        : 0
-
-    return {
-      period,
-      startDate,
-      endDate,
-      summary,
-      attendancePercentage,
-      records: attendanceRecords.map(record => ({
-        id: record.id,
-        date: record.date,
-        status: record.status,
-        student: {
-          id: record.student.id,
-          name: record.student.user.name,
-          admissionNumber: record.student.admissionNumber,
-        },
-        subject: {
-          name: record.section.subject.subjectName,
-          code: record.section.subject.subjectCode,
-        },
-        remarks: record.remarks,
-      })),
-    }
-  }
-
   // UUID-based methods
   async updateByUuid(uuid: string, updateTeacherDto: UpdateTeacherDto) {
     // First find the teacher by UUID
@@ -1218,26 +1084,6 @@ export class TeachersService {
 
     // Use the existing getRecentStudentActivity method with the found teacher ID
     return this.getRecentStudentActivity(teacher.id, limit)
-  }
-
-  async getAttendanceSummaryByUuid(
-    uuid: string,
-    date?: string,
-    period: 'daily' | 'weekly' | 'monthly' = 'daily'
-  ): Promise<TeacherAttendanceSummary> {
-    // First find the teacher by UUID
-    const teacher = await this.prisma.teacher.findFirst({
-      where: {
-        user: { uuid },
-      },
-    })
-
-    if (!teacher) {
-      throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
-    }
-
-    // Use the existing getAttendanceSummary method with the found teacher ID
-    return this.getAttendanceSummary(teacher.id, date, period)
   }
 
   // ============================================================================
@@ -3596,6 +3442,156 @@ export class TeachersService {
     return {
       success: true,
       message: 'Attendance record deleted successfully',
+    }
+  }
+
+  /**
+   * Get attendance records with filtering, pagination, and sorting
+   */
+  async getAttendanceRecords(
+    userUuid: string,
+    query: {
+      sectionId?: number
+      studentId?: number
+      startDate?: string
+      endDate?: string
+      status?: string
+      limit?: number
+      offset?: number
+      sortBy?: 'date' | 'student' | 'section' | 'status'
+      sortOrder?: 'asc' | 'desc'
+    }
+  ) {
+    // Find teacher by UUID
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+    })
+
+    if (!teacher) {
+      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    }
+
+    // Build where clause
+    const where: Prisma.AttendanceWhereInput = {
+      section: {
+        teacherId: teacher.id,
+        status: 'ACTIVE',
+      },
+    }
+
+    // Apply filters
+    if (query.sectionId) {
+      where.sectionId = query.sectionId
+    }
+
+    if (query.studentId) {
+      where.studentId = query.studentId
+    }
+
+    if (query.status) {
+      where.status = query.status as 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED'
+    }
+
+    if (query.startDate || query.endDate) {
+      where.date = {}
+      if (query.startDate) {
+        where.date.gte = new Date(query.startDate)
+      }
+      if (query.endDate) {
+        where.date.lte = new Date(query.endDate)
+      }
+    }
+
+    // Build orderBy
+    let orderBy: Prisma.AttendanceOrderByWithRelationInput = {}
+    switch (query.sortBy) {
+      case 'date':
+        orderBy = { date: query.sortOrder || 'desc' }
+        break
+      case 'student':
+        orderBy = { student: { user: { name: query.sortOrder || 'asc' } } }
+        break
+      case 'section':
+        orderBy = { section: { sectionName: query.sortOrder || 'asc' } }
+        break
+      case 'status':
+        orderBy = { status: query.sortOrder || 'asc' }
+        break
+      default:
+        orderBy = { date: 'desc' }
+    }
+
+    // Get total count
+    const total = await this.prisma.attendance.count({ where })
+
+    // Get records with pagination
+    const records = await this.prisma.attendance.findMany({
+      where,
+      orderBy,
+      skip: query.offset || 0,
+      take: query.limit || 50,
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                uuid: true,
+              },
+            },
+          },
+        },
+        section: {
+          include: {
+            subject: {
+              select: {
+                subjectName: true,
+                subjectCode: true,
+              },
+            },
+            semester: {
+              select: {
+                semesterName: true,
+                semesterNumber: true,
+                status: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return {
+      total,
+      limit: query.limit || 50,
+      offset: query.offset || 0,
+      records: records.map(record => ({
+        id: record.id,
+        date: record.date,
+        status: record.status,
+        remarks: record.remarks,
+        markedAt: record.markedAt,
+        student: {
+          id: record.student.id,
+          name: record.student.user.name,
+          uuid: record.student.user.uuid,
+          admissionNumber: record.student.admissionNumber,
+          rollNumber: record.student.rollNumber,
+        },
+        section: {
+          id: record.section.id,
+          name: record.section.sectionName,
+          subject: {
+            name: record.section.subject.subjectName,
+            code: record.section.subject.subjectCode,
+          },
+          semester: {
+            name: record.section.semester.semesterName,
+            number: record.section.semester.semesterNumber,
+            status: record.section.semester.status,
+          },
+        },
+      })),
     }
   }
 

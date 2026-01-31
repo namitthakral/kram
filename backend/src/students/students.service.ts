@@ -36,6 +36,60 @@ import {
 export class StudentsService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Helper: Get attendance summary from database view
+   * Uses student_attendance_summary view for optimized performance
+   */
+  private async getAttendanceSummaryFromView(
+    studentId: number,
+    semesterId: number
+  ): Promise<
+    Array<{
+      subject_id: number
+      subject_name: string
+      subject_code: string
+      total_classes: bigint
+      classes_present: bigint
+      classes_absent: bigint
+      classes_late: bigint
+      classes_excused: bigint
+      attendance_percentage: number
+      status: string
+    }>
+  > {
+    return this.prisma.$queryRaw`
+      SELECT * FROM student_attendance_summary
+      WHERE student_id = ${studentId} AND semester_id = ${semesterId}
+    `
+  }
+
+  /**
+   * Helper: Get grade summary from database view
+   * Uses semester_grade_summary view for optimized SGPA calculations
+   */
+  private async getGradeSummaryFromView(
+    studentId: number,
+    semesterId: number
+  ): Promise<{
+    sgpa: number | null
+    total_subjects: bigint
+    percentage: number | null
+  } | null> {
+    const results = await this.prisma.$queryRaw<
+      Array<{
+        sgpa: number
+        total_subjects: bigint
+        percentage: number
+      }>
+    >`
+      SELECT sgpa, total_subjects, percentage
+      FROM semester_grade_summary
+      WHERE student_id = ${studentId} AND semester_id = ${semesterId}
+    `
+
+    return results.length > 0 ? results[0] : null
+  }
+
   async findAll(paginationDto: PaginationDto, _currentUser: UserWithRelations) {
     const {
       page = 1,
@@ -1504,7 +1558,7 @@ export class StudentsService {
     // Build report card components in parallel
     const [
       academicRecords,
-      attendanceData,
+      attendanceSummaryData,
       examResults,
       studentProgress,
       classRankData,
@@ -1529,16 +1583,8 @@ export class StudentsService {
         orderBy: { subject: { subjectCode: 'asc' } },
       }),
 
-      // Get attendance for the semester period
-      this.prisma.attendance.findMany({
-        where: {
-          studentId: student.id,
-          date: {
-            gte: semester.startDate,
-            lte: semester.endDate,
-          },
-        },
-      }),
+      // Get attendance summary from optimized view (replaces individual attendance query)
+      this.getAttendanceSummaryFromView(student.id, semester.id),
 
       // Get exam results if requested
       queryParams.includeExamDetails !== false
@@ -1677,12 +1723,19 @@ export class StudentsService {
       }
     })
 
-    // Build attendance summary
-    const totalClasses = attendanceData.length
-    const classesAttended = attendanceData.filter(
-      record => record.status === 'PRESENT'
-    ).length
-    const classesAbsent = totalClasses - classesAttended
+    // Build attendance summary from optimized view data
+    const totalClasses = attendanceSummaryData.reduce(
+      (sum, record) => sum + Number(record.total_classes),
+      0
+    )
+    const classesAttended = attendanceSummaryData.reduce(
+      (sum, record) => sum + Number(record.classes_present) + Number(record.classes_late),
+      0
+    )
+    const classesAbsent = attendanceSummaryData.reduce(
+      (sum, record) => sum + Number(record.classes_absent),
+      0
+    )
     const attendancePercentage =
       totalClasses > 0
         ? Math.round((classesAttended / totalClasses) * 100 * 100) / 100

@@ -17,7 +17,6 @@ import '../models/examination_models.dart';
 /// - GET /teachers/:user_uuid/subject-performance - Get subject performance
 /// - GET /teachers/:user_uuid/grade-distribution - Get grade distribution
 /// - GET /teachers/:user_uuid/recent-activity - Get recent student activity
-/// - GET /teachers/:user_uuid/attendance-summary - Get attendance summary
 /// - POST /teachers - Create new teacher (admin only)
 /// - POST /teachers/:user_uuid/assign-subjects - Assign subjects to teacher
 /// - PATCH /teachers/:user_uuid - Update teacher
@@ -169,55 +168,6 @@ class TeacherService {
         throw Exception('Unauthorized access');
       } else {
         throw Exception('Failed to load grade distribution: ${e.message}');
-      }
-    } catch (e) {
-      throw Exception('Unexpected error: $e');
-    }
-  }
-
-  /// Get attendance summary for a teacher
-  ///
-  /// Endpoint: GET /teachers/:user_uuid/attendance-summary
-  ///
-  /// [userUuid] - Teacher's user UUID
-  /// [date] - Optional date filter
-  /// [period] - Optional period filter (daily, weekly, monthly)
-  Future<Map<String, dynamic>> getAttendanceSummary(
-    String userUuid, {
-    String? date,
-    String? period,
-  }) async {
-    try {
-      final queryParams = <String, dynamic>{};
-      if (date != null) {
-        queryParams['date'] = date;
-      }
-      if (period != null) {
-        queryParams['period'] = period;
-      }
-
-      final response = await _apiService.dio.get(
-        '/teachers/$userUuid/attendance-summary',
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error: 'Failed to load attendance summary',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        throw Exception('Teacher not found');
-      } else if (e.response?.statusCode == 401) {
-        throw Exception('Unauthorized access');
-      } else {
-        throw Exception('Failed to load attendance summary: ${e.message}');
       }
     } catch (e) {
       throw Exception('Unexpected error: $e');
