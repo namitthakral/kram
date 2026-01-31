@@ -704,64 +704,53 @@ export class AdminService {
   }
 
   private async getTeacherPerformanceData(limit: number = 10) {
-    const teachers = await this.prisma.teacher.findMany({
-      take: limit,
-      include: {
-        user: true,
-        teacherSubjects: {
-          include: {
-            subject: true,
-          },
-        },
-      },
-    })
+    // Optimized: Use raw SQL with JOINs and GROUP BY to eliminate N+1 queries
+    const performanceData = await this.prisma.$queryRaw<
+      Array<{
+        teacher_id: number
+        teacher_name: string
+        subject_name: string
+        student_count: bigint
+        avg_grade: number
+      }>
+    >`
+      SELECT 
+        t.id as teacher_id,
+        u.name as teacher_name,
+        COALESCE(s.subject_name, 'Multiple Subjects') as subject_name,
+        COUNT(DISTINCT cs.id) as student_count,
+        COALESCE(
+          ROUND(
+            AVG(
+              CASE 
+                WHEN er.marks_obtained IS NOT NULL AND e.total_marks > 0 
+                THEN (er.marks_obtained::DECIMAL / e.total_marks) * 100
+                ELSE NULL
+              END
+            ), 
+            2
+          ), 
+          0
+        ) as avg_grade
+      FROM teachers t
+      JOIN users u ON t.user_id = u.id
+      LEFT JOIN teacher_subjects ts ON t.id = ts.teacher_id
+      LEFT JOIN subjects s ON ts.subject_id = s.id
+      LEFT JOIN class_sections cs ON t.id = cs.teacher_id
+      LEFT JOIN exam_results er ON t.id = er.evaluated_by
+      LEFT JOIN examinations e ON er.exam_id = e.id
+      GROUP BY t.id, u.name, s.subject_name
+      ORDER BY t.id DESC
+      LIMIT ${limit}
+    `
 
-    const performanceData = await Promise.all(
-      teachers.map(async teacher => {
-        // Get number of students taught through class sections
-        const studentCount = await this.prisma.classSection.count({
-          where: {
-            teacherId: teacher.id,
-          },
-        })
-
-        // Get average exam results for students taught by this teacher
-        const examResults = await this.prisma.examResult.findMany({
-          where: {
-            evaluatedBy: teacher.id,
-          },
-          select: {
-            marksObtained: true,
-            exam: {
-              select: {
-                totalMarks: true,
-              },
-            },
-          },
-        })
-
-        const avgGrade =
-          examResults.length > 0
-            ? examResults.reduce((sum, result) => {
-                const marks = Number(result.marksObtained || 0)
-                const total = result.exam.totalMarks
-                return sum + (total > 0 ? (marks / total) * 100 : 0)
-              }, 0) / examResults.length
-            : 0
-
-        return {
-          teacher_name: teacher.user.name,
-          subject:
-            teacher.teacherSubjects[0]?.subject.subjectName ||
-            'Multiple Subjects',
-          students: studentCount,
-          avg_grade: Math.round(avgGrade * 100) / 100,
-          rating: 4.5, // Placeholder - implement rating system later
-        }
-      })
-    )
-
-    return performanceData
+    return performanceData.map(data => ({
+      teacher_name: data.teacher_name,
+      subject: data.subject_name,
+      students: Number(data.student_count),
+      avg_grade: data.avg_grade,
+      rating: 4.5, // Placeholder - implement rating system later
+    }))
   }
 
   /**
@@ -864,73 +853,55 @@ export class AdminService {
   }
 
   private async getClassPerformanceData() {
-    const sections = await this.prisma.classSection.findMany({
-      take: 20,
-      include: {
-        subject: true,
-        semester: true,
-      },
-    })
-
-    const performanceData = await Promise.all(
-      sections.map(async section => {
-        // Get number of enrollments for this section
-        const studentCount = await this.prisma.enrollment.count({
-          where: {
-            subjectId: section.subjectId,
-            semesterId: section.semesterId,
-          },
-        })
-
-        // Get average academic record grades for this section's subject
-        const academicRecords = await this.prisma.academicRecord.findMany({
-          where: {
-            subjectId: section.subjectId,
-            semesterId: section.semesterId,
-          },
-          select: {
-            marksObtained: true,
-            maxMarks: true,
-          },
-        })
-
-        const avgGrade =
-          academicRecords.length > 0
-            ? academicRecords.reduce((sum, record) => {
-                const marks = Number(record.marksObtained || 0)
-                const max = Number(record.maxMarks || 1)
-                return sum + (max > 0 ? (marks / max) * 100 : 0)
-              }, 0) / academicRecords.length
-            : 0
-
-        // Get attendance rate for this section
-        const attendanceData = await this.prisma.attendance.groupBy({
-          by: ['status'],
-          where: {
-            sectionId: section.id,
-          },
-          _count: { id: true },
-        })
-
-        const totalAttendance = attendanceData.reduce(
-          (sum, record) => sum + record._count.id,
+    // Optimized: Use raw SQL with JOINs and GROUP BY to eliminate N+1 queries
+    const performanceData = await this.prisma.$queryRaw<
+      Array<{
+        class_name: string
+        student_count: bigint
+        avg_grade: number
+        attendance_rate: number
+      }>
+    >`
+      SELECT 
+        CONCAT(s.subject_name, ' (', cs.section_name, ')') as class_name,
+        COUNT(DISTINCT e.student_id) as student_count,
+        COALESCE(
+          ROUND(
+            AVG(
+              CASE 
+                WHEN ar.marks_obtained IS NOT NULL AND ar.max_marks > 0 
+                THEN (ar.marks_obtained::DECIMAL / ar.max_marks) * 100
+                ELSE NULL
+              END
+            ), 
+            2
+          ), 
           0
-        )
-        const presentCount =
-          attendanceData.find(r => r.status === 'PRESENT')?._count.id || 0
-        const attendanceRate =
-          totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0
+        ) as avg_grade,
+        COALESCE(
+          ROUND(
+            (COUNT(*) FILTER (WHERE a.status = 'PRESENT')::DECIMAL / NULLIF(COUNT(a.id), 0)) * 100,
+            2
+          ),
+          0
+        ) as attendance_rate
+      FROM class_sections cs
+      JOIN subjects s ON cs.subject_id = s.id
+      LEFT JOIN enrollments e ON cs.subject_id = e.subject_id AND cs.semester_id = e.semester_id
+      LEFT JOIN academic_records ar ON cs.subject_id = ar.subject_id AND cs.semester_id = ar.semester_id
+      LEFT JOIN attendance a ON cs.id = a.section_id
+      WHERE cs.status = 'ACTIVE'
+      GROUP BY cs.id, s.subject_name, cs.section_name
+      ORDER BY cs.id DESC
+      LIMIT 20
+    `
 
-        return {
-          class_name: `${section.subject.subjectName} (${section.sectionName})`,
-          student_count: studentCount,
-          avg_grade: Math.round(avgGrade * 100) / 100,
-          attendance_rate: Math.round(attendanceRate * 100) / 100,
-        }
-      })
-    )
-
-    return performanceData
+    return performanceData.map(data => ({
+      class_name: data.class_name,
+      student_count: Number(data.student_count),
+      avg_grade: data.avg_grade,
+      attendance_rate: data.attendance_rate,
+    }))
   }
 
   /**
@@ -1000,46 +971,44 @@ export class AdminService {
       timestamp: Date
     }> = []
 
-    // Check for low attendance in sections
-    const sections = await this.prisma.classSection.findMany({
-      take: 50,
-      include: {
-        subject: true,
-      },
+    // Optimized: Use raw SQL to get low attendance sections in one query
+    const lowAttendanceSections = await this.prisma.$queryRaw<
+      Array<{
+        subject_name: string
+        section_name: string
+        attendance_rate: number
+      }>
+    >`
+      SELECT 
+        s.subject_name,
+        cs.section_name,
+        ROUND(
+          (COUNT(*) FILTER (WHERE a.status = 'PRESENT')::DECIMAL / NULLIF(COUNT(a.id), 0)) * 100,
+          1
+        ) as attendance_rate
+      FROM class_sections cs
+      JOIN subjects s ON cs.subject_id = s.id
+      LEFT JOIN attendance a ON cs.id = a.section_id
+      WHERE cs.status = 'ACTIVE'
+        AND a.date >= CURRENT_DATE - INTERVAL '7 days'
+      GROUP BY cs.id, s.subject_name, cs.section_name
+      HAVING 
+        COUNT(a.id) > 0 
+        AND ROUND((COUNT(*) FILTER (WHERE a.status = 'PRESENT')::DECIMAL / NULLIF(COUNT(a.id), 0)) * 100, 1) < 78
+      LIMIT 50
+    `
+
+    // Add low attendance alerts
+    lowAttendanceSections.forEach(section => {
+      alerts.push({
+        category: 'Attendance',
+        message: `${section.subject_name} (${section.section_name}) has ${section.attendance_rate}% attendance this week`,
+        severity: 'high',
+        timestamp: new Date(),
+      })
     })
 
-    for (const section of sections) {
-      const attendanceData = await this.prisma.attendance.groupBy({
-        by: ['status'],
-        where: {
-          sectionId: section.id,
-          date: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
-          },
-        },
-        _count: { id: true },
-      })
-
-      const totalAttendance = attendanceData.reduce(
-        (sum, record) => sum + record._count.id,
-        0
-      )
-      const presentCount =
-        attendanceData.find(r => r.status === 'PRESENT')?._count.id || 0
-      const attendanceRate =
-        totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0
-
-      if (attendanceRate < 78 && totalAttendance > 0) {
-        alerts.push({
-          category: 'Attendance',
-          message: `${section.subject.subjectName} (${section.sectionName}) has ${attendanceRate.toFixed(1)}% attendance this week`,
-          severity: 'high',
-          timestamp: new Date(),
-        })
-      }
-    }
-
-    // Check for pending fees
+    // Check for pending fees (already optimized)
     const overdueFees = await this.prisma.studentFee.count({
       where: {
         status: 'OVERDUE',

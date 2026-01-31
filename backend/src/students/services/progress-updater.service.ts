@@ -87,15 +87,21 @@ export class ProgressUpdaterService {
       return
     }
 
-    // Calculate all metrics using ProgressCalculator with institution config
-    const progressData = await ProgressCalculator.calculateCompleteProgress(
+    // Calculate all metrics using optimized batch ProgressCalculator
+    const progressMap = await ProgressCalculator.calculateProgressBatch(
       this.prisma,
-      studentId,
+      [studentId], // Batch method even for single student (uses optimized views)
       subjectId,
       semesterId,
       academicYearId,
       student.institutionId
     )
+    
+    const progressData = progressMap.get(studentId)
+    if (!progressData) {
+      this.logger.warn(`Could not calculate progress for student ${studentId}`)
+      return
+    }
 
     // Update or create StudentProgress record
     await this.prisma.studentProgress.upsert({

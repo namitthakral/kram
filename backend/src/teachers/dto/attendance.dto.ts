@@ -79,3 +79,45 @@ export class UpdateAttendanceDto {
   @IsOptional()
   remarks?: string
 }
+
+export class AttendanceQueryDto {
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  sectionId?: number
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  studentId?: number
+
+  @IsDateString()
+  @IsOptional()
+  startDate?: string
+
+  @IsDateString()
+  @IsOptional()
+  endDate?: string
+
+  @IsEnum(AttendanceStatus)
+  @IsOptional()
+  status?: AttendanceStatus
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  limit?: number = 50
+
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  offset?: number = 0
+
+  @IsString()
+  @IsOptional()
+  sortBy?: 'date' | 'student' | 'section' | 'status' = 'date'
+
+  @IsString()
+  @IsOptional()
+  sortOrder?: 'asc' | 'desc' = 'desc'
+}

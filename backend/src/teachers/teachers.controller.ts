@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { CreateAssignmentDto, UpdateAssignmentDto } from './dto/assignment.dto'
 import {
+  AttendanceQueryDto,
   BulkMarkAttendanceDto,
   MarkAttendanceDto,
   UpdateAttendanceDto,
@@ -128,21 +129,6 @@ export class TeachersController {
     return this.teachersService.getRecentStudentActivityByUuid(
       userUuid,
       parsedLimit
-    )
-  }
-
-  @Get(':user_uuid/attendance-summary')
-  @UseGuards(RolesGuard)
-  @Roles('super_admin', 'admin', 'teacher')
-  getAttendanceSummary(
-    @Param('user_uuid') userUuid: string,
-    @Query('date') date?: string,
-    @Query('period') period?: 'daily' | 'weekly' | 'monthly'
-  ) {
-    return this.teachersService.getAttendanceSummaryByUuid(
-      userUuid,
-      date,
-      period
     )
   }
 
@@ -347,6 +333,16 @@ export class TeachersController {
   }
 
   // ==================== Attendance Management ====================
+
+  @Get(':user_uuid/attendance/records')
+  @UseGuards(RolesGuard)
+  @Roles('teacher', 'super_admin', 'admin')
+  getAttendanceRecords(
+    @Param('user_uuid') userUuid: string,
+    @Query() query: AttendanceQueryDto
+  ) {
+    return this.teachersService.getAttendanceRecords(userUuid, query)
+  }
 
   @Post(':user_uuid/attendance')
   @UseGuards(RolesGuard)
