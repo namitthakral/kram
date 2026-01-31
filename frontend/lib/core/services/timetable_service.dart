@@ -127,6 +127,75 @@ class TimetableService {
     }
   }
 
+  /// Update a time slot
+  ///
+  /// Endpoint: PATCH /timetable/time-slots/:id
+  ///
+  /// [id] - Time slot ID
+  /// [data] - Updated time slot data
+  Future<Map<String, dynamic>> updateTimeSlot(
+    int id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/timetable/time-slots/$id',
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update time slot',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to update time slot',
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to update time slot',
+      );
+    }
+  }
+
+  /// Delete a time slot
+  ///
+  /// Endpoint: DELETE /timetable/time-slots/:id
+  ///
+  /// [id] - Time slot ID
+  Future<void> deleteTimeSlot(int id) async {
+    try {
+      final response = await _apiService.dio.delete('/timetable/time-slots/$id');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete time slot',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to delete time slot',
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to delete time slot',
+      );
+    }
+  }
+
   // ============ Room Methods ============
 
   /// Get all rooms

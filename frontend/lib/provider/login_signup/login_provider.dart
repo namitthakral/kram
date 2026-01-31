@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
@@ -33,6 +34,11 @@ class LoginProvider extends ChangeNotifier {
 
   final AuthService _authService = AuthService();
 
+  // SharedPreferences keys for Remember Me
+  static const String _keyRememberMe = 'remember_me';
+  static const String _keySavedIdentifier = 'saved_identifier';
+  static const String _keySavedPassword = 'saved_password';
+
   void updatePasswordVisibility() {
     _isPasswordVisible = !_isPasswordVisible;
     notifyListeners();
@@ -41,6 +47,11 @@ class LoginProvider extends ChangeNotifier {
   void updateRememberPassword({bool rememberPass = false}) {
     _rememberPassword = rememberPass;
     notifyListeners();
+
+    // If unchecked, clear saved credentials
+    if (!rememberPass) {
+      _clearSavedCredentials();
+    }
   }
 
   void updateLoginAccountClicked({bool loginAccountClicked = false}) {
@@ -129,6 +140,14 @@ class LoginProvider extends ChangeNotifier {
       _currentUser = response.user;
 
       log('Login successful for user: ${response.user.email}');
+
+      // Save credentials if Remember Me is checked
+      if (_rememberPassword) {
+        await _saveCredentials(identifier, password);
+      } else {
+        await _clearSavedCredentials();
+      }
+
       updateLoginAccountClicked(loginAccountClicked: true);
     } on Exception catch (e) {
       var errorMessage = 'Login failed. Please try again.';
@@ -182,6 +201,10 @@ class LoginProvider extends ChangeNotifier {
       updateLoginAccountClicked();
       clearError();
 
+      // Clear saved credentials on logout (user can re-check Remember Me on next login)
+      await _clearSavedCredentials();
+      _rememberPassword = false;
+
       log('Logout successful');
     } on Exception catch (e) {
       _setError('Logout failed: $e');
@@ -213,6 +236,55 @@ class LoginProvider extends ChangeNotifier {
     updateLoginAccountClicked(loginAccountClicked: true);
     log('Controller 2: ${changePasswordController?.text}');
     log('Controller 3: ${changeConfirmPasswordController?.text}');
+  }
+
+  /// Load saved credentials if Remember Me was previously checked
+  Future<void> loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final rememberMe = prefs.getBool(_keyRememberMe) ?? false;
+
+      if (rememberMe) {
+        final savedIdentifier = prefs.getString(_keySavedIdentifier);
+        final savedPassword = prefs.getString(_keySavedPassword);
+
+        if (savedIdentifier != null && savedPassword != null) {
+          emailController?.text = savedIdentifier;
+          passwordController?.text = savedPassword;
+          _rememberPassword = true;
+          notifyListeners();
+          log('Loaded saved credentials');
+        }
+      }
+    } on Exception catch (e) {
+      log('Error loading saved credentials: $e');
+    }
+  }
+
+  /// Save credentials to SharedPreferences
+  Future<void> _saveCredentials(String identifier, String password) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_keyRememberMe, true);
+      await prefs.setString(_keySavedIdentifier, identifier);
+      await prefs.setString(_keySavedPassword, password);
+      log('Credentials saved');
+    } on Exception catch (e) {
+      log('Error saving credentials: $e');
+    }
+  }
+
+  /// Clear saved credentials from SharedPreferences
+  Future<void> _clearSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_keyRememberMe);
+      await prefs.remove(_keySavedIdentifier);
+      await prefs.remove(_keySavedPassword);
+      log('Saved credentials cleared');
+    } on Exception catch (e) {
+      log('Error clearing saved credentials: $e');
+    }
   }
 
   @override

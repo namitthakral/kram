@@ -341,7 +341,7 @@ class _ProfessionalInfoTabState extends State<ProfessionalInfoTab> {
       ),
       const SizedBox(height: 8),
       DropdownButtonFormField<String>(
-        initialValue: value,
+        initialValue: items.contains(value) ? value : null,
         onChanged: onChanged,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, size: 20, color: AppTheme.slate500),

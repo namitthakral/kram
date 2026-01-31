@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/bottom_nav_provider.dart';
@@ -15,6 +16,7 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final theme = themeProvider.themeData;
+    final currentRoute = GoRouterState.of(context).uri.path;
 
     // Bottom navigation bar - only for mobile
     return Column(
@@ -28,20 +30,29 @@ class CustomBottomNavBar extends StatelessWidget {
               return const SizedBox.shrink();
             }
 
+            // Get current index based on route
+            final selectedIndex = navProvider.getCurrentIndex(currentRoute);
+
             return NavigationBar(
               labelPadding: EdgeInsets.zero,
-              selectedIndex: navProvider.currentIndex,
-              onDestinationSelected: (index) => navProvider.setIndex(index),
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (index) {
+                navProvider.navigateToIndex(context, index);
+              },
               height: 60,
-              destinations: navProvider.navigationItems
-                  .map(
-                    (item) => NavigationDestination(
-                      icon: _buildIcon(item.iconUrl),
-                      selectedIcon: _buildIcon(item.iconFilledUrl, isSelected: true),
-                      label: context.translate(item.labelKey),
-                    ),
-                  )
-                  .toList(),
+              destinations:
+                  navProvider.navigationItems
+                      .map(
+                        (item) => NavigationDestination(
+                          icon: _buildIcon(item.iconUrl),
+                          selectedIcon: _buildIcon(
+                            item.iconFilledUrl,
+                            isSelected: true,
+                          ),
+                          label: context.translate(item.labelKey),
+                        ),
+                      )
+                      .toList(),
             );
           },
         ),

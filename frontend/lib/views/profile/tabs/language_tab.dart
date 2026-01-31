@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../provider/bottom_nav_provider.dart';
 import '../../../provider/language_provider.dart';
 import '../../../utils/extensions.dart';
 
@@ -30,7 +30,7 @@ class LanguageTab extends StatelessWidget {
                             languageProvider.locale.languageCode == 'en',
                         onTap: () {
                           languageProvider.setLocale('en');
-                          context.read<BottomNavProvider>().setIndex(0);
+                          context.go('/dashboard');
                         },
                       ),
                       const SizedBox(height: 16),
@@ -41,7 +41,7 @@ class LanguageTab extends StatelessWidget {
                             languageProvider.locale.languageCode == 'hi',
                         onTap: () {
                           languageProvider.setLocale('hi');
-                          context.read<BottomNavProvider>().setIndex(0);
+                          context.go('/dashboard');
                         },
                       ),
                     ],

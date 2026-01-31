@@ -405,4 +405,104 @@ class RoleNavigationConfig {
 
     return roleFeatures[roleId]?.contains(featureName) ?? false;
   }
+
+  /// Get the route path for a specific role and navigation index
+  static String getRoutePath(int roleId, int index) {
+    final routes = _getRoutePathsForRole(roleId);
+    if (index < 0 || index >= routes.length) {
+      return '/dashboard';
+    }
+    return routes[index];
+  }
+
+  /// Get the navigation index from a route path for a specific role
+  static int? getIndexFromRoute(int roleId, String route) {
+    final routes = _getRoutePathsForRole(roleId);
+
+    // Normalize the route (remove trailing slashes, handle nested routes)
+    final normalizedRoute = route.split('?').first; // Remove query params
+
+    // Check for exact match first
+    final exactIndex = routes.indexOf(normalizedRoute);
+    if (exactIndex != -1) {
+      return exactIndex;
+    }
+
+    // Check if it's a nested route under /academic
+    if (normalizedRoute.startsWith('/academic/')) {
+      return routes.indexOf('/academic');
+    }
+
+    // Check if it's a nested route under /classes
+    if (normalizedRoute.startsWith('/classes/')) {
+      return routes.indexOf('/classes');
+    }
+
+    // Default to dashboard
+    return 0;
+  }
+
+  /// Get route paths for a specific role
+  static List<String> _getRoutePathsForRole(int roleId) => switch (roleId) {
+        // Super Admin routes
+        1 => [
+            '/dashboard',
+            '/institutions',
+            '/analytics',
+            '/system-settings',
+            '/security',
+            '/profile',
+          ],
+        // Admin routes
+        2 => [
+            '/dashboard',
+            '/students',
+            '/staff',
+            '/fees',
+            '/transport',
+            '/academic',
+            '/reports',
+            '/profile',
+          ],
+        // Student routes
+        3 => [
+            '/dashboard',
+            '/grades',
+            '/timetable',
+            '/assignments',
+            '/events',
+            '/profile',
+          ],
+        // Parent routes
+        4 => [
+            '/dashboard',
+            '/child-progress',
+            '/fee-payment',
+            '/announcements',
+            '/profile',
+          ],
+        // Teacher routes
+        5 => [
+            '/dashboard',
+            '/classes',
+            '/academic',
+            '/profile',
+          ],
+        // Librarian routes
+        6 => [
+            '/dashboard',
+            '/books',
+            '/issued-books',
+            '/profile',
+          ],
+        // Staff routes
+        7 => [
+            '/dashboard',
+            '/schedule',
+            '/messages',
+            '/profile',
+          ],
+        // Default
+        _ => ['/dashboard', '/profile'],
+      };
 }

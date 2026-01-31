@@ -14,8 +14,23 @@ import '../../widgets/custom_widgets/custom_elevated_button.dart';
 import '../../widgets/custom_widgets/custom_text_button.dart';
 import '../../widgets/custom_widgets/custom_text_field.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load saved credentials if Remember Me was previously checked
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loginProvider = context.read<LoginProvider>();
+      loginProvider.loadSavedCredentials();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
