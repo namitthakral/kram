@@ -24,11 +24,8 @@ import '../../modules/super_admin/screens/institutions_screen.dart';
 import '../../modules/super_admin/screens/security_screen.dart';
 import '../../modules/super_admin/screens/system_settings_screen.dart';
 import '../../modules/teacher/screens/academic_management_screen.dart';
-import '../../modules/teacher/screens/assignments_list_screen.dart';
-import '../../modules/teacher/screens/examinations_list_screen.dart';
 import '../../modules/teacher/screens/my_classes_screen.dart';
 import '../../modules/teacher/screens/teacher_dashboard_screen.dart';
-import '../../modules/teacher/screens/timetables_list_screen.dart';
 import '../../utils/custom_images.dart';
 import '../../views/dashboard/staff_dashboard_screen.dart';
 import '../../views/dashboard/super_admin_dashboard_screen.dart';
@@ -159,28 +156,6 @@ class RoleNavigationConfig {
       labelKey: 'my_classes',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconSchedule,
-      iconFilledUrl: CustomImages.iconScheduleFilled,
-      labelKey: 'timetable',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconReport,
-      iconFilledUrl: CustomImages.iconReportFilled,
-      labelKey: 'examinations', // Can stay as is if Exam List is the view
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconAcademic,
-      iconFilledUrl: CustomImages.iconAcademicFilled,
-      labelKey: 'assignments', // Can stay as is if Assignment List is the view
-    ),
-    // Replaced 'academic' with explicit items as requested?
-    // Wait, the plan was to link screens. `RoleNavigationConfig` maps keys to screens.
-    // I need to check `getPages` mapping.
-    // The keys 'timetable', 'examinations', 'assignments' must map to the List/View screens.
-    // I see 'academic' maps to `AcademicManagementScreen`.
-    // The user's request implies we should use individual items or ensure 'academic' sub-items work.
-    // If I add Marks, Question Papers, Attendance here, looking at `getPages` order is critical.
-    NavigationItemModel(
       iconUrl: CustomImages.iconSetting4,
       iconFilledUrl: CustomImages.iconSetting4,
       labelKey: 'academic',
@@ -195,9 +170,6 @@ class RoleNavigationConfig {
   static final List<Widget> _teacherPages = [
     const TeacherDashboardScreen(),
     const MyClassesScreen(),
-    const TimetablesListScreen(),
-    const ExaminationsListScreen(),
-    const AssignmentsListScreen(),
     const AcademicManagementScreen(),
     const ProfileScreen(),
   ];

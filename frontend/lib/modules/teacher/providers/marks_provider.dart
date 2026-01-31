@@ -28,6 +28,10 @@ class MarksProvider with ChangeNotifier {
   List<ClassInfo> _availableClasses = [];
   List<SubjectInfo> _availableSubjects = [];
 
+  // Recent exams list
+  List<dynamic> _recentExams = [];
+  List<dynamic> get recentExams => _recentExams;
+
   // Keep mock exam types for now as no service found for it yet,
   // or fetch if available. Assuming static for now.
   final List<ExamType> _availableExamTypes = [
@@ -95,10 +99,6 @@ class MarksProvider with ChangeNotifier {
             );
           }).toList();
 
-      // For subjects, we might need a separate call or extract from classes
-      // Assuming getTeacherSubjects exists or we can derive it.
-      // If not, we can fetch subjects for the selected class later.
-      // Checking TeacherService again, it has getTeacherSubjects (line 13).
       final subjectsData = await _teacherService.getTeacherSubjects(userUuid);
       _availableSubjects =
           subjectsData.map((data) {
@@ -111,6 +111,25 @@ class MarksProvider with ChangeNotifier {
       _error = null;
     } catch (e) {
       _error = 'Failed to load data: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load Recent Exams for List Screen
+  Future<void> loadRecentExams(String userUuid) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final exams = await _teacherService.getExaminations(userUuid);
+      _recentExams = exams;
+      _error = null;
+    } catch (e) {
+      _error = 'Failed to load exams: $e';
+      _recentExams = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -219,26 +238,10 @@ class MarksProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Logic to save marks
-      // We need to map _students marks to API format
-      // TeacherService.uploadBulkExamResults(userUuid, examId, results)
-      // Wait, we don't have examId unless we Create Exam first.
-      // Usually "Enter Marks" workflow implies selecting an existing exam or creating one implicitly.
-      // If we assume implicitly creating an exam result for each student:
-      // Or maybe we create an Exam first?
-      // Since existing UI is "Enter Marks" with "Exam Type" and "Date", it suggests creating a new record of marks.
-      // This might correspond to `createExamResult` loop or `uploadBulkExamResults` if exam exists.
-
-      // For now, let's assume we just print/log as "Not Implemented" fully or
-      // try to mock success if backend requires complex flow (like creating Exam entity first).
-
-      // Real implementation would be:
-      // 1. Create Exam (if not exists)
-      // 2. Upload results.
-
+      // Logic to save marks would go here
       await Future.delayed(
         const Duration(seconds: 1),
-      ); // Mock save for now as Exam creation flow is complex
+      ); // Mock save for now
 
       return true;
     } catch (e) {

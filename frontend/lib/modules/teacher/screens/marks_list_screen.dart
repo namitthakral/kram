@@ -1,44 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
+import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/unified_loader.dart';
+import '../models/examination_models.dart';
+import '../providers/marks_provider.dart';
 
-class MarksListScreen extends StatelessWidget {
+class MarksListScreen extends StatefulWidget {
   const MarksListScreen({super.key});
 
   @override
+  State<MarksListScreen> createState() => _MarksListScreenState();
+}
+
+class _MarksListScreenState extends State<MarksListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final loginProvider = context.read<LoginProvider>();
+    final userUuid = loginProvider.currentUser?.uuid;
+    if (userUuid != null) {
+      context.read<MarksProvider>().loadRecentExams(userUuid);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<MarksProvider>();
     final loginProvider = context.watch<LoginProvider>();
     final user = loginProvider.currentUser;
+    final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
 
-    return CustomMainScreenWithAppbar(
-      title: 'Marks & Results',
-      appBarConfig: AppBarConfig.teacher(
-        userInitials: user?.name?.substring(0, 1) ?? 'T',
-        userName: user?.name ?? 'Teacher',
-        designation: user?.teacher?.designation ?? 'Teacher',
-        employeeId: user?.teacher?.employeeId ?? 'EMP',
-        onNotificationIconPressed: () {},
-      ),
-      bottomWidget: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton.icon(
+    return Stack(
+      children: [
+        CustomMainScreenWithAppbar(
+          title: 'Marks & Results',
+          appBarConfig: AppBarConfig.teacher(
+            userInitials: userInitials,
+            userName: user?.name ?? 'Teacher',
+            designation: user?.teacher?.designation ?? 'Faculty',
+            employeeId: user?.teacher?.employeeId ?? 'N/A',
+            onNotificationIconPressed: () {},
+          ),
+          floatingActionButton: FloatingActionButton.extended(
             onPressed: () {
               context.pushNamed('enter_marks');
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: CustomAppColors.pink,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            backgroundColor: CustomAppColors.pink,
             icon: const Icon(Icons.grading_rounded, color: Colors.white),
             label: const Text(
               'Enter Marks',
@@ -49,43 +69,76 @@ class MarksListScreen extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Recent Submissions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: CustomAppColors.slate800,
+          child: RefreshIndicator(
+            onRefresh: _loadData,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                top: 16,
+                left: 16,
+                right: 16,
+                bottom: 80,
+              ),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Recent Exams',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: CustomAppColors.slate800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (provider.recentExams.isEmpty && !provider.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: Text('No exams found'),
+                      ),
+                    )
+                  else
+                    ...provider.recentExams.map((exam) {
+                      // Handling potential dynamic or Examination model
+                      String title = 'Unknown Exam';
+                      String subtitle = 'Unknown Class';
+                      String dateStr = '';
+                      bool isPending = false;
+                      // Logic: if current date < exam date + duration? Or check status?
+                      // Assuming 'scheduled' is pending results? Or 'completed' needs marks.
+
+                      if (exam is Examination) {
+                        title = exam.examName;
+                        subtitle =
+                            exam.courseName ?? exam.courseId.toString();
+                        dateStr = DateFormat(
+                          'MMM d, yyyy',
+                        ).format(exam.examDate);
+                        isPending = exam.status == 'scheduled'; // Example logic
+                      } else if (exam is Map<String, dynamic>) {
+                        title = exam['name'] ?? 'Unknown Exam';
+                        subtitle = exam['courseName'] ?? '';
+                        dateStr = exam['date'] ?? '';
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildMarksItem(
+                          title,
+                          subtitle,
+                          dateStr,
+                          isPending: isPending,
+                        ),
+                      );
+                    }),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            _buildMarksItem(
-              'Mid-Term Mathematics',
-              'Class 10-A',
-              'Submitted yesterday',
-            ),
-            const SizedBox(height: 12),
-            _buildMarksItem(
-              'Unit Test 1 - Physics',
-              'Class 9-B',
-              'Submitted 2 days ago',
-            ),
-            const SizedBox(height: 12),
-            _buildMarksItem(
-              'Final Exam - English',
-              'Class 10-A',
-              'Pending submission',
-              isPending: true,
-            ),
-          ],
+          ),
         ),
-      ),
+        if (provider.isLoading) const UnifiedLoader(),
+      ],
     );
   }
 

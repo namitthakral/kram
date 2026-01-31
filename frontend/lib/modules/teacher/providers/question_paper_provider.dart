@@ -42,6 +42,27 @@ class QuestionPaperProvider extends ChangeNotifier {
   bool get isLoading =>
       _isLoadingPaper || _isCreating || _isUpdating || _isDeleting;
 
+  /// Load all question papers for a teacher
+  Future<void> loadAllQuestionPapers(String userUuid) async {
+    _isLoadingPaper = true;
+    _paperError = null;
+    notifyListeners();
+
+    try {
+      final result = await _questionPaperService.getAllQuestionPapers(userUuid);
+      _questionPapers = result.cast<Map<String, dynamic>>();
+      _paperError = null;
+      debugPrint('✅ All question papers loaded successfully');
+    } on Exception catch (e) {
+      _paperError = e.toString().replaceAll('Exception: ', '');
+      _questionPapers = [];
+      debugPrint('❌ Error loading all question papers: $e');
+    } finally {
+      _isLoadingPaper = false;
+      notifyListeners();
+    }
+  }
+
   /// Load question paper by examination ID
   Future<void> loadQuestionPaperByExamId(String userUuid, int examId) async {
     _isLoadingPaper = true;

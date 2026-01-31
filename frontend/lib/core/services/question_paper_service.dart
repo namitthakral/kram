@@ -43,6 +43,46 @@ class QuestionPaperService {
 
   // ============ Question Paper Methods (Teacher) ============
 
+  /// Get all question papers for a teacher
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/question-papers
+  ///
+  /// [userUuid] - Teacher user UUID
+  Future<List<dynamic>> getAllQuestionPapers(String userUuid) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/question-papers',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get question papers',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get question papers',
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get question papers',
+      );
+    }
+  }
+
   /// Create an empty question paper for an examination
   ///
   /// Endpoint: POST /teachers/:user_uuid/examinations/:examId/question-paper

@@ -20,7 +20,9 @@ import 'modules/student/providers/dashboard_tab_provider.dart';
 import 'modules/student/providers/report_card_provider.dart';
 import 'modules/student/providers/student_dashboard_provider.dart';
 import 'modules/teacher/providers/assignment_provider.dart';
+import 'modules/teacher/providers/attendance_provider.dart';
 import 'modules/teacher/providers/examination_provider.dart';
+import 'modules/teacher/providers/marks_provider.dart';
 import 'modules/teacher/providers/performance_tab_provider.dart';
 import 'modules/teacher/providers/question_paper_provider.dart';
 import 'modules/teacher/providers/teacher_classes_provider.dart';
@@ -95,6 +97,12 @@ void main() async {
         ),
         ChangeNotifierProvider<ExaminationProvider>(
           create: (_) => ExaminationProvider(),
+        ),
+        ChangeNotifierProvider<AttendanceProvider>(
+          create: (_) => AttendanceProvider(),
+        ),
+        ChangeNotifierProvider<MarksProvider>(
+          create: (_) => MarksProvider(),
         ),
         ChangeNotifierProvider<ParentDashboardProvider>(
           create: (_) => ParentDashboardProvider(),

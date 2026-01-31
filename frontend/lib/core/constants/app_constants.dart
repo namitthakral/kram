@@ -6,7 +6,8 @@ class AppConstants {
   // API Configuration
   // For local development, use: 'http://localhost:3000' or 'http://192.168.1.11:3000'
   // For production: API subdomain without redundant /api prefix
-  static const String baseUrl = 'https://api.kramedu.in';
+  // static const String baseUrl = 'https://api.kramedu.in';
+  static const String baseUrl = 'http://localhost:3000';
   static const String apiVersion = ''; // No prefix needed - routes are at root
   static const Duration apiTimeout = Duration(seconds: 30);
 

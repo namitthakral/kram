@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../provider/login_signup/login_provider.dart';
@@ -17,7 +18,7 @@ import '../widgets/quick_action_button.dart';
 import '../widgets/student_activity_card.dart';
 import 'assignments_list_screen.dart';
 import 'examinations_list_screen.dart';
-import 'mark_attendance_screen.dart';
+
 
 enum PerformanceTab { attendance, subject, grade }
 
@@ -337,12 +338,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icons.calendar_today,
           backgroundColor: const Color(0xFF10b981),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const MarkAttendanceScreen(),
-              ),
-            );
+            context.pushNamed('attendance_view');
           },
         ),
         const SizedBox(height: 12),

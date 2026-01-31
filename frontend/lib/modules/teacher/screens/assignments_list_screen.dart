@@ -12,6 +12,7 @@ import '../../../widgets/custom_widgets/custom_bottom_modal_sheet.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
+import '../../../widgets/custom_widgets/unified_loader.dart';
 import '../providers/assignment_provider.dart';
 import 'assignment_form_screen.dart';
 import 'create_assignment_screen.dart';
@@ -75,100 +76,121 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
           // Notification handler to be implemented
         },
       ),
-      bottomWidget: _buildFloatingButton(context),
-      child: Column(
+      floatingActionButton: _buildFloatingActionButton(context),
+      child: Stack(
         children: [
-          // Search bar and filter - always visible
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: CustomSearchBar(
-                    hintText: context.translate('search_assignments'),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: () => _showFilterDialog(context),
-                  icon: const Icon(Icons.filter_list, size: 20),
-                  label: Text(context.translate('filter')),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+          Column(
+            children: [
+              // Search bar and filter - always visible
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CustomSearchBar(
+                        hintText: context.translate('search_assignments'),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                        },
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => _showFilterDialog(context),
+                      icon: const Icon(Icons.filter_list, size: 20),
+                      label: Text(context.translate('filter')),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          // Content area
-          Expanded(
-            child: Consumer<AssignmentProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading && provider.assignments.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+              ),
+              // Content area
+              Expanded(
+                child: Consumer<AssignmentProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading && provider.assignments.isEmpty) {
+                      return const SizedBox(); // Loader handles this
+                    }
 
-                if (provider.error != null) {
-                  return _buildErrorState(provider.error!);
-                }
+                    if (provider.error != null) {
+                      return _buildErrorState(provider.error!);
+                    }
 
-                if (provider.assignments.isEmpty) {
-                  return _buildEmptyState();
-                }
+                    if (provider.assignments.isEmpty) {
+                      return _buildEmptyState();
+                    }
 
-                // Filter assignments based on search query
-                final filteredAssignments =
-                    provider.assignments.where((assignment) {
-                      if (_searchQuery.isEmpty) {
-                        return true;
-                      }
-                      final query = _searchQuery.toLowerCase();
-                      return assignment.title.toLowerCase().contains(query) ||
-                          (assignment.courseName.toLowerCase().contains(
-                                query,
-                              ) ??
-                              false);
-                    }).toList();
+                    // Filter assignments based on search query
+                    final filteredAssignments =
+                        provider.assignments.where((assignment) {
+                          if (_searchQuery.isEmpty) {
+                            return true;
+                          }
+                          final query = _searchQuery.toLowerCase();
+                          return assignment.title.toLowerCase().contains(query) ||
+                              (assignment.courseName.toLowerCase().contains(
+                                    query,
+                                  ) ??
+                                  false);
+                        }).toList();
 
-                return RefreshIndicator(
-                  onRefresh: _loadData,
-                  child:
-                      filteredAssignments.isEmpty
-                          ? Center(
-                            child: Text(
-                              context.translate('no_assignments_found'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: AppTheme.slate500,
+                    return RefreshIndicator(
+                      onRefresh: _loadData,
+                      child:
+                          filteredAssignments.isEmpty
+                              ? Center(
+                                child: Text(
+                                  context.translate('no_assignments_found'),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: AppTheme.slate500,
+                                  ),
+                                ),
+                              )
+                              : ListView.builder(
+                                padding: const EdgeInsets.only(bottom: 80), // Space for FAB
+                                itemCount: filteredAssignments.length,
+                                itemBuilder: (context, index) {
+                                  final assignment = filteredAssignments[index];
+                                  return _AssignmentCard(
+                                    assignment: assignment,
+                                    onTap: () => _navigateToEdit(assignment.id),
+                                    onDelete: () => _confirmDelete(assignment.id),
+                                  );
+                                },
                               ),
-                            ),
-                          )
-                          : ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            itemCount: filteredAssignments.length,
-                            itemBuilder: (context, index) {
-                              final assignment = filteredAssignments[index];
-                              return _AssignmentCard(
-                                assignment: assignment,
-                                onTap: () => _navigateToEdit(assignment.id),
-                                onDelete: () => _confirmDelete(assignment.id),
-                              );
-                            },
-                          ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          // Unified Loader
+          Consumer<AssignmentProvider>(
+            builder: (context, provider, child) {
+              if (provider.isLoading) {
+                return const UnifiedLoader();
+              }
+              return const SizedBox.shrink();
+            },
           ),
         ],
       ),
+    );
+  }
+
+  Widget? _buildFloatingActionButton(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: _navigateToCreate,
+      icon: const Icon(Icons.add),
+      label: Text(context.translate('new_assignment')),
     );
   }
 
@@ -231,28 +253,6 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
       ),
     ),
   );
-
-  Widget _buildFloatingButton(BuildContext context) {
-    final isMobile = context.isMobile;
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _navigateToCreate,
-        icon: const Icon(Icons.add),
-        label: Text(
-          context.translate('new_assignment'),
-          style: TextStyle(fontSize: isMobile ? 14 : 16),
-        ),
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(
-            vertical: isMobile ? 14 : 16,
-            horizontal: 24,
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showFilterDialog(BuildContext context) {
     final provider = context.read<AssignmentProvider>();

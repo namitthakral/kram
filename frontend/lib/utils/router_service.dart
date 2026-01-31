@@ -10,7 +10,7 @@ import '../modules/teacher/screens/attendance_view_screen.dart';
 import '../modules/teacher/screens/enter_marks_screen.dart';
 import '../modules/teacher/screens/examination_form_screen.dart';
 import '../modules/teacher/screens/examinations_list_screen.dart';
-import '../modules/teacher/screens/mark_attendance_screen.dart';
+
 import '../modules/teacher/screens/marks_list_screen.dart';
 import '../modules/teacher/screens/my_classes_screen.dart';
 import '../modules/teacher/screens/question_paper_template_screen.dart';
@@ -121,17 +121,6 @@ class RouterService {
                 key: state.pageKey,
                 child: const AttendanceViewScreen(),
               ),
-          routes: [
-            GoRoute(
-              path: 'mark',
-              name: 'mark_attendance',
-              pageBuilder:
-                  (context, state) => _buildPageWithTransition(
-                    key: state.pageKey,
-                    child: const MarkAttendanceScreen(),
-                  ),
-            ),
-          ],
         ),
         GoRoute(
           path: 'marks',

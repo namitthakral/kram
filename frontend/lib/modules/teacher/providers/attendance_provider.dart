@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import '../../../core/services/attendance_service.dart';
 import '../../../core/services/class_section_service.dart';
 import '../../../utils/user_utils.dart';
-import '../services/teacher_service.dart';
 import '../models/attendance_models.dart';
+import '../services/teacher_service.dart';
 
 class AttendanceProvider with ChangeNotifier {
   // Selected Date
@@ -32,29 +32,44 @@ class AttendanceProvider with ChangeNotifier {
   // Available grading systems
   List<GradingSystem> _availableGradingSystems = [];
 
-  // Load Initial Data
+  // Attendance Summary Data
+  List<dynamic> _summaryData = [];
+  List<dynamic> get summaryData => _summaryData;
+
+  String? _teacherUuid;
+
+  void setTeacherUuid(String uuid) {
+    _teacherUuid = uuid;
+  }
+
   Future<void> loadInitialData(String userUuid) async {
+    _teacherUuid = userUuid;
     _isLoading = true;
     notifyListeners();
     try {
-      final teacherService = TeacherService(); // Use service directly or inject
+      final teacherService = TeacherService();
       final classesData = await teacherService.getTeacherClasses(userUuid);
 
       _availableClasses =
           classesData.map((data) {
             return ClassInfo(
               id: data['id']?.toString() ?? '',
-              name: '${data['name'] ?? ''} ${data['section'] ?? ''}'.trim(),
+              name:
+                  '${data['subject']?['subjectName'] ?? ''} ${data['section'] ?? ''}'
+                      .trim(),
               totalStudents: data['studentCount'] as int? ?? 0,
               courseId: data['courseId'] as int? ?? 0,
-              sectionId: data['id'] as int?, // Assuming id is sectionId
+              sectionId: data['id'] as int?,
               sectionName: data['section'] as String? ?? 'A',
+              subjectName: data['subject']?['subjectName'] as String?,
+              // Use room_number (camelCase from Prisma) as the Class Name as per user request
+              className: data['roomNumber']?.toString() ??
+                         data['room_number']?.toString() ??
+                         data['class']?['name']?.toString() ??
+                         'Class',
             );
           }).toList();
 
-      // Fetch grading systems logic if available.
-      // For now, we can keep using mock or fetch if API available.
-      // Assuming mock/static for grading systems as usually configured per school/global.
       _availableGradingSystems = [
         GradingSystem(
           id: '1',
@@ -66,6 +81,69 @@ class AttendanceProvider with ChangeNotifier {
       _error = null;
     } catch (e) {
       _error = 'Failed to load data: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Load Attendance Summary
+  Future<void> loadAttendanceSummary(String userUuid, {DateTime? date}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final teacherService = TeacherService();
+      final attendanceService = AttendanceService();
+
+      // 1. Get Teacher's Classes
+      final classes = await teacherService.getTeacherClasses(userUuid);
+
+      // 2. Get Attendance Records for selected date (or today)
+      final targetDate = date ?? DateTime.now();
+      // Fetch more records to ensure we cover all classes comfortably
+      final attendanceResponse = await attendanceService.getAttendanceRecords(
+        userUuid,
+        startDate: targetDate,
+        endDate: targetDate,
+        limit: 100,
+      );
+
+      final records = attendanceResponse['records'] as List<dynamic>? ?? [];
+
+      // 3. Synthesize Summary Data
+      _summaryData =
+          classes.map((classData) {
+            final sectionId = classData['id'] as int;
+            final subjectName =
+                classData['subject']?['subjectName'] ?? 'Unknown Subject';
+            final sectionName = classData['section'] ?? '';
+            final studentCount = classData['studentCount'] as int? ?? 0;
+
+            // Filter records for this section and calculate present count
+            final sectionRecords =
+                records.where((r) => r['sectionId'] == sectionId).toList();
+            final presentCount =
+                sectionRecords.where((r) => r['status'] == 'PRESENT').length;
+
+            // Determine if marked (if any record exists for this section today)
+            final isMarked = sectionRecords.isNotEmpty;
+
+            return {
+              'className': '$subjectName $sectionName'.trim(),
+              'sectionId': sectionId,
+              'totalStudents': studentCount,
+              'presentCount': presentCount,
+              'isMarked': isMarked,
+            };
+          }).toList();
+
+      _error = null;
+    } catch (e) {
+      _error = 'Failed to load attendance summary: $e';
+      _summaryData = [];
+      print('Error loading attendance summary: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -96,7 +174,8 @@ class AttendanceProvider with ChangeNotifier {
 
   // Set selected date
   Future<void> setSelectedDate(DateTime date) async {
-    _selectedDate = date;
+    // Normalize to midnight to avoid time discrepancies
+    _selectedDate = DateTime(date.year, date.month, date.day);
     notifyListeners();
     // Reload students with attendance for the new date
     if (_selectedClass != null) {
@@ -105,9 +184,18 @@ class AttendanceProvider with ChangeNotifier {
   }
 
   // Set selected class and load students
-  Future<void> setSelectedClass(ClassInfo classInfo) async {
+  Future<void> setSelectedClass(ClassInfo? classInfo) async {
     _selectedClass = classInfo;
     _error = null;
+
+    if (classInfo == null) {
+      _students = [];
+      // Assuming _summary is a getter, we don't set it directly.
+      // The getter will return 0,0,0 if _students is empty.
+      notifyListeners();
+      return;
+    }
+
     notifyListeners();
     await _loadStudents();
   }
@@ -125,7 +213,13 @@ class AttendanceProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      print('=== _loadStudents called ===');
+      print('Selected Class: ${_selectedClass?.name}');
+      print('Selected Date: $_selectedDate');
+      print('Current Teacher UUID: $_teacherUuid');
+
       if (_selectedClass == null) {
+        print('Aborting: No class selected');
         _students = [];
         return;
       }
@@ -140,6 +234,7 @@ class AttendanceProvider with ChangeNotifier {
             'Unable to load students: Class section ID is missing. '
             'Please ensure you have subjects assigned to this section.';
         _students = [];
+        print('Aborting: Missing section ID');
         return;
       }
 
@@ -147,75 +242,97 @@ class AttendanceProvider with ChangeNotifier {
       final attendanceService = AttendanceService();
 
       // Fetch enrolled students for this class section
+      print('Fetching students for sectionId: $sectionId');
       final response = await classSectionService.getEnrolledStudents(
         sectionId: sectionId,
       );
 
-      print('Enrolled students response: $response');
+      print('Enrolled students fetched successfully');
 
       // Parse the response
       final responseData = response['data'] as Map<String, dynamic>?;
       if (responseData == null) {
+        print('Aborting: No data in response');
         _students = [];
         return;
       }
 
       final studentsData = responseData['students'] as List<dynamic>? ?? [];
+      print('Found ${studentsData.length} students enrolled');
 
       // Fetch existing attendance records for the selected date
-      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-      final attendanceResponse = await attendanceService.getAttendance(
-        sectionId: sectionId,
-        date: dateStr,
-      );
-
-      print('Existing attendance response: $attendanceResponse');
-
-      // Create a map of studentId -> attendance status
       final attendanceMap = <int, String>{};
-      final attendanceData =
-          attendanceResponse['data'] as Map<String, dynamic>?;
-      if (attendanceData != null) {
-        final attendanceList =
-            attendanceData['attendance'] as List<dynamic>? ?? [];
-        for (final record in attendanceList) {
+
+      if (_teacherUuid != null) {
+        print('Fetching existing attendance from DB...');
+        final attendanceResponse = await attendanceService.getAttendanceRecords(
+          _teacherUuid!,
+          sectionId: sectionId,
+          startDate: _selectedDate,
+          endDate: _selectedDate,
+          limit: 100,
+        );
+
+        final records = attendanceResponse['records'] as List<dynamic>? ?? [];
+        print('DB returned ${records.length} records');
+
+        for (final record in records) {
           final recordData = record as Map<String, dynamic>;
-          final studentId = recordData['studentId'] as int?;
+          // Try to get studentId from top level, or nested student object
+          var id = recordData['studentId'];
+          if (id == null && recordData['student'] != null) {
+            id = recordData['student']['id'];
+          }
+
+          final studentId = int.tryParse(id?.toString() ?? '');
           final status = recordData['status'] as String?;
 
           if (studentId != null && status != null) {
             attendanceMap[studentId] = status;
           }
         }
+        print('Parsed attendance map: $attendanceMap');
+      } else {
+        print('WARNING: _teacherUuid is null! Skipping DB fetch.');
       }
-
-      print('Found ${attendanceMap.length} existing attendance records');
 
       _students =
           studentsData.map((studentData) {
             final student = studentData as Map<String, dynamic>;
             final userName = student['name'] as String? ?? 'Unknown Student';
             final studentId = student['id']?.toString() ?? '';
-            final studentIdInt = student['id'] as int?;
+            final studentIdInt = int.tryParse(student['id']?.toString() ?? '');
 
             // Get initials from name
             final initials = UserUtils.getInitials(userName);
 
             // Check if attendance already exists for this student
+            // Default to PRESENT for new records if no data exists
             AttendanceStatus status = AttendanceStatus.present;
+
             if (studentIdInt != null &&
                 attendanceMap.containsKey(studentIdInt)) {
               final dbStatus = attendanceMap[studentIdInt]!;
-              status =
-                  dbStatus == 'PRESENT'
-                      ? AttendanceStatus.present
-                      : dbStatus == 'ABSENT'
-                      ? AttendanceStatus.absent
-                      : dbStatus == 'LATE'
-                      ? AttendanceStatus.late
-                      : dbStatus == 'EXCUSED'
-                      ? AttendanceStatus.excused
-                      : AttendanceStatus.present;
+              switch (dbStatus) {
+                case 'PRESENT':
+                  status = AttendanceStatus.present;
+                  break;
+                case 'ABSENT':
+                  status = AttendanceStatus.absent;
+                  break;
+                case 'LATE':
+                  status = AttendanceStatus.late;
+                  break;
+                case 'EXCUSED':
+                  status = AttendanceStatus.excused;
+                  break;
+                default:
+                  status = AttendanceStatus.present;
+              }
+            } else {
+              // If no record exists, verify if we should mark default as present.
+              // For now, defaulting to present is standard behavior for new sheets.
+              status = AttendanceStatus.present;
             }
 
             return StudentAttendance(
@@ -226,10 +343,9 @@ class AttendanceProvider with ChangeNotifier {
             );
           }).toList();
 
-      print(
-        'Loaded ${_students.length} enrolled students with attendance status',
-      );
+      print('=== _loadStudents complete. Total: ${_students.length} ===');
     } on Exception catch (e) {
+      print('ERROR in _loadStudents: $e');
       _error = 'Failed to load students: $e';
       _students = [];
     } finally {
@@ -293,50 +409,16 @@ class AttendanceProvider with ChangeNotifier {
 
     try {
       final attendanceService = AttendanceService();
-      final classSectionService = ClassSectionService();
 
-      // Fetch class sections for this teacher and course
-      print(
-        'Fetching class sections for teacherId: $teacherId, '
-        'courseId: ${_selectedClass!.courseId}',
-      );
-
-      final classSections = await classSectionService.getClassSections(
-        teacherId: teacherId,
-        courseId: _selectedClass!.courseId,
-        status: 'ACTIVE',
-      );
-
-      print('Found ${classSections.length} class sections');
-
-      if (classSections.isEmpty) {
-        _error =
-            'No active class sections found for this course. '
-            'Please ensure the class has subjects assigned with you as the teacher.';
+      // Use the sectionId from the selected class directly
+      // This ensures we write to the same section we read from
+      if (_selectedClass!.sectionId == null) {
+        _error = 'Invalid class selection (missing section ID)';
         return false;
       }
 
-      // Filter sections by matching sectionName
-      final matchingSections =
-          classSections.where((section) {
-            final sectionName = section['sectionName'] as String?;
-            print(
-              'Section: $sectionName, looking for: ${_selectedClass!.sectionName}',
-            );
-            return sectionName == _selectedClass!.sectionName;
-          }).toList();
-
-      print('Found ${matchingSections.length} matching sections');
-
-      if (matchingSections.isEmpty) {
-        _error =
-            'No class section found for ${_selectedClass!.sectionName}. '
-            'Please ensure subjects are assigned to this section.';
-        return false;
-      }
-
-      // Use the first matching section (or we could mark attendance for all subjects)
-      final sectionId = matchingSections.first['id'] as int;
+      final sectionId = _selectedClass!.sectionId!;
+      print('Saving attendance for sectionId: $sectionId');
       print('Using sectionId: $sectionId');
 
       // Format date as YYYY-MM-DD
@@ -447,6 +529,77 @@ class AttendanceProvider with ChangeNotifier {
     }
   }
 
+  // History State
+  List<Map<String, dynamic>> _historyRecords = [];
+  bool _historyLoading = false;
+  int _historyTotal = 0;
+
+  // History Filters
+  DateTime? _historyStartDate;
+  DateTime? _historyEndDate;
+  ClassInfo? _historySelectedClass;
+  String? _historyStatus; // 'PRESENT', 'ABSENT', etc.
+
+  // Getters for History
+  List<Map<String, dynamic>> get historyRecords => _historyRecords;
+  bool get historyLoading => _historyLoading;
+  int get historyTotal => _historyTotal;
+  DateTime? get historyStartDate => _historyStartDate;
+  DateTime? get historyEndDate => _historyEndDate;
+  ClassInfo? get historySelectedClass => _historySelectedClass;
+  String? get historyStatus => _historyStatus;
+
+  // Setters for History Filters
+  void setHistoryDateRange(DateTime? start, DateTime? end) {
+    _historyStartDate = start;
+    _historyEndDate = end;
+    notifyListeners();
+  }
+
+  void setHistoryClass(ClassInfo? classInfo) {
+    _historySelectedClass = classInfo;
+    notifyListeners();
+  }
+
+  void setHistoryStatus(String? status) {
+    _historyStatus = status;
+    notifyListeners();
+  }
+
+  // Fetch Attendance History
+  Future<void> fetchAttendanceHistory(
+    String teacherUuid, {
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    _historyLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final attendanceService = AttendanceService();
+      final response = await attendanceService.getAttendanceRecords(
+        teacherUuid,
+        sectionId: _historySelectedClass?.sectionId,
+        startDate: _historyStartDate,
+        endDate: _historyEndDate,
+        status: _historyStatus,
+        limit: limit,
+        offset: offset,
+      );
+
+      final records = response['records'] as List<dynamic>? ?? [];
+      _historyRecords = records.cast<Map<String, dynamic>>();
+      _historyTotal = response['total'] as int? ?? 0;
+    } catch (e) {
+      _error = 'Failed to fetch history: $e';
+      _historyRecords = [];
+    } finally {
+      _historyLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Reset attendance state
   void reset() {
     _selectedDate = DateTime.now();
@@ -454,6 +607,14 @@ class AttendanceProvider with ChangeNotifier {
     _selectedGradingSystem = null;
     _students = [];
     _error = null;
+
+    // Reset history filters too
+    _historyStartDate = null;
+    _historyEndDate = null;
+    _historySelectedClass = null;
+    _historyStatus = null;
+    _historyRecords = [];
+
     notifyListeners();
   }
 }

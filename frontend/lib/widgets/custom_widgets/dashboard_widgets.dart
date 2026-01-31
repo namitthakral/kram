@@ -11,6 +11,7 @@ class DashboardStatCard extends StatelessWidget {
     required this.backgroundColor,
     required this.iconColor,
     required this.icon,
+    this.onTap,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class DashboardStatCard extends StatelessWidget {
   final Color backgroundColor;
   final Color iconColor;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,13 @@ class DashboardStatCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
         clipBehavior: Clip.antiAlias,
         children: [
           Positioned(
@@ -113,6 +121,8 @@ class DashboardStatCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }

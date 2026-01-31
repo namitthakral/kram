@@ -10,165 +10,248 @@ import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
+import '../../../widgets/custom_widgets/unified_loader.dart';
+import '../providers/assignment_provider.dart';
+import '../providers/examination_provider.dart';
+import '../providers/teacher_dashboard_provider.dart';
 
-class AcademicManagementScreen extends StatelessWidget {
+class AcademicManagementScreen extends StatefulWidget {
   const AcademicManagementScreen({super.key});
+
+  @override
+  State<AcademicManagementScreen> createState() =>
+      _AcademicManagementScreenState();
+}
+
+class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
+  }
+
+  Future<void> _loadData() async {
+    final loginProvider = context.read<LoginProvider>();
+    final userUuid = loginProvider.currentUser?.uuid;
+    if (userUuid != null) {
+      // Load all necessary data for the dashboard
+      final dashboardProvider = context.read<TeacherDashboardProvider>();
+      final assignmentProvider = context.read<AssignmentProvider>();
+      final examProvider = context.read<ExaminationProvider>();
+
+      // Load in parallel/sequence
+      await Future.wait([
+        dashboardProvider.loadDashboardData(userUuid),
+        assignmentProvider.loadAssignments(userUuid),
+        examProvider.loadExaminations(userUuid),
+        // Timetable/Classes could be added here if needed for "Classes Today"
+      ]);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
     final loginProvider = context.watch<LoginProvider>();
+    final dashboardProvider = context.watch<TeacherDashboardProvider>();
+    final assignmentProvider = context.watch<AssignmentProvider>();
+    final examProvider = context.watch<ExaminationProvider>();
+
     final user = loginProvider.currentUser;
     final teacher = user?.teacher;
-
-    // Use real user data
     final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
-    final userName = user?.name ?? 'Teacher';
-    final designation = teacher?.designation ?? 'Teacher';
-    final employeeId = teacher?.employeeId ?? 'N/A';
+
+    // Counts
+    final assignmentCount = assignmentProvider.assignments.length.toString();
+    final examCount = examProvider.examinations.length.toString();
+    final attendanceAvg =
+        dashboardProvider.stats != null
+            ? '${dashboardProvider.stats!.attendancePercentage.toStringAsFixed(1)}%'
+            : '--';
 
     return CustomMainScreenWithAppbar(
       title: context.translate('academic_management'),
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
-        userName: userName,
-        designation: designation,
-        employeeId: employeeId,
-        onNotificationIconPressed: () {
-          // Notification handler to be implemented
-        },
+        userName: user?.name ?? 'Teacher',
+        designation: teacher?.designation ?? 'Faculty',
+        employeeId: teacher?.employeeId ?? 'N/A',
+        onNotificationIconPressed: () {},
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Stats Section
-            GridView.count(
-              crossAxisCount: isMobile ? 2 : 4,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: isMobile ? 12 : 16,
-              mainAxisSpacing: isMobile ? 12 : 16,
-              childAspectRatio: isMobile ? 1.3 : 1.5,
-              children: const [
-                DashboardStatCard(
-                  title: 'Assignments',
-                  value: '12',
-                  subtitle: 'Active assignments',
-                  backgroundColor: CustomAppColors.warning,
-                  iconColor: CustomAppColors.warning,
-                  icon: Icons.assignment_turned_in_rounded,
-                ),
-                DashboardStatCard(
-                  title: 'Exams',
-                  value: '3',
-                  subtitle: 'Upcoming exams',
-                  backgroundColor: CustomAppColors.purple,
-                  iconColor: CustomAppColors.purple,
-                  icon: Icons.quiz_rounded,
-                ),
-                DashboardStatCard(
-                  title: 'Classes Today',
-                  value: '5',
-                  subtitle: 'Scheduled classes',
-                  backgroundColor: CustomAppColors.blue500,
-                  iconColor: CustomAppColors.blue500,
-                  icon: Icons.schedule_rounded,
-                ),
-                DashboardStatCard(
-                  title: 'Avg Attendance',
-                  value: '95%',
-                  subtitle: 'This month',
-                  backgroundColor: CustomAppColors.success,
-                  iconColor: CustomAppColors.success,
-                  icon: Icons.check_circle_rounded,
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+      child: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Stats Section
+                      GridView.count(
+                        crossAxisCount: isMobile ? 2 : 4,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisSpacing: isMobile ? 12 : 16,
+                        mainAxisSpacing: isMobile ? 12 : 16,
+                        childAspectRatio: isMobile ? 1.3 : 1.5,
+                        children: [
+                          DashboardStatCard(
+                            title: 'Assignments',
+                            value: assignmentCount,
+                            subtitle: 'Total assignments',
+                            backgroundColor: CustomAppColors.warning,
+                            iconColor: CustomAppColors.warning,
+                            icon: Icons.assignment_turned_in_rounded,
+                            onTap: () => context.pushNamed('assignments_list'),
+                          ),
+                          DashboardStatCard(
+                            title: 'Exams',
+                            value: examCount,
+                            subtitle: 'Scheduled exams',
+                            backgroundColor: CustomAppColors.purple,
+                            iconColor: CustomAppColors.purple,
+                            icon: Icons.quiz_rounded,
+                            onTap: () => context.pushNamed('examinations_list'),
+                          ),
+                          DashboardStatCard(
+                            title: 'Classes Today',
+                            value:
+                                '5', // Needs TimetableProvider integration for dynamic value
+                            subtitle: 'Scheduled classes',
+                            backgroundColor: CustomAppColors.blue500,
+                            iconColor: CustomAppColors.blue500,
+                            icon: Icons.schedule_rounded,
+                            onTap: () => context.pushNamed('timetables_list'),
+                          ),
+                          DashboardStatCard(
+                            title: 'Avg Attendance',
+                            value: attendanceAvg,
+                            subtitle: 'Today',
+                            backgroundColor: CustomAppColors.success,
+                            iconColor: CustomAppColors.success,
+                            icon: Icons.check_circle_rounded,
+                            onTap: () => context.pushNamed('attendance_view'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
 
-            // Create New Section Header
-            Text(
-              'Create & Manage',
-              style: TextStyle(
-                fontSize: isMobile ? AppTheme.fontSizeXl : AppTheme.fontSize2xl,
-                fontWeight: AppTheme.fontWeightBold,
-                color: CustomAppColors.slate800,
+                      // Create New Section Header
+                      Text(
+                        'Academic Modules',
+                        style: TextStyle(
+                          fontSize:
+                              isMobile
+                                  ? AppTheme.fontSizeXl
+                                  : AppTheme.fontSize2xl,
+                          fontWeight: AppTheme.fontWeightBold,
+                          color: CustomAppColors.slate800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Quick access to common academic tasks',
+                        style: TextStyle(
+                          fontSize: AppTheme.fontSizeSm,
+                          color: CustomAppColors.slate500,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Quick access to common academic tasks',
-              style: TextStyle(
-                fontSize: AppTheme.fontSizeSm,
-                color: CustomAppColors.slate500,
+
+              // Action Grid
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: isMobile ? 2 : 4,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.1,
+                  ),
+                  delegate: SliverChildListDelegate([
+                    _ActionGridCard(
+                      title: 'Attendance',
+                      icon: Icons.calendar_today,
+                      color: const Color(0xFF4F7CFF),
+                      onTap: () => context.pushNamed('attendance_view'),
+                    ),
+                    _ActionGridCard(
+                      title: 'Marks',
+                      icon: Icons.grade,
+                      color: const Color(0xFF10B981),
+                      onTap: () => context.pushNamed('marks_list'),
+                    ),
+                    _ActionGridCard(
+                      title: 'Examinations',
+                      icon: Icons.assignment,
+                      color: const Color(0xFFF59E0B),
+                      onTap: () => context.pushNamed('examinations_list'),
+                    ),
+                    _ActionGridCard(
+                      title: 'Timetables',
+                      icon: Icons.schedule,
+                      color: const Color(0xFF8B5CF6),
+                      onTap: () => context.pushNamed('timetables_list'),
+                    ),
+                    _ActionGridCard(
+                      title: 'Question Papers',
+                      icon: Icons.description,
+                      color: const Color(0xFFEC4899),
+                      onTap: () => context.pushNamed('question_papers_list'),
+                    ),
+                    _ActionGridCard(
+                      title: 'Assignments',
+                      icon: Icons.assignment_ind,
+                      color: const Color(0xFF6366F1),
+                      onTap: () => context.pushNamed('assignments_list'),
+                    ),
+                  ]),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
 
-            // Grid of Action Cards
-            GridView.count(
-              crossAxisCount: isMobile ? 2 : 4,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: isMobile ? 1.1 : 1.2,
-              children: [
-                _ActionGridCard(
-                  title: 'Mark\nAttendance',
-                  icon: Icons.how_to_reg_rounded,
-                  color: CustomAppColors.success,
-                  onTap: () => context.pushNamed('mark_attendance'),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        'Recent Activities',
+                        style: TextStyle(
+                          fontSize:
+                              isMobile
+                                  ? AppTheme.fontSizeXl
+                                  : AppTheme.fontSize2xl,
+                          fontWeight: AppTheme.fontWeightBold,
+                          color: CustomAppColors.slate800,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (dashboardProvider.activities.isNotEmpty)
+                        _RecentActivitiesSection(
+                          activities: dashboardProvider.activities,
+                        )
+                      else if (!dashboardProvider.isLoading)
+                        const Center(child: Text('No recent activities')),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
-                _ActionGridCard(
-                  title: 'Enter\nMarks',
-                  icon: Icons.grading_rounded,
-                  color: CustomAppColors.pink,
-                  onTap: () => context.pushNamed('enter_marks'),
-                ),
-                _ActionGridCard(
-                  title: 'Create\nExamination',
-                  icon: Icons.quiz_rounded,
-                  color: CustomAppColors.purple,
-                  onTap: () => context.pushNamed('examinations_list'),
-                ),
-                _ActionGridCard(
-                  title: 'Create\nTimetable',
-                  icon: Icons.calendar_month_rounded,
-                  color: CustomAppColors.blue500,
-                  onTap: () => context.pushNamed('timetables_list'),
-                ),
-                _ActionGridCard(
-                  title: 'Create\nQuestion Paper',
-                  icon: Icons.description_rounded,
-                  color: CustomAppColors.purple,
-                  onTap: () => context.pushNamed('create_question_paper'),
-                ),
-                _ActionGridCard(
-                  title: 'Create\nAssignment',
-                  icon: Icons.assignment_rounded,
-                  color: CustomAppColors.warning,
-                  onTap: () => context.pushNamed('assignments_list'),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // Recent Activities
-            Text(
-              'Recent Activities',
-              style: TextStyle(
-                fontSize: isMobile ? AppTheme.fontSizeXl : AppTheme.fontSize2xl,
-                fontWeight: AppTheme.fontWeightBold,
-                color: CustomAppColors.slate800,
               ),
-            ),
-            const SizedBox(height: 16),
-            _RecentActivitiesSection(isMobile: isMobile),
-          ],
-        ),
+            ],
+          ),
+          if (dashboardProvider.isLoading || assignmentProvider.isLoading)
+            const UnifiedLoader(),
+        ],
       ),
     );
   }
@@ -232,9 +315,9 @@ class _ActionGridCard extends StatelessWidget {
 }
 
 class _RecentActivitiesSection extends StatelessWidget {
-  const _RecentActivitiesSection({required this.isMobile});
+  const _RecentActivitiesSection({required this.activities});
 
-  final bool isMobile;
+  final List<dynamic> activities; // Using dynamic as common interface
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
@@ -249,39 +332,20 @@ class _RecentActivitiesSection extends StatelessWidget {
         ),
       ],
     ),
-    child: const Column(
+    child: Column(
       children: [
-        _ActivityItem(
-          icon: Icons.how_to_reg_rounded,
-          iconColor: CustomAppColors.success,
-          title: 'Attendance marked for Grade 10-A',
-          subtitle: '28 students present • 2 hours ago',
-          time: '2h ago',
-        ),
-        Divider(height: 1),
-        _ActivityItem(
-          icon: Icons.assignment_rounded,
-          iconColor: CustomAppColors.warning,
-          title: 'Assignment "Chapter 5 Problems" created',
-          subtitle: 'Due date: Dec 5, 2025',
-          time: '5h ago',
-        ),
-        Divider(height: 1),
-        _ActivityItem(
-          icon: Icons.quiz_rounded,
-          iconColor: CustomAppColors.purple,
-          title: 'Mid-term Examination scheduled',
-          subtitle: 'December 10-15, 2025',
-          time: '1d ago',
-        ),
-        Divider(height: 1),
-        _ActivityItem(
-          icon: Icons.calendar_month_rounded,
-          iconColor: CustomAppColors.blue500,
-          title: 'Timetable updated for next week',
-          subtitle: 'Effective from Dec 2, 2025',
-          time: '2d ago',
-        ),
+        for (var i = 0; i < activities.length; i++) ...[
+          _ActivityItem(
+            icon:
+                Icons
+                    .notifications_active_rounded, // Generic icon if type not avail
+            iconColor: CustomAppColors.blue500,
+            title: activities[i].name ?? 'Activity',
+            subtitle: activities[i].grade ?? '',
+            time: activities[i].lastActive ?? '',
+          ),
+          if (i < activities.length - 1) const Divider(height: 1),
+        ],
       ],
     ),
   );
