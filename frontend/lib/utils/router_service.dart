@@ -30,7 +30,7 @@ import '../modules/teacher/screens/academic_management_screen.dart';
 import '../modules/teacher/screens/assignments_list_screen.dart';
 import '../modules/teacher/screens/attendance_view_screen.dart';
 import '../modules/teacher/screens/create_assignment_screen.dart';
-import '../modules/teacher/screens/enter_marks_screen.dart';
+
 import '../modules/teacher/screens/examination_form_screen.dart';
 import '../modules/teacher/screens/examinations_list_screen.dart';
 import '../modules/teacher/screens/marks_list_screen.dart';
@@ -220,17 +220,7 @@ class RouterService {
                     key: state.pageKey,
                     child: const MarksListScreen(),
                   ),
-              routes: [
-                GoRoute(
-                  path: 'enter',
-                  name: 'enter_marks',
-                  pageBuilder:
-                      (context, state) => _buildPageWithTransition(
-                        key: state.pageKey,
-                        child: const EnterMarksScreen(),
-                      ),
-                ),
-              ],
+
             ),
             GoRoute(
               path: 'assignments',

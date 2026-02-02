@@ -10,7 +10,7 @@ import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
-import '../../../widgets/custom_widgets/unified_loader.dart';
+
 import '../providers/assignment_provider.dart';
 import '../providers/examination_provider.dart';
 import '../providers/teacher_dashboard_provider.dart';
@@ -71,8 +71,11 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
             ? '${dashboardProvider.stats!.attendancePercentage.toStringAsFixed(1)}%'
             : '--';
 
+    final isLoading = dashboardProvider.isLoading || assignmentProvider.isLoading;
+
     return CustomMainScreenWithAppbar(
       title: context.translate('academic_management'),
+      isLoading: isLoading,
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
         userName: user?.name ?? 'Teacher',
@@ -80,177 +83,171 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
         employeeId: teacher?.employeeId ?? 'N/A',
         onNotificationIconPressed: () {},
       ),
-      child: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Stats Section
-                      GridView.count(
-                        crossAxisCount: isMobile ? 2 : 4,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: isMobile ? 12 : 16,
-                        mainAxisSpacing: isMobile ? 12 : 16,
-                        childAspectRatio: isMobile ? 1.3 : 1.5,
-                        children: [
-                          DashboardStatCard(
-                            title: 'Assignments',
-                            value: assignmentCount,
-                            subtitle: 'Total assignments',
-                            backgroundColor: CustomAppColors.warning,
-                            iconColor: CustomAppColors.warning,
-                            icon: Icons.assignment_turned_in_rounded,
-                            onTap: () => context.pushNamed('assignments_list'),
-                          ),
-                          DashboardStatCard(
-                            title: 'Exams',
-                            value: examCount,
-                            subtitle: 'Scheduled exams',
-                            backgroundColor: CustomAppColors.purple,
-                            iconColor: CustomAppColors.purple,
-                            icon: Icons.quiz_rounded,
-                            onTap: () => context.pushNamed('examinations_list'),
-                          ),
-                          DashboardStatCard(
-                            title: 'Classes Today',
-                            value:
-                                '5', // Needs TimetableProvider integration for dynamic value
-                            subtitle: 'Scheduled classes',
-                            backgroundColor: CustomAppColors.blue500,
-                            iconColor: CustomAppColors.blue500,
-                            icon: Icons.schedule_rounded,
-                            onTap: () => context.pushNamed('timetables_list'),
-                          ),
-                          DashboardStatCard(
-                            title: 'Avg Attendance',
-                            value: attendanceAvg,
-                            subtitle: 'Today',
-                            backgroundColor: CustomAppColors.success,
-                            iconColor: CustomAppColors.success,
-                            icon: Icons.check_circle_rounded,
-                            onTap: () => context.pushNamed('attendance_view'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Create New Section Header
-                      Text(
-                        'Academic Modules',
-                        style: TextStyle(
-                          fontSize:
-                              isMobile
-                                  ? AppTheme.fontSizeXl
-                                  : AppTheme.fontSize2xl,
-                          fontWeight: AppTheme.fontWeightBold,
-                          color: CustomAppColors.slate800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Quick access to common academic tasks',
-                        style: TextStyle(
-                          fontSize: AppTheme.fontSizeSm,
-                          color: CustomAppColors.slate500,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Action Grid
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Stats Section
+                  GridView.count(
                     crossAxisCount: isMobile ? 2 : 4,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.1,
-                  ),
-                  delegate: SliverChildListDelegate([
-                    _ActionGridCard(
-                      title: 'Attendance',
-                      icon: Icons.calendar_today,
-                      color: const Color(0xFF4F7CFF),
-                      onTap: () => context.pushNamed('attendance_view'),
-                    ),
-                    _ActionGridCard(
-                      title: 'Marks',
-                      icon: Icons.grade,
-                      color: const Color(0xFF10B981),
-                      onTap: () => context.pushNamed('marks_list'),
-                    ),
-                    _ActionGridCard(
-                      title: 'Examinations',
-                      icon: Icons.assignment,
-                      color: const Color(0xFFF59E0B),
-                      onTap: () => context.pushNamed('examinations_list'),
-                    ),
-                    _ActionGridCard(
-                      title: 'Timetables',
-                      icon: Icons.schedule,
-                      color: const Color(0xFF8B5CF6),
-                      onTap: () => context.pushNamed('timetables_list'),
-                    ),
-                    _ActionGridCard(
-                      title: 'Question Papers',
-                      icon: Icons.description,
-                      color: const Color(0xFFEC4899),
-                      onTap: () => context.pushNamed('question_papers_list'),
-                    ),
-                    _ActionGridCard(
-                      title: 'Assignments',
-                      icon: Icons.assignment_ind,
-                      color: const Color(0xFF6366F1),
-                      onTap: () => context.pushNamed('assignments_list'),
-                    ),
-                  ]),
-                ),
-              ),
-
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: isMobile ? 12 : 16,
+                    mainAxisSpacing: isMobile ? 12 : 16,
+                    childAspectRatio: isMobile ? 1.3 : 1.5,
                     children: [
-                      const SizedBox(height: 16),
-                      Text(
-                        'Recent Activities',
-                        style: TextStyle(
-                          fontSize:
-                              isMobile
-                                  ? AppTheme.fontSizeXl
-                                  : AppTheme.fontSize2xl,
-                          fontWeight: AppTheme.fontWeightBold,
-                          color: CustomAppColors.slate800,
-                        ),
+                      DashboardStatCard(
+                        title: 'Assignments',
+                        value: assignmentCount,
+                        subtitle: 'Total assignments',
+                        backgroundColor: CustomAppColors.warning,
+                        iconColor: CustomAppColors.warning,
+                        icon: Icons.assignment_turned_in_rounded,
+                        onTap: () => context.pushNamed('assignments_list'),
                       ),
-                      const SizedBox(height: 16),
-                      if (dashboardProvider.activities.isNotEmpty)
-                        _RecentActivitiesSection(
-                          activities: dashboardProvider.activities,
-                        )
-                      else if (!dashboardProvider.isLoading)
-                        const Center(child: Text('No recent activities')),
-                      const SizedBox(height: 32),
+                      DashboardStatCard(
+                        title: 'Exams',
+                        value: examCount,
+                        subtitle: 'Scheduled exams',
+                        backgroundColor: CustomAppColors.purple,
+                        iconColor: CustomAppColors.purple,
+                        icon: Icons.quiz_rounded,
+                        onTap: () => context.pushNamed('examinations_list'),
+                      ),
+                      DashboardStatCard(
+                        title: 'Classes Today',
+                        value:
+                            '5', // Needs TimetableProvider integration for dynamic value
+                        subtitle: 'Scheduled classes',
+                        backgroundColor: CustomAppColors.blue500,
+                        iconColor: CustomAppColors.blue500,
+                        icon: Icons.schedule_rounded,
+                        onTap: () => context.pushNamed('timetables_list'),
+                      ),
+                      DashboardStatCard(
+                        title: 'Avg Attendance',
+                        value: attendanceAvg,
+                        subtitle: 'Today',
+                        backgroundColor: CustomAppColors.success,
+                        iconColor: CustomAppColors.success,
+                        icon: Icons.check_circle_rounded,
+                        onTap: () => context.pushNamed('attendance_view'),
+                      ),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 24),
+
+                  // Create New Section Header
+                  Text(
+                    'Academic Modules',
+                    style: TextStyle(
+                      fontSize:
+                          isMobile
+                              ? AppTheme.fontSizeXl
+                              : AppTheme.fontSize2xl,
+                      fontWeight: AppTheme.fontWeightBold,
+                      color: CustomAppColors.slate800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Quick access to common academic tasks',
+                    style: TextStyle(
+                      fontSize: AppTheme.fontSizeSm,
+                      color: CustomAppColors.slate500,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
-            ],
+            ),
           ),
-          if (dashboardProvider.isLoading || assignmentProvider.isLoading)
-            const UnifiedLoader(),
+
+          // Action Grid
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isMobile ? 2 : 4,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+              ),
+              delegate: SliverChildListDelegate([
+                _ActionGridCard(
+                  title: 'Attendance',
+                  icon: Icons.calendar_today,
+                  color: const Color(0xFF4F7CFF),
+                  onTap: () => context.pushNamed('attendance_view'),
+                ),
+                _ActionGridCard(
+                  title: 'Marks',
+                  icon: Icons.grade,
+                  color: const Color(0xFF10B981),
+                  onTap: () => context.pushNamed('marks_list'),
+                ),
+                _ActionGridCard(
+                  title: 'Examinations',
+                  icon: Icons.assignment,
+                  color: const Color(0xFFF59E0B),
+                  onTap: () => context.pushNamed('examinations_list'),
+                ),
+                _ActionGridCard(
+                  title: 'Timetables',
+                  icon: Icons.schedule,
+                  color: const Color(0xFF8B5CF6),
+                  onTap: () => context.pushNamed('timetables_list'),
+                ),
+                _ActionGridCard(
+                  title: 'Question Papers',
+                  icon: Icons.description,
+                  color: const Color(0xFFEC4899),
+                  onTap: () => context.pushNamed('question_papers_list'),
+                ),
+                _ActionGridCard(
+                  title: 'Assignments',
+                  icon: Icons.assignment_ind,
+                  color: const Color(0xFF6366F1),
+                  onTap: () => context.pushNamed('assignments_list'),
+                ),
+              ]),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  Text(
+                    'Recent Activities',
+                    style: TextStyle(
+                      fontSize:
+                          isMobile
+                              ? AppTheme.fontSizeXl
+                              : AppTheme.fontSize2xl,
+                      fontWeight: AppTheme.fontWeightBold,
+                      color: CustomAppColors.slate800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (dashboardProvider.activities.isNotEmpty)
+                    _RecentActivitiesSection(
+                      activities: dashboardProvider.activities,
+                    )
+                  else if (!dashboardProvider.isLoading)
+                    const Center(child: Text('No recent activities')),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

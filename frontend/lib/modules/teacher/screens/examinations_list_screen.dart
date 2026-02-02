@@ -14,7 +14,7 @@ import '../../../widgets/custom_widgets/custom_bottom_modal_sheet.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
-import '../../../widgets/custom_widgets/unified_loader.dart';
+
 import '../providers/examination_provider.dart';
 
 
@@ -53,6 +53,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
   @override
   Widget build(BuildContext context) {
     final loginProvider = context.watch<LoginProvider>();
+    final examProvider = context.watch<ExaminationProvider>();
     final user = loginProvider.currentUser;
     final teacher = user?.teacher;
 
@@ -68,6 +69,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
 
     return CustomMainScreenWithAppbar(
       title: context.translate('my_examinations'),
+      isLoading: examProvider.isLoading,
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
         userName: userName,
@@ -78,110 +80,98 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
         },
       ),
       floatingActionButton: _buildFloatingActionButton(context),
-      child: Stack(
+      child: Column(
         children: [
-          Column(
-            children: [
-              // Search bar and filter - always visible
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: CustomSearchBar(
-                        hintText: context.translate('search_examinations'),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    OutlinedButton.icon(
-                      onPressed: () => _showFilterDialog(context),
-                      icon: const Icon(Icons.filter_list, size: 20),
-                      label: Text(context.translate('filter')),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                  ],
+          // Search bar and filter - always visible
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: CustomSearchBar(
+                    hintText: context.translate('search_examinations'),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
-              ),
-              // Content area
-              Expanded(
-                child: Consumer<ExaminationProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.isLoading && provider.examinations.isEmpty) {
-                      return const SizedBox(); // UnifiedLoader handles this
-                    }
-
-                    if (provider.error != null) {
-                      return _buildErrorState(provider.error!);
-                    }
-
-                    if (provider.examinations.isEmpty) {
-                      return _buildEmptyState();
-                    }
-
-                    // Filter examinations based on search query
-                    final filteredExaminations =
-                        provider.examinations.where((examination) {
-                          if (_searchQuery.isEmpty) {
-                            return true;
-                          }
-                          final query = _searchQuery.toLowerCase();
-                          return examination.examName.toLowerCase().contains(
-                                query,
-                              ) ||
-                              (examination.courseName.toLowerCase().contains(
-                                    query,
-                                  ) ??
-                                  false);
-                        }).toList();
-
-                    return RefreshIndicator(
-                      onRefresh: _loadData,
-                      child:
-                          filteredExaminations.isEmpty
-                              ? Center(
-                                child: Text(
-                                  context.translate('no_examinations_found'),
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    color: AppTheme.slate500,
-                                  ),
-                                ),
-                              )
-                              : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 80),
-                                itemCount: filteredExaminations.length,
-                                itemBuilder: (context, index) {
-                                  final examination = filteredExaminations[index];
-                                  return _ExaminationCard(
-                                    examination: examination,
-                                    onTap: () => _navigateToEdit(examination.id),
-                                    onDelete: () => _confirmDelete(examination.id),
-                                  );
-                                },
-                              ),
-                    );
-                  },
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _showFilterDialog(context),
+                  icon: const Icon(Icons.filter_list, size: 20),
+                  label: Text(context.translate('filter')),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          Consumer<ExaminationProvider>(
-            builder: (context, provider, child) {
-              if (provider.isLoading) {
-                return const UnifiedLoader();
-              }
-              return const SizedBox.shrink();
-            },
+          // Content area
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                if (examProvider.isLoading && examProvider.examinations.isEmpty) {
+                  return const SizedBox(); // UnifiedLoader handles this
+                }
+
+                if (examProvider.error != null) {
+                  return _buildErrorState(examProvider.error!);
+                }
+
+                if (examProvider.examinations.isEmpty) {
+                  return _buildEmptyState();
+                }
+
+                // Filter examinations based on search query
+                final filteredExaminations =
+                    examProvider.examinations.where((examination) {
+                      if (_searchQuery.isEmpty) {
+                        return true;
+                      }
+                      final query = _searchQuery.toLowerCase();
+                      return examination.examName.toLowerCase().contains(
+                            query,
+                          ) ||
+                          (examination.courseName.toLowerCase().contains(
+                                query,
+                              ) ??
+                              false);
+                    }).toList();
+
+                return RefreshIndicator(
+                  onRefresh: _loadData,
+                  child:
+                      filteredExaminations.isEmpty
+                          ? Center(
+                            child: Text(
+                              context.translate('no_examinations_found'),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: AppTheme.slate500,
+                              ),
+                            ),
+                          )
+                          : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 80),
+                            itemCount: filteredExaminations.length,
+                            itemBuilder: (context, index) {
+                              final examination = filteredExaminations[index];
+                              return _ExaminationCard(
+                                examination: examination,
+                                onTap: () => _navigateToEdit(examination.id),
+                                onDelete: () => _confirmDelete(examination.id),
+                              );
+                            },
+                          ),
+                );
+              },
+            ),
           ),
         ],
       ),

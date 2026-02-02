@@ -49,11 +49,12 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
   void _checkAutoSelections(AttendanceProvider provider) {
     if (!mounted) return;
 
-    final classNames = provider.availableClasses
-        .map((c) => c.className ?? 'Class')
-        .toSet()
-        .toList()
-      ..sort();
+    final classNames =
+        provider.availableClasses
+            .map((c) => c.className ?? 'Class')
+            .toSet()
+            .toList()
+          ..sort();
 
     bool stateChanged = false;
 
@@ -64,13 +65,14 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
     }
 
     // 2. Auto-select Section
-    final sections = _selectedClassName == null
-        ? <String>[]
-        : provider.availableClasses
-            .where((c) => (c.className ?? 'Class') == _selectedClassName)
-            .map((c) => c.sectionName)
-            .toSet()
-            .toList()
+    final sections =
+        _selectedClassName == null
+              ? <String>[]
+              : provider.availableClasses
+                  .where((c) => (c.className ?? 'Class') == _selectedClassName)
+                  .map((c) => c.sectionName)
+                  .toSet()
+                  .toList()
           ..sort();
 
     if (_selectedClassName != null &&
@@ -86,15 +88,18 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
     }
 
     // 3. Auto-select Subject
-    final subjects = (_selectedClassName == null || _selectedSectionName == null)
-        ? <String>[]
-        : provider.availableClasses
-            .where((c) =>
-                (c.className ?? 'Class') == _selectedClassName &&
-                c.sectionName == _selectedSectionName)
-            .map((c) => c.subjectName ?? 'Unknown Subject')
-            .toSet()
-            .toList()
+    final subjects =
+        (_selectedClassName == null || _selectedSectionName == null)
+              ? <String>[]
+              : provider.availableClasses
+                  .where(
+                    (c) =>
+                        (c.className ?? 'Class') == _selectedClassName &&
+                        c.sectionName == _selectedSectionName,
+                  )
+                  .map((c) => c.subjectName ?? 'Unknown Subject')
+                  .toSet()
+                  .toList()
           ..sort();
 
     if (_selectedClassName != null &&
@@ -163,7 +168,6 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
             .toSet()
             .toList()
           ..sort(); // Optional: Sort alphabetically
-
 
     // 2. Sections (Filtered by Class)
     final sections =
@@ -271,10 +275,9 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
                         _selectedClassName = val;
                         _selectedSectionName = null;
                         _selectedSubjectName = null;
-                        // Reset provider
-                        _updateSelection(provider);
-                        _checkAutoSelections(provider);
                       });
+                      // Update provider outside setState to avoid rebuild loops
+                      _updateSelection(provider);
                     },
                     placeholder: 'Class',
                     iconData: Icons.class_,
@@ -296,9 +299,9 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
                       setState(() {
                         _selectedSectionName = val;
                         _selectedSubjectName = null;
-                        _updateSelection(provider);
-                        _checkAutoSelections(provider);
                       });
+                      // Update provider outside setState to avoid rebuild loops
+                      _updateSelection(provider);
                     },
                     placeholder: 'Sec',
                     iconData: Icons.view_module,
@@ -320,9 +323,9 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
                     onItemSelected: (val) {
                       setState(() {
                         _selectedSubjectName = val;
-                        _updateSelection(provider);
-                        _checkAutoSelections(provider);
                       });
+                      // Update provider outside setState to avoid rebuild loops
+                      _updateSelection(provider);
                     },
                     placeholder: 'Subject',
                     iconData: Icons.book,

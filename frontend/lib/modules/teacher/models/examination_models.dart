@@ -115,7 +115,7 @@ class CreateExaminationDto {
   final String status;
 
   Map<String, dynamic> toJson() => {
-    'courseId': courseId,
+    'subjectId': courseId,
     'semesterId': semesterId,
     'examName': examName,
     'examType': examType,

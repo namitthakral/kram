@@ -5,6 +5,7 @@ import '../../utils/custom_colors.dart';
 import '../../utils/enum.dart';
 import '../../utils/extensions.dart';
 import '../../utils/responsive_utils.dart';
+import 'unified_loader.dart';
 
 /// Configuration class for app bar customization
 class AppBarConfig {
@@ -242,6 +243,7 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
     this.bottomWidget,
     this.floatingActionButton,
     this.bottomWidgetPadding = const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 32.0),
+    this.isLoading = false,
   });
 
   final Widget child;
@@ -250,27 +252,37 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
   final Widget? bottomWidget;
   final Widget? floatingActionButton;
   final EdgeInsetsGeometry bottomWidgetPadding;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     // Get responsive padding
     final padding = ResponsiveUtils.responsivePadding(context);
 
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          appBarConfig.type == AppBarType.profile
-              ? kToolbarHeight + 8
-              : kToolbarHeight,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(
+              appBarConfig.type == AppBarType.profile
+                  ? kToolbarHeight + 8
+                  : kToolbarHeight,
+            ),
+            child: _CustomAppBar(title: title, config: appBarConfig),
+          ),
+          bottomNavigationBar:
+              bottomWidget == null
+                  ? null
+                  : Padding(padding: bottomWidgetPadding, child: bottomWidget),
+          body: _buildResponsiveBody(context, padding),
+          floatingActionButton: floatingActionButton,
         ),
-        child: _CustomAppBar(title: title, config: appBarConfig),
-      ),
-      bottomNavigationBar:
-          bottomWidget == null
-              ? null
-              : Padding(padding: bottomWidgetPadding, child: bottomWidget),
-      body: _buildResponsiveBody(context, padding),
-      floatingActionButton: floatingActionButton,
+        // Full-screen loader overlay
+        if (isLoading)
+          const Positioned.fill(
+            child: UnifiedLoader(),
+          ),
+      ],
     );
   }
 

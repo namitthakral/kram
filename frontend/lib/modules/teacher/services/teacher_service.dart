@@ -669,7 +669,76 @@ class TeacherService {
     }
   }
 
-  // ==================== HELPER METHODS ====================
+  // ==================== RESULT MANAGEMENT ====================
+
+  /// Get results for an examination
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/examinations/:examId/results
+  Future<List<dynamic>> getExamResults(String userUuid, int examId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/examinations/$examId/results',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+           // Case 1: data['data'] is the list (handled originally)
+           if (data['data'] is List) {
+             return data['data'] as List<dynamic>;
+           }
+           // Case 2: data['data']['results'] is the list (User's log case)
+           else if (data['data'] is Map<String, dynamic> && data['data']['results'] is List) {
+             return data['data']['results'] as List<dynamic>;
+           }
+           // Case 3: data['results'] might be the list (direct object response)
+           else if (data['results'] is List) {
+             return data['results'] as List<dynamic>;
+           }
+        }
+        return <dynamic>[];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load exam results',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to load exam results: $e');
+    }
+  }
+
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/examinations/:examId/results/bulk
+  Future<Map<String, dynamic>> enterExamResultsBulk(
+    String userUuid,
+    int examId,
+    List<Map<String, dynamic>> results,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/examinations/$examId/results/bulk',
+        data: {'results': results},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to save exam results',
+        );
+      }
+    } catch (e) {
+      throw Exception('Failed to save exam results: $e');
+    }
+  }
 
   /// Get teacher's courses (for dropdowns)
   ///
@@ -901,32 +970,7 @@ class TeacherService {
   /// Get all results for an exam
   ///
   /// Endpoint: GET /teachers/:user_uuid/examinations/:examId/results
-  Future<List<dynamic>> getExamResults(String userUuid, int examId) async {
-    try {
-      final response = await _apiService.dio.get(
-        '/teachers/$userUuid/examinations/$examId/results',
-      );
 
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data is List) {
-          return data;
-        } else if (data is Map<String, dynamic>) {
-          return data['data'] as List<dynamic>? ?? [];
-        }
-        return [];
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error: 'Failed to get exam results',
-        );
-      }
-    } catch (e) {
-      throw Exception('Failed to get exam results: $e');
-    }
-  }
 
   /// Update an exam result
   ///

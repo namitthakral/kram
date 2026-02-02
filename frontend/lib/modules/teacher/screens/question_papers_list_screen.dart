@@ -7,7 +7,7 @@ import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-import '../../../widgets/custom_widgets/unified_loader.dart';
+
 import '../providers/question_paper_provider.dart';
 
 class QuestionPapersListScreen extends StatefulWidget {
@@ -44,6 +44,7 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
 
     return CustomMainScreenWithAppbar(
       title: 'Question Papers',
+      isLoading: provider.isLoading,
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
         userName: user?.name ?? 'Teacher',
@@ -64,32 +65,27 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
           ),
         ),
       ),
-      child: Stack(
-        children: [
-          RefreshIndicator(
-            onRefresh: _loadData,
-            child: provider.questionPapers == null && provider.isLoading
-                ? const SizedBox() // Initial loading handled by UnifiedLoader
-                : provider.questionPapers == null || provider.questionPapers!.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
-                        itemCount: provider.questionPapers!.length,
-                        itemBuilder: (context, index) {
-                          final paper = provider.questionPapers![index];
-                          // Fallback to defaults if fields are missing
-                          final title = paper['title'] ?? paper['examName'] ?? 'Question Paper #${paper['id']}';
-                          final subtitle = paper['courseName'] ?? 'General';
+      child: RefreshIndicator(
+        onRefresh: _loadData,
+        child: provider.questionPapers == null && provider.isLoading
+            ? const SizedBox() // Initial loading handled by UnifiedLoader
+            : provider.questionPapers == null || provider.questionPapers!.isEmpty
+                ? _buildEmptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                    itemCount: provider.questionPapers!.length,
+                    itemBuilder: (context, index) {
+                      final paper = provider.questionPapers![index];
+                      // Fallback to defaults if fields are missing
+                      final title = paper['title'] ?? paper['examName'] ?? 'Question Paper #${paper['id']}';
+                      final subtitle = paper['courseName'] ?? 'General';
 
-                          return _buildPaperItem(title, subtitle, () {
-                            // Navigate to detail or edit
-                            // context.pushNamed('question_paper_detail', extra: paper['id']);
-                          });
-                        },
-                      ),
-          ),
-          if (provider.isLoading) const UnifiedLoader(),
-        ],
+                      return _buildPaperItem(title, subtitle, () {
+                        // Navigate to detail or edit
+                        // context.pushNamed('question_paper_detail', extra: paper['id']);
+                      });
+                    },
+                  ),
       ),
     );
   }

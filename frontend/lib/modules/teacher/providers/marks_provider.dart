@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/auth_service.dart';
 import '../../../core/services/class_section_service.dart';
 import '../../teacher/services/teacher_service.dart';
+import '../models/examination_models.dart';
 import '../models/marks_models.dart';
 
 class MarksProvider with ChangeNotifier {
   final TeacherService _teacherService = TeacherService();
   final ClassSectionService _classSectionService = ClassSectionService();
+  final AuthService _authService = AuthService();
 
   // Selected values
   ClassInfo? _selectedClass;
-  SubjectInfo? _selectedSubject;
-  ExamType? _selectedExamType;
-  double? _totalMarks = 100;
-  DateTime? _examDate;
+  // SubjectInfo is implict in ClassInfo
+
+  // Selected Exam (Mandatory)
+  Examination? _selectedExam;
 
   // List of students with marks
   List<StudentMarks> _students = [];
@@ -26,40 +29,23 @@ class MarksProvider with ChangeNotifier {
 
   // Available data
   List<ClassInfo> _availableClasses = [];
-  List<SubjectInfo> _availableSubjects = [];
 
-  // Recent exams list
-  List<dynamic> _recentExams = [];
-  List<dynamic> get recentExams => _recentExams;
-
-  // Keep mock exam types for now as no service found for it yet,
-  // or fetch if available. Assuming static for now.
-  final List<ExamType> _availableExamTypes = [
-    ExamType(id: '1', name: 'Quiz'),
-    ExamType(id: '2', name: 'Unit Test'),
-    ExamType(id: '3', name: 'Mid-Term'),
-    ExamType(id: '4', name: 'Final Exam'),
-    ExamType(id: '5', name: 'Assignment'),
-  ];
+  // Available Exams for the selected class
+  List<Examination> _availableExams = [];
+  List<Examination> get availableExams => _availableExams;
+  Examination? get selectedExam => _selectedExam;
 
   // Getters
   ClassInfo? get selectedClass => _selectedClass;
-  SubjectInfo? get selectedSubject => _selectedSubject;
-  ExamType? get selectedExamType => _selectedExamType;
-  double? get totalMarks => _totalMarks;
-  DateTime? get examDate => _examDate;
+  // Use selectedExam details
+  double? get totalMarks => _selectedExam?.totalMarks.toDouble();
+  DateTime? get examDate => _selectedExam?.examDate;
+  String? get examType => _selectedExam?.examType;
+
   List<StudentMarks> get students => _students;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<ClassInfo> get availableClasses => _availableClasses;
-  List<SubjectInfo> get availableSubjects => _availableSubjects;
-  List<ExamType> get availableExamTypes => _availableExamTypes;
-
-  // Show only first 4 students (Logic kept for EnterMarksScreen widget structure)
-  List<StudentMarks> get displayedStudents =>
-      _students.length > 4 ? _students.sublist(0, 4) : _students;
-
-  bool get hasMoreStudents => _students.length > 4;
 
   MarksSummary get summary {
     final entered = _students.where((s) => s.marks != null).length;
@@ -78,11 +64,7 @@ class MarksProvider with ChangeNotifier {
   }
 
   bool get canSave =>
-      _selectedClass != null &&
-      _selectedSubject != null &&
-      _selectedExamType != null &&
-      _totalMarks != null &&
-      _examDate != null;
+      _selectedClass != null && _selectedExam != null && _students.isNotEmpty;
 
   // Load Initial Data
   Future<void> loadInitialData(String userUuid) async {
@@ -91,22 +73,32 @@ class MarksProvider with ChangeNotifier {
     try {
       final classesData = await _teacherService.getTeacherClasses(userUuid);
       _availableClasses =
-          classesData.map((data) {
-            return ClassInfo(
-              id: data['id']?.toString() ?? '',
-              name: '${data['name'] ?? ''} ${data['section'] ?? ''}'.trim(),
-              totalStudents: data['studentCount'] as int? ?? 0,
-            );
-          }).toList();
-
-      final subjectsData = await _teacherService.getTeacherSubjects(userUuid);
-      _availableSubjects =
-          subjectsData.map((data) {
-            return SubjectInfo(
-              id: data['id']?.toString() ?? '',
-              name: data['name'] ?? 'Unknown Subject',
-            );
-          }).toList();
+          classesData
+              .map(
+                (data) => ClassInfo(
+                  id: data['id']?.toString() ?? '',
+                  name:
+                      '${data['subject']?['subjectName'] ?? ''} ${data['section'] ?? ''}'
+                          .trim(),
+                  totalStudents: data['studentCount'] as int? ?? 0,
+                  // Fix: Check multiple possible fields for valid course/subject ID
+                  courseId:
+                      data['courseId'] as int? ??
+                      data['subjectId'] as int? ??
+                      data['subject']?['id'] as int? ??
+                      0,
+                  sectionId: data['id'] as int?,
+                  sectionName: data['section'] as String? ?? 'A',
+                  subjectName: data['subject']?['subjectName'] as String?,
+                  className:
+                      data['roomNumber']?.toString() ??
+                      data['room_number']?.toString() ??
+                      data['class']?['name']?.toString() ??
+                      'Class',
+                  semesterId: data['semesterId'] as int?,
+                ),
+              )
+              .toList();
 
       _error = null;
     } catch (e) {
@@ -117,65 +109,176 @@ class MarksProvider with ChangeNotifier {
     }
   }
 
-  // Load Recent Exams for List Screen
-  Future<void> loadRecentExams(String userUuid) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final exams = await _teacherService.getExaminations(userUuid);
-      _recentExams = exams;
-      _error = null;
-    } catch (e) {
-      _error = 'Failed to load exams: $e';
-      _recentExams = [];
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Set selected class and load students
+  // Set selected class and load students (Early Loading)
+  // DEPRECATED in favor of loadExamsForSection for the new flow
   Future<void> setSelectedClass(ClassInfo? classInfo) async {
     _selectedClass = classInfo;
+    _selectedExam = null; // Reset specific exam when class changes
+    _availableExams = [];
     _error = null;
     notifyListeners();
+
     if (classInfo != null) {
-      await _loadStudents(classInfo.id);
+      // 1. Load students for this section
+      await loadStudents(classInfo.id);
+
+      // 2. Load exams for this course
+      await _loadExamsForClass(classInfo.courseId);
     } else {
       _students = [];
       notifyListeners();
     }
   }
 
-  // Set selected subject
-  void setSelectedSubject(SubjectInfo? subject) {
-    _selectedSubject = subject;
+  // Load exams for a specific section (identifies all relevant subjects/courses)
+  Future<void> loadExamsForSection(String className, String sectionName) async {
+
+    _isLoading = true;
+    _selectedExam = null;
+    _error = null;
     notifyListeners();
+
+    try {
+      // 1. Find all ClassInfo objects that match this Class & Section
+      final relevantClasses =
+          _availableClasses
+              .where(
+                (c) =>
+                    (c.className == className) &&
+                    (c.sectionName == sectionName),
+              )
+              .toList();
+
+
+
+      if (relevantClasses.isEmpty) {
+
+        _students = [];
+        _availableExams = [];
+        notifyListeners();
+        return;
+      }
+
+      // 2. Load Students (using the ID of the first match - section IDs should be same for same section)
+      // We assume the underlying sectionId is the same for all subjects of the same section
+      final representativeClass = relevantClasses.first;
+      await loadStudents(representativeClass.id);
+
+      // 3. Load Exams for ALL relevant courses
+      final relevantCourseIds = relevantClasses.map((c) => c.courseId).toSet();
+
+      final user = await _authService.getCurrentUser();
+      if (user?.uuid != null) {
+        // Fetch ALL exams for teacher
+        final allExams = await _teacherService.getExaminations(user!.uuid!);
+
+
+        _availableExams =
+            allExams
+                .where(
+                  (e) =>
+                      relevantCourseIds.contains(e.courseId) &&
+                      e.status != 'CANCELLED',
+                )
+                .toList();
+
+      }
+    } catch (e) {
+
+      _error = 'Failed to load exams: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // Set selected exam type
-  void setSelectedExamType(ExamType? examType) {
-    _selectedExamType = examType;
-    notifyListeners();
+  Future<void> _loadExamsForClass(int courseId) async {
+    try {
+      final user = await _authService.getCurrentUser();
+      if (user?.uuid != null) {
+        final exams = await _teacherService.getExaminations(
+          user!.uuid!,
+          courseId: courseId,
+        );
+        // Filter out cancelled exams if needed
+        _availableExams = exams.where((e) => e.status != 'CANCELLED').toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Failed to load exams for course $courseId: $e');
+    }
   }
 
-  // Set total marks
-  void setTotalMarks(double? marks) {
-    _totalMarks = marks;
-    notifyListeners();
+  // Set selected exam
+  Future<void> setSelectedExam(Examination? exam) async {
+    _selectedExam = exam;
+
+    // INFERS the selected class/subject context based on the exam
+    if (exam != null) {
+      // Find the class info that matches this exam's course
+      try {
+        final matchingClass = _availableClasses.firstWhere(
+          (c) => c.courseId == exam.courseId,
+        );
+        _selectedClass = matchingClass;
+      } catch (e) {
+        // Should not happen if data is consistent
+        print(
+          'Warning: Could not find ClassInfo for exam course ${exam.courseId}',
+        );
+      }
+    } else {
+      _selectedClass = null;
+    }
+
+    notifyListeners(); // Updates UI with new total marks/date implicitly via getters
+
+    if (exam != null) {
+      // Load existing marks
+      if (_students.isNotEmpty) {
+        final user = await _authService.getCurrentUser();
+        if (user?.uuid != null) {
+          _isLoading = true;
+          notifyListeners();
+          await _loadMarksForExam(user!.uuid!, exam.id);
+          _isLoading = false;
+          notifyListeners();
+        }
+      }
+    } else {
+      // Reset marks if no exam selected
+      for (var i = 0; i < _students.length; i++) {
+        _students[i] = _students[i].copyWith(marks: null);
+      }
+      notifyListeners();
+    }
   }
 
-  // Set exam date
-  void setExamDate(DateTime? date) {
-    _examDate = date;
-    notifyListeners();
+  Future<void> _loadMarksForExam(String userUuid, int examId) async {
+    try {
+      final results = await _teacherService.getExamResults(userUuid, examId);
+      final resultMap = {
+        for (var r in results)
+          r['studentId'].toString(): (r['marksObtained'] as num?)?.toDouble(),
+      };
+
+      for (var i = 0; i < _students.length; i++) {
+        final sid = _students[i].id;
+        if (resultMap.containsKey(sid)) {
+          _students[i] = _students[i].copyWith(marks: resultMap[sid]);
+        } else {
+          _students[i] = _students[i].copyWith(marks: null);
+        }
+      }
+    } catch (e) {
+      _error = 'Failed to load marks: $e';
+    }
   }
 
   // Load students for a class
-  Future<void> _loadStudents(String classId) async {
-    _isLoading = true;
+  Future<void> loadStudents(String classId) async {
+    // Only set loading if not already loading (to avoid flicker if called internally)
+    if (!_isLoading) _isLoading = true;
     _error = null;
     notifyListeners();
 
@@ -187,7 +290,11 @@ class MarksProvider with ChangeNotifier {
         sectionId: sectionId,
       );
 
-      final studentsList = response['students'] as List<dynamic>? ?? [];
+      final data =
+          response.containsKey('data')
+              ? response['data'] as Map<String, dynamic>
+              : response;
+      final studentsList = data['students'] as List<dynamic>? ?? [];
 
       _students =
           studentsList.map((s) {
@@ -202,9 +309,13 @@ class MarksProvider with ChangeNotifier {
           }).toList();
     } catch (e) {
       _error = 'Failed to load students: $e';
-      _students = []; // Clear on error
+      _students = [];
     } finally {
-      _isLoading = false;
+      // Don't turn off loading here if it was part of a larger operation?
+      // For safety, let the caller handle main loading state or use check
+      if (isLoading) {
+        // _isLoading = false; // logic moved to loadExamsForSection
+      }
       notifyListeners();
     }
   }
@@ -228,7 +339,7 @@ class MarksProvider with ChangeNotifier {
   // Save marks
   Future<bool> saveMarks() async {
     if (!canSave) {
-      _error = 'Please fill all required fields';
+      _error = 'Please select an exam and class';
       notifyListeners();
       return false;
     }
@@ -238,10 +349,26 @@ class MarksProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Logic to save marks would go here
-      await Future.delayed(
-        const Duration(seconds: 1),
-      ); // Mock save for now
+      final user = await _authService.getCurrentUser();
+      if (user == null || user.uuid == null)
+        throw Exception('User not authenticated');
+      final userUuid = user.uuid!;
+
+      final examId = _selectedExam!.id;
+
+      final results =
+          _students
+              .where((s) => s.marks != null)
+              .map(
+                (s) => {'studentId': int.parse(s.id), 'marksObtained': s.marks},
+              )
+              .toList();
+
+      if (results.isEmpty) {
+        return true;
+      }
+
+      await _teacherService.uploadBulkExamResults(userUuid, examId, results);
 
       return true;
     } catch (e) {
@@ -256,11 +383,9 @@ class MarksProvider with ChangeNotifier {
   // Reset marks state
   void reset() {
     _selectedClass = null;
-    _selectedSubject = null;
-    _selectedExamType = null;
-    _totalMarks = 100;
-    _examDate = null;
+    _selectedExam = null;
     _students = [];
+    _availableExams = [];
     _error = null;
     notifyListeners();
   }
