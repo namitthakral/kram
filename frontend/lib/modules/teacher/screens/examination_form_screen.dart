@@ -40,7 +40,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   String _examType = 'QUIZ';
   DateTime? _examDate;
   TimeOfDay? _startTime;
-  TimeOfDay? _endTime;
   String _status = 'SCHEDULED';
   bool _isLoading = false;
 
@@ -56,19 +55,60 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
     final uuid = user?.uuid;
-    if (uuid == null) {
+    if (user?.teacher?.id == null || uuid == null) {
+      debugPrint('User UUID or Teacher ID not found');
       return;
     }
 
     final assignmentProvider = context.read<AssignmentProvider>();
     final examProvider = context.read<ExaminationProvider>();
 
-    await assignmentProvider.loadCourses(uuid);
+    await assignmentProvider.loadClassSectionsForTeacher(user!.teacher!.id);
     await examProvider.loadSemesters();
 
-    // TODO: If editing, load examination data
+    // If editing, load examination data
     if (widget.examinationId != null) {
-      // Load examination details and populate form
+      final exam = await examProvider.getExamination(
+        uuid!,
+        widget.examinationId!,
+      );
+      if (exam != null) {
+        if (!mounted) return;
+
+        // Pre-fill controllers
+        _examNameController.text = exam.examName;
+        _totalMarksController.text = exam.totalMarks.toString();
+        _passingMarksController.text = exam.passingMarks.toString();
+        _durationController.text = exam.durationMinutes.toString();
+        _venueController.text = exam.venue ?? '';
+        _instructionsController.text = exam.instructions ?? '';
+
+        // Pre-fill state
+        setState(() {
+          _examType = exam.examType;
+          _selectedSemesterId = exam.semesterId;
+          _examDate = exam.examDate;
+          _status = exam.status;
+
+          if (exam.startTime != null) {
+            _startTime = TimeOfDay.fromDateTime(exam.startTime!);
+          }
+
+
+
+          // Find and select course
+          try {
+            _selectedCourse = assignmentProvider.courses.firstWhere(
+              (c) => c.id == exam.courseId,
+            );
+          } catch (_) {
+            // Course might not be in the list if inactive or deleted
+            debugPrint(
+              'Course with ID ${exam.courseId} not found in available courses.',
+            );
+          }
+        });
+      }
     }
   }
 
@@ -110,31 +150,38 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
           // Notification handler to be implemented
         },
       ),
-      bottomWidget: _buildSubmitButton(),
+      floatingActionButton: _buildFloatingActionButton(),
       child: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.only(bottom: isMobile ? 16 : 24),
+          padding: EdgeInsets.fromLTRB(16, 16, 16, isMobile ? 80 : 100),
           children: [
             // Back Navigation Link
             InkWell(
               onTap: () => Navigator.of(context).pop(),
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: 24),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
-                      Icons.arrow_back,
-                      size: 18,
-                      color: Color(0xFF155dfc),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF155dfc).withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        size: 16,
+                        color: Color(0xFF155dfc),
+                      ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 12),
                     Text(
                       context.translate('back_to_examinations'),
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w600,
                         color: Color(0xFF155dfc),
                       ),
                     ),
@@ -150,11 +197,11 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               icon: Icons.quiz_outlined,
               children: [
                 _buildExamNameField(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 _buildExamTypeDropdown(),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Course & Semester Section
             CustomFormSection(
@@ -163,37 +210,43 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               icon: Icons.school_outlined,
               children: [
                 _buildCourseDropdown(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 _buildSemesterDropdown(),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Marks & Duration Section
+            // Marks, Duration & Schedule Section
             CustomFormSection(
-              title: context.translate('marks_duration'),
-              subtitle: context.translate('set_marks_duration'),
-              icon: Icons.grade_outlined,
+              title: context.translate('exam_details'),
+              subtitle: context.translate('set_marks_duration_schedule'),
+              icon: Icons.assignment_outlined,
               children: [
                 _buildMarksFields(),
-                const SizedBox(height: 16),
-                _buildDurationField(),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Schedule Section
-            CustomFormSection(
-              title: context.translate('schedule'),
-              subtitle: context.translate('set_exam_schedule'),
-              icon: Icons.calendar_today_outlined,
-              children: [
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(child: _buildDurationField()),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: CustomTimePickerField(
+                        label: context.translate('start_time'),
+                        selectedTime: _startTime,
+                        hintText: context.translate('select_time'),
+                        onTimeSelected: (time) {
+                          setState(() {
+                            _startTime = time;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
                 _buildExamDateField(),
-                const SizedBox(height: 16),
-                _buildTimeFields(),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Venue & Instructions Section
             CustomFormSection(
@@ -202,11 +255,11 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               icon: Icons.location_on_outlined,
               children: [
                 _buildVenueField(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 _buildInstructionsField(),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Status Section
             CustomFormSection(
@@ -220,6 +273,8 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
       ),
     );
   }
+
+  // ... (keeping other build methods) ...
 
   Widget _buildExamNameField() => CustomTextField(
     label: context.translate('exam_name_required'),
@@ -403,35 +458,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     lastDate: DateTime.now().add(const Duration(days: 365)),
   );
 
-  Widget _buildTimeFields() => Row(
-    children: [
-      Expanded(
-        child: CustomTimePickerField(
-          label: context.translate('start_time'),
-          selectedTime: _startTime,
-          hintText: context.translate('select_time'),
-          onTimeSelected: (time) {
-            setState(() {
-              _startTime = time;
-            });
-          },
-        ),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: CustomTimePickerField(
-          label: context.translate('end_time'),
-          selectedTime: _endTime,
-          hintText: context.translate('select_time'),
-          onTimeSelected: (time) {
-            setState(() {
-              _endTime = time;
-            });
-          },
-        ),
-      ),
-    ],
-  );
+
 
   Widget _buildVenueField() => CustomTextField(
     label: context.translate('venue_optional'),
@@ -477,35 +504,44 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     },
   );
 
-  Widget _buildSubmitButton() {
-    final isMobile = context.isMobile;
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _submitForm,
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(
-            vertical: isMobile ? 14 : 16,
-            horizontal: 24,
+  Widget _buildFloatingActionButton() {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF155dfc).withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-        ),
-        child:
+        ],
+      ),
+      child: FloatingActionButton.extended(
+        onPressed: _isLoading ? null : _submitForm,
+        backgroundColor: const Color(0xFF155dfc),
+        elevation: 0,
+        highlightElevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon:
             _isLoading
                 ? const SizedBox(
-                  height: 20,
                   width: 20,
+                  height: 20,
                   child: CircularProgressIndicator(
+                    color: Colors.white,
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-                : Text(
-                  widget.examinationId == null
-                      ? context.translate('create_examination')
-                      : context.translate('update_examination'),
-                  style: TextStyle(fontSize: isMobile ? 14 : 16),
-                ),
+                : const Icon(Icons.check_circle_outline, color: Colors.white),
+        label: Text(
+          widget.examinationId == null
+              ? context.translate('create_examination')
+              : context.translate('update_examination'),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
@@ -538,6 +574,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     }
 
     final provider = context.read<ExaminationProvider>();
+    final durationMinutes = int.parse(_durationController.text.trim());
 
     // Combine date and time if provided
     DateTime? startDateTime;
@@ -551,16 +588,9 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         _startTime!.hour,
         _startTime!.minute,
       );
-    }
 
-    if (_endTime != null) {
-      endDateTime = DateTime(
-        _examDate!.year,
-        _examDate!.month,
-        _examDate!.day,
-        _endTime!.hour,
-        _endTime!.minute,
-      );
+      // Auto-calculate end time based on duration
+      endDateTime = startDateTime.add(Duration(minutes: durationMinutes));
     }
 
     final dto = CreateExaminationDto(
@@ -570,7 +600,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
       examType: _examType,
       totalMarks: int.parse(_totalMarksController.text.trim()),
       passingMarks: int.parse(_passingMarksController.text.trim()),
-      durationMinutes: int.parse(_durationController.text.trim()),
+      durationMinutes: durationMinutes,
       examDate: _examDate!,
       startTime: startDateTime,
       endTime: endDateTime,
@@ -596,7 +626,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
                 examType: _examType,
                 totalMarks: int.parse(_totalMarksController.text.trim()),
                 passingMarks: int.parse(_passingMarksController.text.trim()),
-                durationMinutes: int.parse(_durationController.text.trim()),
+                durationMinutes: durationMinutes,
                 examDate: _examDate,
                 startTime: startDateTime,
                 endTime: endDateTime,
@@ -619,9 +649,10 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     if (mounted) {
       if (success) {
         showCustomSnackbar(
-          message: widget.examinationId == null
-              ? context.translate('examination_created_success')
-              : context.translate('examination_updated_success'),
+          message:
+              widget.examinationId == null
+                  ? context.translate('examination_created_success')
+                  : context.translate('examination_updated_success'),
           type: SnackbarType.success,
         );
         Navigator.pop(context);

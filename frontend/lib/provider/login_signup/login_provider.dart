@@ -142,11 +142,11 @@ class LoginProvider extends ChangeNotifier {
       log('Login successful for user: ${response.user.email}');
 
       // Save credentials if Remember Me is checked
-      if (_rememberPassword) {
-        await _saveCredentials(identifier, password);
-      } else {
-        await _clearSavedCredentials();
-      }
+      await _saveCredentials(identifier, password);
+      // if (_rememberPassword) {
+      // } else {
+      //   await _clearSavedCredentials();
+      // }
 
       updateLoginAccountClicked(loginAccountClicked: true);
     } on Exception catch (e) {
@@ -267,7 +267,9 @@ class LoginProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_keyRememberMe, true);
       await prefs.setString(_keySavedIdentifier, identifier);
-      await prefs.setString(_keySavedPassword, password);
+      if (_rememberPassword) {
+        await prefs.setString(_keySavedPassword, password);
+      }
       log('Credentials saved');
     } on Exception catch (e) {
       log('Error saving credentials: $e');

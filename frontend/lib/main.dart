@@ -64,7 +64,8 @@ void main() async {
     };
   }
 
-  RouterService().init();
+  final loginProvider = LoginProvider();
+  RouterService().init(loginProvider);
   ApiService().init();
 
   runApp(
@@ -79,7 +80,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => FavouriteProvider()),
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => SignUpProvider()),
-        ChangeNotifierProvider(create: (_) => LoginProvider()),
+        ChangeNotifierProvider.value(value: loginProvider),
         ChangeNotifierProvider<PerformanceTabProvider>(
           create: (_) => PerformanceTabProvider(),
         ),

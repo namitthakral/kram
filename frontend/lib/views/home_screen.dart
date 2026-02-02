@@ -12,6 +12,7 @@ import '../utils/platform_helper.dart';
 import '../utils/router_service.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
 import '../widgets/custom_widgets/custom_navigation_rail.dart';
+import '../widgets/custom_widgets/draggable_floating_overlay.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.child});
@@ -65,10 +66,17 @@ class _HomeScreenState extends State<HomeScreen> {
       _HomeScreenContent(scaffoldKey: _scaffoldKey, child: widget.child);
 }
 
-class _HomeScreenContent extends StatelessWidget {
+class _HomeScreenContent extends StatefulWidget {
   const _HomeScreenContent({required this.scaffoldKey, required this.child});
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Widget child;
+
+  @override
+  State<_HomeScreenContent> createState() => _HomeScreenContentState();
+}
+
+class _HomeScreenContentState extends State<_HomeScreenContent> {
+  bool _isEndDrawerOpen = false;
 
   /// Check if should use bottom bar (mobile platforms or mobile screen sizes)
   bool _shouldUseBottomBar(BuildContext context) {
@@ -95,14 +103,6 @@ class _HomeScreenContent extends StatelessWidget {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
-      final fab = FloatingActionButton(
-        onPressed: () {
-          scaffoldKey.currentState?.openEndDrawer();
-        },
-        backgroundColor: const Color(0xFF6366F1),
-        child: const Icon(Icons.auto_awesome, color: Colors.white),
-      );
-
       // Handle back button to navigate to first tab instead of exiting App
       return PopScope(
         canPop: false,
@@ -113,41 +113,53 @@ class _HomeScreenContent extends StatelessWidget {
           // Navigate to dashboard instead of exiting
           context.go('/dashboard');
         },
-        child: _buildScaffold(context, navProvider, fab),
+        child: _buildScaffold(context, navProvider),
       );
     },
   );
 
-  Widget _buildScaffold(
-    BuildContext context,
-    BottomNavProvider navProvider,
-    Widget fab,
-  ) {
+  Widget _buildScaffold(BuildContext context, BottomNavProvider navProvider) {
     // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
     if (_shouldUseBottomBar(context)) {
-      return Scaffold(
-        key: scaffoldKey,
-        body: child,
-        bottomNavigationBar: const CustomBottomNavBar(),
-        floatingActionButton: fab,
-        endDrawer: const Drawer(
-          width: 380, // Slightly wider for chat
-          child: AiChatScreen(),
+      return DraggableFloatingOverlay(
+        isVisible: !_isEndDrawerOpen,
+        onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+        child: Scaffold(
+          key: widget.scaffoldKey,
+          body: widget.child,
+          bottomNavigationBar: const CustomBottomNavBar(),
+          endDrawer: const Drawer(
+            width: 380, // Slightly wider for chat
+            child: AiChatScreen(),
+          ),
+          onEndDrawerChanged: (isOpen) {
+            setState(() {
+              _isEndDrawerOpen = isOpen;
+            });
+          },
+          drawerEnableOpenDragGesture: false, // Prevent accidental swipe
         ),
-        drawerEnableOpenDragGesture: false, // Prevent accidental swipe
       );
     }
 
     // Desktop/Tablet (other platforms or larger screens) → Use Overlay Rail
-    return Scaffold(
-      key: scaffoldKey,
-      body: _HomeScreenWithRail(child: child),
-      floatingActionButton: fab,
-      endDrawer: const Drawer(
-        width: 400, // Wide drawer for desktop
-        child: AiChatScreen(),
+    return DraggableFloatingOverlay(
+      isVisible: !_isEndDrawerOpen,
+      onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+      child: Scaffold(
+        key: widget.scaffoldKey,
+        body: _HomeScreenWithRail(child: widget.child),
+        endDrawer: const Drawer(
+          width: 400, // Wide drawer for desktop
+          child: AiChatScreen(),
+        ),
+        onEndDrawerChanged: (isOpen) {
+          setState(() {
+            _isEndDrawerOpen = isOpen;
+          });
+        },
+        drawerEnableOpenDragGesture: false,
       ),
-      drawerEnableOpenDragGesture: false,
     );
   }
 }
@@ -166,60 +178,60 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
 
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
-        builder: (context, navProvider, _) {
-          // Check if navigation is initialized
-          if (navProvider.navigationItems.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    builder: (context, navProvider, _) {
+      // Check if navigation is initialized
+      if (navProvider.navigationItems.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-          return Stack(
-            children: [
-              // Main content with left padding to avoid rail overlap
-              Padding(
-                padding: const EdgeInsets.only(left: 80),
-                child: widget.child,
-              ),
-              // Backdrop overlay when rail is extended
-              if (_isRailExtended)
-                Positioned.fill(
-                  child: GestureDetector(
-                    onTap: () {
-                      // Collapse the rail by calling its method
-                      _railKey.currentState?.setExtended(false);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withOpacity(0.5),
-                            Colors.black.withOpacity(0.2),
-                          ],
-                        ),
-                      ),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                        child: Container(color: Colors.transparent),
-                      ),
+      return Stack(
+        children: [
+          // Main content with left padding to avoid rail overlap
+          Padding(
+            padding: const EdgeInsets.only(left: 80),
+            child: widget.child,
+          ),
+          // Backdrop overlay when rail is extended
+          if (_isRailExtended)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  // Collapse the rail by calling its method
+                  _railKey.currentState?.setExtended(false);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.5),
+                        Colors.black.withOpacity(0.2),
+                      ],
                     ),
                   ),
-                ),
-              // Navigation rail overlay
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: CustomNavigationRail(
-                  key: _railKey,
-                  onExtendedChanged: (isExtended) {
-                    setState(() {
-                      _isRailExtended = isExtended;
-                    });
-                  },
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                    child: Container(color: Colors.transparent),
+                  ),
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          // Navigation rail overlay
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: CustomNavigationRail(
+              key: _railKey,
+              onExtendedChanged: (isExtended) {
+                setState(() {
+                  _isRailExtended = isExtended;
+                });
+              },
+            ),
+          ),
+        ],
       );
+    },
+  );
 }

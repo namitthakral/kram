@@ -163,4 +163,32 @@ class ExaminationProvider with ChangeNotifier {
 
   /// Get filtered examinations
   List<Examination> getFilteredExaminations() => _examinations;
+
+  /// Get a single examination by ID
+  Future<Examination?> getExamination(String userUuid, int examId) async {
+    // 1. Try to find in current list
+    try {
+      final existing = _examinations.firstWhere((e) => e.id == examId);
+      return existing;
+    } catch (_) {
+      // 2. If not found, fetch from API
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      try {
+        final exam = await _teacherService.getExamination(userUuid, examId);
+        // Add to list if not present (optional, but good for caching)
+        _examinations.add(exam);
+        _isLoading = false;
+        notifyListeners();
+        return exam;
+      } on Exception catch (e) {
+        _error = e.toString();
+        _isLoading = false;
+        notifyListeners();
+        return null;
+      }
+    }
+  }
 }

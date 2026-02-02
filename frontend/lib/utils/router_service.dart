@@ -58,6 +58,9 @@ class RouterService {
   // Singleton instance
   static final RouterService _instance = RouterService._internal();
 
+  // Login provider for auth state
+  LoginProvider? _loginProvider;
+
   // Router configuration
   late final GoRouter router;
 
@@ -71,26 +74,42 @@ class RouterService {
   Stream<String> get routeStream => _routeStreamController.stream;
 
   // Initialize the router
-  void init() {
+  void init(LoginProvider loginProvider) {
+    _loginProvider = loginProvider;
+
     router = GoRouter(
       initialLocation: '/splash',
       // errorBuilder: (context, state) => const NotFoundPage(),
       routes: _routes,
       redirect: _globalRedirect,
-      refreshListenable: GoRouterRefreshStream(routeStream),
+      refreshListenable: Listenable.merge([
+        GoRouterRefreshStream(routeStream),
+        loginProvider,
+      ]),
       observers: [RouteObserver()],
     );
   }
 
   // Global redirect function for authentication or other global conditions
   String? _globalRedirect(BuildContext context, GoRouterState state) {
-    // Example: Check authentication and redirect if needed
-    // final isLoggedIn = AuthService().isLoggedIn;
-    // final isGoingToLogin = state.location == '/login';
+    final isLoggedIn = _loginProvider?.currentUser != null;
+    final isGoingToLogin = state.matchedLocation == '/login';
+    final isSplash = state.matchedLocation == '/splash';
+    final isOnboarding = state.matchedLocation == '/onboarding';
 
-    // if (!isLoggedIn && !isGoingToLogin) {
-    //   return '/login?from=${state.location}';
-    // }
+    // Specify public routes that don't require authentication
+    if (isSplash || isGoingToLogin || isOnboarding) {
+      return null;
+    }
+
+    if (!isLoggedIn) {
+      return '/login';
+    }
+
+    // If logged in and going to login page, redirect to dashboard
+    if (isLoggedIn && isGoingToLogin) {
+      return '/dashboard';
+    }
 
     return null; // No redirect needed
   }
@@ -220,7 +239,6 @@ class RouterService {
                     key: state.pageKey,
                     child: const MarksListScreen(),
                   ),
-
             ),
             GoRoute(
               path: 'assignments',

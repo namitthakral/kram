@@ -201,7 +201,39 @@ class ApiService {
               return handler.next(error);
             }
           } else {
-            handler.next(error);
+            // Try to extract a more meaningful error message from the backend response
+            String? customErrorMessage;
+            try {
+              if (error.response?.data is Map<String, dynamic>) {
+                final data = error.response!.data as Map<String, dynamic>;
+                if (data.containsKey('message')) {
+                  final message = data['message'];
+                  if (message is String) {
+                    customErrorMessage = message;
+                  } else if (message is List) {
+                    customErrorMessage = message.join(', ');
+                  }
+                } else if (data.containsKey('error') &&
+                    data['error'] is String) {
+                  customErrorMessage = data['error'];
+                }
+              }
+            } catch (e) {
+              log('Error parsing backend error message: $e');
+            }
+
+            if (customErrorMessage != null) {
+              final newError = DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: customErrorMessage,
+                message: customErrorMessage,
+              );
+              handler.next(newError);
+            } else {
+              handler.next(error);
+            }
           }
         },
       ),
