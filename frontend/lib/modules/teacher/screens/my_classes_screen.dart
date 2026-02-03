@@ -27,8 +27,12 @@ class _MyClassesScreenState extends State<MyClassesScreen> {
   Future<void> _loadData() async {
     final loginProvider = context.read<LoginProvider>();
     final userUuid = loginProvider.currentUser?.uuid;
+    final teacherId = loginProvider.currentUser?.teacher?.id;
     if (userUuid != null) {
-      await context.read<TeacherClassesProvider>().loadTeacherClasses(userUuid);
+      await context.read<TeacherClassesProvider>().loadTeacherClasses(
+        userUuid,
+        teacherId: teacherId,
+      );
     }
   }
 

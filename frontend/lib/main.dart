@@ -65,8 +65,9 @@ void main() async {
   }
 
   final loginProvider = LoginProvider();
-  RouterService().init(loginProvider);
   ApiService().init();
+  RouterService().init(loginProvider);
+  await loginProvider.init();
 
   runApp(
     MultiProvider(
@@ -102,9 +103,7 @@ void main() async {
         ChangeNotifierProvider<AttendanceProvider>(
           create: (_) => AttendanceProvider(),
         ),
-        ChangeNotifierProvider<MarksProvider>(
-          create: (_) => MarksProvider(),
-        ),
+        ChangeNotifierProvider<MarksProvider>(create: (_) => MarksProvider()),
         ChangeNotifierProvider<ParentDashboardProvider>(
           create: (_) => ParentDashboardProvider(),
         ),

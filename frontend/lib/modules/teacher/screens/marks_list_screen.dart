@@ -52,10 +52,11 @@ class _MarksListContentState extends State<_MarksListContent> {
   Future<void> _loadInitialData() async {
     final loginProvider = context.read<LoginProvider>();
     final userUuid = loginProvider.currentUser?.uuid;
+    final teacherId = loginProvider.currentUser?.teacher?.id;
     if (userUuid != null) {
       final provider = context.read<MarksProvider>();
       provider.reset();
-      await provider.loadInitialData(userUuid);
+      await provider.loadInitialData(userUuid, teacherId: teacherId);
       if (mounted) {
         _checkAutoSelections(provider);
       }
@@ -117,7 +118,7 @@ class _MarksListContentState extends State<_MarksListContent> {
   void _updateSelection(MarksProvider provider) {
     // If Class & Section selected, load students AND exams
     if (_selectedClassName != null && _selectedSectionName != null) {
-        provider.loadExamsForSection(_selectedClassName!, _selectedSectionName!);
+      provider.loadExamsForSection(_selectedClassName!, _selectedSectionName!);
     }
   }
 
@@ -152,8 +153,6 @@ class _MarksListContentState extends State<_MarksListContent> {
                   .toSet()
                   .toList()
           ..sort();
-
-
 
     // 4. Exams (Filtered by Class/Subject)
     // 4. Exams (Now directly from provider)
@@ -280,7 +279,6 @@ class _MarksListContentState extends State<_MarksListContent> {
                         compact: true,
                       ),
                     ),
-
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -434,15 +432,14 @@ class _MarksListContentState extends State<_MarksListContent> {
                       totalMarks: provider.totalMarks ?? 100,
                       onMarksChanged: provider.updateStudentMarks,
                       readOnly:
-                          provider.selectedExam == null, // Disable if no exam selected
+                          provider.selectedExam ==
+                          null, // Disable if no exam selected
                     ),
           ),
         ],
       ),
     );
   }
-
-
 
   Widget _buildSummaryMetric(String label, String value, Color color) {
     return Column(

@@ -1,0 +1,65 @@
+// ============================================================================
+// QUESTION PAPER MODELS
+// ============================================================================
+
+model QuestionPaper {
+  id              Int      @id @default(autoincrement())
+  examinationId   Int      @unique @map("examination_id")
+  title           String   @db.VarChar(200)
+  instructions    String?
+  totalMarks      Int      @map("total_marks")
+  totalQuestions  Int      @default(0) @map("total_questions")
+  createdBy       Int      @map("created_by")
+  status          String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  examination     Examination @relation(fields: [examinationId], references: [id])
+  creator         Teacher     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  sections        QuestionPaperSection[]
+
+  @@map("question_papers")
+}
+
+model QuestionPaperSection {
+  id              Int      @id @default(autoincrement())
+  questionPaperId Int      @map("question_paper_id")
+  name            String   @db.VarChar(100) // e.g., "Part A", "Section 1"
+  description     String?
+  sortOrder       Int      @map("sort_order")
+
+  // Relations
+  questionPaper   QuestionPaper @relation(fields: [questionPaperId], references: [id], onDelete: Cascade)
+  questions       Question[]
+
+  @@map("question_paper_sections")
+}
+
+model Question {
+  id              Int      @id @default(autoincrement())
+  sectionId       Int      @map("section_id")
+  text            String
+  marks           Int
+  questionType    String   @map("question_type") // MCQ, SUBJECTIVE, TRUE_FALSE, etc.
+  sortOrder       Int      @map("sort_order")
+
+  // Relations
+  section         QuestionPaperSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  options         Option[]
+
+  @@map("questions")
+}
+
+model Option {
+  id              Int      @id @default(autoincrement())
+  questionId      Int      @map("question_id")
+  text            String
+  isCorrect       Boolean  @default(false) @map("is_correct")
+  sortOrder       Int      @map("sort_order")
+
+  // Relations
+  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_options")
+}

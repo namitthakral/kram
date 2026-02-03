@@ -82,6 +82,7 @@ model Teacher {
   teacherSubjects   TeacherSubject[]
   substitutions     TeacherSubstitution[] @relation("TeacherSubstitute")
   classTeacher      ClassTeacher[]
+  questionPapers    QuestionPaper[]
 
   @@map("teachers")
 }

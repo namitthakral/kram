@@ -298,4 +298,24 @@ class LoginProvider extends ChangeNotifier {
     changeConfirmPasswordController?.dispose();
     super.dispose();
   }
+
+  /// Initialize auth state from storage
+  Future<void> init() async {
+    try {
+      final isLoggedIn = await _authService.isLoggedIn();
+      if (isLoggedIn) {
+        // Validate token validity
+        final isValid = await _authService.validateAndRefreshToken();
+        if (isValid) {
+          _currentUser = await _authService.getCurrentUser();
+          notifyListeners();
+        } else {
+          // Token invalid, clear everything
+          await logout();
+        }
+      }
+    } on Exception catch (e) {
+      log('Error initializing LoginProvider: $e');
+    }
+  }
 }

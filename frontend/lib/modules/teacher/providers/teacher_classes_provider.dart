@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../models/assignment_models.dart';
-import '../services/teacher_service.dart';
+import '../../../core/services/class_section_service.dart';
+
 
 class TeacherClassesProvider extends ChangeNotifier {
-  final TeacherService _teacherService = TeacherService();
+
 
   bool _isLoading = false;
   String? _error;
@@ -13,16 +14,21 @@ class TeacherClassesProvider extends ChangeNotifier {
   String? get error => _error;
   List<ClassSection> get classes => _classes;
 
-  Future<void> loadTeacherClasses(String userUuid, {int? semesterId}) async {
+  Future<void> loadTeacherClasses(String userUuid, {int? semesterId, int? teacherId}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final rawClasses = await _teacherService.getTeacherClasses(
-        userUuid,
+      final classSectionService = ClassSectionService();
+      // Use ClassSectionService with institutionId=1
+      final rawClasses = await classSectionService.getClassSections(
+        institutionId: 1,
+        teacherId: teacherId,
         semesterId: semesterId,
+        status: 'ACTIVE',
       );
+
       _classes =
           rawClasses
               .map(

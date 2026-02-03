@@ -36,6 +36,8 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   final _instructionsController = TextEditingController();
 
   Course? _selectedCourse;
+  Section? _selectedSection;
+  Subject? _selectedSubject;
   int? _selectedSemesterId;
   String _examType = 'QUIZ';
   DateTime? _examDate;
@@ -64,16 +66,30 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     final examProvider = context.read<ExaminationProvider>();
 
     await assignmentProvider.loadClassSectionsForTeacher(user!.teacher!.id);
+
+    if (mounted) _checkAutoSelection(assignmentProvider);
     await examProvider.loadSemesters();
 
     // If editing, load examination data
     if (widget.examinationId != null) {
       final exam = await examProvider.getExamination(
-        uuid!,
+        uuid,
         widget.examinationId!,
       );
       if (exam != null) {
         if (!mounted) return;
+
+        // COMPREHENSIVE DEBUG LOGGING
+        debugPrint('=== EXAMINATION EDIT MODE DEBUG ===');
+        debugPrint('Exam ID: ${exam.id}');
+        debugPrint('Exam.courseId (subjectId): ${exam.courseId}');
+        debugPrint('Exam.referenceCourseId: ${exam.referenceCourseId}');
+        debugPrint('Exam.sectionId: ${exam.sectionId}');
+        debugPrint('Exam.examName: ${exam.examName}');
+        debugPrint(
+          'Available courses: ${assignmentProvider.courses.map((c) => 'id=${c.id}, name=${c.courseName}').join(', ')}',
+        );
+        debugPrint('====================================');
 
         // Pre-fill controllers
         _examNameController.text = exam.examName;
@@ -84,31 +100,119 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         _instructionsController.text = exam.instructions ?? '';
 
         // Pre-fill state
-        setState(() {
-          _examType = exam.examType;
-          _selectedSemesterId = exam.semesterId;
-          _examDate = exam.examDate;
-          _status = exam.status;
+        _examType = exam.examType;
+        _selectedSemesterId = exam.semesterId;
+        _examDate = exam.examDate;
+        _status = exam.status;
 
-          if (exam.startTime != null) {
-            _startTime = TimeOfDay.fromDateTime(exam.startTime!);
-          }
+        if (exam.startTime != null) {
+          _startTime = TimeOfDay.fromDateTime(exam.startTime!);
+        }
 
+        // Find and select course, section, and subject
+        // We need to find which course contains the subject with exam.courseId (subjectId)
+        Course? matchedCourse;
+        Section? matchedSection;
+        Subject? matchedSubject;
 
+        debugPrint(
+          'Looking for course that contains subject with ID: ${exam.courseId}',
+        );
 
-          // Find and select course
+        // Strategy: Load all courses, then for each course, load its details and check if it contains our subject
+        for (final course in assignmentProvider.courses) {
+          await assignmentProvider.loadDetailsForCourse(course.id);
+
+          // Check if this course has the subject we're looking for
           try {
-            _selectedCourse = assignmentProvider.courses.firstWhere(
-              (c) => c.id == exam.courseId,
+            final foundSubject = assignmentProvider.subjects.firstWhere(
+              (s) => s.id == exam.courseId,
             );
-          } catch (_) {
-            // Course might not be in the list if inactive or deleted
+
+            // Found it! This is the right course
+            matchedCourse = course;
+            matchedSubject = foundSubject;
             debugPrint(
-              'Course with ID ${exam.courseId} not found in available courses.',
+              'Found course: ${course.courseName} contains subject: ${foundSubject.name}',
             );
+            break;
+          } catch (e) {
+            // This course doesn't have our subject, continue searching
+            debugPrint(
+              'Course ${course.courseName} does not contain subject ${exam.courseId}',
+            );
+            continue;
           }
-        });
+        }
+
+        if (matchedCourse != null && mounted) {
+          // Now that we have the course, the subjects are already loaded
+          debugPrint(
+            'Available sections: ${assignmentProvider.sections.map((s) => 'id=${s.id}, name=${s.sectionName}').join(', ')}',
+          );
+          debugPrint(
+            'Available subjects: ${assignmentProvider.subjects.map((s) => 'id=${s.id}, name=${s.name}').join(', ')}',
+          );
+
+          // Match section if available
+          if (exam.sectionId != null) {
+            try {
+              matchedSection = assignmentProvider.sections.firstWhere(
+                (s) => s.id == exam.sectionId,
+              );
+              debugPrint(
+                'Matched section: id=${matchedSection.id}, name=${matchedSection.sectionName}',
+              );
+            } catch (e) {
+              debugPrint('Section not found for id=${exam.sectionId}: $e');
+            }
+          }
+
+          setState(() {
+            _selectedCourse = matchedCourse;
+            _selectedSection = matchedSection;
+            _selectedSubject = matchedSubject;
+          });
+        } else {
+          debugPrint(
+            'ERROR: Could not find course containing subject ${exam.courseId}',
+          );
+        }
       }
+    }
+  }
+
+  void _checkAutoSelection(AssignmentProvider provider) async {
+    if (!mounted) return;
+
+    bool stateChanged = false;
+
+    // 1. Auto-select Course
+    if (_selectedCourse == null && provider.courses.length == 1) {
+      _selectedCourse = provider.courses.first;
+      stateChanged = true;
+      // Load details for the single course immediately
+      await provider.loadDetailsForCourse(_selectedCourse!.id);
+    }
+
+    // 2. Auto-select Section
+    if (_selectedCourse != null &&
+        _selectedSection == null &&
+        provider.sections.length == 1) {
+      _selectedSection = provider.sections.first;
+      stateChanged = true;
+    }
+
+    // 3. Auto-select Subject
+    if (_selectedCourse != null &&
+        _selectedSubject == null &&
+        provider.subjects.length == 1) {
+      _selectedSubject = provider.subjects.first;
+      stateChanged = true;
+    }
+
+    if (stateChanged && mounted) {
+      setState(() {});
     }
   }
 
@@ -210,6 +314,10 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               icon: Icons.school_outlined,
               children: [
                 _buildCourseDropdown(),
+                const SizedBox(height: 20),
+                _buildSectionDropdown(),
+                const SizedBox(height: 20),
+                _buildSubjectDropdown(),
                 const SizedBox(height: 20),
                 _buildSemesterDropdown(),
               ],
@@ -333,14 +441,58 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
           items: provider.courses,
           displayText:
               (course) => '${course.courseCode} - ${course.courseName}',
-          onChanged: (course) {
+          onChanged: (course) async {
             setState(() {
               _selectedCourse = course;
+              _selectedSection = null;
+              _selectedSubject = null;
             });
+            if (course != null) {
+              await provider.loadDetailsForCourse(course.id);
+              if (context.mounted) _checkAutoSelection(provider);
+            }
           },
           validator: (value) {
             if (value == null) {
               return context.translate('please_select_course');
+            }
+            return null;
+          },
+        ),
+  );
+
+  Widget _buildSectionDropdown() => Consumer<AssignmentProvider>(
+    builder:
+        (context, provider, child) => DropDownFormField<Section>(
+          label: context.translate('section_optional'),
+          value: _selectedSection,
+          hintText: context.translate('select_section'),
+          items: provider.sections,
+          displayText: (section) => section.sectionName,
+          onChanged: (section) {
+            setState(() {
+              _selectedSection = section;
+            });
+          },
+        ),
+  );
+
+  Widget _buildSubjectDropdown() => Consumer<AssignmentProvider>(
+    builder:
+        (context, provider, child) => DropDownFormField<Subject>(
+          label: context.translate('subject_required'),
+          value: _selectedSubject,
+          hintText: context.translate('select_subject'),
+          items: provider.subjects,
+          displayText: (subject) => '${subject.code} - ${subject.name}',
+          onChanged: (subject) {
+            setState(() {
+              _selectedSubject = subject;
+            });
+          },
+          validator: (value) {
+            if (value == null) {
+              return 'Please select a subject';
             }
             return null;
           },
@@ -457,8 +609,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     firstDate: DateTime.now(),
     lastDate: DateTime.now().add(const Duration(days: 365)),
   );
-
-
 
   Widget _buildVenueField() => CustomTextField(
     label: context.translate('venue_optional'),
@@ -594,7 +744,8 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     }
 
     final dto = CreateExaminationDto(
-      courseId: _selectedCourse!.id,
+      courseId: _selectedSubject!.id, // Mapped to subjectId in backend
+      sectionId: _selectedSection?.id,
       semesterId: _selectedSemesterId ?? 1,
       examName: _examNameController.text.trim(),
       examType: _examType,

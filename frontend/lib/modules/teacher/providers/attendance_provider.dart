@@ -5,7 +5,7 @@ import '../../../core/services/attendance_service.dart';
 import '../../../core/services/class_section_service.dart';
 import '../../../utils/user_utils.dart';
 import '../models/attendance_models.dart';
-import '../services/teacher_service.dart';
+
 
 class AttendanceProvider with ChangeNotifier {
   // Selected Date
@@ -37,36 +37,46 @@ class AttendanceProvider with ChangeNotifier {
   List<dynamic> get summaryData => _summaryData;
 
   String? _teacherUuid;
+  int? _teacherId;
 
   void setTeacherUuid(String uuid) {
     _teacherUuid = uuid;
   }
 
-  Future<void> loadInitialData(String userUuid) async {
+
+  Future<void> loadInitialData(String userUuid, {int? teacherId}) async {
     _teacherUuid = userUuid;
+    _teacherId = teacherId;
     _isLoading = true;
     notifyListeners();
     try {
-      final teacherService = TeacherService();
-      final classesData = await teacherService.getTeacherClasses(userUuid);
+      final classSectionService = ClassSectionService();
+      // Use the new API: getClassSections with institutionId=1
+      // We also filter by teacherId if provided to show only this teacher's classes
+      final classesData = await classSectionService.getClassSections(
+        institutionId: 1,
+        teacherId: teacherId,
+        status: 'ACTIVE',
+      );
 
       _availableClasses =
           classesData.map((data) {
+            final subject = data['subject'] as Map<String, dynamic>?;
+            final course = data['course'] as Map<String, dynamic>?;
+
             return ClassInfo(
               id: data['id']?.toString() ?? '',
               name:
-                  '${data['subject']?['subjectName'] ?? ''} ${data['section'] ?? ''}'
+                  '${subject?['name'] ?? ''} ${data['sectionName'] ?? ''}'
                       .trim(),
-              totalStudents: data['studentCount'] as int? ?? 0,
-              courseId: data['courseId'] as int? ?? 0,
+              totalStudents: data['currentEnrollment'] as int? ?? 0,
+              // Try to find courseId at top level or inside course object
+              courseId: data['courseId'] as int? ?? course?['id'] as int? ?? 0,
               sectionId: data['id'] as int?,
-              sectionName: data['section'] as String? ?? 'A',
-              subjectName: data['subject']?['subjectName'] as String?,
-              // Use room_number (camelCase from Prisma) as the Class Name as per user request
-              className: data['roomNumber']?.toString() ??
-                         data['room_number']?.toString() ??
-                         data['class']?['name']?.toString() ??
-                         'Class',
+              sectionName: data['sectionName'] as String? ?? 'A',
+              subjectName: subject?['name'] as String?,
+              // Use course name as the "Class Name" grouping
+              className: course?['name']?.toString() ?? 'Class',
             );
           }).toList();
 
@@ -94,11 +104,15 @@ class AttendanceProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final teacherService = TeacherService();
+      final classSectionService = ClassSectionService();
       final attendanceService = AttendanceService();
 
-      // 1. Get Teacher's Classes
-      final classes = await teacherService.getTeacherClasses(userUuid);
+      // 1. Get Class Sections (instead of Teacher's Classes)
+      final classes = await classSectionService.getClassSections(
+        institutionId: 1,
+        teacherId: _teacherId, // Use stored teacherId
+        status: 'ACTIVE',
+      );
 
       // 2. Get Attendance Records for selected date (or today)
       final targetDate = date ?? DateTime.now();
@@ -116,10 +130,10 @@ class AttendanceProvider with ChangeNotifier {
       _summaryData =
           classes.map((classData) {
             final sectionId = classData['id'] as int;
-            final subjectName =
-                classData['subject']?['subjectName'] ?? 'Unknown Subject';
-            final sectionName = classData['section'] ?? '';
-            final studentCount = classData['studentCount'] as int? ?? 0;
+            final subject = classData['subject'] as Map<String, dynamic>?;
+            final subjectName = subject?['name'] ?? 'Unknown Subject';
+            final sectionName = classData['sectionName'] ?? '';
+            final studentCount = classData['currentEnrollment'] as int? ?? 0;
 
             // Filter records for this section and calculate present count
             final sectionRecords =

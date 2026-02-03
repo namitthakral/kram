@@ -14,7 +14,7 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../../../widgets/custom_widgets/unified_loader.dart';
 import '../providers/assignment_provider.dart';
-import 'assignment_form_screen.dart';
+
 import 'create_assignment_screen.dart';
 
 /// Screen to display and manage all assignments for a teacher
@@ -45,7 +45,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     }
 
     final provider = context.read<AssignmentProvider>();
-    await provider.loadCourses(uuid);
+    await provider.loadCourses();
     await provider.loadAssignments(uuid);
   }
 
@@ -134,7 +134,9 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                             return true;
                           }
                           final query = _searchQuery.toLowerCase();
-                          return assignment.title.toLowerCase().contains(query) ||
+                          return assignment.title.toLowerCase().contains(
+                                query,
+                              ) ||
                               (assignment.courseName.toLowerCase().contains(
                                     query,
                                   ) ??
@@ -155,14 +157,17 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                                 ),
                               )
                               : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 80), // Space for FAB
+                                padding: const EdgeInsets.only(
+                                  bottom: 80,
+                                ), // Space for FAB
                                 itemCount: filteredAssignments.length,
                                 itemBuilder: (context, index) {
                                   final assignment = filteredAssignments[index];
                                   return _AssignmentCard(
                                     assignment: assignment,
                                     onTap: () => _navigateToEdit(assignment.id),
-                                    onDelete: () => _confirmDelete(assignment.id),
+                                    onDelete:
+                                        () => _confirmDelete(assignment.id),
                                   );
                                 },
                               ),
@@ -357,22 +362,24 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
   Future<void> _navigateToCreate() async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const CreateAssignmentScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const CreateAssignmentScreen()),
     );
     if (result == true) {
       await _loadData();
     }
   }
 
-  void _navigateToEdit(int assignmentId) {
-    Navigator.push(
+  Future<void> _navigateToEdit(int assignmentId) async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => AssignmentFormScreen(assignmentId: assignmentId),
+        builder:
+            (context) => CreateAssignmentScreen(assignmentId: assignmentId),
       ),
-    ).then((_) => _loadData());
+    );
+    if (result == true) {
+      await _loadData();
+    }
   }
 
   Future<void> _confirmDelete(int assignmentId) async {

@@ -28,6 +28,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
   final _descriptionController = TextEditingController();
   final _marksController = TextEditingController(text: '25');
 
+  Subject? _selectedSubject;
   Course? _selectedCourse;
   Section? _selectedSection;
   DateTime? _assignedDate = DateTime.now();
@@ -52,13 +53,9 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
   }
 
   Future<void> _loadData() async {
-    final loginProvider = context.read<LoginProvider>();
     final provider = context.read<AssignmentProvider>();
-    final uuid = loginProvider.currentUser?.uuid;
-
-    if (uuid != null) {
-      await provider.loadCourses(uuid);
-    }
+    // Updated to use the new loadCourses method which takes no arguments
+    await provider.loadCourses();
   }
 
   @override
@@ -164,14 +161,18 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
         ),
         const SizedBox(height: 16),
 
-        // Subject and Class in a row
+        // Course and Section in a row
         Row(
           children: [
-            Expanded(child: _buildSubjectDropdown()),
+            Expanded(child: _buildCourseDropdown()),
             const SizedBox(width: 16),
-            Expanded(child: _buildClassDropdown()),
+            Expanded(child: _buildSectionDropdown()),
           ],
         ),
+        const SizedBox(height: 16),
+
+        // Subject dropdown
+        _buildSubjectDropdown(),
         const SizedBox(height: 16),
 
         // Assigned Date and Due Date in a row
@@ -250,14 +251,14 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
     ),
   );
 
-  Widget _buildSubjectDropdown() {
+  Widget _buildCourseDropdown() {
     final provider = context.watch<AssignmentProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Subject',
+          'Course',
           style: TextStyle(
             fontWeight: AppTheme.fontWeightBold,
             fontSize: AppTheme.fontSizeSm,
@@ -277,7 +278,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
             value: _selectedCourse,
             underline: const SizedBox(),
             hint: const Text(
-              'Select subject',
+              'Select course',
               style: TextStyle(
                 fontSize: AppTheme.fontSizeBase,
                 color: CustomAppColors.grey01,
@@ -302,16 +303,13 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
             onChanged: (course) async {
               setState(() {
                 _selectedCourse = course;
-                _selectedSection = null; // Reset section when course changes
+                _selectedSection = null;
+                _selectedSubject = null;
               });
 
-              // Load sections for the selected course
+              // Load sections and subjects for the selected course
               if (course != null) {
-                final loginProvider = context.read<LoginProvider>();
-                final uuid = loginProvider.currentUser?.uuid;
-                if (uuid != null) {
-                  await provider.loadSectionsForCourse(uuid, course.id);
-                }
+                await provider.loadDetailsForCourse(course.id);
               }
             },
           ),
@@ -320,14 +318,14 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
     );
   }
 
-  Widget _buildClassDropdown() {
+  Widget _buildSectionDropdown() {
     final provider = context.watch<AssignmentProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Class',
+          'Section',
           style: TextStyle(
             fontWeight: AppTheme.fontWeightBold,
             fontSize: AppTheme.fontSizeSm,
@@ -347,7 +345,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
             value: _selectedSection,
             underline: const SizedBox(),
             hint: const Text(
-              'Select class',
+              'Select section',
               style: TextStyle(
                 fontSize: AppTheme.fontSizeBase,
                 color: CustomAppColors.grey01,
@@ -373,6 +371,67 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
                     : (section) {
                       setState(() {
                         _selectedSection = section;
+                      });
+                    },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubjectDropdown() {
+    final provider = context.watch<AssignmentProvider>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Subject',
+          style: TextStyle(
+            fontWeight: AppTheme.fontWeightBold,
+            fontSize: AppTheme.fontSizeSm,
+            color: AppTheme.slate800,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: CustomAppColors.lightGrey01),
+            borderRadius: BorderRadius.circular(15),
+            color: CustomAppColors.slate50,
+          ),
+          child: DropdownButton<Subject>(
+            isExpanded: true,
+            value: _selectedSubject,
+            underline: const SizedBox(),
+            hint: const Text(
+              'Select subject',
+              style: TextStyle(
+                fontSize: AppTheme.fontSizeBase,
+                color: CustomAppColors.grey01,
+              ),
+            ),
+            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+            style: const TextStyle(
+              fontSize: AppTheme.fontSizeBase,
+              color: AppTheme.slate800,
+            ),
+            items:
+                provider.subjects
+                    .map(
+                      (subject) => DropdownMenuItem<Subject>(
+                        value: subject,
+                        child: Text(subject.name),
+                      ),
+                    )
+                    .toList(),
+            onChanged:
+                _selectedCourse == null
+                    ? null
+                    : (subject) {
+                      setState(() {
+                        _selectedSubject = subject;
                       });
                     },
           ),
@@ -728,6 +787,22 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
     // Additional validation
     if (_selectedCourse == null) {
       showCustomSnackbar(
+        message: 'Please select a course',
+        type: SnackbarType.warning,
+      );
+      return;
+    }
+
+    if (_selectedSection == null) {
+      showCustomSnackbar(
+        message: 'Please select a section',
+        type: SnackbarType.warning,
+      );
+      return;
+    }
+
+    if (_selectedSubject == null) {
+      showCustomSnackbar(
         message: 'Please select a subject',
         type: SnackbarType.warning,
       );
@@ -776,7 +851,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
     }
 
     final dto = CreateAssignmentDto(
-      subjectId: _selectedCourse!.id,
+      subjectId: _selectedSubject!.id,
       sectionId: _selectedSection?.id,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
@@ -799,7 +874,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
       } else {
         showCustomSnackbar(
           message: provider.error ?? 'Failed to create assignment',
-          type: SnackbarType.warning,
+          type: SnackbarType.error,
         );
       }
     }

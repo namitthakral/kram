@@ -174,8 +174,8 @@ class SecureStorageService {
       allValues = {};
       final keys = _prefs!.getKeys();
       for (final key in keys) {
-        final value = _prefs!.getString(key);
-        if (value != null) {
+        final dynamic value = _prefs!.get(key);
+        if (value is String) {
           allValues[key] = value;
         }
       }

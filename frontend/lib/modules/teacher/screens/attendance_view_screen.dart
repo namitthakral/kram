@@ -37,9 +37,13 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
     final loginProvider = context.read<LoginProvider>();
     final userUuid = loginProvider.currentUser?.uuid;
     if (userUuid != null) {
+      final teacherId = loginProvider.currentUser?.teacher?.id;
       // Create fresh state
       context.read<AttendanceProvider>().reset();
-      await context.read<AttendanceProvider>().loadInitialData(userUuid);
+      await context.read<AttendanceProvider>().loadInitialData(
+        userUuid,
+        teacherId: teacherId,
+      );
       if (mounted) {
         _checkAutoSelections(context.read<AttendanceProvider>());
       }

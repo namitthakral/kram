@@ -2037,6 +2037,32 @@
           "response": []
         },
         {
+          "name": "Get All Question Papers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                }
+              ]
+            },
+            "description": "Get all question papers created by the teacher."
+          },
+          "response": []
+        },
+        {
           "name": "Create Question Paper",
           "request": {
             "method": "POST",
@@ -2132,6 +2158,37 @@
               ]
             },
             "description": "Get question paper by examination ID with all sections and questions."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Question Paper by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/:paperId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers", ":paperId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "paperId",
+                  "value": "1",
+                  "description": "Question Paper ID"
+                }
+              ]
+            },
+            "description": "Get question paper by its ID."
           },
           "response": []
         },

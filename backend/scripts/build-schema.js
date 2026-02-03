@@ -43,6 +43,7 @@ const schemaFiles = [
   'gatepass.prisma',
   'timetable.prisma',
   'analytics.prisma',
+  'question-paper.prisma',
 ]
 
 console.log('Building schema from individual files...')

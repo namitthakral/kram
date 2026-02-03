@@ -67,38 +67,36 @@ class MarksProvider with ChangeNotifier {
       _selectedClass != null && _selectedExam != null && _students.isNotEmpty;
 
   // Load Initial Data
-  Future<void> loadInitialData(String userUuid) async {
+  Future<void> loadInitialData(String userUuid, {int? teacherId}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final classesData = await _teacherService.getTeacherClasses(userUuid);
+      final classesData = await _classSectionService.getClassSections(
+        institutionId: 1,
+        teacherId: teacherId,
+        status: 'ACTIVE',
+      );
+
       _availableClasses =
-          classesData
-              .map(
-                (data) => ClassInfo(
-                  id: data['id']?.toString() ?? '',
-                  name:
-                      '${data['subject']?['subjectName'] ?? ''} ${data['section'] ?? ''}'
-                          .trim(),
-                  totalStudents: data['studentCount'] as int? ?? 0,
-                  // Fix: Check multiple possible fields for valid course/subject ID
-                  courseId:
-                      data['courseId'] as int? ??
-                      data['subjectId'] as int? ??
-                      data['subject']?['id'] as int? ??
-                      0,
-                  sectionId: data['id'] as int?,
-                  sectionName: data['section'] as String? ?? 'A',
-                  subjectName: data['subject']?['subjectName'] as String?,
-                  className:
-                      data['roomNumber']?.toString() ??
-                      data['room_number']?.toString() ??
-                      data['class']?['name']?.toString() ??
-                      'Class',
-                  semesterId: data['semesterId'] as int?,
-                ),
-              )
-              .toList();
+          classesData.map((data) {
+            final subject = data['subject'] as Map<String, dynamic>?;
+            final course = data['course'] as Map<String, dynamic>?;
+
+            return ClassInfo(
+              id: data['id']?.toString() ?? '',
+              name:
+                  '${subject?['name'] ?? ''} ${data['sectionName'] ?? ''}'
+                      .trim(),
+              totalStudents: data['currentEnrollment'] as int? ?? 0,
+              // Fix: Check multiple possible fields for valid course/subject ID
+              courseId: data['courseId'] as int? ?? course?['id'] as int? ?? 0,
+              sectionId: data['id'] as int?,
+              sectionName: data['sectionName'] as String? ?? 'A',
+              subjectName: subject?['name'] as String?,
+              className: course?['name']?.toString() ?? 'Class',
+              semesterId: data['semesterId'] as int?,
+            );
+          }).toList();
 
       _error = null;
     } catch (e) {
@@ -132,7 +130,6 @@ class MarksProvider with ChangeNotifier {
 
   // Load exams for a specific section (identifies all relevant subjects/courses)
   Future<void> loadExamsForSection(String className, String sectionName) async {
-
     _isLoading = true;
     _selectedExam = null;
     _error = null;
@@ -149,10 +146,7 @@ class MarksProvider with ChangeNotifier {
               )
               .toList();
 
-
-
       if (relevantClasses.isEmpty) {
-
         _students = [];
         _availableExams = [];
         notifyListeners();
@@ -172,7 +166,6 @@ class MarksProvider with ChangeNotifier {
         // Fetch ALL exams for teacher
         final allExams = await _teacherService.getExaminations(user!.uuid!);
 
-
         _availableExams =
             allExams
                 .where(
@@ -181,10 +174,8 @@ class MarksProvider with ChangeNotifier {
                       e.status != 'CANCELLED',
                 )
                 .toList();
-
       }
     } catch (e) {
-
       _error = 'Failed to load exams: $e';
     } finally {
       _isLoading = false;

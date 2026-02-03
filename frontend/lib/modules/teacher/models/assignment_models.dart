@@ -15,11 +15,14 @@ class Assignment {
     this.sectionId,
     this.sectionName,
     this.instructions,
+    this.referenceCourseId,
   });
 
   factory Assignment.fromJson(Map<String, dynamic> json) => Assignment(
     id: json['id'] as int,
     courseId: json['subjectId'] as int,
+    // Store the actual Course ID (e.g. B.Sc) if available, for edit mode
+    referenceCourseId: json['subject']?['courseId'] as int?,
     courseName: json['subject']?['subjectName'] ?? json['courseName'] ?? '',
     sectionId: json['sectionId'] as int?,
     sectionName: json['section']?['sectionName'] ?? json['sectionName'],
@@ -35,6 +38,7 @@ class Assignment {
   );
   final int id;
   final int courseId;
+  final int? referenceCourseId;
   final String courseName;
   final int? sectionId;
   final String? sectionName;
@@ -132,7 +136,7 @@ class Subject {
 
   factory Subject.fromJson(Map<String, dynamic> json) => Subject(
     id: json['id'] as int,
-    name: json['name'] as String,
+    name: (json['name'] ?? json['subjectName'] ?? 'Unknown Subject') as String,
     code: (json['code'] ?? json['subjectCode'] ?? '') as String,
   );
   final int id;
@@ -202,9 +206,10 @@ class Course {
   });
 
   factory Course.fromJson(Map<String, dynamic> json) => Course(
-    id: json['id'] as int,
+    id: (json['id'] ?? json['courseId']) as int,
     // Handle both 'courseName' (old) and 'name' (backend) field names
-    courseName: (json['courseName'] ?? json['name']) as String,
+    courseName:
+        (json['courseName'] ?? json['name'] ?? 'Unknown Course') as String,
     // Handle both 'courseCode' (old) and 'code' (backend) field names
     courseCode: (json['courseCode'] ?? json['code'] ?? '') as String,
   );
@@ -243,13 +248,29 @@ class Section {
       throw Exception('Unable to extract courseId from Section data');
     }
 
+    final sectionName = (json['sectionName'] ?? 'Unknown Section') as String;
+    // Generate a unique fallback ID to prevent dropdown collisions
+    final fallbackId =
+        (sectionName +
+                courseId.toString() +
+                DateTime.now().microsecondsSinceEpoch.toString())
+            .hashCode;
+
     return Section(
-      id: json['id'] as int,
-      sectionName: json['sectionName'] as String,
+      id: json['id'] as int? ?? fallbackId,
+      sectionName: sectionName,
       courseId: courseId,
     );
   }
   final int id;
   final String sectionName;
   final int courseId;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Section && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

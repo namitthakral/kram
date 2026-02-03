@@ -16,6 +16,7 @@ class ApiService {
   late Dio _dio;
   final SecureStorageService _storage = SecureStorageService();
   bool _isRefreshing = false;
+  bool _isLoggingOut = false;
 
   /// List of endpoints that don't require authentication token
   ///
@@ -112,14 +113,22 @@ class ApiService {
             // 1. Handle Refresh Token Failure (Fatal)
             if (path.contains('/auth/refresh')) {
               log('❌ Refresh token expired or invalid. Logging out.');
-              await _clearAuthToken();
-              RouterService().goToLogin();
+
+              if (!_isLoggingOut) {
+                _isLoggingOut = true;
+                await RouterService().performLogout();
+                // Reset flag after a delay to allow navigation to complete
+                Future.delayed(const Duration(seconds: 2), () {
+                  _isLoggingOut = false;
+                });
+              }
 
               final sessionExpiredError = DioException(
                 requestOptions: originalRequest,
                 response: error.response,
                 type: DioExceptionType.badResponse,
                 error: 'Session expired. Please login again.',
+                message: 'Session expired. Please login again.',
               );
               return handler.reject(sessionExpiredError);
             }
@@ -140,14 +149,22 @@ class ApiService {
 
               if (!hasRefToken) {
                 log('❌ No refresh token available. Skipping reactive refresh.');
-                await _clearAuthToken();
-                RouterService().goToLogin();
+
+                if (!_isLoggingOut) {
+                  _isLoggingOut = true;
+                  await RouterService().performLogout();
+                  Future.delayed(const Duration(seconds: 2), () {
+                    _isLoggingOut = false;
+                  });
+                }
 
                 final sessionExpiredError = DioException(
                   requestOptions: originalRequest,
                   response: error.response,
                   type: DioExceptionType.badResponse,
                   error:
+                      'Session expired (No refresh token). Please login again.',
+                  message:
                       'Session expired (No refresh token). Please login again.',
                 );
                 return handler.reject(sessionExpiredError);
@@ -178,10 +195,13 @@ class ApiService {
                 log('🚪 Clearing auth tokens and logging out user...');
 
                 // Token refresh failed, clear tokens and let user login again
-                await _clearAuthToken();
-
-                // Redirect to login page
-                RouterService().goToLogin();
+                if (!_isLoggingOut) {
+                  _isLoggingOut = true;
+                  await RouterService().performLogout();
+                  Future.delayed(const Duration(seconds: 2), () {
+                    _isLoggingOut = false;
+                  });
+                }
 
                 // Create a more informative error for session expiry
                 final sessionExpiredError = DioException(
@@ -189,6 +209,7 @@ class ApiService {
                   response: error.response,
                   type: DioExceptionType.badResponse,
                   error: 'Session expired. Please login again.',
+                  message: 'Session expired. Please login again.',
                 );
                 return handler.reject(sessionExpiredError);
               }
@@ -246,13 +267,6 @@ class ApiService {
 
   Future<String?> _getAuthToken() async =>
       _storage.read(AppConstants.accessTokenKey);
-
-  Future<void> _clearAuthToken() async {
-    await _storage.delete(AppConstants.accessTokenKey);
-    await _storage.delete(AppConstants.refreshTokenKey);
-    await _storage.delete(AppConstants.tokenExpiryKey);
-    await _storage.delete(AppConstants.userKey);
-  }
 
   Dio get dio => _dio;
 }

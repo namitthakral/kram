@@ -282,8 +282,19 @@ class AuthService {
         log(
           '❌ AuthService: Token refresh failed with status: ${response.statusCode}',
         );
-        throw Exception('Token refresh failed');
+        log('❌ Response body: ${response.data}');
+        throw Exception(
+          'Token refresh failed: ${response.statusCode} - ${response.statusMessage}',
+        );
       }
+    } on DioException catch (e) {
+      log('❌ AuthService: Token refresh DioError: ${e.message}');
+      if (e.response != null) {
+        log(
+          '❌ Response status: ${e.response?.statusCode}, data: ${e.response?.data}',
+        );
+      }
+      throw Exception('Token refresh failed: ${e.message}');
     } catch (e) {
       log('❌ AuthService: Token refresh error: $e');
       // Don't logout here - let the API interceptor handle it

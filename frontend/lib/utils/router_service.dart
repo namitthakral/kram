@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +31,6 @@ import '../modules/teacher/screens/academic_management_screen.dart';
 import '../modules/teacher/screens/assignments_list_screen.dart';
 import '../modules/teacher/screens/attendance_view_screen.dart';
 import '../modules/teacher/screens/create_assignment_screen.dart';
-
 import '../modules/teacher/screens/examination_form_screen.dart';
 import '../modules/teacher/screens/examinations_list_screen.dart';
 import '../modules/teacher/screens/marks_list_screen.dart';
@@ -39,9 +39,9 @@ import '../modules/teacher/screens/question_paper_template_screen.dart';
 import '../modules/teacher/screens/question_papers_list_screen.dart';
 import '../modules/teacher/screens/students_list_screen.dart';
 import '../modules/teacher/screens/teacher_dashboard_screen.dart';
+import '../modules/teacher/screens/timetable_management_screen.dart';
 import '../modules/teacher/screens/timetable_template_screen.dart';
 import '../modules/teacher/screens/timetable_view_screen.dart';
-import '../modules/teacher/screens/timetable_management_screen.dart';
 import '../provider/login_signup/login_provider.dart';
 import '../views/dashboard/staff_dashboard_screen.dart';
 import '../views/dashboard/super_admin_dashboard_screen.dart';
@@ -623,6 +623,15 @@ class RouterService {
 
     // Notify stream about route change
     _routeStreamController.add(path);
+  }
+
+  // Perform full logout
+  Future<void> performLogout() async {
+    log('🚪 RouterService: Performing full logout...');
+    if (_loginProvider != null) {
+      await _loginProvider!.logout();
+    }
+    goToLogin();
   }
 
   // Clean up resources
