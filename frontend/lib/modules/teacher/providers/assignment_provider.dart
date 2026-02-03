@@ -35,21 +35,15 @@ class AssignmentProvider with ChangeNotifier {
   String? get selectedCourseFilter => _selectedCourseFilter;
   String? get selectedStatusFilter => _selectedStatusFilter;
 
-  /// Load all assignments for a teacher
+  /// Load all assignments for a teacher (without filters)
   Future<void> loadAssignments(String userUuid) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _assignments = await _teacherService.getAssignments(
-        userUuid,
-        courseId:
-            _selectedCourseFilter != null
-                ? int.tryParse(_selectedCourseFilter!)
-                : null,
-        status: _selectedStatusFilter,
-      );
+      // Load ALL assignments without filters
+      _assignments = await _teacherService.getAssignments(userUuid);
       _error = null;
     } on Exception catch (e) {
       _error = e.toString();
@@ -70,7 +64,10 @@ class AssignmentProvider with ChangeNotifier {
         institutionId: 1,
       );
 
-      _courses = coursesData.map((data) => Course.fromJson(data as Map<String, dynamic>)).toList();
+      _courses =
+          coursesData
+              .map((data) => Course.fromJson(data as Map<String, dynamic>))
+              .toList();
 
       // Reset dependent lists
       _sections = [];
@@ -93,31 +90,37 @@ class AssignmentProvider with ChangeNotifier {
       notifyListeners();
 
       // Parallel fetching of sections and subjects for the course
-      final sectionsData = await _classSectionService.getCourseSections(courseId);
+      final sectionsData = await _classSectionService.getCourseSections(
+        courseId,
+      );
       final courseData = await _classSectionService.getCourseById(courseId);
 
       // Map sections and deduplicate by ID
-      final sectionsList = sectionsData.map((data) {
-         if (data is Map<String, dynamic> && data['courseId'] == null) {
-            data['courseId'] = courseId;
-         }
-         return Section.fromJson(data as Map<String, dynamic>);
-      }).toList();
+      final sectionsList =
+          sectionsData.map((data) {
+            if (data is Map<String, dynamic> && data['courseId'] == null) {
+              data['courseId'] = courseId;
+            }
+            return Section.fromJson(data as Map<String, dynamic>);
+          }).toList();
 
       // Deduplicate sections by ID to prevent dropdown errors
       final seenIds = <int>{};
-      _sections = sectionsList.where((section) {
-        if (seenIds.contains(section.id)) {
-          return false;
-        }
-        seenIds.add(section.id);
-        return true;
-      }).toList();
+      _sections =
+          sectionsList.where((section) {
+            if (seenIds.contains(section.id)) {
+              return false;
+            }
+            seenIds.add(section.id);
+            return true;
+          }).toList();
 
-      if (courseData.containsKey('subjects') && courseData['subjects'] is List) {
-        _subjects = (courseData['subjects'] as List)
-            .map((data) => Subject.fromJson(data as Map<String, dynamic>))
-            .toList();
+      if (courseData.containsKey('subjects') &&
+          courseData['subjects'] is List) {
+        _subjects =
+            (courseData['subjects'] as List)
+                .map((data) => Subject.fromJson(data as Map<String, dynamic>))
+                .toList();
       } else {
         _subjects = [];
       }
@@ -134,8 +137,11 @@ class AssignmentProvider with ChangeNotifier {
   }
 
   // Deprecated/Legacy methods compatibility placeholders
-  Future<void> loadClassSectionsForTeacher(int teacherId) async => loadCourses();
-  Future<void> filterClassSectionsBySubject(int subjectId) async {} // No-op as flow changed
+  Future<void> loadClassSectionsForTeacher(int teacherId) async =>
+      loadCourses();
+  Future<void> filterClassSectionsBySubject(
+    int subjectId,
+  ) async {} // No-op as flow changed
 
   /// Get a single assignment by ID
   Future<Assignment> getAssignment(String userUuid, int assignmentId) async {
@@ -245,12 +251,33 @@ class AssignmentProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
+
   /// Clear error
   void clearError() {
     _error = null;
     notifyListeners();
   }
 
-  /// Get filtered assignments
-  List<Assignment> getFilteredAssignments() => _assignments;
+  /// Get filtered assignments based on current filter criteria
+  List<Assignment> getFilteredAssignments() {
+    var filtered = _assignments;
+
+    // Filter by course
+    if (_selectedCourseFilter != null) {
+      final courseId = int.tryParse(_selectedCourseFilter!);
+      if (courseId != null) {
+        filtered = filtered.where((a) => a.courseId == courseId).toList();
+      }
+    }
+
+    // Filter by status
+    if (_selectedStatusFilter != null) {
+      filtered = filtered
+          .where((a) => a.status.toUpperCase() == _selectedStatusFilter!.toUpperCase())
+          .toList();
+    }
+
+    return filtered;
+  }
 }

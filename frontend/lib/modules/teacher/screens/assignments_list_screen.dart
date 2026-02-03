@@ -263,7 +263,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     final provider = context.read<AssignmentProvider>();
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
-      config: const BottomSheetConfig(height: 0.55, canDismiss: true),
+      config: const BottomSheetConfig(height: 0.7, canDismiss: true),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -325,7 +325,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                   onPressed: () {
                     provider.clearFilters();
                     Navigator.pop(context);
-                    _loadData();
+                    // No need to reload - filtering is local
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -341,7 +341,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    _loadData();
+                    // No need to reload - filtering is local
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),

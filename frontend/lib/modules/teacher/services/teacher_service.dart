@@ -344,6 +344,8 @@ class TeacherService {
     String userUuid, {
     int? courseId,
     String? status,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -352,6 +354,12 @@ class TeacherService {
       }
       if (status != null) {
         queryParams['status'] = status;
+      }
+      if (startDate != null) {
+        queryParams['startDate'] = startDate.toIso8601String();
+      }
+      if (endDate != null) {
+        queryParams['endDate'] = endDate.toIso8601String();
       }
 
       final response = await _apiService.dio.get(
@@ -525,6 +533,8 @@ class TeacherService {
     String userUuid, {
     int? courseId,
     String? status,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -533,6 +543,12 @@ class TeacherService {
       }
       if (status != null) {
         queryParams['status'] = status;
+      }
+      if (startDate != null) {
+        queryParams['startDate'] = startDate.toIso8601String();
+      }
+      if (endDate != null) {
+        queryParams['endDate'] = endDate.toIso8601String();
       }
 
       final response = await _apiService.dio.get(

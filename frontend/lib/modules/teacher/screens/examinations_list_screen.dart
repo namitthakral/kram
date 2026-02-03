@@ -250,7 +250,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     final provider = context.read<ExaminationProvider>();
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
-      config: const BottomSheetConfig(height: 0.5, canDismiss: true),
+      config: const BottomSheetConfig(height: 0.65, canDismiss: true),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -298,7 +298,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                   onPressed: () {
                     provider.clearFilters();
                     Navigator.pop(context);
-                    _loadData();
+                    // No need to reload - filtering is local
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -314,7 +314,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    _loadData();
+                    // No need to reload - filtering is local
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),

@@ -21,21 +21,15 @@ class ExaminationProvider with ChangeNotifier {
   String? get selectedCourseFilter => _selectedCourseFilter;
   String? get selectedStatusFilter => _selectedStatusFilter;
 
-  /// Load all examinations for a teacher
+  /// Load all examinations for a teacher (without filters)
   Future<void> loadExaminations(String userUuid) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _examinations = await _teacherService.getExaminations(
-        userUuid,
-        courseId:
-            _selectedCourseFilter != null
-                ? int.tryParse(_selectedCourseFilter!)
-                : null,
-        status: _selectedStatusFilter,
-      );
+      // Load ALL examinations without filters
+      _examinations = await _teacherService.getExaminations(userUuid);
       _error = null;
     } on Exception catch (e) {
       _error = e.toString();
@@ -161,8 +155,32 @@ class ExaminationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Get filtered examinations
-  List<Examination> getFilteredExaminations() => _examinations;
+  /// Get filtered examinations based on current filter criteria
+  List<Examination> getFilteredExaminations() {
+    var filtered = _examinations;
+
+    // Filter by course
+    if (_selectedCourseFilter != null) {
+      final courseId = int.tryParse(_selectedCourseFilter!);
+      if (courseId != null) {
+        filtered = filtered.where((e) => e.courseId == courseId).toList();
+      }
+    }
+
+    // Filter by status
+    if (_selectedStatusFilter != null) {
+      filtered =
+          filtered
+              .where(
+                (e) =>
+                    e.status.toUpperCase() ==
+                    _selectedStatusFilter!.toUpperCase(),
+              )
+              .toList();
+    }
+
+    return filtered;
+  }
 
   /// Get a single examination by ID
   Future<Examination?> getExamination(String userUuid, int examId) async {

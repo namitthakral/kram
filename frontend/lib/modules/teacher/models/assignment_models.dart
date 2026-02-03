@@ -107,7 +107,6 @@ class UpdateAssignmentDto {
     this.description,
     this.instructions,
     this.maxMarks,
-    this.assignedDate,
     this.dueDate,
     this.status,
   });
@@ -115,7 +114,6 @@ class UpdateAssignmentDto {
   final String? description;
   final String? instructions;
   final int? maxMarks;
-  final DateTime? assignedDate;
   final DateTime? dueDate;
   final String? status;
 
@@ -124,7 +122,6 @@ class UpdateAssignmentDto {
     if (description != null) 'description': description,
     if (instructions != null) 'instructions': instructions,
     if (maxMarks != null) 'maxMarks': maxMarks,
-    if (assignedDate != null) 'assignedDate': assignedDate!.toIso8601String(),
     if (dueDate != null) 'dueDate': dueDate!.toIso8601String(),
     if (status != null) 'status': status,
   };

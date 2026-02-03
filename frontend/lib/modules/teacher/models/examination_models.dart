@@ -146,6 +146,8 @@ class CreateExaminationDto {
 
 class UpdateExaminationDto {
   UpdateExaminationDto({
+    this.subjectId,
+    this.semesterId,
     this.examName,
     this.examType,
     this.totalMarks,
@@ -158,6 +160,8 @@ class UpdateExaminationDto {
     this.instructions,
     this.status,
   });
+  final int? subjectId;
+  final int? semesterId;
   final String? examName;
   final String? examType;
   final int? totalMarks;
@@ -171,6 +175,8 @@ class UpdateExaminationDto {
   final String? status;
 
   Map<String, dynamic> toJson() => {
+    if (subjectId != null) 'subjectId': subjectId,
+    if (semesterId != null) 'semesterId': semesterId,
     if (examName != null) 'examName': examName,
     if (examType != null) 'examType': examType,
     if (totalMarks != null) 'totalMarks': totalMarks,

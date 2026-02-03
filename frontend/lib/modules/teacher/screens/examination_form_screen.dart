@@ -773,6 +773,8 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               uuid,
               widget.examinationId!,
               UpdateExaminationDto(
+                subjectId: _selectedSubject?.id,
+                semesterId: _selectedSemesterId,
                 examName: _examNameController.text.trim(),
                 examType: _examType,
                 totalMarks: int.parse(_totalMarksController.text.trim()),

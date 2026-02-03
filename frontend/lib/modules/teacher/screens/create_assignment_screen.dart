@@ -589,7 +589,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   Widget _buildSectionDropdown() {
     final provider = context.watch<AssignmentProvider>();
     return DropDownFormField<Section>(
-      label: 'Section',
+      label: 'Section (Optional)',
       value: _selectedSection,
       hintText: 'Select section',
       isEnabled: _selectedCourse != null,
@@ -600,7 +600,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
           _selectedSection = section;
         });
       },
-      validator: (value) => value == null ? 'Please select a section' : null,
     );
   }
 
@@ -782,14 +781,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       return;
     }
 
-    if (_selectedSection == null) {
-      showCustomSnackbar(
-        message: 'Please select a section',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
-
     if (_selectedSubject == null) {
       showCustomSnackbar(
         message: 'Please select a subject',
@@ -797,6 +788,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       );
       return;
     }
+
 
     if (_assignedDate == null) {
       showCustomSnackbar(
@@ -873,7 +865,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                 description: dto.description,
                 instructions: dto.instructions,
                 maxMarks: dto.maxMarks,
-                assignedDate: dto.assignedDate,
                 dueDate: dto.dueDate,
                 status: dto.status,
               ),
