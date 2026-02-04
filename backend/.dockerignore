@@ -1,0 +1,82 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Build output
+dist
+build
+*.tsbuildinfo
+
+# Tests
+tests
+test
+*.spec.ts
+*.test.ts
+coverage
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files (will be set via Lightsail)
+.env
+.env.*
+
+# Documentation
+README.md
+MIGRATIONS.md
+docs
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Development files
+*.md
+!prisma/README.md
+
+# Jest
+jest.config.js
+
+# ESLint
+.eslintrc.js
+.eslintignore
+
+# Prettier
+.prettierrc
+.prettierignore
+
+# TypeScript (commented out - needed for build)
+# tsconfig.json
+# tsconfig.build.json
+
+# Nest CLI
+nest-cli.json
+
+# Postman
+*.postman_collection.json
+
+# Setup scripts
+setup.sh
+

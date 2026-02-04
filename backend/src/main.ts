@@ -29,7 +29,7 @@ async function bootstrap() {
             'https://fonts.gstatic.com',
             'https://www.gstatic.com',
             'https://static.cloudflareinsights.com',
-            'https://*.elasticbeanstalk.com',
+          'https://*.cloudfront.net',      // CloudFront domains
             'https://api.kramedu.in',        // Allow API calls
             'https://dashboard.kramedu.in',  // Allow self-reference
             'https://kramedu.in',            // Allow main domain
@@ -53,8 +53,7 @@ async function bootstrap() {
       /^http:\/\/127\.0\.0\.1:\d+$/, // Allow any 127.0.0.1 port
       /^http:\/\/10\.0\.2\.2:\d+$/, // Allow Android emulator
       /^http:\/\/192\.168\.\d+\.\d+:\d+$/, // Allow local network IPs
-      /^https?:\/\/.*\.elasticbeanstalk\.com$/, // Allow EB domains
-      /^https?:\/\/.*\.cloudfront\.net$/, // Allow CloudFront
+      /^https?:\/\/.*\.cloudfront\.net$/, // CloudFront distribution
       'https://kramedu.in', // Production domain
       'https://dashboard.kramedu.in', // Dashboard subdomain
       'https://api.kramedu.in', // API subdomain

@@ -36,20 +36,22 @@ npm run db:migrate -- --name add_user_avatar_field
 
 ### **2. Deploying to Production**
 
-When you deploy to Elastic Beanstalk:
+When you deploy to Lightsail:
 
 ```bash
 # Commit your migration files
 git add prisma/migrations/
 git commit -m "Add user avatar field"
+git push
 
-# Deploy
-eb deploy
-
-# EB will automatically run: npx prisma migrate deploy
+# Deploy (runs migrations automatically)
+./scripts/lightsail-deploy.sh
 ```
 
-The `.ebextensions/02_prisma_migrate.config` handles this automatically.
+Migrations are automatically applied via the Dockerfile CMD:
+```dockerfile
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+```
 
 ### **3. Checking Migration Status**
 
@@ -149,7 +151,7 @@ git push origin feature/user-notifications
 # After PR approval:
 git checkout main
 git merge feature/user-notifications
-eb deploy
+./scripts/lightsail-deploy.sh
 ```
 
 ---
@@ -245,8 +247,9 @@ prisma/
 - **Environment:** AWS RDS PostgreSQL
 - **Host:** `kram-db.chu82aoyy194.ap-south-1.rds.amazonaws.com`
 - **Database:** `postgres`
-- **Deployment:** Elastic Beanstalk with auto-migration
+- **Deployment:** AWS Lightsail Containers with auto-migration
 - **Baseline Migration:** `20260127164543_init`
+- **Auto-migration:** Runs on every container deployment via Dockerfile
 
 ---
 
