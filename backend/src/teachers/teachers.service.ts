@@ -349,6 +349,18 @@ export class TeachersService {
             academicYear: true,
           },
         },
+        // Include classTeacher to check for current academic year assignment
+        classTeacher: {
+          where: {
+            academicYear: {
+              status: 'CURRENT',
+            },
+          },
+          include: {
+            course: true,
+            academicYear: true,
+          },
+        },
       },
     })
 
@@ -356,7 +368,11 @@ export class TeachersService {
       throw new NotFoundException(`Teacher with UUID ${uuid} not found`)
     }
 
-    return teacher
+    // Transform response to include isClassTeacher flag
+    return {
+      ...teacher,
+      isClassTeacher: teacher.classTeacher && teacher.classTeacher.length > 0,
+    }
   }
 
   async update(id: number, updateTeacherDto: UpdateTeacherDto) {
@@ -562,6 +578,7 @@ export class TeachersService {
             subjectName: true,
             subjectCode: true,
             credits: true,
+            courseId: true,
           },
         },
         semester: {
@@ -586,7 +603,33 @@ export class TeachersService {
       },
     })
 
-    return classes
+    // Fetch active class teacher assignments for this teacher
+    const classTeacherAssignments = await this.prisma.classTeacher.findMany({
+      where: {
+        teacherId,
+        academicYear: {
+          status: 'CURRENT',
+        },
+        isActive: true,
+      },
+    })
+
+    // Map helper to check if a section is assigned as class teacher
+    // Matching logic: same courseId and same sectionName
+    // Note: ClassTeacher model has courseId, section (string), classLevel
+    // ClassSection model has courseId (via subject or direct), sectionName
+    return classes.map((cls) => {
+      const isClassTeacher = classTeacherAssignments.some(
+        (assignment) =>
+          assignment.courseId === cls.subject.courseId &&
+          assignment.section === cls.sectionName
+      )
+
+      return {
+        ...cls,
+        isClassTeacher,
+      }
+    })
   }
 
   /**

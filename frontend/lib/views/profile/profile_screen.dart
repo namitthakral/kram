@@ -312,7 +312,7 @@ class ProfileScreen extends StatelessWidget {
     ),
   );
 
-  void _showLogoutDialog(BuildContext context) async {
+  Future<void> _showLogoutDialog(BuildContext context) async {
     final result = await CustomDialog.showConfirmation(
       context: context,
       title: context.translate('logout_title'),

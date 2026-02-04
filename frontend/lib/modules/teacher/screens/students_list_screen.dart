@@ -35,8 +35,7 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return CustomMainScreenWithAppbar(
+  Widget build(BuildContext context) => CustomMainScreenWithAppbar(
       title: 'Students - ${widget.className}',
       appBarConfig: AppBarConfig.teacher(
         userInitials: 'T',
@@ -57,19 +56,13 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: Colors.red,
-                  ),
+                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
                   Text('Error: ${snapshot.error}'),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      setState(() {
-                        _loadData();
-                      });
+                      setState(_loadData);
                     },
                     child: const Text('Retry'),
                   ),
@@ -78,11 +71,34 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
             );
           }
 
-          final data = snapshot.data;
+          final responseData = snapshot.data;
+          // Backend returns { success: true, data: { section: {...}, students: [...], count: N } }
+          final data = responseData?['data'] as Map<String, dynamic>?;
           final students = data?['students'] as List<dynamic>? ?? [];
 
           if (students.isEmpty) {
-            return const Center(child: Text('No students found'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline, size: 80, color: Colors.grey[300]),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'No students enrolled',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1e293b),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'This class section has no enrolled students yet',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.separated(
@@ -91,20 +107,37 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
             separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               final student = students[index] as Map<String, dynamic>;
-              final name = student['name'] ?? 'Unknown';
-              final enrollmentNo = student['enrollmentNo'] ?? 'N/A';
+              final name = student['name'] as String? ?? 'Unknown';
+              final rollNumber = student['rollNumber'] as String? ?? 'N/A';
+              final admissionNumber =
+                  student['admissionNumber'] as String? ?? '';
               final initials = UserUtils.getInitials(name);
 
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: CustomAppColors.primary.withOpacity(0.1),
+                  backgroundColor: CustomAppColors.primary.withValues(
+                    alpha: 0.1,
+                  ),
                   child: Text(
                     initials,
                     style: const TextStyle(color: CustomAppColors.primary),
                   ),
                 ),
-                title: Text(name),
-                subtitle: Text('Enrollment No: $enrollmentNo'),
+                title: Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (rollNumber != 'N/A') Text('Roll No: $rollNumber'),
+                    if (admissionNumber.isNotEmpty)
+                      Text('Admission No: $admissionNumber'),
+                  ],
+                ),
                 trailing: IconButton(
                   icon: const Icon(Icons.info_outline),
                   onPressed: () {
@@ -117,5 +150,4 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
         },
       ),
     );
-  }
 }

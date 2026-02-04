@@ -444,7 +444,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
     ),
   );
 
-  void _showLogoutDialog(BuildContext context) async {
+  Future<void> _showLogoutDialog(BuildContext context) async {
     final result = await CustomDialog.showConfirmation(
       context: context,
       title: context.translate('logout_title'),
@@ -583,9 +583,14 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                   horizontal: widget.isExtended ? 16 : 12,
                   vertical: widget.isExtended ? 16 : 14,
                 ),
-                child: Row(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final showExtended =
+                        widget.isExtended && constraints.maxWidth > 50;
+
+                    return Row(
                   mainAxisAlignment:
-                      widget.isExtended
+                      showExtended
                           ? MainAxisAlignment.start
                           : MainAxisAlignment.center,
                   children: [
@@ -617,7 +622,7 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                                 : theme.iconTheme.color?.withValues(alpha: 0.7),
                       ),
                     ),
-                    if (widget.isExtended) ...[
+                    if (showExtended) ...[
                       const SizedBox(width: 14),
                       Expanded(
                         child: Text(
@@ -658,7 +663,9 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                         ),
                     ],
                   ],
-                ),
+                );
+              },
+            ),
               ),
             ),
           ),

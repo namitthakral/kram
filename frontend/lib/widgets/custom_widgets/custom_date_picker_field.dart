@@ -132,13 +132,13 @@ class CustomDatePickerField extends StatelessWidget {
     // Ensure firstDate and lastDate encompass the initialDate
     // This prevents crashes if the selected date (e.g. from editing an old record)
     // is outside the restricted range (e.g. future dates only).
-    DateTime effectiveFirstDate =
+    var effectiveFirstDate =
         firstDate ?? DateTime.now().subtract(const Duration(days: 365));
     if (initialDate.isBefore(effectiveFirstDate)) {
       effectiveFirstDate = initialDate;
     }
 
-    DateTime effectiveLastDate =
+    var effectiveLastDate =
         lastDate ?? DateTime.now().add(const Duration(days: 365));
     if (initialDate.isAfter(effectiveLastDate)) {
       effectiveLastDate = initialDate;

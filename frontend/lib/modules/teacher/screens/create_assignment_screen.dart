@@ -35,10 +35,9 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   final _marksController = TextEditingController(text: '25');
 
   Course? _selectedCourse;
-  Section? _selectedSection;
   Subject? _selectedSubject;
 
-  DateTime? _assignedDate = DateTime.now();
+
   DateTime? _dueDate;
 
   bool _isLoading = false;
@@ -92,11 +91,15 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         debugPrint('=== ASSIGNMENT EDIT MODE DEBUG ===');
         debugPrint('Assignment ID: ${assignment.id}');
         debugPrint('Assignment.courseId (subjectId): ${assignment.courseId}');
-        debugPrint('Assignment.referenceCourseId: ${assignment.referenceCourseId}');
+        debugPrint(
+          'Assignment.referenceCourseId: ${assignment.referenceCourseId}',
+        );
         debugPrint('Assignment.sectionId: ${assignment.sectionId}');
         debugPrint('Assignment.sectionName: ${assignment.sectionName}');
         debugPrint('Assignment.courseName: ${assignment.courseName}');
-        debugPrint('Available courses: ${provider.courses.map((c) => 'id=${c.id}, name=${c.courseName}').join(', ')}');
+        debugPrint(
+          'Available courses: ${provider.courses.map((c) => 'id=${c.id}, name=${c.courseName}').join(', ')}',
+        );
         debugPrint('=================================');
 
         _titleController.text = assignment.title;
@@ -105,7 +108,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         _marksController.text = assignment.maxMarks.toString();
 
         setState(() {
-          _assignedDate = assignment.assignedDate;
+
           _dueDate = assignment.dueDate;
           _status = assignment.status;
         });
@@ -113,11 +116,13 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         // Pre-fill dropdowns logic
         // We need to find which course contains the subject with assignment.courseId (subjectId)
         Course? matchedCourse;
-        Section? matchedSection;
+
         Subject? matchedSubject;
 
         // Strategy: Load all courses, then for each course, load its details and check if it contains our subject
-        debugPrint('Looking for course that contains subject with ID: ${assignment.courseId}');
+        debugPrint(
+          'Looking for course that contains subject with ID: ${assignment.courseId}',
+        );
 
         for (final course in provider.courses) {
           await provider.loadDetailsForCourse(course.id);
@@ -131,51 +136,29 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             // Found it! This is the right course
             matchedCourse = course;
             matchedSubject = foundSubject;
-            debugPrint('Found course: ${course.courseName} contains subject: ${foundSubject.name}');
+            debugPrint(
+              'Found course: ${course.courseName} contains subject: ${foundSubject.name}',
+            );
             break;
           } catch (e) {
             // This course doesn't have our subject, continue searching
-            debugPrint('Course ${course.courseName} does not contain subject ${assignment.courseId}');
+            debugPrint(
+              'Course ${course.courseName} does not contain subject ${assignment.courseId}',
+            );
             continue;
           }
         }
 
+
         if (matchedCourse != null && mounted) {
-          // Now that we have the course, the subjects are already loaded
-          debugPrint('Available sections: ${provider.sections.map((s) => 'id=${s.id}, name=${s.sectionName}').join(', ')}');
-          debugPrint('Available subjects: ${provider.subjects.map((s) => 'id=${s.id}, name=${s.name}').join(', ')}');
-
-          // Match section if available
-          if (assignment.sectionId != null) {
-            try {
-              matchedSection = provider.sections.firstWhere(
-                (s) => s.id == assignment.sectionId,
-              );
-              debugPrint('Matched section by ID: id=${matchedSection.id}, name=${matchedSection.sectionName}');
-            } catch (e) {
-              debugPrint('Section not found by ID=${assignment.sectionId}: $e');
-
-              // Fallback: Try matching by name if ID match fails
-              if (assignment.sectionName != null) {
-                try {
-                  matchedSection = provider.sections.firstWhere(
-                    (s) => s.sectionName == assignment.sectionName,
-                  );
-                  debugPrint('Matched section by name: id=${matchedSection.id}, name=${matchedSection.sectionName}');
-                } catch (e2) {
-                  debugPrint('Section not found by name=${assignment.sectionName}: $e2');
-                }
-              }
-            }
-          }
-
           setState(() {
             _selectedCourse = matchedCourse;
-            _selectedSection = matchedSection;
             _selectedSubject = matchedSubject;
           });
         } else {
-          debugPrint('ERROR: Could not find course containing subject ${assignment.courseId}');
+          debugPrint(
+            'ERROR: Could not find course containing subject ${assignment.courseId}',
+          );
         }
 
         setState(() => _isLoading = false);
@@ -191,10 +174,10 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     }
   }
 
-  void _checkAutoSelection(AssignmentProvider provider) async {
+  Future<void> _checkAutoSelection(AssignmentProvider provider) async {
     if (!mounted) return;
 
-    bool stateChanged = false;
+    var stateChanged = false;
 
     // 1. Auto-select Course
     if (_selectedCourse == null && provider.courses.length == 1) {
@@ -202,14 +185,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       stateChanged = true;
       // Load details for the single course immediately
       await provider.loadDetailsForCourse(_selectedCourse!.id);
-    }
-
-    // 2. Auto-select Section - use object from provider's list
-    if (_selectedCourse != null &&
-        _selectedSection == null &&
-        provider.sections.length == 1) {
-      _selectedSection = provider.sections.first;
-      stateChanged = true;
     }
 
     // 3. Auto-select Subject - use object from provider's list
@@ -368,8 +343,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               children: [
                 _buildCourseDropdown(),
                 const SizedBox(height: 16),
-                _buildSectionDropdown(),
-                const SizedBox(height: 16),
+
                 _buildSubjectDropdown(),
               ],
             ),
@@ -391,25 +365,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                         // Dates in a Row for compact layout
                         Row(
                           children: [
-                            Expanded(
-                              child: CustomDatePickerField(
-                                label: 'Assigned Date',
-                                selectedDate: _assignedDate,
-                                hintText: 'dd/mm/yyyy',
-                                onDateSelected: (date) {
-                                  setState(() {
-                                    _assignedDate = date;
-                                  });
-                                },
-                                firstDate: DateTime.now().subtract(
-                                  const Duration(days: 365),
-                                ),
-                                lastDate: DateTime.now().add(
-                                  const Duration(days: 365),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
                             Expanded(
                               child: CustomDatePickerField(
                                 label: 'Due Date',
@@ -516,8 +471,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return Container(
+  Widget _buildFloatingActionButton() => DecoratedBox(
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -561,7 +515,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         ),
       ),
     );
-  }
 
   Widget _buildCourseDropdown() {
     final provider = context.watch<AssignmentProvider>();
@@ -574,7 +527,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       onChanged: (course) async {
         setState(() {
           _selectedCourse = course;
-          _selectedSection = null;
           _selectedSubject = null;
         });
         if (course != null) {
@@ -586,22 +538,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     );
   }
 
-  Widget _buildSectionDropdown() {
-    final provider = context.watch<AssignmentProvider>();
-    return DropDownFormField<Section>(
-      label: 'Section (Optional)',
-      value: _selectedSection,
-      hintText: 'Select section',
-      isEnabled: _selectedCourse != null,
-      items: provider.sections,
-      displayText: (section) => section.sectionName,
-      onChanged: (section) {
-        setState(() {
-          _selectedSection = section;
-        });
-      },
-    );
-  }
+
 
   Widget _buildSubjectDropdown() {
     final provider = context.watch<AssignmentProvider>();
@@ -621,8 +558,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     );
   }
 
-  Widget _buildStatusDropdown() {
-    return DropDownFormField<String>(
+  Widget _buildStatusDropdown() => DropDownFormField<String>(
       label: 'Status',
       value: _status,
       hintText: 'Select status',
@@ -634,7 +570,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         }
       },
     );
-  }
 
   Widget _buildAssignmentTypeOption({
     required String value,
@@ -790,13 +725,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     }
 
 
-    if (_assignedDate == null) {
-      showCustomSnackbar(
-        message: 'Please select an assigned date',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
 
     if (_dueDate == null) {
       showCustomSnackbar(
@@ -806,13 +734,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       return;
     }
 
-    if (_dueDate!.isBefore(_assignedDate!)) {
-      showCustomSnackbar(
-        message: 'Due date must be after assigned date',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
+
 
     setState(() => _isLoading = true);
 
@@ -844,12 +766,12 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
     final dto = CreateAssignmentDto(
       subjectId: _selectedSubject!.id,
-      sectionId: _selectedSection?.id,
+
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       instructions: instructions,
       maxMarks: int.parse(_marksController.text.trim()),
-      assignedDate: _assignedDate!,
+
       dueDate: _dueDate!,
       status: _status,
     );

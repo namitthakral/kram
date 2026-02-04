@@ -191,13 +191,11 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     );
   }
 
-  Widget? _buildFloatingActionButton(BuildContext context) {
-    return FloatingActionButton.extended(
+  Widget? _buildFloatingActionButton(BuildContext context) => FloatingActionButton.extended(
       onPressed: _navigateToCreate,
       icon: const Icon(Icons.add),
       label: Text(context.translate('new_assignment')),
     );
-  }
 
   Widget _buildErrorState(String error) => Center(
     child: Padding(
@@ -263,7 +261,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     final provider = context.read<AssignmentProvider>();
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
-      config: const BottomSheetConfig(height: 0.7, canDismiss: true),
+      config: const BottomSheetConfig(canDismiss: true),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

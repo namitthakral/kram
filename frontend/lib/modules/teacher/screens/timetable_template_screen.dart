@@ -919,7 +919,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
 
     // Extract class info from class name if available
     int? courseId;
-    String? section = _sectionController.text.trim();
+    final section = _sectionController.text.trim();
 
     if (classesList.isNotEmpty) {
       // Use first available class as default

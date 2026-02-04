@@ -6,8 +6,8 @@ import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-import '../providers/teacher_classes_provider.dart';
 import '../../../../widgets/custom_widgets/unified_loader.dart';
+import '../providers/teacher_classes_provider.dart';
 
 class TimetablesListScreen extends StatefulWidget {
   const TimetablesListScreen({super.key});
@@ -54,11 +54,15 @@ class _TimetablesListScreenState extends State<TimetablesListScreen> {
         employeeId: employeeId,
         onNotificationIconPressed: () {},
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.pushNamed('create_timetable'),
+        backgroundColor: CustomAppColors.blue500,
+        icon: const Icon(Icons.add),
+        label: const Text('New Timetable'),
+      ),
       child: Stack(
         children: [
-          provider.error != null
-              ? Center(child: Text('Error: ${provider.error}'))
-              : provider.classes.isEmpty
+          if (provider.error != null) Center(child: Text('Error: ${provider.error}')) else provider.classes.isEmpty
               ? const Center(child: Text('No classes found'))
               : ListView.builder(
                 padding: const EdgeInsets.only(
@@ -110,12 +114,6 @@ class _TimetablesListScreenState extends State<TimetablesListScreen> {
               ),
           if (provider.isLoading) const UnifiedLoader(),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.pushNamed('create_timetable'),
-        backgroundColor: CustomAppColors.blue500,
-        icon: const Icon(Icons.add),
-        label: const Text('New Timetable'),
       ),
     );
   }

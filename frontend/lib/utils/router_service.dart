@@ -29,7 +29,9 @@ import '../modules/super_admin/screens/security_screen.dart';
 import '../modules/super_admin/screens/system_settings_screen.dart';
 import '../modules/teacher/screens/academic_management_screen.dart';
 import '../modules/teacher/screens/assignments_list_screen.dart';
+import '../modules/teacher/screens/attendance_screen.dart';
 import '../modules/teacher/screens/attendance_view_screen.dart';
+import '../modules/teacher/screens/class_detail_screen.dart';
 import '../modules/teacher/screens/create_assignment_screen.dart';
 import '../modules/teacher/screens/examination_form_screen.dart';
 import '../modules/teacher/screens/examinations_list_screen.dart';
@@ -37,7 +39,7 @@ import '../modules/teacher/screens/marks_list_screen.dart';
 import '../modules/teacher/screens/my_classes_screen.dart';
 import '../modules/teacher/screens/question_paper_template_screen.dart';
 import '../modules/teacher/screens/question_papers_list_screen.dart';
-import '../modules/teacher/screens/students_list_screen.dart';
+import '../modules/teacher/screens/student_detail_screen.dart';
 import '../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../modules/teacher/screens/timetable_management_screen.dart';
 import '../modules/teacher/screens/timetable_template_screen.dart';
@@ -195,19 +197,48 @@ class RouterService {
           routes: [
             GoRoute(
               path: ':className/:sectionId',
-              name: 'class_students',
+              name: 'class_detail',
               pageBuilder: (context, state) {
                 final className = state.pathParameters['className'] ?? 'Class';
                 final sectionId =
                     int.tryParse(state.pathParameters['sectionId'] ?? '') ?? 0;
+                final courseId = int.tryParse(
+                  state.uri.queryParameters['courseId'] ?? '',
+                );
+
                 return _buildPageWithTransition(
                   key: state.pageKey,
-                  child: StudentsListScreen(
+                  child: ClassDetailScreen(
                     className: className,
                     sectionId: sectionId,
+                    courseId: courseId,
                   ),
                 );
               },
+              routes: [
+                GoRoute(
+                  path: 'student/:studentId',
+                  name: 'student_detail',
+                  pageBuilder: (context, state) {
+                    final studentId = state.pathParameters['studentId'] ?? '0';
+                    final className =
+                        state.pathParameters['className'] ?? 'Class';
+                    final sectionId = state.pathParameters['sectionId'] ?? '0';
+                    final studentData =
+                        state.extra as Map<String, dynamic>? ?? {};
+
+                    return _buildPageWithTransition(
+                      key: state.pageKey,
+                      child: StudentDetailScreen(
+                        studentId: studentId,
+                        className: className,
+                        sectionId: sectionId,
+                        studentData: studentData,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -230,6 +261,20 @@ class RouterService {
                     key: state.pageKey,
                     child: const AttendanceViewScreen(),
                   ),
+            ),
+            GoRoute(
+              path: 'mark-attendance',
+              name: 'mark_attendance',
+              pageBuilder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: AttendanceScreen(
+                    sectionId: extra?['sectionId'] as int?,
+                    className: extra?['className'] as String?,
+                  ),
+                );
+              },
             ),
             GoRoute(
               path: 'marks',

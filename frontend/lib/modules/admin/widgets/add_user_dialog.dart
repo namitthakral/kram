@@ -357,12 +357,10 @@ class _AddUserDialogState extends State<AddUserDialog> {
               vertical: 14,
             ),
           ),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
+          items: items.map((String item) => DropdownMenuItem<String>(
               value: item,
               child: Text(item),
-            );
-          }).toList(),
+            )).toList(),
           onChanged: onChanged,
         ),
       ],

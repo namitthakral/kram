@@ -20,6 +20,11 @@ class TransportScreen extends StatelessWidget {
         institutionName: institutionName,
         onNotificationIconPressed: () {},
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: CustomAppColors.primary,
+        child: const Icon(Icons.add),
+      ),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -49,11 +54,6 @@ class TransportScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: CustomAppColors.primary,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -62,8 +62,7 @@ class TransportScreen extends StatelessWidget {
     String busNo,
     String driver,
     String count,
-  ) {
-    return Card(
+  ) => Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -138,5 +137,4 @@ class TransportScreen extends StatelessWidget {
         ),
       ),
     );
-  }
 }

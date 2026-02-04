@@ -150,7 +150,7 @@ class _QuestionPaperTemplateScreenState
 
         // As I can't guarantee the API, I will set a placeholder if it's empty
         if (_schoolNameController.text.isEmpty) {
-           _schoolNameController.text = "Loading School Name...";
+           _schoolNameController.text = 'Loading School Name...';
         }
 
         // Placeholder for actual API call
@@ -564,15 +564,13 @@ class _QuestionPaperTemplateScreenState
                 color: AppTheme.slate800,
                 fontWeight: FontWeight.normal,
               ),
-              items: _coursesMap.entries.map((entry) {
-                return DropdownMenuItem<int>(
+              items: _coursesMap.entries.map((entry) => DropdownMenuItem<int>(
                   value: entry.key,
                   child: Text(
                     'Class ${entry.value}',
                     style: const TextStyle(fontWeight: FontWeight.normal),
                   ),
-                );
-              }).toList(),
+                )).toList(),
               onChanged: (courseId) {
                 setState(() {
                   _selectedCourseId = courseId;
@@ -627,12 +625,10 @@ class _QuestionPaperTemplateScreenState
               fontSize: AppTheme.fontSizeBase,
               color: AppTheme.slate800,
             ),
-            items: availableSections.map((section) {
-              return DropdownMenuItem<String>(
+            items: availableSections.map((section) => DropdownMenuItem<String>(
                 value: section,
                 child: Text(section),
-              );
-            }).toList(),
+              )).toList(),
             onChanged: _selectedCourseId == null
                 ? null
                 : (section) {
@@ -690,12 +686,10 @@ class _QuestionPaperTemplateScreenState
               fontSize: AppTheme.fontSizeBase,
               color: AppTheme.slate800,
             ),
-            items: availableSubjects.map((subject) {
-              return DropdownMenuItem<int>(
+            items: availableSubjects.map((subject) => DropdownMenuItem<int>(
                 value: subject['id'] as int,
                 child: Text(subject['name'] as String? ?? 'Unknown'),
-              );
-            }).toList(),
+              )).toList(),
             onChanged: (_selectedSection == null)
                 ? null
                 : (subjectId) {
@@ -817,8 +811,7 @@ class _QuestionPaperTemplateScreenState
                               color: AppTheme.slate800,
                               fontWeight: FontWeight.normal,
                             ),
-                             items: _examNames.map((name) {
-                               return DropdownMenuItem<String>(
+                             items: _examNames.map((name) => DropdownMenuItem<String>(
                                  value: name,
                                  child: Text(
                                    name,
@@ -828,8 +821,7 @@ class _QuestionPaperTemplateScreenState
                                      color: AppTheme.slate800,
                                    ),
                                  ),
-                               );
-                             }).toList(),
+                               )).toList(),
                              onChanged: (value) {
                                setState(() {
                                  _selectedExamNameDropdown = value;

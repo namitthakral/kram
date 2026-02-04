@@ -15,7 +15,7 @@ import '../widgets/custom_widgets/custom_navigation_rail.dart';
 import '../widgets/custom_widgets/draggable_floating_overlay.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.child});
+  const HomeScreen({required this.child, super.key});
 
   final Widget child;
 

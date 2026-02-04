@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -14,7 +13,6 @@ import '../../../widgets/custom_widgets/custom_bottom_modal_sheet.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
-
 import '../providers/examination_provider.dart';
 
 
@@ -238,13 +236,11 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     ),
   );
 
-  Widget? _buildFloatingActionButton(BuildContext context) {
-    return FloatingActionButton.extended(
+  Widget? _buildFloatingActionButton(BuildContext context) => FloatingActionButton.extended(
       onPressed: _navigateToCreate,
       icon: const Icon(Icons.add),
       label: Text(context.translate('new_examination')),
     );
-  }
 
   void _showFilterDialog(BuildContext context) {
     final provider = context.read<ExaminationProvider>();

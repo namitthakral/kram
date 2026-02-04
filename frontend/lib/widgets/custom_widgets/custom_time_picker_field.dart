@@ -120,8 +120,7 @@ class CustomTimePickerField extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: selectedTime ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
+      builder: (context, child) => Theme(
           data: Theme.of(context).copyWith(
             timePickerTheme: TimePickerThemeData(
               dayPeriodColor: WidgetStateColor.resolveWith((states) =>
@@ -149,8 +148,7 @@ class CustomTimePickerField extends StatelessWidget {
             ),
           ),
           child: child!,
-        );
-      },
+        ),
     );
 
     if (picked != null) {

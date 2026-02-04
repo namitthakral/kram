@@ -73,7 +73,7 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
     // We need to know WHICH class we are viewing.
     // Ideally passed via constructor/route params.
     // For now, I'll just use a placeholder title.
-    const className = "Class Timetable";
+    const className = 'Class Timetable';
 
     final loginProvider = context.watch<LoginProvider>();
     final user = loginProvider.currentUser;
@@ -81,7 +81,7 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
     return CustomMainScreenWithAppbar(
       title: className,
       appBarConfig: AppBarConfig.teacher(
-        userInitials: user?.name?.substring(0, 1) ?? 'T',
+        userInitials: user?.name.substring(0, 1) ?? 'T',
         userName: user?.name ?? 'Teacher',
         designation: user?.teacher?.designation ?? 'Teacher',
         employeeId: user?.teacher?.employeeId ?? 'EMP',
@@ -125,15 +125,14 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
                   children: [
                     _buildLegend(),
                     const SizedBox(height: 16),
-                    ..._days.map((day) => _buildDaySchedule(day)),
+                    ..._days.map(_buildDaySchedule),
                   ],
                 ),
               ),
     );
   }
 
-  Widget _buildLegend() {
-    return Row(
+  Widget _buildLegend() => Row(
       children: [
         _legendItem(
           'Lecture',
@@ -144,10 +143,8 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
         _legendItem('Break', Colors.orange.withOpacity(0.1), Colors.orange),
       ],
     );
-  }
 
-  Widget _legendItem(String label, Color bg, Color text) {
-    return Container(
+  Widget _legendItem(String label, Color bg, Color text) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: bg,
@@ -162,10 +159,8 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
         ),
       ),
     );
-  }
 
-  Widget _buildDaySchedule(String day) {
-    return Container(
+  Widget _buildDaySchedule(String day) => Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -201,19 +196,17 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
         ],
       ),
     );
-  }
 
   Widget _buildSlot(
     String time,
     String subject,
     String subtext, {
     bool isBreak = false,
-  }) {
-    return Container(
+  }) => Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1), width: 1),
+          bottom: BorderSide(color: Colors.grey.withOpacity(0.1)),
         ),
         color: isBreak ? Colors.orange.withOpacity(0.05) : null,
       ),
@@ -264,5 +257,4 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
         ],
       ),
     );
-  }
 }

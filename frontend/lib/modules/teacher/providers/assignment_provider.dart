@@ -13,7 +13,7 @@ class AssignmentProvider with ChangeNotifier {
 
   // Data for creation flow
   List<Course> _courses = [];
-  List<Section> _sections = [];
+
   List<Subject> _subjects = [];
 
   bool _isLoading = false;
@@ -23,7 +23,7 @@ class AssignmentProvider with ChangeNotifier {
 
   List<Assignment> get assignments => _assignments;
   List<Course> get courses => _courses;
-  List<Section> get sections => _sections;
+
   List<Subject> get subjects => _subjects;
 
   // Backwards compatibility for ClassSection usage if needed,
@@ -61,7 +61,7 @@ class AssignmentProvider with ChangeNotifier {
       notifyListeners();
 
       final coursesData = await _classSectionService.getCoursesWithSections(
-        institutionId: 1,
+        
       );
 
       _courses =
@@ -70,7 +70,7 @@ class AssignmentProvider with ChangeNotifier {
               .toList();
 
       // Reset dependent lists
-      _sections = [];
+
       _subjects = [];
 
       _isLoading = false;
@@ -89,31 +89,8 @@ class AssignmentProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      // Parallel fetching of sections and subjects for the course
-      final sectionsData = await _classSectionService.getCourseSections(
-        courseId,
-      );
+      // Parallel fetching of subjects for the course
       final courseData = await _classSectionService.getCourseById(courseId);
-
-      // Map sections and deduplicate by ID
-      final sectionsList =
-          sectionsData.map((data) {
-            if (data is Map<String, dynamic> && data['courseId'] == null) {
-              data['courseId'] = courseId;
-            }
-            return Section.fromJson(data as Map<String, dynamic>);
-          }).toList();
-
-      // Deduplicate sections by ID to prevent dropdown errors
-      final seenIds = <int>{};
-      _sections =
-          sectionsList.where((section) {
-            if (seenIds.contains(section.id)) {
-              return false;
-            }
-            seenIds.add(section.id);
-            return true;
-          }).toList();
 
       if (courseData.containsKey('subjects') &&
           courseData['subjects'] is List) {
@@ -129,7 +106,7 @@ class AssignmentProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading course details: $e');
-      _sections = [];
+
       _subjects = [];
       _isLoading = false;
       notifyListeners();
@@ -251,8 +228,6 @@ class AssignmentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-
-
   /// Clear error
   void clearError() {
     _error = null;
@@ -273,9 +248,14 @@ class AssignmentProvider with ChangeNotifier {
 
     // Filter by status
     if (_selectedStatusFilter != null) {
-      filtered = filtered
-          .where((a) => a.status.toUpperCase() == _selectedStatusFilter!.toUpperCase())
-          .toList();
+      filtered =
+          filtered
+              .where(
+                (a) =>
+                    a.status.toUpperCase() ==
+                    _selectedStatusFilter!.toUpperCase(),
+              )
+              .toList();
     }
 
     return filtered;

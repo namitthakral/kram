@@ -36,7 +36,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   final _instructionsController = TextEditingController();
 
   Course? _selectedCourse;
-  Section? _selectedSection;
+
   Subject? _selectedSubject;
   int? _selectedSemesterId;
   String _examType = 'QUIZ';
@@ -84,7 +84,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         debugPrint('Exam ID: ${exam.id}');
         debugPrint('Exam.courseId (subjectId): ${exam.courseId}');
         debugPrint('Exam.referenceCourseId: ${exam.referenceCourseId}');
-        debugPrint('Exam.sectionId: ${exam.sectionId}');
+
         debugPrint('Exam.examName: ${exam.examName}');
         debugPrint(
           'Available courses: ${assignmentProvider.courses.map((c) => 'id=${c.id}, name=${c.courseName}').join(', ')}',
@@ -112,7 +112,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         // Find and select course, section, and subject
         // We need to find which course contains the subject with exam.courseId (subjectId)
         Course? matchedCourse;
-        Section? matchedSection;
+
         Subject? matchedSubject;
 
         debugPrint(
@@ -147,30 +147,11 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
 
         if (matchedCourse != null && mounted) {
           // Now that we have the course, the subjects are already loaded
-          debugPrint(
-            'Available sections: ${assignmentProvider.sections.map((s) => 'id=${s.id}, name=${s.sectionName}').join(', ')}',
-          );
-          debugPrint(
-            'Available subjects: ${assignmentProvider.subjects.map((s) => 'id=${s.id}, name=${s.name}').join(', ')}',
-          );
 
-          // Match section if available
-          if (exam.sectionId != null) {
-            try {
-              matchedSection = assignmentProvider.sections.firstWhere(
-                (s) => s.id == exam.sectionId,
-              );
-              debugPrint(
-                'Matched section: id=${matchedSection.id}, name=${matchedSection.sectionName}',
-              );
-            } catch (e) {
-              debugPrint('Section not found for id=${exam.sectionId}: $e');
-            }
-          }
 
           setState(() {
             _selectedCourse = matchedCourse;
-            _selectedSection = matchedSection;
+
             _selectedSubject = matchedSubject;
           });
         } else {
@@ -182,10 +163,10 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     }
   }
 
-  void _checkAutoSelection(AssignmentProvider provider) async {
+  Future<void> _checkAutoSelection(AssignmentProvider provider) async {
     if (!mounted) return;
 
-    bool stateChanged = false;
+    var stateChanged = false;
 
     // 1. Auto-select Course
     if (_selectedCourse == null && provider.courses.length == 1) {
@@ -195,13 +176,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
       await provider.loadDetailsForCourse(_selectedCourse!.id);
     }
 
-    // 2. Auto-select Section
-    if (_selectedCourse != null &&
-        _selectedSection == null &&
-        provider.sections.length == 1) {
-      _selectedSection = provider.sections.first;
-      stateChanged = true;
-    }
+
 
     // 3. Auto-select Subject
     if (_selectedCourse != null &&
@@ -315,7 +290,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               children: [
                 _buildCourseDropdown(),
                 const SizedBox(height: 20),
-                _buildSectionDropdown(),
+
                 const SizedBox(height: 20),
                 _buildSubjectDropdown(),
                 const SizedBox(height: 20),
@@ -444,7 +419,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
           onChanged: (course) async {
             setState(() {
               _selectedCourse = course;
-              _selectedSection = null;
+
               _selectedSubject = null;
             });
             if (course != null) {
@@ -461,21 +436,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         ),
   );
 
-  Widget _buildSectionDropdown() => Consumer<AssignmentProvider>(
-    builder:
-        (context, provider, child) => DropDownFormField<Section>(
-          label: context.translate('section_optional'),
-          value: _selectedSection,
-          hintText: context.translate('select_section'),
-          items: provider.sections,
-          displayText: (section) => section.sectionName,
-          onChanged: (section) {
-            setState(() {
-              _selectedSection = section;
-            });
-          },
-        ),
-  );
+
 
   Widget _buildSubjectDropdown() => Consumer<AssignmentProvider>(
     builder:
@@ -654,8 +615,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     },
   );
 
-  Widget _buildFloatingActionButton() {
-    return Container(
+  Widget _buildFloatingActionButton() => DecoratedBox(
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
@@ -694,7 +654,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         ),
       ),
     );
-  }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
@@ -745,7 +704,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
 
     final dto = CreateExaminationDto(
       courseId: _selectedSubject!.id, // Mapped to subjectId in backend
-      sectionId: _selectedSection?.id,
+
       semesterId: _selectedSemesterId ?? 1,
       examName: _examNameController.text.trim(),
       examType: _examType,

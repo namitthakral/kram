@@ -239,7 +239,7 @@ class MarksProvider with ChangeNotifier {
     } else {
       // Reset marks if no exam selected
       for (var i = 0; i < _students.length; i++) {
-        _students[i] = _students[i].copyWith(marks: null);
+        _students[i] = _students[i].copyWith();
       }
       notifyListeners();
     }
@@ -249,7 +249,7 @@ class MarksProvider with ChangeNotifier {
     try {
       final results = await _teacherService.getExamResults(userUuid, examId);
       final resultMap = {
-        for (var r in results)
+        for (final r in results)
           r['studentId'].toString(): (r['marksObtained'] as num?)?.toDouble(),
       };
 
@@ -258,7 +258,7 @@ class MarksProvider with ChangeNotifier {
         if (resultMap.containsKey(sid)) {
           _students[i] = _students[i].copyWith(marks: resultMap[sid]);
         } else {
-          _students[i] = _students[i].copyWith(marks: null);
+          _students[i] = _students[i].copyWith();
         }
       }
     } catch (e) {
@@ -295,7 +295,6 @@ class MarksProvider with ChangeNotifier {
               id: s['id']?.toString() ?? '',
               name: name,
               initials: initials,
-              marks: null, // Reset marks initially
             );
           }).toList();
     } catch (e) {
@@ -341,8 +340,9 @@ class MarksProvider with ChangeNotifier {
 
     try {
       final user = await _authService.getCurrentUser();
-      if (user == null || user.uuid == null)
+      if (user == null || user.uuid == null) {
         throw Exception('User not authenticated');
+      }
       final userUuid = user.uuid!;
 
       final examId = _selectedExam!.id;

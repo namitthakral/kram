@@ -72,7 +72,6 @@ class CreateAssignmentDto {
     required this.title,
     required this.description,
     required this.maxMarks,
-    required this.assignedDate,
     required this.dueDate,
     this.sectionId,
     this.instructions,
@@ -84,7 +83,6 @@ class CreateAssignmentDto {
   final String description;
   final String? instructions;
   final int maxMarks;
-  final DateTime assignedDate;
   final DateTime dueDate;
   final String status;
 
@@ -95,7 +93,6 @@ class CreateAssignmentDto {
     'description': description,
     if (instructions != null) 'instructions': instructions,
     'maxMarks': maxMarks,
-    'assignedDate': assignedDate.toIso8601String(),
     'dueDate': dueDate.toIso8601String(),
     'status': status,
   };
@@ -158,6 +155,9 @@ class ClassSection {
     required this.subjectName,
     required this.sectionName,
     required this.displayName,
+    this.studentCount = 0,
+    this.classTeacherName,
+    this.isClassTeacher = false,
   });
 
   factory ClassSection.fromJson(Map<String, dynamic> json) {
@@ -165,24 +165,41 @@ class ClassSection {
     final subject = json['subject'] as Map<String, dynamic>?;
     final course = json['course'] as Map<String, dynamic>?;
 
-    final subjectName = subject?['name'] as String? ?? 'Unknown Subject';
-    final courseName = course?['name'] as String? ?? '';
-    final subjectId = subject?['id'] as int? ?? 0;
-    final courseId = subject?['courseId'] as int? ?? 0;
+    // Use nested object if available, otherwise check root level (standard fallback)
+    final subjectName =
+        subject?['name'] ??
+        subject?['subjectName'] ??
+        json['subjectName'] ??
+        'Unknown Subject';
 
-    // Format: "B.Sc. CS - Mathematics (A)"
+    // Use nested object if available, otherwise check root level
+    final courseName = course?['name'] ?? json['courseName'] ?? '';
+
+    final subjectId = subject?['id'] as int? ?? json['subjectId'] as int? ?? 0;
+    final courseId =
+        subject?['courseId'] as int? ?? json['courseId'] as int? ?? 0;
+
+    // Format: "B.Sc. CS - A" or "Class 10 - A"
+    // User requested Class Name instead of Subject Name
     final displayName =
-        courseName.isNotEmpty
-            ? '$courseName - $subjectName ($sectionName)'
-            : '$subjectName ($sectionName)';
+        (courseName as String).isNotEmpty
+            ? '$courseName - $sectionName'
+            : sectionName;
+
+    // Backend returns currentEnrollment, not studentCount
+    final studentCount =
+        json['currentEnrollment'] as int? ?? json['studentCount'] as int? ?? 0;
 
     return ClassSection(
       id: json['id'] as int,
       subjectId: subjectId,
       courseId: courseId,
-      subjectName: subjectName,
+      subjectName: subjectName as String,
       sectionName: sectionName,
       displayName: displayName,
+      studentCount: studentCount,
+      classTeacherName: json['classTeacher'] as String?,
+      isClassTeacher: json['isClassTeacher'] as bool? ?? false,
     );
   }
 
@@ -192,6 +209,9 @@ class ClassSection {
   final String subjectName;
   final String sectionName;
   final String displayName;
+  final int studentCount;
+  final String? classTeacherName;
+  final bool isClassTeacher; // True if current teacher is the class teacher
 }
 
 // Legacy models for backward compatibility

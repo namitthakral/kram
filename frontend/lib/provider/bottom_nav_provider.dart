@@ -7,33 +7,57 @@ import '../models/navigation_item_model.dart';
 class BottomNavProvider extends ChangeNotifier {
   int? _currentRoleId;
   List<NavigationItemModel> _navigationItems = [];
+  final Map<int, String> _routeOverrides = {};
+  final Set<int> _hiddenIndices = {};
 
   int? get currentRoleId => _currentRoleId;
+
   List<NavigationItemModel> get navigationItems => _navigationItems;
 
   /// Initialize navigation based on user's role
   void initializeForRole(int roleId) {
-    // Only skip if already initialized for this role AND items are not empty
-    if (_currentRoleId == roleId && _navigationItems.isNotEmpty) {
-      return; // Already initialized for this role
-    }
-
+    // Always reset/reload when initializing
     _currentRoleId = roleId;
-    _navigationItems = RoleNavigationConfig.getNavigationItems(roleId);
+    _navigationItems = List.from(
+      RoleNavigationConfig.getNavigationItems(roleId),
+    );
+    _routeOverrides.clear();
+    _hiddenIndices.clear();
     notifyListeners();
   }
+
+  void overrideRoute(int index, String path) {
+    _routeOverrides[index] = path;
+    notifyListeners();
+  }
+
+  void hideItem(int index) {
+    _hiddenIndices.add(index);
+    notifyListeners();
+  }
+
+  bool isItemHidden(int index) => _hiddenIndices.contains(index);
 
   /// Get the current index based on the current route
   int getCurrentIndex(String currentRoute) {
     if (_currentRoleId == null) return 0;
 
-    final index = RoleNavigationConfig.getIndexFromRoute(_currentRoleId!, currentRoute);
+    final index = RoleNavigationConfig.getIndexFromRoute(
+      _currentRoleId!,
+      currentRoute,
+    );
     return index ?? 0;
   }
 
   /// Get the route path for a given navigation index
   String getRoutePath(int index) {
-    if (_currentRoleId == null || index < 0 || index >= _navigationItems.length) {
+    if (_routeOverrides.containsKey(index)) {
+      return _routeOverrides[index]!;
+    }
+
+    if (_currentRoleId == null ||
+        index < 0 ||
+        index >= _navigationItems.length) {
       return '/dashboard';
     }
 

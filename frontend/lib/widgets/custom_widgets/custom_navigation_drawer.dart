@@ -48,6 +48,11 @@ class CustomNavigationDrawer extends StatelessWidget {
                       navProvider.navigationItems.asMap().entries.map((entry) {
                         final index = entry.key;
                         final item = entry.value;
+
+                        if (navProvider.isItemHidden(index)) {
+                          return const SizedBox.shrink();
+                        }
+
                         final selectedIndex = navProvider.getCurrentIndex(
                           currentRoute,
                         );
@@ -273,7 +278,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     ),
   );
 
-  void _showLogoutDialog(BuildContext context) async {
+  Future<void> _showLogoutDialog(BuildContext context) async {
     final result = await CustomDialog.showConfirmation(
       context: context,
       title: context.translate('logout_title'),

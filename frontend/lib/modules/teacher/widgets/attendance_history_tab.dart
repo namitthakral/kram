@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../widgets/custom_widgets/custom_dialog.dart';
-import '../providers/attendance_provider.dart';
 import '../models/attendance_models.dart';
+import '../providers/attendance_provider.dart';
 
 class AttendanceHistoryTab extends StatefulWidget {
   const AttendanceHistoryTab({super.key});
@@ -110,8 +111,7 @@ class _AttendanceHistoryTabState extends State<AttendanceHistoryTab> {
     required IconData icon,
     required VoidCallback onTap,
     bool isSelected = false,
-  }) {
-    return InkWell(
+  }) => InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -158,7 +158,6 @@ class _AttendanceHistoryTabState extends State<AttendanceHistoryTab> {
         ),
       ),
     );
-  }
 
   Widget _buildHistoryCard(Map<String, dynamic> record) {
     final student = record['student'] ?? {};

@@ -3,20 +3,19 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../provider/teachers_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../../utils/custom_snackbar.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/custom_tab_bar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../../widgets/custom_widgets/unified_loader.dart';
-import '../../../widgets/custom_widgets/custom_tab_bar.dart';
+import '../models/template_models.dart';
 import '../providers/attendance_provider.dart';
 import '../providers/timetable_provider.dart';
-import '../../../provider/teachers_provider.dart';
-import '../models/template_models.dart';
-import '../../../utils/custom_snackbar.dart';
 
 enum TimetableTab { weeklySchedule, timeSlots }
 
@@ -135,7 +134,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
             .toList()
           ..sort();
 
-    bool stateChanged = false;
+    var stateChanged = false;
 
     // 1. Auto-select Class
     if (_selectedClassName == null && classNames.length == 1) {
@@ -468,7 +467,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     children: [
       // Header row
       TableRow(
-        decoration: BoxDecoration(color: CustomAppColors.primaryBlue),
+        decoration: const BoxDecoration(color: CustomAppColors.primaryBlue),
         children: [_buildHeaderCell('Time'), ...days.map(_buildHeaderCell)],
       ),
       // Time slot rows
@@ -640,7 +639,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     final endTime = _formatTime(slot['endTime']);
     final isMerged = slot['slotType'] == 'BREAK' || slot['slotType'] == 'LUNCH';
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -678,13 +677,11 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     );
   }
 
-  Widget _buildAddTimeSlotButton() {
-    return FloatingActionButton(
+  Widget _buildAddTimeSlotButton() => FloatingActionButton(
       onPressed: _showAddTimeSlotDialog,
       backgroundColor: CustomAppColors.primaryBlue,
       child: const Icon(Icons.add, color: Colors.white),
     );
-  }
 
   String _formatTime(String? timeStr) {
     if (timeStr == null) return '--:--';
@@ -699,8 +696,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     return timeStr;
   }
 
-  Widget _buildEmptyState(String message, {Widget? action}) {
-    return Center(
+  Widget _buildEmptyState(String message, {Widget? action}) => Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -715,7 +711,6 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         ],
       ),
     );
-  }
 
   // --- Period Save/Delete Methods ---
 
@@ -799,7 +794,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         success = createdEntry != null;
 
         // Track the new entry ID from the response
-        if (success && createdEntry != null) {
+        if (success) {
           final newEntryId = createdEntry['id'] as int?;
           if (newEntryId != null) {
             entryIds[entryKey] = newEntryId;
@@ -878,9 +873,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   }
 
   /// Convert day from UI format (Monday) to API format (MONDAY)
-  String _convertDayToApi(String uiDay) {
-    return uiDay.toUpperCase();
-  }
+  String _convertDayToApi(String uiDay) => uiDay.toUpperCase();
 
   // --- Period Editing Dialog ---
 
@@ -1081,7 +1074,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
                       await _savePeriodEntry(
                         slotIndex,
                         day,
-                        finalSubject!,
+                        finalSubject,
                         foundTeacherId,
                       );
                     }
@@ -1590,8 +1583,7 @@ class _GenericSelector<T> extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
+  Widget build(BuildContext context) => InkWell(
       onTap:
           (isLoading || isDisabled)
               ? null
@@ -1611,7 +1603,7 @@ class _GenericSelector<T> extends StatelessWidget {
           children: [
             Icon(
               iconData,
-              color: (isDisabled) ? Colors.grey : CustomAppColors.primaryBlue,
+              color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
               size: compact ? 16 : 18,
             ),
             SizedBox(width: compact ? 6 : 8),
@@ -1663,7 +1655,6 @@ class _GenericSelector<T> extends StatelessWidget {
         ),
       ),
     );
-  }
 
   Future<void> _showSelectionDialog(BuildContext context) async {
     final selected = await CustomDialog.showSelection<T>(

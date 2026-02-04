@@ -13,6 +13,7 @@ class AppTheme {
   static const Color slate800 = Color(0xFF1e293b); // Headings
   static const Color slate600 = Color(0xFF475569); // Body text
   static const Color slate500 = Color(0xFF64748b); // Muted text
+  static const Color slate200 = Color(0xFFe2e8f0); // Borders, dividers
   static const Color slate100 = Color(0xFFf1f5f9); // Subtle backgrounds
 
   // Status Colors

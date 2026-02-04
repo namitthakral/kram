@@ -60,7 +60,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
             .toList()
           ..sort();
 
-    bool stateChanged = false;
+    var stateChanged = false;
 
     // 1. Auto-select Class
     if (_selectedClassName == null && classNames.length == 1) {
@@ -371,8 +371,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
     );
   }
 
-  Widget _buildEmptyState(String message) {
-    return Center(
+  Widget _buildEmptyState(String message) => Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -382,7 +381,6 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
         ],
       ),
     );
-  }
 }
 
 // Generic Selector Widget
@@ -412,8 +410,7 @@ class _GenericSelector<T> extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
+  Widget build(BuildContext context) => InkWell(
       onTap:
           (isLoading || isDisabled)
               ? null
@@ -433,7 +430,7 @@ class _GenericSelector<T> extends StatelessWidget {
           children: [
             Icon(
               iconData,
-              color: (isDisabled) ? Colors.grey : CustomAppColors.primaryBlue,
+              color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
               size: compact ? 16 : 18,
             ),
             SizedBox(width: compact ? 6 : 8),
@@ -485,7 +482,6 @@ class _GenericSelector<T> extends StatelessWidget {
         ),
       ),
     );
-  }
 
   Future<void> _showSelectionDialog(BuildContext context) async {
     final selected = await CustomDialog.showSelection<T>(
@@ -524,8 +520,7 @@ class _CompactDatePicker extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
+  Widget build(BuildContext context) => InkWell(
       onTap: () async {
         final selected = await showDatePicker(
           context: context,
@@ -591,7 +586,6 @@ class _CompactDatePicker extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 // Student List
@@ -602,8 +596,7 @@ class _StudentList extends StatelessWidget {
   final Function(String) onToggle;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
+  Widget build(BuildContext context) => ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: students.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -630,7 +623,6 @@ class _StudentList extends StatelessWidget {
                     isPresent
                         ? Colors.transparent
                         : CustomAppColors.danger.withOpacity(0.3),
-                width: 1,
               ),
             ),
             padding: const EdgeInsets.all(12),
@@ -730,7 +722,6 @@ class _StudentList extends StatelessWidget {
         );
       },
     );
-  }
 }
 
 // Attendance Summary Bar
@@ -746,8 +737,7 @@ class _AttendanceSummaryBar extends StatelessWidget {
   final VoidCallback onMarkAllAbsent;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: Colors.white,
       child: Column(
@@ -837,15 +827,13 @@ class _AttendanceSummaryBar extends StatelessWidget {
         ],
       ),
     );
-  }
 
   Widget _buildSummaryItem(
     String label,
     String value,
     Color color,
     IconData icon,
-  ) {
-    return Expanded(
+  ) => Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
         decoration: BoxDecoration(
@@ -882,5 +870,4 @@ class _AttendanceSummaryBar extends StatelessWidget {
         ),
       ),
     );
-  }
 }

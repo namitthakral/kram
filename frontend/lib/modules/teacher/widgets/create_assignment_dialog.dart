@@ -30,8 +30,8 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
 
   Subject? _selectedSubject;
   Course? _selectedCourse;
-  Section? _selectedSection;
-  DateTime? _assignedDate = DateTime.now();
+
+
   DateTime? _dueDate;
   bool _isLoading = false;
 
@@ -162,52 +162,26 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
         const SizedBox(height: 16),
 
         // Course and Section in a row
-        Row(
-          children: [
-            Expanded(child: _buildCourseDropdown()),
-            const SizedBox(width: 16),
-            Expanded(child: _buildSectionDropdown()),
-          ],
-        ),
+        // Course Dropdown
+        _buildCourseDropdown(),
         const SizedBox(height: 16),
 
         // Subject dropdown
         _buildSubjectDropdown(),
         const SizedBox(height: 16),
 
-        // Assigned Date and Due Date in a row
-        Row(
-          children: [
-            Expanded(
-              child: CustomDatePickerField(
-                label: 'Assigned Date',
-                selectedDate: _assignedDate,
-                hintText: 'dd/mm/yyyy',
-                onDateSelected: (date) {
-                  setState(() {
-                    _assignedDate = date;
-                  });
-                },
-                firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: CustomDatePickerField(
-                label: 'Due Date',
-                selectedDate: _dueDate,
-                hintText: 'dd/mm/yyyy',
-                onDateSelected: (date) {
-                  setState(() {
-                    _dueDate = date;
-                  });
-                },
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-              ),
-            ),
-          ],
+        // Due Date
+        CustomDatePickerField(
+          label: 'Due Date',
+          selectedDate: _dueDate,
+          hintText: 'dd/mm/yyyy',
+          onDateSelected: (date) {
+            setState(() {
+              _dueDate = date;
+            });
+          },
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
         ),
         const SizedBox(height: 16),
 
@@ -303,7 +277,6 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
             onChanged: (course) async {
               setState(() {
                 _selectedCourse = course;
-                _selectedSection = null;
                 _selectedSubject = null;
               });
 
@@ -318,66 +291,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
     );
   }
 
-  Widget _buildSectionDropdown() {
-    final provider = context.watch<AssignmentProvider>();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Section',
-          style: TextStyle(
-            fontWeight: AppTheme.fontWeightBold,
-            fontSize: AppTheme.fontSizeSm,
-            color: AppTheme.slate800,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: CustomAppColors.lightGrey01),
-            borderRadius: BorderRadius.circular(15),
-            color: CustomAppColors.slate50,
-          ),
-          child: DropdownButton<Section>(
-            isExpanded: true,
-            value: _selectedSection,
-            underline: const SizedBox(),
-            hint: const Text(
-              'Select section',
-              style: TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                color: CustomAppColors.grey01,
-              ),
-            ),
-            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-            style: const TextStyle(
-              fontSize: AppTheme.fontSizeBase,
-              color: AppTheme.slate800,
-            ),
-            items:
-                provider.sections
-                    .map(
-                      (section) => DropdownMenuItem<Section>(
-                        value: section,
-                        child: Text(section.sectionName),
-                      ),
-                    )
-                    .toList(),
-            onChanged:
-                _selectedCourse == null
-                    ? null
-                    : (section) {
-                      setState(() {
-                        _selectedSection = section;
-                      });
-                    },
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSubjectDropdown() {
     final provider = context.watch<AssignmentProvider>();
@@ -793,13 +707,7 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
       return;
     }
 
-    if (_selectedSection == null) {
-      showCustomSnackbar(
-        message: 'Please select a section',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
+
 
     if (_selectedSubject == null) {
       showCustomSnackbar(
@@ -809,25 +717,9 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
       return;
     }
 
-    if (_assignedDate == null) {
-      showCustomSnackbar(
-        message: 'Please select an assigned date',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
-
     if (_dueDate == null) {
       showCustomSnackbar(
         message: 'Please select a due date',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
-
-    if (_dueDate!.isBefore(_assignedDate!)) {
-      showCustomSnackbar(
-        message: 'Due date must be after assigned date',
         type: SnackbarType.warning,
       );
       return;
@@ -852,11 +744,10 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
 
     final dto = CreateAssignmentDto(
       subjectId: _selectedSubject!.id,
-      sectionId: _selectedSection?.id,
+
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       maxMarks: int.parse(_marksController.text.trim()),
-      assignedDate: _assignedDate!,
       dueDate: _dueDate!,
     );
 

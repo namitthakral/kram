@@ -55,7 +55,7 @@ class FeesManagementScreen extends StatelessWidget {
                 itemBuilder:
                     (context, index) => Card(
                       elevation: 0,
-                      margin: const EdgeInsets.only(bottom: 0, top: 8),
+                      margin: const EdgeInsets.only(top: 8),
                       color: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

@@ -13,17 +13,26 @@ import '../providers/attendance_provider.dart';
 import '../widgets/attendance_history_tab.dart';
 
 class AttendanceScreen extends StatelessWidget {
-  const AttendanceScreen({super.key});
+
+  const AttendanceScreen({super.key, this.sectionId, this.className});
+  final int? sectionId;
+  final String? className;
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
     create: (_) => AttendanceProvider(),
-    child: const _AttendanceScreenContent(),
+    child: _AttendanceScreenContent(sectionId: sectionId, className: className),
   );
 }
 
 class _AttendanceScreenContent extends StatefulWidget {
-  const _AttendanceScreenContent();
+
+  const _AttendanceScreenContent({
+    this.sectionId,
+    this.className,
+  });
+  final int? sectionId;
+  final String? className;
 
   @override
   State<_AttendanceScreenContent> createState() =>
@@ -38,7 +47,23 @@ class _AttendanceScreenContentState extends State<_AttendanceScreenContent> {
       final loginProvider = context.read<LoginProvider>();
       final userUuid = loginProvider.currentUser?.uuid;
       if (userUuid != null) {
-        context.read<AttendanceProvider>().loadInitialData(userUuid);
+        context.read<AttendanceProvider>().loadInitialData(userUuid).then((_) {
+           if (widget.sectionId != null && mounted) {
+             final provider = context.read<AttendanceProvider>();
+             try {
+                // Try to find matching class by sectionId
+                // NOTE: ClassInfo.id is String in model but sectionId is int here
+                // We should match robustly
+                final validClass = provider.availableClasses.firstWhere((c) {
+                    final cId = int.tryParse(c.id) ?? -1;
+                    return cId == widget.sectionId;
+                });
+                provider.setSelectedClass(validClass);
+             } catch (e) {
+               debugPrint('Could not pre-select class with sectionId ${widget.sectionId}');
+             }
+           }
+        });
       }
     });
   }
@@ -65,11 +90,11 @@ class _AttendanceScreenContentState extends State<_AttendanceScreenContent> {
           employeeId: employeeId,
           onNotificationIconPressed: () {},
         ),
-        child: Column(
+        child: const Column(
           children: [
-            Container(
+            ColoredBox(
               color: Colors.white,
-              child: const TabBar(
+              child: TabBar(
                 labelColor: CustomAppColors.primary,
                 unselectedLabelColor: Colors.grey,
                 indicatorColor: CustomAppColors.primary,
@@ -81,7 +106,7 @@ class _AttendanceScreenContentState extends State<_AttendanceScreenContent> {
                 ],
               ),
             ),
-            const Expanded(
+            Expanded(
               child: TabBarView(
                 children: [_MarkAttendanceTab(), AttendanceHistoryTab()],
               ),
@@ -238,7 +263,7 @@ class _MarkAttendanceTab extends StatelessWidget {
         // subtitle: Text('ID: ${student.id}'),
         trailing: Switch(
           value: isPresent,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           inactiveThumbColor: Colors.red,
           inactiveTrackColor: Colors.red.withOpacity(0.3),
           onChanged: (val) => provider.toggleStudentAttendance(student.id),

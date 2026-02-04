@@ -73,7 +73,7 @@ class _MarksListContentState extends State<_MarksListContent> {
             .toList()
           ..sort();
 
-    bool stateChanged = false;
+    var stateChanged = false;
 
     // 1. Auto-select Class
     if (_selectedClassName == null && classNames.length == 1) {
@@ -294,9 +294,7 @@ class _MarksListContentState extends State<_MarksListContent> {
                         items: provider.availableExams,
                         isLoading: false,
                         itemLabelBuilder: (e) => e?.examName ?? 'Unnamed Exam',
-                        onItemSelected: (val) {
-                          provider.setSelectedExam(val);
-                        },
+                        onItemSelected: provider.setSelectedExam,
                         placeholder: 'Select Exam',
                         iconData: Icons.history_edu,
                         compact: true,
@@ -441,8 +439,7 @@ class _MarksListContentState extends State<_MarksListContent> {
     );
   }
 
-  Widget _buildSummaryMetric(String label, String value, Color color) {
-    return Column(
+  Widget _buildSummaryMetric(String label, String value, Color color) => Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
@@ -463,10 +460,8 @@ class _MarksListContentState extends State<_MarksListContent> {
         ),
       ],
     );
-  }
 
-  Widget _buildEmptyState(String message) {
-    return Center(
+  Widget _buildEmptyState(String message) => Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -480,7 +475,6 @@ class _MarksListContentState extends State<_MarksListContent> {
         ],
       ),
     );
-  }
 }
 
 // Student Marks List
@@ -498,8 +492,7 @@ class _StudentMarksList extends StatelessWidget {
   final bool readOnly;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
+  Widget build(BuildContext context) => ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: students.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -573,7 +566,7 @@ class _StudentMarksList extends StatelessWidget {
               // Marks Input
               Container(
                 width: 70,
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                padding: const EdgeInsets.symmetric(),
                 child: TextField(
                   key: ValueKey('student_marks_${student.id}'),
                   enabled: !readOnly,
@@ -636,7 +629,6 @@ class _StudentMarksList extends StatelessWidget {
         );
       },
     );
-  }
 }
 
 // Generic Selector Widget (Copied and adapted)
@@ -666,8 +658,7 @@ class _GenericSelector<T> extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
+  Widget build(BuildContext context) => InkWell(
       onTap:
           (isLoading || isDisabled)
               ? null
@@ -687,7 +678,7 @@ class _GenericSelector<T> extends StatelessWidget {
           children: [
             Icon(
               iconData,
-              color: (isDisabled) ? Colors.grey : CustomAppColors.primaryBlue,
+              color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
               size: compact ? 16 : 18,
             ),
             SizedBox(width: compact ? 6 : 8),
@@ -739,7 +730,6 @@ class _GenericSelector<T> extends StatelessWidget {
         ),
       ),
     );
-  }
 
   Future<void> _showSelectionDialog(BuildContext context) async {
     final selected = await CustomDialog.showSelection<T>(

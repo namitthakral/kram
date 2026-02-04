@@ -322,7 +322,7 @@ class AttendanceProvider with ChangeNotifier {
 
             // Check if attendance already exists for this student
             // Default to PRESENT for new records if no data exists
-            AttendanceStatus status = AttendanceStatus.present;
+            var status = AttendanceStatus.present;
 
             if (studentIdInt != null &&
                 attendanceMap.containsKey(studentIdInt)) {

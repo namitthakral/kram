@@ -90,8 +90,7 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
+  Widget _buildEmptyState() => const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -104,10 +103,8 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
         ],
       ),
     );
-  }
 
-  Widget _buildPaperItem(String title, String subtitle, VoidCallback onTap) {
-    return GestureDetector(
+  Widget _buildPaperItem(String title, String subtitle, VoidCallback onTap) => GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -169,5 +166,4 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
         ),
       ),
     );
-  }
 }
