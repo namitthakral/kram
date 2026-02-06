@@ -138,12 +138,16 @@ class _QuestionPaperTemplateScreenState
     try {
       final loginProvider = context.read<LoginProvider>();
       final userUuid = loginProvider.currentUser?.uuid;
-      if (userUuid == null) return;
+      if (userUuid == null) {
+        return;
+      }
 
       final qpProvider = context.read<QuestionPaperProvider>();
       await qpProvider.loadQuestionPaperById(userUuid, paperId);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       final paperWrapper = qpProvider.questionPaper;
       if (paperWrapper == null || paperWrapper['data'] == null) {
@@ -156,7 +160,7 @@ class _QuestionPaperTemplateScreenState
       final course = subject?['course'] as Map<String, dynamic>?;
 
       // Safe Parsing Helpers
-      int? parseInt(dynamic val) =>
+      int? parseInt(val) =>
           val is int ? val : int.tryParse(val.toString());
 
       setState(() {
@@ -178,7 +182,7 @@ class _QuestionPaperTemplateScreenState
           try {
             final dt = DateTime.parse(examDateStr.toString());
             _dateController.text = DateFormat('d MMMM, yyyy').format(dt);
-          } catch (_) {}
+          } on Exception catch (_) {}
         }
 
         // Other fields
@@ -222,7 +226,7 @@ class _QuestionPaperTemplateScreenState
               }
             }
 
-            int estimatedMarks = 1;
+            var estimatedMarks = 1;
             if (parsedQuestions.isNotEmpty &&
                 parsedQuestions.first.customMarks != null) {
               estimatedMarks = parsedQuestions.first.customMarks!;
@@ -242,7 +246,7 @@ class _QuestionPaperTemplateScreenState
         _isLoadingData = false;
         _updateMaxMarks();
       });
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error parsing paper data: $e');
       if (mounted) {
         setState(() => _isLoadingData = false);
@@ -256,7 +260,9 @@ class _QuestionPaperTemplateScreenState
           );
           // Optionally pop back?
           Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) Navigator.pop(context);
+            if (mounted) {
+              Navigator.pop(context);
+            }
           });
         } else {
           showCustomSnackbar(
@@ -400,7 +406,7 @@ class _QuestionPaperTemplateScreenState
       _isLoadingData = true;
     });
 
-    int? examinationId = _existingExaminationId;
+    var examinationId = _existingExaminationId;
 
     // If subject changed, we cannot use the existing examination (which is linked to the old subject)
     // We must treat this as a potentially new exam
@@ -415,14 +421,14 @@ class _QuestionPaperTemplateScreenState
             : _selectedExamNameDropdown ?? 'Examination';
 
     // 1. Create Examination Payload (Only if creating new exam)
-    DateTime examDate = DateTime.now();
+    var examDate = DateTime.now();
     try {
       final dateText = _dateController.text;
       if (dateText.isNotEmpty) {
-        final cleanText = dateText.replaceAll(RegExp(r'(st|nd|rd|th)'), '');
+        final cleanText = dateText.replaceAll(RegExp('(st|nd|rd|th)'), '');
         examDate = DateFormat('d MMMM, yyyy').parse(cleanText);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error parsing date: $e');
     }
 
@@ -507,8 +513,7 @@ class _QuestionPaperTemplateScreenState
 
       // 3. Construct Question Paper Payload
       final sectionsPayload =
-          sections.map((section) {
-            return {
+          sections.map((section) => {
               'sectionName': section.sectionName,
               'instructions': '', // Ensure not null
               'sortOrder': 0,
@@ -517,7 +522,7 @@ class _QuestionPaperTemplateScreenState
                     List<Map<String, dynamic>>? optionsPayload;
 
                     if (question.mcqOptions != null) {
-                      int optIndex = 0;
+                      var optIndex = 0;
                       optionsPayload = [];
                       for (final optText in question.mcqOptions!) {
                         optionsPayload.add({
@@ -537,8 +542,7 @@ class _QuestionPaperTemplateScreenState
                           optionsPayload ?? [], // Ensure not null just in case
                     };
                   }).toList(),
-            };
-          }).toList();
+            }).toList();
 
       final questionPaperPayload = {
         'examinationId': examinationId,
@@ -843,12 +847,12 @@ class _QuestionPaperTemplateScreenState
 
   Future<void> _selectDate() async {
     final now = DateTime.now();
-    DateTime initialDate = now;
+    var initialDate = now;
 
     try {
       final currentText = _dateController.text;
       if (currentText.isNotEmpty) {
-        final cleanText = currentText.replaceAll(RegExp(r'(st|nd|rd|th)'), '');
+        final cleanText = currentText.replaceAll(RegExp('(st|nd|rd|th)'), '');
         initialDate = DateFormat('d MMMM, yyyy').parse(cleanText);
       }
     } catch (_) {
@@ -860,8 +864,7 @@ class _QuestionPaperTemplateScreenState
       initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
+      builder: (context, child) => Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
               primary: AppTheme.blue500,
@@ -870,8 +873,7 @@ class _QuestionPaperTemplateScreenState
             ),
           ),
           child: child!,
-        );
-      },
+        ),
     );
 
     if (pickedDate != null) {
@@ -1761,8 +1763,7 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
               ],
             ),
             const SizedBox(height: 8),
-            ...List.generate(_optionControllers.length, (index) {
-              return Padding(
+            ...List.generate(_optionControllers.length, (index) => Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Row(
                   children: [
@@ -1800,8 +1801,7 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
                       ),
                   ],
                 ),
-              );
-            }),
+              )),
           ],
         ],
       ),
@@ -1835,8 +1835,7 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
-  }) {
-    return InkWell(
+  }) => InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -1872,5 +1871,4 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
         ),
       ),
     );
-  }
 }
