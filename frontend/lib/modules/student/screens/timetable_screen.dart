@@ -117,7 +117,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                           'Room';
 
                       // Handle teacher name parsing based on observation log
-                      String teacherName = 'Teacher';
+                      var teacherName = 'Teacher';
                       if (entry['teacher'] != null) {
                         teacherName =
                             entry['teacher']['name'] ??

@@ -23,9 +23,9 @@ class StudentTimetableProvider with ChangeNotifier {
     }
 
     // Capture values to potentially update if missing
-    int? programId = student.programId;
-    String? section = student.section;
-    int currentSemester = student.currentSemester ?? 1;
+    var programId = student.programId;
+    var section = student.section;
+    var currentSemester = student.currentSemester ?? 1;
 
     try {
       _isLoading = true;

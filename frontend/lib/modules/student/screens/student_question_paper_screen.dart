@@ -212,7 +212,7 @@ class _StudentQuestionPaperScreenState
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
+                      border: Border.all(),
                     ),
                     child: Text(
                       _questionPaper!.examName.toUpperCase(),
@@ -280,8 +280,7 @@ class _StudentQuestionPaperScreenState
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
+  Widget _buildDetailRow(String label, String value) => Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -291,10 +290,8 @@ class _StudentQuestionPaperScreenState
         ],
       ),
     );
-  }
 
-  Widget _buildSection(QuestionSection section) {
-    return Column(
+  Widget _buildSection(QuestionSection section) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
@@ -329,7 +326,6 @@ class _StudentQuestionPaperScreenState
         const SizedBox(height: 24),
       ],
     );
-  }
 
   Widget _buildQuestion(Question question, int number, int defaultMarks) {
     final marks = question.customMarks ?? defaultMarks;

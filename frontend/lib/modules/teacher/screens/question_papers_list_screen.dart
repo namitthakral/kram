@@ -7,9 +7,8 @@ import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-
-import '../providers/question_paper_provider.dart';
 import '../models/template_models.dart';
+import '../providers/question_paper_provider.dart';
 import '../services/pdf_template_service.dart';
 
 class QuestionPapersListScreen extends StatefulWidget {
@@ -351,7 +350,6 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
       schoolAddress: 'Digital Campus',
       examName: json['title'] ?? json['examName'] ?? 'Examination',
       className: json['courseName'] ?? 'Class',
-      section: '',
       subject: json['subjectName'] ?? 'Subject',
       date:
           json['examDate'] != null

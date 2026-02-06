@@ -212,7 +212,7 @@ class MarksProvider with ChangeNotifier {
           (c) => c.courseId == exam.courseId,
         );
         _selectedClass = matchingClass;
-      } on Exception catch (e) {
+      } on Exception {
         // Should not happen if data is consistent
         print(
           'Warning: Could not find ClassInfo for exam course ${exam.courseId}',

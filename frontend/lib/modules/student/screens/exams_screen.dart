@@ -110,7 +110,7 @@ class ExamsScreen extends StatelessWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.access_time,
                               size: 16,
                               color: Colors.grey,
@@ -220,7 +220,7 @@ class ExamsScreen extends StatelessWidget {
         );
       }
       return DateFormat.jm().format(date);
-    } catch (e) {
+    } on Exception {
       return timeString;
     }
   }

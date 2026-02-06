@@ -124,12 +124,12 @@ class QuestionPaperTemplate {
     required this.schoolAddress,
     required this.examName,
     required this.className,
-    this.section = '', // Default to empty string if not provided
     required this.subject,
     required this.date,
     required this.duration,
     required this.maxMarks,
     required this.sections,
+    this.section = '', // Default to empty string if not provided
     this.instructions,
     this.logo,
   });

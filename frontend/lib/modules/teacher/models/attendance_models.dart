@@ -79,10 +79,12 @@ class AttendanceSummary {
     required this.totalStudents,
     required this.present,
     required this.absent,
+    required this.late,
   });
   final int totalStudents;
   final int present;
   final int absent;
+  final int late;
 
   double get presentPercentage =>
       totalStudents > 0 ? (present / totalStudents) * 100 : 0.0;

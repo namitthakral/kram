@@ -21,6 +21,7 @@ class RouteConstants {
   static const String studentTimetable = '/timetable';
   static const String studentAssignments = '/assignments';
   static const String studentAssignmentDetail = 'detail';
+  static const String studentAttendance = '/attendance';
   static const String studentEvents = '/events';
 
   // Admin Routes

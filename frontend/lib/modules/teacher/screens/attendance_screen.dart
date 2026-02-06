@@ -54,7 +54,7 @@ class _AttendanceScreenContentState extends State<_AttendanceScreenContent> {
                 return cId == widget.sectionId;
               });
               provider.setSelectedClass(validClass);
-            } on Exception catch (e) {
+            } on Exception {
               debugPrint(
                 'Could not pre-select class with sectionId ${widget.sectionId}',
               );

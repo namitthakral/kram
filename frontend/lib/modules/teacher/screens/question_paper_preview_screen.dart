@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../models/template_models.dart';
+
 import '../../../core/theme/app_theme.dart';
+import '../models/template_models.dart';
 
 class QuestionPaperPreviewScreen extends StatelessWidget {
+
+  const QuestionPaperPreviewScreen({required this.template, super.key});
   final QuestionPaperTemplate template;
 
-  const QuestionPaperPreviewScreen({super.key, required this.template});
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: const Text('Preview Question Paper'),
         backgroundColor: Colors.white,
@@ -92,8 +92,7 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
             ],
 
             // Sections
-            ...template.sections.map((section) {
-              return Column(
+            ...template.sections.map((section) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
@@ -167,8 +166,7 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
                   }),
                   const SizedBox(height: 24),
                 ],
-              );
-            }),
+              )),
 
             const SizedBox(height: 32),
             const Center(child: Text('*** END OF QUESTION PAPER ***')),
@@ -176,5 +174,4 @@ class QuestionPaperPreviewScreen extends StatelessWidget {
         ),
       ),
     );
-  }
 }

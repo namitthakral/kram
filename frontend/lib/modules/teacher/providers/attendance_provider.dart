@@ -38,13 +38,17 @@ class AttendanceProvider with ChangeNotifier {
   String? _teacherUuid;
   int? _teacherId;
 
-  void setTeacherUuid(String uuid) {
+  set teacherUuid(String uuid) {
     _teacherUuid = uuid;
   }
 
   Future<void> loadInitialData(String userUuid, {int? teacherId}) async {
     _teacherUuid = userUuid;
     _teacherId = teacherId;
+    if (_isLoading) {
+      // Changed from `isLoading` to `_isLoading` to match private member
+      return; // Changed from `const SizedBox.shrink()` to `return;` for Future<void>
+    }
     _isLoading = true;
     notifyListeners();
     try {
@@ -177,10 +181,13 @@ class AttendanceProvider with ChangeNotifier {
         _students.where((s) => s.status == AttendanceStatus.present).length;
     final absent =
         _students.where((s) => s.status == AttendanceStatus.absent).length;
+    final late =
+        _students.where((s) => s.status == AttendanceStatus.late).length;
     return AttendanceSummary(
       totalStudents: _students.length,
       present: present,
       absent: absent,
+      late: late,
     );
   }
 
@@ -354,10 +361,7 @@ class AttendanceProvider with ChangeNotifier {
               status: status,
             );
           }).toList();
-
-      print('=== _loadStudents complete. Total: ${_students.length} ===');
     } on Exception catch (e) {
-      print('ERROR in _loadStudents: $e');
       _error = 'Failed to load students: $e';
       _students = [];
     } finally {
@@ -366,17 +370,36 @@ class AttendanceProvider with ChangeNotifier {
     }
   }
 
-  // Toggle student attendance status
+  // Update student attendance status directly
+  void updateStudentAttendance(String studentId, AttendanceStatus status) {
+    final index = _students.indexWhere((s) => s.id == studentId);
+    if (index != -1) {
+      _students[index] = _students[index].copyWith(status: status);
+      notifyListeners();
+    }
+  }
+
+  // Deprecated: Toggle student attendance status (Cycles: Present -> Absent -> Late)
+  @Deprecated('Use updateStudentAttendance instead')
   void toggleStudentAttendance(String studentId) {
     final index = _students.indexWhere((s) => s.id == studentId);
     if (index != -1) {
       final student = _students[index];
-      _students[index] = student.copyWith(
-        status:
-            student.status == AttendanceStatus.present
-                ? AttendanceStatus.absent
-                : AttendanceStatus.present,
-      );
+      AttendanceStatus newStatus;
+      switch (student.status) {
+        case AttendanceStatus.present:
+          newStatus = AttendanceStatus.absent;
+          break;
+        case AttendanceStatus.absent:
+          newStatus = AttendanceStatus.late;
+          break;
+        case AttendanceStatus.late:
+        case AttendanceStatus.excused:
+          newStatus = AttendanceStatus.present;
+          break;
+      }
+
+      _students[index] = student.copyWith(status: newStatus);
       notifyListeners();
     }
   }
@@ -445,6 +468,8 @@ class AttendanceProvider with ChangeNotifier {
                   'status':
                       student.status == AttendanceStatus.present
                           ? 'PRESENT'
+                          : student.status == AttendanceStatus.late
+                          ? 'LATE'
                           : 'ABSENT',
                 },
               )

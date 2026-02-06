@@ -427,7 +427,7 @@ class RoleNavigationConfig {
         '/exams',
         '/events',
       ];
-      if (studentAcademicRoutes.any((r) => normalizedRoute.startsWith(r))) {
+      if (studentAcademicRoutes.any(normalizedRoute.startsWith)) {
         return routes.indexOf('/student-academic');
       }
     }

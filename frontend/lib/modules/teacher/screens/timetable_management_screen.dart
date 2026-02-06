@@ -690,7 +690,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
       if (parts.length >= 2) {
         return '${parts[0]}:${parts[1]}';
       }
-    } on Exception catch (e) {
+    } on Exception {
       return timeStr;
     }
     return timeStr;

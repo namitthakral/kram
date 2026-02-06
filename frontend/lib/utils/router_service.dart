@@ -25,6 +25,7 @@ import '../modules/student/screens/exams_screen.dart';
 import '../modules/student/screens/my_grades_screen.dart';
 import '../modules/student/screens/student_academic_screen.dart';
 import '../modules/student/screens/student_assignment_detail_screen.dart';
+import '../modules/student/screens/student_attendance_screen.dart';
 import '../modules/student/screens/student_dashboard_screen.dart';
 import '../modules/student/screens/student_question_paper_screen.dart';
 import '../modules/student/screens/timetable_screen.dart';
@@ -382,21 +383,19 @@ class RouterService {
                 GoRoute(
                   path: 'create',
                   name: 'create_question_paper',
-                  pageBuilder:
-                      (context, state) {
-                        final extra = state.extra as Map<String, dynamic>?;
-                        final paperId = extra?['paperId'] as int?;
-                        return _buildPageWithTransition(
-                          key: state.pageKey,
-                          child: QuestionPaperTemplateScreen(paperId: paperId),
-                        );
-                      },
+                  pageBuilder: (context, state) {
+                    final extra = state.extra as Map<String, dynamic>?;
+                    final paperId = extra?['paperId'] as int?;
+                    return _buildPageWithTransition(
+                      key: state.pageKey,
+                      child: QuestionPaperTemplateScreen(paperId: paperId),
+                    );
+                  },
                 ),
               ],
             ),
           ],
         ),
-
 
         // Student-specific routes
         GoRoute(
@@ -434,12 +433,12 @@ class RouterService {
                 key: state.pageKey,
                 child: const AssignmentsScreen(),
               ),
-            routes: [
+          routes: [
             GoRoute(
               path: ':id',
               name: 'student_assignment_detail',
               pageBuilder: (context, state) {
-                final assignment = state.extra as Assignment;
+                final assignment = state.extra! as Assignment;
                 return _buildPageWithTransition(
                   key: state.pageKey,
                   child: StudentAssignmentDetailScreen(assignment: assignment),
@@ -448,7 +447,7 @@ class RouterService {
             ),
           ],
         ),
-         GoRoute(
+        GoRoute(
           path: '/exams',
           name: 'student_exams',
           pageBuilder:
@@ -461,7 +460,8 @@ class RouterService {
               path: 'paper/:examId',
               name: 'student_question_paper',
               pageBuilder: (context, state) {
-                final examId = int.tryParse(state.pathParameters['examId'] ?? '') ?? 0;
+                final examId =
+                    int.tryParse(state.pathParameters['examId'] ?? '') ?? 0;
                 return _buildPageWithTransition(
                   key: state.pageKey,
                   child: StudentQuestionPaperScreen(examId: examId),
@@ -477,6 +477,15 @@ class RouterService {
               (context, state) => _buildPageWithTransition(
                 key: state.pageKey,
                 child: const EventsScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/attendance',
+          name: 'student_attendance',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const StudentAttendanceScreen(),
               ),
         ),
 

@@ -138,7 +138,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               'Found course: ${course.courseName} contains subject: ${foundSubject.name}',
             );
             break;
-          } on Exception catch (e) {
+          } on Exception {
             // This course doesn't have our subject, continue searching
             debugPrint(
               'Course ${course.courseName} does not contain subject ${assignment.courseId}',

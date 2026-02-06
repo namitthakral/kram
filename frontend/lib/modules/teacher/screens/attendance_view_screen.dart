@@ -139,7 +139,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
         if (provider.selectedClass != match) {
           provider.setSelectedClass(match);
         }
-      } on Exception catch (e) {
+      } on Exception {
         // No match found
         if (provider.selectedClass != null) {
           provider.setSelectedClass(null);
@@ -360,7 +360,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
                     ? _buildEmptyState('No students found in this class')
                     : _StudentList(
                       students: provider.students,
-                      onToggle: provider.toggleStudentAttendance,
+                      onUpdateStatus: provider.updateStudentAttendance,
                     ),
           ),
 
@@ -588,138 +588,156 @@ class _CompactDatePicker extends StatelessWidget {
 
 // Student List
 class _StudentList extends StatelessWidget {
-  const _StudentList({required this.students, required this.onToggle});
+  const _StudentList({required this.students, required this.onUpdateStatus});
 
   final List<StudentAttendance> students;
-  final Function(String) onToggle;
+  final Function(String, AttendanceStatus) onUpdateStatus;
 
   @override
   Widget build(BuildContext context) => ListView.separated(
     padding: const EdgeInsets.all(16),
     itemCount: students.length,
-    separatorBuilder: (_, __) => const SizedBox(height: 12),
+    separatorBuilder: (_, _) => const SizedBox(height: 12),
     itemBuilder: (context, index) {
       final student = students[index];
       final isPresent = student.status == AttendanceStatus.present;
+      final isLate = student.status == AttendanceStatus.late;
+      final isAbsent = student.status == AttendanceStatus.absent;
 
-      return InkWell(
-        onTap: () => onToggle(student.id),
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            border: Border.all(
-              color:
-                  isPresent
-                      ? Colors.transparent
-                      : CustomAppColors.danger.withOpacity(0.3),
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
+          ],
+          border: Border.all(
+            color:
+                (isPresent || isLate)
+                    ? Colors.transparent
+                    : CustomAppColors.danger.withValues(alpha: 0.3),
           ),
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Avatar
-              CircleAvatar(
-                backgroundColor:
-                    isPresent
-                        ? CustomAppColors.primaryBlue.withOpacity(0.1)
-                        : Colors.grey.shade100,
-                radius: 22,
-                child: Text(
-                  student.initials,
-                  style: TextStyle(
-                    color:
-                        isPresent
-                            ? CustomAppColors.primaryBlue
-                            : Colors.grey.shade600,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      student.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'ID: ${student.id}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Status Toggle
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Avatar
+            CircleAvatar(
+              backgroundColor:
+                  (isPresent || isLate)
+                      ? (isPresent
+                              ? CustomAppColors.primaryBlue
+                              : Colors.amber.shade700)
+                          .withValues(alpha: 0.1)
+                      : Colors.grey.shade100,
+              radius: 22,
+              child: Text(
+                student.initials,
+                style: TextStyle(
                   color:
-                      isPresent
-                          ? CustomAppColors.success
-                          : CustomAppColors.danger,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isPresent
-                              ? CustomAppColors.success
-                              : CustomAppColors.danger)
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPresent ? Icons.check_circle : Icons.cancel,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isPresent ? 'Present' : 'Absent',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
+                      (isPresent || isLate)
+                          ? (isPresent
+                              ? CustomAppColors.primaryBlue
+                              : Colors.amber.shade700)
+                          : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 16),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    student.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'ID: ${student.id}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            ),
+            // Status Buttons
+            Row(
+              children: [
+                _StatusButton(
+                  icon: Icons.check_circle,
+                  color: CustomAppColors.success,
+                  isSelected: isPresent,
+                  onPressed:
+                      () =>
+                          onUpdateStatus(student.id, AttendanceStatus.present),
+                ),
+                const SizedBox(width: 8),
+                _StatusButton(
+                  icon: Icons.access_time_filled,
+                  color: Colors.amber.shade700,
+                  isSelected: isLate,
+                  onPressed:
+                      () => onUpdateStatus(student.id, AttendanceStatus.late),
+                ),
+                const SizedBox(width: 8),
+                _StatusButton(
+                  icon: Icons.cancel,
+                  color: CustomAppColors.danger,
+                  isSelected: isAbsent,
+                  onPressed:
+                      () => onUpdateStatus(student.id, AttendanceStatus.absent),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     },
   );
+}
+
+class _StatusButton extends StatelessWidget {
+  const _StatusButton({
+    required this.icon,
+    required this.color,
+    required this.isSelected,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isSelected ? color : color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? color : color.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Icon(icon, color: isSelected ? Colors.white : color, size: 20),
+        ),
+      );
 }
 
 // Attendance Summary Bar
@@ -762,6 +780,13 @@ class _AttendanceSummaryBar extends StatelessWidget {
               CustomAppColors.danger,
               Icons.cancel_outlined,
             ),
+            const SizedBox(width: 8),
+            _buildSummaryItem(
+              'Late',
+              summary.late.toString(),
+              Colors.amber.shade700,
+              Icons.access_time,
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -784,7 +809,7 @@ class _AttendanceSummaryBar extends StatelessWidget {
                 ),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
-                    color: CustomAppColors.success.withOpacity(0.5),
+                    color: CustomAppColors.success.withValues(alpha: 0.5),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
@@ -808,7 +833,7 @@ class _AttendanceSummaryBar extends StatelessWidget {
                 ),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(
-                    color: CustomAppColors.danger.withOpacity(0.5),
+                    color: CustomAppColors.danger.withValues(alpha: 0.5),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   shape: RoundedRectangleBorder(
@@ -832,7 +857,7 @@ class _AttendanceSummaryBar extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -846,7 +871,7 @@ class _AttendanceSummaryBar extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 11,
-                  color: color.withOpacity(0.8),
+                  color: color.withValues(alpha: 0.8),
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -8,7 +8,7 @@ import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../models/student_dashboard_models.dart';
 
 class StudentAssignmentDetailScreen extends StatelessWidget {
-  const StudentAssignmentDetailScreen({super.key, required this.assignment});
+  const StudentAssignmentDetailScreen({required this.assignment, super.key});
 
   final Assignment assignment;
 
@@ -25,7 +25,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
 
   Widget _buildFormattedText(String text) {
     final lines = text.split('\n');
-    List<Widget> children = [];
+    final children = <Widget>[];
 
     for (var line in lines) {
       line = line.trim();
@@ -78,8 +78,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Row(
+  Widget _buildSectionHeader(String title, IconData icon) => Row(
       children: [
         Icon(icon, size: 20, color: CustomAppColors.primary),
         const SizedBox(width: 8),
@@ -93,10 +92,8 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
         ),
       ],
     );
-  }
 
-  Widget _buildInfoCard({required Widget child}) {
-    return Container(
+  Widget _buildInfoCard({required Widget child}) => Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -113,7 +110,6 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
       ),
       child: child,
     );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +135,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Hero Card
-            Container(
+            DecoratedBox(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),

@@ -475,9 +475,7 @@ class _QuestionPaperTemplateScreenState
             examDate.month,
             examDate.day,
             9,
-            0,
           ),
-          status: 'SCHEDULED',
         );
 
         final successExam = await examProvider.createExamination(
@@ -497,17 +495,13 @@ class _QuestionPaperTemplateScreenState
 
       // If updating, delete the OLD paper first to avoid duplicates (Simulate Full Update)
       // TODO: Ideally we should use a transaction or a better update endpoint
-      if (widget.paperId != null && examinationId != null) {
+      if (widget.paperId != null) {
         try {
           await qpProvider.deleteQuestionPaper(userUuid, widget.paperId!);
         } on Exception catch (e) {
-          debugPrint("Error deleting old paper: $e");
+          debugPrint('Error deleting old paper: $e');
           // Continue anyway? If delete fails, we might have duplicate or error.
         }
-      }
-
-      if (examinationId == null) {
-        throw Exception('Examination ID is missing');
       }
 
       // 3. Construct Question Paper Payload
@@ -832,7 +826,6 @@ class _QuestionPaperTemplateScreenState
                     '123 Education Street', // TODO: Get from provider
                 examName: _examNameController.text,
                 className: courseName,
-                section: '',
                 subject: subjectName,
                 date: _dateController.text,
                 duration: _durationController.text,
@@ -876,7 +869,6 @@ class _QuestionPaperTemplateScreenState
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.light(
                 primary: AppTheme.blue500,
-                onPrimary: Colors.white,
                 onSurface: AppTheme.slate800,
               ),
             ),
@@ -1333,12 +1325,11 @@ class _QuestionPaperTemplateScreenState
                           await PdfTemplateService.generateQuestionPaperPdf(
                             QuestionPaperTemplate(
                               schoolName:
-                                  'Springfield High School', // TODO provider
+                                  'Springfield High School', // TODOprovider
                               schoolAddress:
-                                  '123 Education Street', // TODO provider
+                                  '123 Education Street', // TODOprovider
                               examName: _examNameController.text,
                               className: courseName,
-                              section: '',
                               subject: subjectName,
                               date: _dateController.text,
                               duration: _durationController.text,

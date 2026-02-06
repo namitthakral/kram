@@ -50,7 +50,7 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: CustomTabBar<int>(
-                tabs: [
+                tabs: const [
                   TabItem(
                     value: 0,
                     label: 'Pending',
@@ -64,10 +64,8 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
                     _selectedTabIndex = index;
                   });
                 },
-                backgroundColor: Colors.white,
                 selectedTabColor: CustomAppColors.primary,
                 unselectedTabColor: Colors.grey.shade100,
-                selectedIconColor: Colors.white,
                 unselectedIconColor: Colors.grey,
               ),
             ),
@@ -157,8 +155,7 @@ class _AssignmentCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
+  Widget build(BuildContext context) => Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -325,5 +322,4 @@ class _AssignmentCard extends StatelessWidget {
         ),
       ),
     );
-  }
 }
