@@ -43,22 +43,33 @@ class SubjectPerformance {
 /// Assignment Model
 class Assignment {
   const Assignment({
+    required this.id,
     required this.title,
     required this.subject,
     required this.dueDate,
     required this.status,
+    required this.type,
     this.grade,
     this.score,
+    this.description,
+    this.instructions,
   });
+
+  final int id;
   final String title;
   final String subject;
   final String dueDate;
   final AssignmentStatus status;
+  final AssignmentType type;
   final String? grade;
   final String? score;
+  final String? description;
+  final String? instructions;
 }
 
 enum AssignmentStatus { submitted, graded, pending }
+
+enum AssignmentType { assignment, test, exam }
 
 /// Upcoming Event Model
 class UpcomingEvent {

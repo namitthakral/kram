@@ -19,6 +19,8 @@ import '../modules/parent/screens/parent_dashboard_screen.dart';
 import '../modules/staff/screens/staff_messages_screen.dart';
 import '../modules/staff/screens/staff_schedule_screen.dart';
 import '../modules/student/screens/assignments_screen.dart';
+import '../modules/student/models/student_dashboard_models.dart';
+import '../modules/student/screens/student_assignment_detail_screen.dart';
 import '../modules/student/screens/events_screen.dart';
 import '../modules/student/screens/exams_screen.dart';
 import '../modules/student/screens/my_grades_screen.dart';
@@ -432,6 +434,19 @@ class RouterService {
                 key: state.pageKey,
                 child: const AssignmentsScreen(),
               ),
+            routes: [
+            GoRoute(
+              path: ':id',
+              name: 'student_assignment_detail',
+              pageBuilder: (context, state) {
+                final assignment = state.extra as Assignment;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: StudentAssignmentDetailScreen(assignment: assignment),
+                );
+              },
+            ),
+          ],
         ),
          GoRoute(
           path: '/exams',

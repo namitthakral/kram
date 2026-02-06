@@ -41,12 +41,18 @@ class StudentAssignmentProvider with ChangeNotifier {
           data.map((json) {
             // Map dynamic json to Assignment model
             return Assignment(
+              id: json['id'] is int
+                  ? json['id']
+                  : int.tryParse(json['id'].toString()) ?? 0,
               title: json['title'] ?? '',
               subject: json['subject'] ?? '',
               dueDate: json['dueDate'] ?? '',
               status: _parseStatus(json['status']),
+              type: AssignmentType.assignment, // Default to assignment as this endpoint returns assignments
               grade: json['grade'],
               score: json['score'],
+              description: json['description'],
+              instructions: json['instructions'],
             );
           }).toList();
     } catch (e) {

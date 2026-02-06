@@ -23,7 +23,7 @@ import { StudentsService } from './students.service'
 @Controller('students')
 @UseGuards(JwtAuthGuard)
 export class StudentsController {
-  constructor(private readonly studentsService: StudentsService) {}
+  constructor(private readonly studentsService: StudentsService) { }
 
   @Get()
   @UseGuards(RolesGuard)
@@ -165,6 +165,19 @@ export class StudentsController {
     @Query('status') status?: string
   ) {
     return this.studentsService.getExaminationsByUuid(userUuid, status, user)
+  }
+
+  @Get(':user_uuid/examinations/:examId/question-paper')
+  async getPublishedQuestionPaper(
+    @Param('user_uuid') userUuid: string,
+    @Param('examId') examId: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.studentsService.getPublishedQuestionPaperByUuid(
+      userUuid,
+      parseInt(examId),
+      user
+    )
   }
 
   // ==================== Report Card Generation ====================

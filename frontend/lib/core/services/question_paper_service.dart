@@ -645,6 +645,10 @@ class QuestionPaperService {
       );
 
       if (response.statusCode == 200) {
+        final data = response.data['data'];
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
         return response.data as Map<String, dynamic>;
       } else {
         throw DioException(

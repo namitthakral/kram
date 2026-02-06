@@ -14,7 +14,8 @@ class TimetableScreen extends StatefulWidget {
 }
 
 class _TimetableScreenState extends State<TimetableScreen> {
-  String _selectedDay = 'MONDAY';
+  late String _selectedDay;
+
   final Map<String, String> _dayMapping = {
     'Mon': 'MONDAY',
     'Tue': 'TUESDAY',
@@ -24,6 +25,34 @@ class _TimetableScreenState extends State<TimetableScreen> {
     'Sat': 'SATURDAY',
     'Sun': 'SUNDAY',
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = _getCurrentDay();
+  }
+
+  String _getCurrentDay() {
+    final now = DateTime.now();
+    switch (now.weekday) {
+      case DateTime.monday:
+        return 'MONDAY';
+      case DateTime.tuesday:
+        return 'TUESDAY';
+      case DateTime.wednesday:
+        return 'WEDNESDAY';
+      case DateTime.thursday:
+        return 'THURSDAY';
+      case DateTime.friday:
+        return 'FRIDAY';
+      case DateTime.saturday:
+        return 'SATURDAY';
+      case DateTime.sunday:
+        return 'SUNDAY';
+      default:
+        return 'MONDAY';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +221,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 90, // Increased width for longer time strings like "9:00 AM - 10:30 AM"
+          width:
+              90, // Increased width for longer time strings like "9:00 AM - 10:30 AM"
           child: Text(
             time,
             style: const TextStyle(

@@ -70,7 +70,16 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     // Use real user data
     final userInitials = UserUtils.getInitials(user.name);
     final userName = user.name;
-    const grade = 'Grade 10B'; // To be fetched from API when available
+
+    // Get dynamic grade/class info
+    final studentProvider = context.watch<StudentProvider>();
+    final className = studentProvider.studentClassName;
+    final section = studentProvider.studentSection;
+    final grade =
+        (className.isNotEmpty || section.isNotEmpty)
+            ? '$className $section'.trim()
+            : 'Class N/A';
+
     final rollNumber = student?.rollNumber ?? 'N/A';
 
     // Get GPA from dashboard stats
@@ -91,37 +100,38 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           // Notification handler to be implemented
         },
       ),
-      child: dashboardProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: () async {
-                if (user.uuid != null) {
-                  await dashboardProvider.refresh(user.uuid!);
-                }
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Statistics Cards
-                    _buildStatsSection(isMobile, dashboardProvider),
-                    const SizedBox(height: 24),
+      child:
+          dashboardProvider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                onRefresh: () async {
+                  if (user.uuid != null) {
+                    await dashboardProvider.refresh(user.uuid!);
+                  }
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Statistics Cards
+                      _buildStatsSection(isMobile, dashboardProvider),
+                      const SizedBox(height: 24),
 
-                    // Main Content - Responsive Layout
-                    if (isMobile)
-                      _buildMobileLayout(dashboardProvider)
-                    else
-                      _buildDesktopLayout(dashboardProvider),
+                      // Main Content - Responsive Layout
+                      if (isMobile)
+                        _buildMobileLayout(dashboardProvider)
+                      else
+                        _buildDesktopLayout(dashboardProvider),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Charts Section with Tabs
-                    _buildChartsSection(isMobile, dashboardProvider),
-                  ],
+                      // Charts Section with Tabs
+                      _buildChartsSection(isMobile, dashboardProvider),
+                    ],
+                  ),
                 ),
               ),
-            ),
     );
   }
 

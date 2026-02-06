@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../utils/user_utils.dart';
@@ -114,8 +116,9 @@ class ExamsScreen extends StatelessWidget {
                               color: Colors.grey,
                             ),
                             const SizedBox(width: 4),
+                            // Format time string to AM/PM
                             Text(
-                              '${exam.startTime ?? "N/A"} (${exam.duration ?? 0} mins)',
+                              '${_formatTime(exam.startTime)} (${exam.duration ?? 0} mins)',
                               style: const TextStyle(color: Colors.grey),
                             ),
                             const Spacer(),
@@ -138,6 +141,15 @@ class ExamsScreen extends StatelessWidget {
                             ),
                             ElevatedButton.icon(
                               onPressed: () {
+                                if (exam.id == 0) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Invalid Exam ID'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                  return;
+                                }
                                 // Navigate to question paper view
                                 context.pushNamed(
                                   'student_question_paper',
@@ -146,12 +158,19 @@ class ExamsScreen extends StatelessWidget {
                                   },
                                 );
                               },
-                              icon: const Icon(Icons.visibility, size: 16),
+                              icon: const Icon(
+                                Icons.description_outlined,
+                                size: 16,
+                              ),
                               label: const Text('View Paper'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: CustomAppColors.primary,
                                 foregroundColor: Colors.white,
                                 visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                               ),
                             ),
                           ],
@@ -178,6 +197,31 @@ class ExamsScreen extends StatelessWidget {
         return Colors.orange;
       default:
         return Colors.grey;
+    }
+  }
+
+  String _formatTime(String? timeString) {
+    if (timeString == null || timeString.isEmpty) return 'N/A';
+    try {
+      // Handle both ISO string and HH:mm format
+      DateTime date;
+      if (timeString.contains('T')) {
+        date = DateTime.parse(timeString).toLocal();
+      } else {
+        // Fallback for HH:mm if backend change hasn't propagated or for old data
+        final now = DateTime.now();
+        final parts = timeString.split(':');
+        date = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          int.parse(parts[0]),
+          int.parse(parts[1]),
+        );
+      }
+      return DateFormat.jm().format(date);
+    } catch (e) {
+      return timeString;
     }
   }
 }

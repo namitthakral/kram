@@ -37,6 +37,16 @@ class _StudentQuestionPaperScreenState
   }
 
   Future<void> _fetchQuestionPaper() async {
+    if (widget.examId <= 0) {
+      if (mounted) {
+        setState(() {
+          _error = 'Invalid Exam ID';
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     try {
       final loginProvider = context.read<LoginProvider>();
       final user = loginProvider.currentUser;
@@ -130,12 +140,15 @@ class _StudentQuestionPaperScreenState
             const Icon(Icons.error_outline, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'Could not load question paper',
+              _error?.replaceAll('Exception: ', '') ??
+                  'Could not load question paper',
+              textAlign: TextAlign.center,
               style: context.textTheme.h3.copyWith(color: AppTheme.slate800),
             ),
             const SizedBox(height: 8),
             Text(
-              'It might not be published yet.',
+              'Please try again later or contact your teacher.',
+              textAlign: TextAlign.center,
               style: context.textTheme.bodySm.copyWith(
                 color: AppTheme.slate500,
               ),

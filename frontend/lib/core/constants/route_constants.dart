@@ -20,6 +20,7 @@ class RouteConstants {
   static const String studentGrades = '/grades';
   static const String studentTimetable = '/timetable';
   static const String studentAssignments = '/assignments';
+  static const String studentAssignmentDetail = 'detail';
   static const String studentEvents = '/events';
 
   // Admin Routes
@@ -63,7 +64,8 @@ class RouteConstants {
   static const String academicExams = '/academic/exams';
   static const String academicCreateExam = '/academic/exams/create';
   static const String academicQuestionPapers = '/academic/question-paper';
-  static const String academicCreateQuestionPaper = '/academic/question-paper/create';
+  static const String academicCreateQuestionPaper =
+      '/academic/question-paper/create';
 
   // Feature Routes (legacy - may be deprecated)
   static const String courseDetail = '/course-detail';
