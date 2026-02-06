@@ -49,7 +49,7 @@ class ParentService {
       } else {
         throw Exception('Failed to map parent to child: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -85,7 +85,7 @@ class ParentService {
       } else {
         throw Exception('Failed to load child dashboard stats: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -111,7 +111,7 @@ class ParentService {
           error: 'Failed to load child academic records',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child academic records: $e');
     }
   }
@@ -152,7 +152,7 @@ class ParentService {
           error: 'Failed to load child attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child attendance: $e');
     }
   }
@@ -190,7 +190,7 @@ class ParentService {
           error: 'Failed to load child assignments',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child assignments: $e');
     }
   }
@@ -231,7 +231,7 @@ class ParentService {
           error: 'Failed to load child performance trends',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child performance trends: $e');
     }
   }
@@ -267,7 +267,7 @@ class ParentService {
           error: 'Failed to load child attendance history',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child attendance history: $e');
     }
   }
@@ -293,7 +293,7 @@ class ParentService {
           error: 'Failed to load child subject performance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child subject performance: $e');
     }
   }
@@ -324,7 +324,7 @@ class ParentService {
           error: 'Failed to load child upcoming events',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child upcoming events: $e');
     }
   }
@@ -334,8 +334,7 @@ class ParentService {
   /// Uses student endpoint: GET /students/:user_uuid
   Future<Map<String, dynamic>> getChildInfo(String childUserUuid) async {
     try {
-      final response =
-          await _apiService.dio.get('/students/$childUserUuid');
+      final response = await _apiService.dio.get('/students/$childUserUuid');
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -347,7 +346,7 @@ class ParentService {
           error: 'Failed to load child information',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load child information: $e');
     }
   }

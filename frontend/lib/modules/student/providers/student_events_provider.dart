@@ -27,7 +27,7 @@ class StudentEventsProvider with ChangeNotifier {
 
       final data = await _studentService.getUpcomingEvents(user.uuid!);
       _events = data;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;

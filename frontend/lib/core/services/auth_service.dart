@@ -87,7 +87,7 @@ class AuthService {
       } else {
         throw Exception('Login failed: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Login failed: $e');
     }
   }
@@ -119,7 +119,7 @@ class AuthService {
       } else {
         throw Exception('Registration failed: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Registration failed: $e');
     }
   }
@@ -295,7 +295,7 @@ class AuthService {
         );
       }
       throw Exception('Token refresh failed: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       log('❌ AuthService: Token refresh error: $e');
       // Don't logout here - let the API interceptor handle it
       // This prevents premature logout during refresh attempts
@@ -369,7 +369,7 @@ class AuthService {
       } else {
         throw Exception('Failed to change password: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to change password: $e');
     }
   }
@@ -404,7 +404,7 @@ class AuthService {
       } else {
         throw Exception('Failed to get profile: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get profile: $e');
     }
   }
@@ -453,7 +453,7 @@ class AuthService {
       } else {
         throw Exception('Failed to activate account: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to activate account: $e');
     }
   }

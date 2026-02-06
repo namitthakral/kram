@@ -71,7 +71,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to load class sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load class sections',
@@ -116,7 +116,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to get courses with sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get courses with sections',
@@ -143,12 +143,12 @@ class ClassSectionService {
         if (data is List) {
           return data;
         } else if (data is Map<String, dynamic>) {
-           // Handle potential 'data' wrapper
-           if (data['data'] is List) {
-             return data['data'] as List<dynamic>;
-           }
-           // Handle if it returns a paginated structure directly
-           return data['data'] as List<dynamic>? ?? [];
+          // Handle potential 'data' wrapper
+          if (data['data'] is List) {
+            return data['data'] as List<dynamic>;
+          }
+          // Handle if it returns a paginated structure directly
+          return data['data'] as List<dynamic>? ?? [];
         }
         return [];
       } else {
@@ -164,7 +164,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to get courses',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get courses',
@@ -181,12 +181,12 @@ class ClassSectionService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-         if (data is Map<String, dynamic>) {
-            return data['data'] is Map<String, dynamic>
-                ? data['data'] as Map<String, dynamic>
-                : data;
-         }
-         return {};
+        if (data is Map<String, dynamic>) {
+          return data['data'] is Map<String, dynamic>
+              ? data['data'] as Map<String, dynamic>
+              : data;
+        }
+        return {};
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -200,7 +200,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to get course',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get course',
@@ -226,7 +226,8 @@ class ClassSectionService {
             return data['data'] as List<dynamic>;
           } else if (data['data'] is Map<String, dynamic>) {
             final innerData = data['data'] as Map<String, dynamic>;
-            if (innerData.containsKey('sections') && innerData['sections'] is List) {
+            if (innerData.containsKey('sections') &&
+                innerData['sections'] is List) {
               return innerData['sections'] as List<dynamic>;
             }
           }
@@ -247,7 +248,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to get course sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get course sections',
@@ -285,7 +286,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to get subjects for course',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get subjects for course',
@@ -326,7 +327,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to load enrolled students',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load enrolled students',

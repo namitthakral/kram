@@ -33,7 +33,7 @@ class StudentExamsProvider with ChangeNotifier {
                 (e) => StudentExamination.fromJson(e as Map<String, dynamic>),
               )
               .toList();
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;

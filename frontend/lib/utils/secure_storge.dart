@@ -46,8 +46,9 @@ class SecureStorageService {
             encryptedSharedPreferences: true,
             resetOnError: true,
           ),
-          iOptions:
-              IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock,
+          ),
           mOptions: MacOsOptions(
             accessibility: KeychainAccessibility.first_unlock,
           ),
@@ -71,7 +72,7 @@ class SecureStorageService {
 
       _cache[key] = value; // Update cache
       log('💾 SecureStorage: Written key: $key');
-    } catch (e) {
+    } on Exception catch (e) {
       log('❌ SecureStorage: Error writing key $key: $e');
       rethrow;
     }
@@ -105,7 +106,7 @@ class SecureStorageService {
         log('⚠️ SecureStorage: Key not found: $key');
       }
       return value;
-    } catch (e) {
+    } on Exception catch (e) {
       log('❌ SecureStorage: Error reading key $key: $e');
       return null;
     }
@@ -124,7 +125,7 @@ class SecureStorageService {
 
       _cache.remove(key); // Update cache
       log('🗑️ SecureStorage: Deleted key: $key');
-    } catch (e) {
+    } on Exception catch (e) {
       log('❌ SecureStorage: Error deleting key $key: $e');
     }
   }
@@ -221,4 +222,3 @@ class SecureStorageService {
       ..addAll(allValues);
   }
 }
-

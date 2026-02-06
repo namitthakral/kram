@@ -17,9 +17,7 @@ class AdminService {
   /// Endpoint: GET /admin/dashboard-stats
   Future<AdminDashboardResponse> getDashboardStats() async {
     try {
-      final response = await _apiService.dio.get(
-        '/admin/dashboard-stats',
-      );
+      final response = await _apiService.dio.get('/admin/dashboard-stats');
 
       if (response.statusCode == 200) {
         return AdminDashboardResponse.fromJson(response.data);
@@ -39,7 +37,7 @@ class AdminService {
       } else {
         throw Exception('Failed to load dashboard stats: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -67,7 +65,7 @@ class AdminService {
           error: 'Failed to load teacher performance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher performance: $e');
     }
   }
@@ -75,9 +73,7 @@ class AdminService {
   /// Get attendance trends
   ///
   /// Endpoint: GET /admin/attendance-trends
-  Future<List<AttendanceTrend>> getAttendanceTrends({
-    String? period,
-  }) async {
+  Future<List<AttendanceTrend>> getAttendanceTrends({String? period}) async {
     try {
       final queryParams = <String, dynamic>{};
       if (period != null) {
@@ -100,7 +96,7 @@ class AdminService {
           error: 'Failed to load attendance trends',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load attendance trends: $e');
     }
   }
@@ -123,7 +119,7 @@ class AdminService {
           error: 'Failed to load grade distribution',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load grade distribution: $e');
     }
   }
@@ -146,7 +142,7 @@ class AdminService {
           error: 'Failed to load class performance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load class performance: $e');
     }
   }
@@ -154,9 +150,7 @@ class AdminService {
   /// Get financial overview
   ///
   /// Endpoint: GET /admin/financial-overview
-  Future<List<FinancialOverview>> getFinancialOverview({
-    String? period,
-  }) async {
+  Future<List<FinancialOverview>> getFinancialOverview({String? period}) async {
     try {
       final queryParams = <String, dynamic>{};
       if (period != null) {
@@ -179,7 +173,7 @@ class AdminService {
           error: 'Failed to load financial overview',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load financial overview: $e');
     }
   }
@@ -192,9 +186,7 @@ class AdminService {
     int limit = 20,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'limit': limit,
-      };
+      final queryParams = <String, dynamic>{'limit': limit};
       if (severity != null) {
         queryParams['severity'] = severity;
       }
@@ -215,7 +207,7 @@ class AdminService {
           error: 'Failed to load system alerts',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load system alerts: $e');
     }
   }
@@ -243,7 +235,7 @@ class AdminService {
           error: 'Failed to load grading configuration',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load grading configuration: $e');
     }
   }
@@ -272,7 +264,7 @@ class AdminService {
           error: 'Failed to update grading configuration',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update grading configuration: $e');
     }
   }
@@ -297,7 +289,7 @@ class AdminService {
           error: 'Failed to reset grading configuration',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to reset grading configuration: $e');
     }
   }
@@ -335,7 +327,7 @@ class AdminService {
         throw Exception(errorMessage);
       }
       throw Exception('Failed to create user: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create user: $e');
     }
   }
@@ -388,7 +380,7 @@ class AdminService {
           error: 'Failed to load users',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load users: $e');
     }
   }
@@ -410,7 +402,7 @@ class AdminService {
           error: 'Failed to load user statistics',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load user statistics: $e');
     }
   }
@@ -452,7 +444,7 @@ class AdminService {
           error: 'Failed to load users by role',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load users by role: $e');
     }
   }
@@ -479,7 +471,7 @@ class AdminService {
         throw Exception('User not found');
       }
       throw Exception('Failed to load user: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load user: $e');
     }
   }
@@ -508,7 +500,7 @@ class AdminService {
         throw Exception('User not found with EdVerse ID: $edverseId');
       }
       throw Exception('Failed to load user: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load user: $e');
     }
   }
@@ -547,7 +539,7 @@ class AdminService {
         throw Exception(errorMessage);
       }
       throw Exception('Failed to update user: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update user: $e');
     }
   }
@@ -572,7 +564,7 @@ class AdminService {
         throw Exception('User not found');
       }
       throw Exception('Failed to delete user: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete user: $e');
     }
   }
@@ -601,7 +593,7 @@ class AdminService {
         throw Exception('Forbidden - Super admin access required');
       }
       throw Exception('Failed to permanently delete user: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to permanently delete user: $e');
     }
   }
@@ -635,7 +627,7 @@ class AdminService {
         throw Exception(errorMessage);
       }
       throw Exception('Failed to bulk import users: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to bulk import users: $e');
     }
   }
@@ -664,7 +656,7 @@ class AdminService {
         throw Exception('User not found');
       }
       throw Exception('Failed to unlock user account: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to unlock user account: $e');
     }
   }

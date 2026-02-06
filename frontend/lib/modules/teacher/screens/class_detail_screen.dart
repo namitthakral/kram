@@ -105,7 +105,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -430,111 +430,110 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
   }
 
   Widget _buildStudentsContent() => Column(
-      children: [
-        // Search Bar
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: CustomSearchBar(
-            hintText: 'Search students...',
-            onChanged: _filterStudents,
-          ),
+    children: [
+      // Search Bar
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: CustomSearchBar(
+          hintText: 'Search students...',
+          onChanged: _filterStudents,
         ),
+      ),
 
-        // Student Count
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Text(
-                '${_filteredStudents.length} ${_filteredStudents.length == 1 ? 'Student' : 'Students'}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: AppTheme.fontWeightSemibold,
-                  color: AppTheme.slate600,
-                ),
+      // Student Count
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Text(
+              '${_filteredStudents.length} ${_filteredStudents.length == 1 ? 'Student' : 'Students'}',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: AppTheme.fontWeightSemibold,
+                color: AppTheme.slate600,
               ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: () {
-                  // TODO: Filter options
-                },
-                icon: const Icon(Icons.filter_list, size: 18),
-                label: const Text('Filter'),
-              ),
-            ],
-          ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () {
+                // TODO: Filter options
+              },
+              icon: const Icon(Icons.filter_list, size: 18),
+              label: const Text('Filter'),
+            ),
+          ],
         ),
+      ),
 
-        // Student List
-        Expanded(
-          child:
-              _filteredStudents.isEmpty
-                  ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 80,
-                          color: Colors.grey[300],
+      // Student List
+      Expanded(
+        child:
+            _filteredStudents.isEmpty
+                ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        size: 80,
+                        color: Colors.grey[300],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _searchQuery.isEmpty
+                            ? 'No students enrolled'
+                            : 'No students found',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: AppTheme.fontWeightSemibold,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isEmpty
-                              ? 'No students enrolled'
-                              : 'No students found',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: AppTheme.fontWeightSemibold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filteredStudents.length,
-                    itemBuilder: (context, index) {
-                      final student = _filteredStudents[index];
-                      // Defensive coding for student properties
-                      final name = student['name'] as String? ?? 'Unknown';
-                      final rollNo = student['rollNumber'] as String? ?? 'N/A';
-                      final attendance =
-                          (student['attendancePercentage'] as num?)
-                              ?.toDouble() ??
-                          0.0;
-                      final grade =
-                          (student['averageGrade'] as num?)?.toDouble() ?? 0.0;
-
-                      return StudentProfileCard(
-                        studentName: name,
-                        rollNumber: rollNo,
-                        attendancePercentage: attendance,
-                        averageGrade: grade,
-                        onTap: () {
-                          // Navigate to student detail with full student object
-                          context.pushNamed(
-                            'student_detail',
-                            pathParameters: {
-                              'className': widget.className,
-                              'sectionId': widget.sectionId.toString(),
-                              'studentId': '${student['id'] ?? 0}',
-                            },
-                            extra: student,
-                          );
-                        },
-                        onContact: () {
-                          // TODO: Contact student
-                        },
-                        onAddRemark: () {
-                          // TODO: Add remark
-                        },
-                      );
-                    },
+                      ),
+                    ],
                   ),
-        ),
-      ],
-    );
+                )
+                : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _filteredStudents.length,
+                  itemBuilder: (context, index) {
+                    final student = _filteredStudents[index];
+                    // Defensive coding for student properties
+                    final name = student['name'] as String? ?? 'Unknown';
+                    final rollNo = student['rollNumber'] as String? ?? 'N/A';
+                    final attendance =
+                        (student['attendancePercentage'] as num?)?.toDouble() ??
+                        0.0;
+                    final grade =
+                        (student['averageGrade'] as num?)?.toDouble() ?? 0.0;
+
+                    return StudentProfileCard(
+                      studentName: name,
+                      rollNumber: rollNo,
+                      attendancePercentage: attendance,
+                      averageGrade: grade,
+                      onTap: () {
+                        // Navigate to student detail with full student object
+                        context.pushNamed(
+                          'student_detail',
+                          pathParameters: {
+                            'className': widget.className,
+                            'sectionId': widget.sectionId.toString(),
+                            'studentId': '${student['id'] ?? 0}',
+                          },
+                          extra: student,
+                        );
+                      },
+                      onContact: () {
+                        // TODO: Contact student
+                      },
+                      onAddRemark: () {
+                        // TODO: Add remark
+                      },
+                    );
+                  },
+                ),
+      ),
+    ],
+  );
 
   Widget _buildPerformanceContent() {
     // Show list of students with top performance
@@ -704,8 +703,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
 
   Widget _buildRecentActivitiesPreview() {
     // Combine and take top 3
-    final allItems = <dynamic>[..._assignments, ..._exams]
-    ..sort((a, b) {
+    final allItems = <dynamic>[..._assignments, ..._exams]..sort((a, b) {
       final dateA =
           a is Assignment ? a.updatedAt : (a as Examination).createdAt;
       final dateB =
@@ -755,8 +753,7 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
       time = '${diff.inMinutes}m ago';
     }
 
-    final icon =
-        isAssignment ? Icons.assignment_outlined : Icons.quiz_outlined;
+    final icon = isAssignment ? Icons.assignment_outlined : Icons.quiz_outlined;
     final color =
         isAssignment ? CustomAppColors.primary : const Color(0xFFf59e0b);
 
@@ -776,41 +773,44 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     required String time,
     required Color color,
   }) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20, color: color),
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: AppTheme.fontWeightSemibold,
-                  ),
+          child: Icon(icon, size: 20, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: AppTheme.fontWeightSemibold,
                 ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.slate600),
-                ),
-              ],
-            ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(fontSize: 12, color: AppTheme.slate600),
+              ),
+            ],
           ),
-          Text(time, style: const TextStyle(fontSize: 12, color: AppTheme.slate500)),
-        ],
-      ),
-    );
+        ),
+        Text(
+          time,
+          style: const TextStyle(fontSize: 12, color: AppTheme.slate500),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildQuickActionButton({
     required IconData icon,
@@ -818,43 +818,43 @@ class _ClassDetailScreenState extends State<ClassDetailScreen> {
     required Color color,
     required VoidCallback onTap,
   }) => InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: AppTheme.fontWeightSemibold,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-    );
-
-  Widget _buildErrorState() => Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
-          const SizedBox(height: 16),
-          Text('Error: $_error'),
-          const SizedBox(height: 16),
-          ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: AppTheme.fontWeightSemibold,
+              color: color,
+            ),
+          ),
         ],
       ),
-    );
+    ),
+  );
+
+  Widget _buildErrorState() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+        const SizedBox(height: 16),
+        Text('Error: $_error'),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+      ],
+    ),
+  );
 }

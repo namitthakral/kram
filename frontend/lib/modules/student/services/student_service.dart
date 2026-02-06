@@ -60,7 +60,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load dashboard stats',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load dashboard stats',
@@ -93,7 +93,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load student data',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load student data',
@@ -125,7 +125,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load academic records',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load academic records',
@@ -174,7 +174,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load attendance data',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load attendance data',
@@ -228,7 +228,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load assignments',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load assignments',
@@ -280,7 +280,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load performance trends',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load performance trends',
@@ -330,7 +330,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load attendance history',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load attendance history',
@@ -365,7 +365,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load subject performance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load subject performance',
@@ -412,7 +412,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load upcoming events',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load upcoming events',
@@ -476,7 +476,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load students',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load students',
@@ -530,7 +530,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load report card',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load report card',
@@ -578,7 +578,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load examinations',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load examinations',
@@ -622,7 +622,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load timetable',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load timetable',

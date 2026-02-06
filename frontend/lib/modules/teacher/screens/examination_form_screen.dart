@@ -140,7 +140,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
               'Found course: ${course.courseName} contains subject: ${foundSubject.name}',
             );
             break;
-          } catch (e) {
+          } on Exception catch (e) {
             // This course doesn't have our subject, continue searching
             debugPrint(
               'Course ${course.courseName} does not contain subject ${exam.courseId}',

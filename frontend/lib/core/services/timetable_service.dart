@@ -84,7 +84,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to get time slots',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get time slots',
@@ -119,7 +119,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to create time slot',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create time slot',
@@ -158,7 +158,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to update time slot',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update time slot',
@@ -173,7 +173,9 @@ class TimetableService {
   /// [id] - Time slot ID
   Future<void> deleteTimeSlot(int id) async {
     try {
-      final response = await _apiService.dio.delete('/timetable/time-slots/$id');
+      final response = await _apiService.dio.delete(
+        '/timetable/time-slots/$id',
+      );
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw DioException(
@@ -188,7 +190,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to delete time slot',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete time slot',
@@ -253,7 +255,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to get rooms',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get rooms',
@@ -288,7 +290,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to create room',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create room',
@@ -378,7 +380,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to get timetable entries',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get timetable entries',
@@ -419,7 +421,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to get class timetable',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get class timetable',
@@ -458,7 +460,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to get teacher timetable',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get teacher timetable',
@@ -497,7 +499,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to get room timetable',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get room timetable',
@@ -534,7 +536,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to create timetable entry',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create timetable entry',
@@ -571,7 +573,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to bulk create timetable',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to bulk create timetable',
@@ -610,7 +612,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to update timetable entry',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update timetable entry',
@@ -640,7 +642,7 @@ class TimetableService {
         e,
         defaultMessage: 'Failed to delete timetable entry',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete timetable entry',

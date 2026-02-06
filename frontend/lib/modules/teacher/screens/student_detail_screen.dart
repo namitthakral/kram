@@ -84,7 +84,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen>
           });
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error fetching student details: $e');
     } finally {
       if (mounted) {
@@ -330,7 +330,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen>
         _performanceData!['data'] ?? _performanceData!['subjects'];
     // If it's a map, try to find the list inside
     if (subjectsRaw is Map) {
-      subjectsRaw = subjectsRaw['data'] ?? subjectsRaw['subjects'] ?? subjectsRaw['items'];
+      subjectsRaw =
+          subjectsRaw['data'] ??
+          subjectsRaw['subjects'] ??
+          subjectsRaw['items'];
     }
     final subjects = (subjectsRaw is List) ? subjectsRaw : [];
 
@@ -420,7 +423,10 @@ class _StudentDetailScreenState extends State<StudentDetailScreen>
         _attendanceHistory!['data'] ?? _attendanceHistory!['attendanceHistory'];
     // If it's a map, try to find the list inside
     if (historyRaw is Map) {
-      historyRaw = historyRaw['data'] ?? historyRaw['attendanceHistory'] ?? historyRaw['history'];
+      historyRaw =
+          historyRaw['data'] ??
+          historyRaw['attendanceHistory'] ??
+          historyRaw['history'];
     }
     final history = (historyRaw is List) ? historyRaw : [];
 
@@ -601,60 +607,61 @@ class _StudentDetailScreenState extends State<StudentDetailScreen>
     required String title,
     required List<Widget> children,
   }) => Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: AppTheme.fontWeightBold,
-                color: AppTheme.slate800,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...children,
-          ],
-        ),
-      ),
-    );
-
-  Widget _buildInfoRow(String label, String value, {Color? valueColor}) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide(color: Colors.grey.shade200),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppTheme.slate500,
-                fontWeight: FontWeight.w500,
-              ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: AppTheme.fontWeightBold,
+              color: AppTheme.slate800,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                color: valueColor ?? AppTheme.slate800,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          const SizedBox(height: 16),
+          ...children,
         ],
       ),
-    );
+    ),
+  );
+
+  Widget _buildInfoRow(String label, String value, {Color? valueColor}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 140,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.slate500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: valueColor ?? AppTheme.slate800,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
   Color _getAttendanceColor(double percentage) {
     if (percentage >= 75) return const Color(0xFF00a63e);

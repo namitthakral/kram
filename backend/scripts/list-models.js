@@ -21,7 +21,7 @@ async function listModels() {
     } else {
       console.log("No models found or error:", data);
     }
-  } catch (e) {
+  } on Exception catch (e) {
     console.error("Error listing models:", e);
   }
 }

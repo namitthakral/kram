@@ -301,7 +301,7 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
           );
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

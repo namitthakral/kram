@@ -239,7 +239,7 @@ class ApiService {
                   customErrorMessage = data['error'];
                 }
               }
-            } catch (e) {
+            } on Exception catch (e) {
               log('Error parsing backend error message: $e');
             }
 

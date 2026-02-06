@@ -37,7 +37,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   Course? _selectedCourse;
   Subject? _selectedSubject;
 
-
   DateTime? _dueDate;
 
   bool _isLoading = false;
@@ -108,7 +107,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         _marksController.text = assignment.maxMarks.toString();
 
         setState(() {
-
           _dueDate = assignment.dueDate;
           _status = assignment.status;
         });
@@ -140,7 +138,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
               'Found course: ${course.courseName} contains subject: ${foundSubject.name}',
             );
             break;
-          } catch (e) {
+          } on Exception catch (e) {
             // This course doesn't have our subject, continue searching
             debugPrint(
               'Course ${course.courseName} does not contain subject ${assignment.courseId}',
@@ -148,7 +146,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
             continue;
           }
         }
-
 
         if (matchedCourse != null && mounted) {
           setState(() {
@@ -163,7 +160,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
         setState(() => _isLoading = false);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         showCustomSnackbar(
           message: 'Failed to load assignment: $e',
@@ -472,49 +469,47 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   }
 
   Widget _buildFloatingActionButton() => DecoratedBox(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF155dfc).withOpacity(0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _submitForm,
-        backgroundColor: const Color(0xFF155dfc),
-        elevation: 0,
-        highlightElevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon:
-            _isLoading
-                ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-                : Icon(
-                  widget.assignmentId == null
-                      ? Icons.add
-                      : Icons.check_circle_outline,
+    decoration: BoxDecoration(
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF155dfc).withOpacity(0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: FloatingActionButton.extended(
+      onPressed: _isLoading ? null : _submitForm,
+      backgroundColor: const Color(0xFF155dfc),
+      elevation: 0,
+      highlightElevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon:
+          _isLoading
+              ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
                   color: Colors.white,
+                  strokeWidth: 2,
                 ),
-        label: Text(
-          widget.assignmentId == null
-              ? 'Create Assignment'
-              : 'Update Assignment',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+              )
+              : Icon(
+                widget.assignmentId == null
+                    ? Icons.add
+                    : Icons.check_circle_outline,
+                color: Colors.white,
+              ),
+      label: Text(
+        widget.assignmentId == null ? 'Create Assignment' : 'Update Assignment',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
-    );
+    ),
+  );
 
   Widget _buildCourseDropdown() {
     final provider = context.watch<AssignmentProvider>();
@@ -538,8 +533,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     );
   }
 
-
-
   Widget _buildSubjectDropdown() {
     final provider = context.watch<AssignmentProvider>();
     return DropDownFormField<Subject>(
@@ -559,17 +552,17 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   }
 
   Widget _buildStatusDropdown() => DropDownFormField<String>(
-      label: 'Status',
-      value: _status,
-      hintText: 'Select status',
-      items: const ['DRAFT', 'PUBLISHED', 'CLOSED'],
-      displayText: (status) => status, // Capitalize or format as needed
-      onChanged: (value) {
-        if (value != null) {
-          setState(() => _status = value);
-        }
-      },
-    );
+    label: 'Status',
+    value: _status,
+    hintText: 'Select status',
+    items: const ['DRAFT', 'PUBLISHED', 'CLOSED'],
+    displayText: (status) => status, // Capitalize or format as needed
+    onChanged: (value) {
+      if (value != null) {
+        setState(() => _status = value);
+      }
+    },
+  );
 
   Widget _buildAssignmentTypeOption({
     required String value,
@@ -724,8 +717,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       return;
     }
 
-
-
     if (_dueDate == null) {
       showCustomSnackbar(
         message: 'Please select a due date',
@@ -733,8 +724,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       );
       return;
     }
-
-
 
     setState(() => _isLoading = true);
 

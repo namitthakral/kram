@@ -75,7 +75,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get question papers',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get question papers',
@@ -116,7 +116,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to create question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create question paper',
@@ -155,7 +155,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to create full question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create full question paper',
@@ -193,7 +193,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get question paper',
@@ -231,7 +231,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get question paper',
@@ -272,7 +272,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to update question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update question paper',
@@ -310,7 +310,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to publish question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to publish question paper',
@@ -343,7 +343,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to delete question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete question paper',
@@ -386,7 +386,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to add section',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to add section',
@@ -427,7 +427,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to update section',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update section',
@@ -460,7 +460,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to delete section',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete section',
@@ -503,7 +503,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to add question',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to add question',
@@ -544,7 +544,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to bulk add questions',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to bulk add questions',
@@ -585,7 +585,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to update question',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update question',
@@ -618,7 +618,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to delete question',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete question',
@@ -663,7 +663,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get published question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get published question paper',

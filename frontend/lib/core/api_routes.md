@@ -214,7 +214,7 @@ Example:
 try {
   final data = await studentService.getDashboardStats(userUuid);
   // Handle success
-} catch (e) {
+} on Exception catch (e) {
   // Error message is user-friendly and can be displayed
   print(e.toString()); // "Failed to load dashboard stats: ..."
 }
@@ -259,7 +259,7 @@ lib/
    ```dart
    try {
      final data = await service.getData();
-   } catch (e) {
+   } on Exception catch (e) {
      // Show error to user
    }
    ```

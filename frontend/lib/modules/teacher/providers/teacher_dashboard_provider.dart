@@ -49,7 +49,7 @@ class TeacherDashboardProvider with ChangeNotifier {
       _dashboardStats = results[0] as DashboardStats;
       _activities = results[1] as List<StudentActivity>;
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load dashboard data: $e';
       debugPrint('Dashboard API Error: $e');
     } finally {
@@ -71,7 +71,7 @@ class TeacherDashboardProvider with ChangeNotifier {
     try {
       _dashboardStats = await _teacherService.getDashboardStats(userUuid);
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to fetch stats: $e';
       debugPrint('Stats Error: $e');
     } finally {
@@ -95,7 +95,7 @@ class TeacherDashboardProvider with ChangeNotifier {
       _subjectPerformance = results[1] as SubjectPerformanceResponse;
       _gradeDistribution = results[2] as GradeDistributionResponse;
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to fetch chart data: $e';
       debugPrint('Charts Error: $e');
     } finally {

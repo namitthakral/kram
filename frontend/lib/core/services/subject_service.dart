@@ -66,7 +66,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to get subjects: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -98,7 +98,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to get subject: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -110,9 +110,7 @@ class SubjectService {
   /// [courseId] - Course ID
   Future<List<dynamic>> getSubjectsByCourse(int courseId) async {
     try {
-      final response = await _apiService.dio.get(
-        '/subjects/course/$courseId',
-      );
+      final response = await _apiService.dio.get('/subjects/course/$courseId');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -138,7 +136,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to get subjects for course: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -148,9 +146,7 @@ class SubjectService {
   /// Endpoint: POST /subjects
   ///
   /// [data] - Subject data
-  Future<Map<String, dynamic>> createSubject(
-    Map<String, dynamic> data,
-  ) async {
+  Future<Map<String, dynamic>> createSubject(Map<String, dynamic> data) async {
     try {
       final response = await _apiService.dio.post('/subjects', data: data);
 
@@ -176,7 +172,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to create subject: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -192,10 +188,7 @@ class SubjectService {
     Map<String, dynamic> data,
   ) async {
     try {
-      final response = await _apiService.dio.patch(
-        '/subjects/$id',
-        data: data,
-      );
+      final response = await _apiService.dio.patch('/subjects/$id', data: data);
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -219,7 +212,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to update subject: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -253,7 +246,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to delete subject: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -281,7 +274,7 @@ class SubjectService {
       } else {
         throw Exception('Failed to get subjects statistics: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }

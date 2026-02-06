@@ -6,7 +6,6 @@ import '../../../core/services/class_section_service.dart';
 import '../../../utils/user_utils.dart';
 import '../models/attendance_models.dart';
 
-
 class AttendanceProvider with ChangeNotifier {
   // Selected Date
   DateTime _selectedDate = DateTime.now();
@@ -42,7 +41,6 @@ class AttendanceProvider with ChangeNotifier {
   void setTeacherUuid(String uuid) {
     _teacherUuid = uuid;
   }
-
 
   Future<void> loadInitialData(String userUuid, {int? teacherId}) async {
     _teacherUuid = userUuid;
@@ -89,7 +87,7 @@ class AttendanceProvider with ChangeNotifier {
       ];
 
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load data: $e';
     } finally {
       _isLoading = false;
@@ -154,7 +152,7 @@ class AttendanceProvider with ChangeNotifier {
           }).toList();
 
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load attendance summary: $e';
       _summaryData = [];
       print('Error loading attendance summary: $e');
@@ -605,7 +603,7 @@ class AttendanceProvider with ChangeNotifier {
       final records = response['records'] as List<dynamic>? ?? [];
       _historyRecords = records.cast<Map<String, dynamic>>();
       _historyTotal = response['total'] as int? ?? 0;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to fetch history: $e';
       _historyRecords = [];
     } finally {

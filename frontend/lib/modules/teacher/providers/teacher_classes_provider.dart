@@ -67,7 +67,7 @@ class TeacherClassesProvider extends ChangeNotifier {
               )
               .toList();
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _classes = [];
     } finally {

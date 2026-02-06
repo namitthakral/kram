@@ -57,11 +57,11 @@ class StudentProvider extends ChangeNotifier {
       // 3. Fetch Dashboard Stats (Assignments, Events, GPA)
       try {
         _dashboardStats = await _studentService.getDashboardStats(userUuid);
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('Failed to load dashboard stats: $e');
         // Non-critical, continue without stats
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       debugPrint('Error loading student data: $e');
     } finally {

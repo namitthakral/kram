@@ -99,7 +99,7 @@ class MarksProvider with ChangeNotifier {
           }).toList();
 
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load data: $e';
     } finally {
       _isLoading = false;
@@ -175,7 +175,7 @@ class MarksProvider with ChangeNotifier {
                 )
                 .toList();
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load exams: $e';
     } finally {
       _isLoading = false;
@@ -195,7 +195,7 @@ class MarksProvider with ChangeNotifier {
         _availableExams = exams.where((e) => e.status != 'CANCELLED').toList();
         notifyListeners();
       }
-    } catch (e) {
+    } on Exception catch (e) {
       print('Failed to load exams for course $courseId: $e');
     }
   }
@@ -212,7 +212,7 @@ class MarksProvider with ChangeNotifier {
           (c) => c.courseId == exam.courseId,
         );
         _selectedClass = matchingClass;
-      } catch (e) {
+      } on Exception catch (e) {
         // Should not happen if data is consistent
         print(
           'Warning: Could not find ClassInfo for exam course ${exam.courseId}',
@@ -261,7 +261,7 @@ class MarksProvider with ChangeNotifier {
           _students[i] = _students[i].copyWith();
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load marks: $e';
     }
   }
@@ -297,7 +297,7 @@ class MarksProvider with ChangeNotifier {
               initials: initials,
             );
           }).toList();
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to load students: $e';
       _students = [];
     } finally {
@@ -362,7 +362,7 @@ class MarksProvider with ChangeNotifier {
       await _teacherService.uploadBulkExamResults(userUuid, examId, results);
 
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = 'Failed to save marks: $e';
       return false;
     } finally {

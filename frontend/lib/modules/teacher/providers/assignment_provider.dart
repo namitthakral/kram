@@ -60,9 +60,7 @@ class AssignmentProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final coursesData = await _classSectionService.getCoursesWithSections(
-        
-      );
+      final coursesData = await _classSectionService.getCoursesWithSections();
 
       _courses =
           coursesData
@@ -75,7 +73,7 @@ class AssignmentProvider with ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading courses: $e');
       _courses = [];
       _isLoading = false;
@@ -104,7 +102,7 @@ class AssignmentProvider with ChangeNotifier {
 
       _isLoading = false;
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading course details: $e');
 
       _subjects = [];
@@ -124,7 +122,7 @@ class AssignmentProvider with ChangeNotifier {
   Future<Assignment> getAssignment(String userUuid, int assignmentId) async {
     try {
       return await _teacherService.getAssignment(userUuid, assignmentId);
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load assignment: $e');
     }
   }

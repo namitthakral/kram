@@ -13,7 +13,6 @@ import '../providers/attendance_provider.dart';
 import '../widgets/attendance_history_tab.dart';
 
 class AttendanceScreen extends StatelessWidget {
-
   const AttendanceScreen({super.key, this.sectionId, this.className});
   final int? sectionId;
   final String? className;
@@ -26,11 +25,7 @@ class AttendanceScreen extends StatelessWidget {
 }
 
 class _AttendanceScreenContent extends StatefulWidget {
-
-  const _AttendanceScreenContent({
-    this.sectionId,
-    this.className,
-  });
+  const _AttendanceScreenContent({this.sectionId, this.className});
   final int? sectionId;
   final String? className;
 
@@ -48,21 +43,23 @@ class _AttendanceScreenContentState extends State<_AttendanceScreenContent> {
       final userUuid = loginProvider.currentUser?.uuid;
       if (userUuid != null) {
         context.read<AttendanceProvider>().loadInitialData(userUuid).then((_) {
-           if (widget.sectionId != null && mounted) {
-             final provider = context.read<AttendanceProvider>();
-             try {
-                // Try to find matching class by sectionId
-                // NOTE: ClassInfo.id is String in model but sectionId is int here
-                // We should match robustly
-                final validClass = provider.availableClasses.firstWhere((c) {
-                    final cId = int.tryParse(c.id) ?? -1;
-                    return cId == widget.sectionId;
-                });
-                provider.setSelectedClass(validClass);
-             } catch (e) {
-               debugPrint('Could not pre-select class with sectionId ${widget.sectionId}');
-             }
-           }
+          if (widget.sectionId != null && mounted) {
+            final provider = context.read<AttendanceProvider>();
+            try {
+              // Try to find matching class by sectionId
+              // NOTE: ClassInfo.id is String in model but sectionId is int here
+              // We should match robustly
+              final validClass = provider.availableClasses.firstWhere((c) {
+                final cId = int.tryParse(c.id) ?? -1;
+                return cId == widget.sectionId;
+              });
+              provider.setSelectedClass(validClass);
+            } on Exception catch (e) {
+              debugPrint(
+                'Could not pre-select class with sectionId ${widget.sectionId}',
+              );
+            }
+          }
         });
       }
     });

@@ -52,7 +52,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load dashboard stats: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -78,7 +78,7 @@ class TeacherService {
           error: 'Failed to load recent activity',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load recent activity: $e');
     }
   }
@@ -107,7 +107,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load attendance trends: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -138,7 +138,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load subject performance: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -169,7 +169,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load grade distribution: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -199,7 +199,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load teacher data: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -235,7 +235,7 @@ class TeacherService {
           error: 'Failed to load teacher subjects',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher subjects: $e');
     }
   }
@@ -271,7 +271,7 @@ class TeacherService {
           error: 'Failed to load teacher classes',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher classes: $e');
     }
   }
@@ -302,7 +302,7 @@ class TeacherService {
           error: 'Failed to load teachers',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teachers: $e');
     }
   }
@@ -332,7 +332,7 @@ class TeacherService {
           error: 'Failed to create assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create assignment: $e');
     }
   }
@@ -415,7 +415,7 @@ class TeacherService {
           error: 'Failed to load assignments',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       await Future.error(e);
       throw Exception('Failed to load assignments: $e');
     }
@@ -440,7 +440,7 @@ class TeacherService {
           error: 'Failed to load assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load assignment: $e');
     }
   }
@@ -469,7 +469,7 @@ class TeacherService {
           error: 'Failed to update assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update assignment: $e');
     }
   }
@@ -491,7 +491,7 @@ class TeacherService {
           error: 'Failed to delete assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete assignment: $e');
     }
   }
@@ -521,7 +521,7 @@ class TeacherService {
           error: 'Failed to create examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create examination: $e');
     }
   }
@@ -604,7 +604,7 @@ class TeacherService {
           error: 'Failed to load examinations',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       await Future.error(e);
       throw Exception('Failed to load examinations: $e');
     }
@@ -629,7 +629,7 @@ class TeacherService {
           error: 'Failed to load examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load examination: $e');
     }
   }
@@ -658,7 +658,7 @@ class TeacherService {
           error: 'Failed to update examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update examination: $e');
     }
   }
@@ -680,7 +680,7 @@ class TeacherService {
           error: 'Failed to delete examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete examination: $e');
     }
   }
@@ -724,7 +724,7 @@ class TeacherService {
           error: 'Failed to load exam results',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load exam results: $e');
     }
   }
@@ -752,7 +752,7 @@ class TeacherService {
           error: 'Failed to save exam results',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to save exam results: $e');
     }
   }
@@ -778,7 +778,7 @@ class TeacherService {
       }
 
       return courses;
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher courses: $e');
     }
   }
@@ -799,7 +799,7 @@ class TeacherService {
       }
 
       return sections;
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load sections: $e');
     }
   }
@@ -823,7 +823,7 @@ class TeacherService {
           error: 'Failed to load semesters',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load semesters: $e');
     }
   }
@@ -853,7 +853,7 @@ class TeacherService {
           error: 'Failed to mark attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to mark attendance: $e');
     }
   }
@@ -881,7 +881,7 @@ class TeacherService {
           error: 'Failed to mark bulk attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to mark bulk attendance: $e');
     }
   }
@@ -910,7 +910,7 @@ class TeacherService {
           error: 'Failed to update attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update attendance: $e');
     }
   }
@@ -932,7 +932,7 @@ class TeacherService {
           error: 'Failed to delete attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete attendance: $e');
     }
   }
@@ -963,7 +963,7 @@ class TeacherService {
           error: 'Failed to create exam result',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create exam result: $e');
     }
   }
@@ -992,7 +992,7 @@ class TeacherService {
           error: 'Failed to upload bulk results',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to upload bulk results: $e');
     }
   }
@@ -1026,7 +1026,7 @@ class TeacherService {
           error: 'Failed to update exam result',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update exam result: $e');
     }
   }
@@ -1052,7 +1052,7 @@ class TeacherService {
           error: 'Failed to delete exam result',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete exam result: $e');
     }
   }
@@ -1097,7 +1097,7 @@ class TeacherService {
           error: 'Failed to get pending submissions',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get pending submissions: $e');
     }
   }
@@ -1140,7 +1140,7 @@ class TeacherService {
           error: 'Failed to get at-risk students',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get at-risk students: $e');
     }
   }

@@ -46,7 +46,7 @@ class StudentTimetableProvider with ChangeNotifier {
             section = data['section'];
             currentSemester = data['currentSemester'] ?? 1;
           }
-        } catch (e) {
+        } on Exception catch (e) {
           debugPrint('Failed to fetch full student profile: $e');
         }
       }
@@ -67,14 +67,14 @@ class StudentTimetableProvider with ChangeNotifier {
       if (response.containsKey('data') && response['data'] is Map) {
         final data = response['data'] as Map<String, dynamic>;
         if (data.containsKey('schedule') && data['schedule'] is Map) {
-           _timetable = data['schedule'] as Map<String, dynamic>;
+          _timetable = data['schedule'] as Map<String, dynamic>;
         } else {
-           _timetable = data;
+          _timetable = data;
         }
       } else {
         _timetable = response;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;

@@ -160,8 +160,7 @@ class _QuestionPaperTemplateScreenState
       final course = subject?['course'] as Map<String, dynamic>?;
 
       // Safe Parsing Helpers
-      int? parseInt(val) =>
-          val is int ? val : int.tryParse(val.toString());
+      int? parseInt(val) => val is int ? val : int.tryParse(val.toString());
 
       setState(() {
         _existingExaminationId = parseInt(paper['examinationId']);
@@ -501,7 +500,7 @@ class _QuestionPaperTemplateScreenState
       if (widget.paperId != null && examinationId != null) {
         try {
           await qpProvider.deleteQuestionPaper(userUuid, widget.paperId!);
-        } catch (e) {
+        } on Exception catch (e) {
           debugPrint("Error deleting old paper: $e");
           // Continue anyway? If delete fails, we might have duplicate or error.
         }
@@ -513,36 +512,44 @@ class _QuestionPaperTemplateScreenState
 
       // 3. Construct Question Paper Payload
       final sectionsPayload =
-          sections.map((section) => {
-              'sectionName': section.sectionName,
-              'instructions': '', // Ensure not null
-              'sortOrder': 0,
-              'questions':
-                  section.questions.map((question) {
-                    List<Map<String, dynamic>>? optionsPayload;
+          sections
+              .map(
+                (section) => {
+                  'sectionName': section.sectionName,
+                  'instructions': '', // Ensure not null
+                  'sortOrder': 0,
+                  'questions':
+                      section.questions.map((question) {
+                        List<Map<String, dynamic>>? optionsPayload;
 
-                    if (question.mcqOptions != null) {
-                      var optIndex = 0;
-                      optionsPayload = [];
-                      for (final optText in question.mcqOptions!) {
-                        optionsPayload.add({
-                          'optionText': optText,
-                          'optionLabel': String.fromCharCode(65 + optIndex),
-                          'isCorrect': false,
-                        });
-                        optIndex++;
-                      }
-                    }
+                        if (question.mcqOptions != null) {
+                          var optIndex = 0;
+                          optionsPayload = [];
+                          for (final optText in question.mcqOptions!) {
+                            optionsPayload.add({
+                              'optionText': optText,
+                              'optionLabel': String.fromCharCode(65 + optIndex),
+                              'isCorrect': false,
+                            });
+                            optIndex++;
+                          }
+                        }
 
-                    return {
-                      'questionText': question.questionText,
-                      'questionType': _mapQuestionTypeToBackend(question.type),
-                      'marks': question.customMarks ?? section.marksPerQuestion,
-                      'options':
-                          optionsPayload ?? [], // Ensure not null just in case
-                    };
-                  }).toList(),
-            }).toList();
+                        return {
+                          'questionText': question.questionText,
+                          'questionType': _mapQuestionTypeToBackend(
+                            question.type,
+                          ),
+                          'marks':
+                              question.customMarks ?? section.marksPerQuestion,
+                          'options':
+                              optionsPayload ??
+                              [], // Ensure not null just in case
+                        };
+                      }).toList(),
+                },
+              )
+              .toList();
 
       final questionPaperPayload = {
         'examinationId': examinationId,
@@ -573,7 +580,7 @@ class _QuestionPaperTemplateScreenState
           type: SnackbarType.error,
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() => _isLoadingData = false);
       if (mounted) {
         showCustomSnackbar(
@@ -798,7 +805,7 @@ class _QuestionPaperTemplateScreenState
               setState(() {
                 sections[sectionIndex].questions[questionIndex] =
                     updatedQuestion;
-                    _updateMaxMarks();
+                _updateMaxMarks();
               });
             },
           ),
@@ -864,16 +871,17 @@ class _QuestionPaperTemplateScreenState
       initialDate: initialDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      builder: (context, child) => Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.blue500,
-              onPrimary: Colors.white,
-              onSurface: AppTheme.slate800,
+      builder:
+          (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: AppTheme.blue500,
+                onPrimary: Colors.white,
+                onSurface: AppTheme.slate800,
+              ),
             ),
+            child: child!,
           ),
-          child: child!,
-        ),
     );
 
     if (pickedDate != null) {
@@ -1763,7 +1771,9 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
               ],
             ),
             const SizedBox(height: 8),
-            ...List.generate(_optionControllers.length, (index) => Padding(
+            ...List.generate(
+              _optionControllers.length,
+              (index) => Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: Row(
                   children: [
@@ -1801,7 +1811,8 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
                       ),
                   ],
                 ),
-              )),
+              ),
+            ),
           ],
         ],
       ),
@@ -1836,39 +1847,39 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
     required bool isSelected,
     required VoidCallback onTap,
   }) => InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.blue50 : Colors.white,
-          border: Border.all(
-            color: isSelected ? AppTheme.blue500 : CustomAppColors.lightGrey01,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(8),
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: isSelected ? AppTheme.blue50 : Colors.white,
+        border: Border.all(
+          color: isSelected ? AppTheme.blue500 : CustomAppColors.lightGrey01,
+          width: isSelected ? 2 : 1,
         ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? AppTheme.blue500 : AppTheme.slate500,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight:
-                    isSelected
-                        ? AppTheme.fontWeightBold
-                        : AppTheme.fontWeightMedium,
-                color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
-              ),
-            ),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(8),
       ),
-    );
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? AppTheme.blue500 : AppTheme.slate500,
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight:
+                  isSelected
+                      ? AppTheme.fontWeightBold
+                      : AppTheme.fontWeightMedium,
+              color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

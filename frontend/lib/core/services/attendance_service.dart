@@ -65,7 +65,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to mark attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       print('Unexpected error: $e');
       throw ApiErrorHandler.handleException(
         e,
@@ -119,7 +119,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to mark attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to mark attendance',
@@ -165,7 +165,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to update attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update attendance',
@@ -203,7 +203,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to delete attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete attendance',
@@ -272,7 +272,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to fetch attendance records',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to fetch attendance records',

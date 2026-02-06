@@ -17,7 +17,7 @@ function loadEnv() {
                 }
             });
         }
-    } catch (e) {
+    } on Exception catch (e) {
         console.error('Error loading .env file', e);
     }
 }

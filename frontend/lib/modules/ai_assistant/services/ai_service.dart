@@ -17,7 +17,7 @@ class AiService {
         sender: MessageSender.ai,
         timestamp: DateTime.now(),
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get response from AI: $e');
     }
   }

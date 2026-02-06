@@ -202,7 +202,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
             _parseLoadedEntries();
           }
         }
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('Error locating class info: $e');
       }
     }
@@ -290,7 +290,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         if (entryId != null) {
           entryIds['${slotIndex}_$dayName'] = entryId;
         }
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('❌ Error parsing entry: $e');
       }
     }
@@ -678,10 +678,10 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
   }
 
   Widget _buildAddTimeSlotButton() => FloatingActionButton(
-      onPressed: _showAddTimeSlotDialog,
-      backgroundColor: CustomAppColors.primaryBlue,
-      child: const Icon(Icons.add, color: Colors.white),
-    );
+    onPressed: _showAddTimeSlotDialog,
+    backgroundColor: CustomAppColors.primaryBlue,
+    child: const Icon(Icons.add, color: Colors.white),
+  );
 
   String _formatTime(String? timeStr) {
     if (timeStr == null) return '--:--';
@@ -690,27 +690,27 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
       if (parts.length >= 2) {
         return '${parts[0]}:${parts[1]}';
       }
-    } catch (e) {
+    } on Exception catch (e) {
       return timeStr;
     }
     return timeStr;
   }
 
   Widget _buildEmptyState(String message, {Widget? action}) => Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_today_outlined,
-            size: 48,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 16),
-          Text(message, style: TextStyle(color: Colors.grey.shade500)),
-          if (action != null) ...[const SizedBox(height: 16), action],
-        ],
-      ),
-    );
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.calendar_today_outlined,
+          size: 48,
+          color: Colors.grey.shade300,
+        ),
+        const SizedBox(height: 16),
+        Text(message, style: TextStyle(color: Colors.grey.shade500)),
+        if (action != null) ...[const SizedBox(height: 16), action],
+      ],
+    ),
+  );
 
   // --- Period Save/Delete Methods ---
 
@@ -817,7 +817,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
           );
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error saving period: $e');
       if (mounted) {
         showCustomSnackbar(
@@ -861,7 +861,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
           );
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error deleting period: $e');
       if (mounted) {
         showCustomSnackbar(
@@ -1299,7 +1299,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
             minute: int.parse(parts[1]),
           );
         }
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('Error parsing start time: $e');
       }
     }
@@ -1312,7 +1312,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
             minute: int.parse(parts[1]),
           );
         }
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('Error parsing end time: $e');
       }
     }
@@ -1584,77 +1584,75 @@ class _GenericSelector<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-      onTap:
-          (isLoading || isDisabled)
-              ? null
-              : () => _showSelectionDialog(context),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 8 : 12,
-          vertical: compact ? 8 : 12,
-        ),
-        decoration: BoxDecoration(
-          color: (isDisabled || isLoading) ? Colors.grey.shade50 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              iconData,
-              color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
-              size: compact ? 16 : 18,
-            ),
-            SizedBox(width: compact ? 6 : 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+    onTap:
+        (isLoading || isDisabled) ? null : () => _showSelectionDialog(context),
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 12,
+        vertical: compact ? 8 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: (isDisabled || isLoading) ? Colors.grey.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            iconData,
+            color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
+            size: compact ? 16 : 18,
+          ),
+          SizedBox(width: compact ? 6 : 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: compact ? 9 : 10,
+                    color: Colors.grey,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    height: 14,
+                    width: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
                   Text(
-                    label,
+                    selectedValue != null
+                        ? itemLabelBuilder(selectedValue as T)
+                        : placeholder,
                     style: TextStyle(
-                      fontSize: compact ? 9 : 10,
-                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: compact ? 11 : 13,
+                      color:
+                          selectedValue == null || isDisabled
+                              ? Colors.grey
+                              : Colors.black,
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
-                  if (isLoading)
-                    const SizedBox(
-                      height: 14,
-                      width: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    Text(
-                      selectedValue != null
-                          ? itemLabelBuilder(selectedValue as T)
-                          : placeholder,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: compact ? 11 : 13,
-                        color:
-                            selectedValue == null || isDisabled
-                                ? Colors.grey
-                                : Colors.black,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                ],
-              ),
+              ],
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              color: Colors.grey,
-              size: compact ? 16 : 18,
-            ),
-          ],
-        ),
+          ),
+          Icon(
+            Icons.arrow_drop_down,
+            color: Colors.grey,
+            size: compact ? 16 : 18,
+          ),
+        ],
       ),
-    );
+    ),
+  );
 
   Future<void> _showSelectionDialog(BuildContext context) async {
     final selected = await CustomDialog.showSelection<T>(

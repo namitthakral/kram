@@ -65,7 +65,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         // Hide the tab if not a class teacher (per user request)
         navProvider.hideItem(1);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error checking class teacher status: $e');
     }
   }
