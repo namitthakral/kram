@@ -44,7 +44,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     }
 
     final provider = context.read<ExaminationProvider>();
-    await provider.loadSemesters();
+    await provider.loadSemesters(uuid);
     await provider.loadExaminations(uuid);
   }
 

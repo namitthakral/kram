@@ -17,7 +17,7 @@ export class CreateExaminationDto {
   @IsNumber()
   semesterId: number
 
-  @IsEnum(['QUIZ', 'MIDTERM', 'FINAL', 'ASSIGNMENT'])
+  @IsEnum(['QUIZ', 'MIDTERM', 'FINAL', 'ASSIGNMENT', 'PROJECT', 'PRACTICAL', 'THEORY'])
   examType: string
 
   @IsDateString()
@@ -72,7 +72,7 @@ export class UpdateExaminationDto {
   @IsOptional()
   semesterId?: number
 
-  @IsEnum(['QUIZ', 'MIDTERM', 'FINAL', 'ASSIGNMENT'])
+  @IsEnum(['QUIZ', 'MIDTERM', 'FINAL', 'ASSIGNMENT', 'PROJECT', 'PRACTICAL'])
   @IsOptional()
   examType?: string
 

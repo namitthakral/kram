@@ -124,7 +124,7 @@ class QuestionPaperTemplate {
     required this.schoolAddress,
     required this.examName,
     required this.className,
-    required this.section,
+    this.section = '', // Default to empty string if not provided
     required this.subject,
     required this.date,
     required this.duration,
@@ -140,7 +140,7 @@ class QuestionPaperTemplate {
         schoolAddress: json['schoolAddress'] as String,
         examName: json['examName'] as String,
         className: json['className'] as String,
-        section: json['section'] as String,
+        section: json['section'] as String? ?? '', // Handle nullable or empty
         subject: json['subject'] as String,
         date: json['date'] as String,
         duration: json['duration'] as String,
@@ -157,7 +157,7 @@ class QuestionPaperTemplate {
   final String schoolAddress;
   final String examName;
   final String className;
-  final String section;
+  final String section; // Keep as String but it can be empty
   final String subject;
   final String date;
   final String duration;
@@ -206,7 +206,10 @@ class QuestionSection {
   final List<Question> questions;
   final int marksPerQuestion;
 
-  int get totalMarks => questions.length * marksPerQuestion;
+  int get totalMarks => questions.fold(
+    0,
+    (sum, question) => sum + (question.customMarks ?? marksPerQuestion),
+  );
 
   Map<String, dynamic> toJson() => {
     'sectionName': sectionName,

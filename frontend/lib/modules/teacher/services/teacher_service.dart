@@ -701,18 +701,19 @@ class TeacherService {
         if (data is List) {
           return data;
         } else if (data is Map<String, dynamic>) {
-           // Case 1: data['data'] is the list (handled originally)
-           if (data['data'] is List) {
-             return data['data'] as List<dynamic>;
-           }
-           // Case 2: data['data']['results'] is the list (User's log case)
-           else if (data['data'] is Map<String, dynamic> && data['data']['results'] is List) {
-             return data['data']['results'] as List<dynamic>;
-           }
-           // Case 3: data['results'] might be the list (direct object response)
-           else if (data['results'] is List) {
-             return data['results'] as List<dynamic>;
-           }
+          // Case 1: data['data'] is the list (handled originally)
+          if (data['data'] is List) {
+            return data['data'] as List<dynamic>;
+          }
+          // Case 2: data['data']['results'] is the list (User's log case)
+          else if (data['data'] is Map<String, dynamic> &&
+              data['data']['results'] is List) {
+            return data['data']['results'] as List<dynamic>;
+          }
+          // Case 3: data['results'] might be the list (direct object response)
+          else if (data['results'] is List) {
+            return data['results'] as List<dynamic>;
+          }
         }
         return <dynamic>[];
       } else {
@@ -804,11 +805,24 @@ class TeacherService {
   }
 
   /// Get active semesters
-  Future<List<Semester>> getActiveSemesters() async {
+  Future<List<Semester>> getActiveSemesters(String userUuid) async {
     try {
-      // This would need a backend endpoint, for now return empty
-      // In a real app, you'd call GET /semesters?status=ACTIVE
-      return [];
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/semesters/active',
+      );
+
+      if (response.statusCode == 200) {
+        // Handle list response
+        final List<dynamic> data = response.data;
+        return data.map((json) => Semester.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load semesters',
+        );
+      }
     } catch (e) {
       throw Exception('Failed to load semesters: $e');
     }
@@ -986,7 +1000,6 @@ class TeacherService {
   /// Get all results for an exam
   ///
   /// Endpoint: GET /teachers/:user_uuid/examinations/:examId/results
-
 
   /// Update an exam result
   ///

@@ -19,6 +19,7 @@ import 'modules/parent/providers/parent_tab_provider.dart';
 import 'modules/student/providers/dashboard_tab_provider.dart';
 import 'modules/student/providers/report_card_provider.dart';
 import 'modules/student/providers/student_dashboard_provider.dart';
+import 'modules/student/providers/student_provider.dart';
 import 'modules/teacher/providers/assignment_provider.dart';
 import 'modules/teacher/providers/attendance_provider.dart';
 import 'modules/teacher/providers/examination_provider.dart';
@@ -111,6 +112,7 @@ void main() async {
           create: (_) => ParentTabProvider(),
         ),
         ChangeNotifierProvider(create: (_) => StudentDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => StudentProvider()),
         ChangeNotifierProvider<LibraryDashboardProvider>(
           create: (_) => LibraryDashboardProvider(),
         ),

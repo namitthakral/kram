@@ -537,4 +537,96 @@ class StudentService {
       );
     }
   }
+
+  /// Get student examinations
+  ///
+  /// Endpoint: GET /students/:user_uuid/examinations
+  ///
+  /// [userUuid] - Student's user UUID
+  /// [status] - Optional filter by status
+  Future<List<dynamic>> getExaminations(
+    String userUuid, {
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (status != null) {
+        queryParams['status'] = status;
+      }
+
+      final response = await _apiService.dio.get(
+        '/students/$userUuid/examinations',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List<dynamic>?;
+        return data ?? [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load examinations',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return [];
+      }
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load examinations',
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load examinations',
+      );
+    }
+  }
+
+  /// Get student timetable
+  ///
+  /// Endpoint: GET /timetable/class/:courseId/:section
+  ///
+  /// [courseId] - Course ID
+  /// [section] - Section name
+  /// [semesterId] - Semester ID
+  Future<Map<String, dynamic>> getTimetable(
+    int courseId,
+    String section,
+    int semesterId,
+  ) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/timetable/class/$courseId/$section',
+        queryParameters: {'semesterId': semesterId.toString()},
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load timetable',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {};
+      }
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load timetable',
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load timetable',
+      );
+    }
+  }
 }

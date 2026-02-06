@@ -20,8 +20,11 @@ import '../modules/staff/screens/staff_messages_screen.dart';
 import '../modules/staff/screens/staff_schedule_screen.dart';
 import '../modules/student/screens/assignments_screen.dart';
 import '../modules/student/screens/events_screen.dart';
+import '../modules/student/screens/exams_screen.dart';
 import '../modules/student/screens/my_grades_screen.dart';
+import '../modules/student/screens/student_academic_screen.dart';
 import '../modules/student/screens/student_dashboard_screen.dart';
+import '../modules/student/screens/student_question_paper_screen.dart';
 import '../modules/student/screens/timetable_screen.dart';
 import '../modules/super_admin/screens/analytics_screen.dart';
 import '../modules/super_admin/screens/institutions_screen.dart';
@@ -378,22 +381,36 @@ class RouterService {
                   path: 'create',
                   name: 'create_question_paper',
                   pageBuilder:
-                      (context, state) => _buildPageWithTransition(
-                        key: state.pageKey,
-                        child: const QuestionPaperTemplateScreen(),
-                      ),
+                      (context, state) {
+                        final extra = state.extra as Map<String, dynamic>?;
+                        final paperId = extra?['paperId'] as int?;
+                        return _buildPageWithTransition(
+                          key: state.pageKey,
+                          child: QuestionPaperTemplateScreen(paperId: paperId),
+                        );
+                      },
                 ),
               ],
             ),
           ],
         ),
 
+
         // Student-specific routes
+        GoRoute(
+          path: '/student-academic',
+          name: 'student_academic',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const StudentAcademicScreen(),
+              ),
+        ),
         GoRoute(
           path: '/grades',
           name: 'student_grades',
           pageBuilder:
-              (context, state) => NoTransitionPage(
+              (context, state) => _buildPageWithTransition(
                 key: state.pageKey,
                 child: const MyGradesScreen(),
               ),
@@ -402,7 +419,7 @@ class RouterService {
           path: '/timetable',
           name: 'student_timetable',
           pageBuilder:
-              (context, state) => NoTransitionPage(
+              (context, state) => _buildPageWithTransition(
                 key: state.pageKey,
                 child: const TimetableScreen(),
               ),
@@ -411,16 +428,38 @@ class RouterService {
           path: '/assignments',
           name: 'student_assignments',
           pageBuilder:
-              (context, state) => NoTransitionPage(
+              (context, state) => _buildPageWithTransition(
                 key: state.pageKey,
                 child: const AssignmentsScreen(),
               ),
+        ),
+         GoRoute(
+          path: '/exams',
+          name: 'student_exams',
+          pageBuilder:
+              (context, state) => _buildPageWithTransition(
+                key: state.pageKey,
+                child: const ExamsScreen(),
+              ),
+          routes: [
+            GoRoute(
+              path: 'paper/:examId',
+              name: 'student_question_paper',
+              pageBuilder: (context, state) {
+                final examId = int.tryParse(state.pathParameters['examId'] ?? '') ?? 0;
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: StudentQuestionPaperScreen(examId: examId),
+                );
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: '/events',
           name: 'student_events',
           pageBuilder:
-              (context, state) => NoTransitionPage(
+              (context, state) => _buildPageWithTransition(
                 key: state.pageKey,
                 child: const EventsScreen(),
               ),

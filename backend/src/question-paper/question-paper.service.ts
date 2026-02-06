@@ -982,7 +982,14 @@ export class QuestionPaperService {
           examType: true,
           examDate: true,
           totalMarks: true,
-          subject: { select: { subjectName: true, subjectCode: true } },
+          subject: {
+            select: {
+              id: true,
+              subjectName: true,
+              subjectCode: true,
+              course: { select: { id: true, name: true, code: true } }
+            }
+          },
         },
       },
       creator: {

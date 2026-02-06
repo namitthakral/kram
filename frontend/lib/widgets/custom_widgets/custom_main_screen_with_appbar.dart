@@ -278,10 +278,7 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
           floatingActionButton: floatingActionButton,
         ),
         // Full-screen loader overlay
-        if (isLoading)
-          const Positioned.fill(
-            child: UnifiedLoader(),
-          ),
+        if (isLoading) const Positioned.fill(child: UnifiedLoader()),
       ],
     );
   }
@@ -330,11 +327,10 @@ class _CustomAppBar extends StatelessWidget {
                 child: Container(height: 1, color: const Color(0xFFE5E7EB)),
               )
               : null,
-      // Leading (back button) - only for standard type
+      // Leading (back button)
       leading:
           !isProfileType && config.showBackButton
               ? IconButton(
-                // padding: const EdgeInsets.only(left: 16),
                 icon: SvgPicture.asset(
                   'assets/images/icons/ic_back_arrow.svg',
                   width: 20,

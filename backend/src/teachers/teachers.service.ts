@@ -562,6 +562,18 @@ export class TeachersService {
     return subjects
   }
 
+  async getActiveSemesters() {
+    const semesters = await this.prisma.semester.findMany({
+      where: {
+        status: 'ACTIVE',
+      },
+      orderBy: {
+        startDate: 'desc', // Most recent first
+      },
+    })
+    return semesters
+  }
+
   async getTeacherClasses(teacherId: number, semesterId?: number) {
     // Build where clause with proper typing
     const where: Prisma.ClassSectionWhereInput = {

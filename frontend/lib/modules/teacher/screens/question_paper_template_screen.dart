@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/services/class_section_service.dart';
@@ -13,11 +14,17 @@ import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_form_section.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
+import '../models/examination_models.dart';
 import '../models/template_models.dart';
+import '../providers/examination_provider.dart';
+import '../providers/question_paper_provider.dart';
 import '../services/pdf_template_service.dart';
+import 'question_paper_preview_screen.dart';
 
 class QuestionPaperTemplateScreen extends StatefulWidget {
-  const QuestionPaperTemplateScreen({super.key});
+  const QuestionPaperTemplateScreen({super.key, this.paperId});
+
+  final int? paperId;
 
   @override
   State<QuestionPaperTemplateScreen> createState() =>
@@ -28,17 +35,12 @@ class _QuestionPaperTemplateScreenState
     extends State<QuestionPaperTemplateScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Paper Info
-  final _schoolNameController = TextEditingController(
-    text: 'Springfield High School',
-  );
-  final _schoolAddressController = TextEditingController(
-    text: '123 Education Street, Springfield, ST 12345',
-  );
   final _examNameController = TextEditingController(
     text: 'Mid-Term Examination',
   );
-  final _dateController = TextEditingController(text: '15th December, 2024');
+  final _dateController = TextEditingController(
+    text: DateFormat('d MMMM, yyyy').format(DateTime.now()),
+  );
   final _durationController = TextEditingController(text: '180');
   final _maxMarksController = TextEditingController(text: '100');
   final _instructionsController = TextEditingController(
@@ -62,20 +64,14 @@ class _QuestionPaperTemplateScreenState
   ];
   String? _selectedExamNameDropdown;
 
-  // Dropdown data
-  // Map<int, String> _subjectsMap = {}; // REMOVED
-  // Map<int, String> _coursesMap = {}; // REMOVED
-  // Map<int, List<String>> _sectionsMap = {}; // REMOVED
-
-  // New Data Structure for Class -> Section -> Subject
+  // Data
   Map<int, String> _coursesMap = {}; // ID -> Name (Class)
-  Map<int, Set<String>> _courseSectionsMap = {}; // CourseID -> Set<SectionNames>
-  Map<String, List<Map<String, dynamic>>> _sectionSubjectsMap = {}; // "CourseID_SectionName" -> List<SubjectObj>
+  Map<int, List<Map<String, dynamic>>> _courseSubjectsMap =
+      {}; // CourseID -> List<SubjectObj>
   Map<int, String> _subjectsMap = {}; // Keep this for easy lookup!
 
   // Selected values
   int? _selectedCourseId;
-  String? _selectedSection;
   int? _selectedSubjectId;
 
   bool _isLoadingData = false;
@@ -83,84 +79,192 @@ class _QuestionPaperTemplateScreenState
   // Sections
   final List<QuestionSection> sections = [];
 
+  // Edit Mode Data
+  int? _existingExaminationId;
+  int? _originalSubjectId;
+
   @override
   void initState() {
     super.initState();
     // Load class sections when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadClassSections();
-      _loadSchoolDetails();
+      // Always add default sections, creating a "fresh" experience even when editing
+      if (widget.paperId != null) {
+        _loadPaperData(widget.paperId!);
+      } else {
+        // Add default sections only for new papers
+        setState(() {
+          sections.addAll([
+            QuestionSection(
+              sectionName: 'Section A - Multiple Choice',
+              questions: List.generate(
+                5,
+                (index) => Question(questionText: 'Question ${index + 1} here'),
+              ),
+              marksPerQuestion: 1,
+              description: 'Choose the correct answer',
+            ),
+            QuestionSection(
+              sectionName: 'Section B - Short Answer',
+              questions: List.generate(
+                5,
+                (index) => Question(questionText: 'Question ${index + 1} here'),
+              ),
+              marksPerQuestion: 3,
+              description: 'Answer in 2-3 sentences',
+            ),
+            QuestionSection(
+              sectionName: 'Section C - Long Answer',
+              questions: List.generate(
+                3,
+                (index) => Question(questionText: 'Question ${index + 1} here'),
+              ),
+              marksPerQuestion: 10,
+              description: 'Answer in detail',
+            ),
+          ]);
+        });
+      }
+      _updateMaxMarks();
     });
-
-    // Add default sections
-    sections.addAll([
-      QuestionSection(
-        sectionName: 'Section A - Multiple Choice',
-        questions: List.generate(
-          5,
-          (index) => Question(questionText: 'Question ${index + 1} here'),
-        ),
-        marksPerQuestion: 1,
-        description: 'Choose the correct answer',
-      ),
-      QuestionSection(
-        sectionName: 'Section B - Short Answer',
-        questions: List.generate(
-          5,
-          (index) => Question(questionText: 'Question ${index + 1} here'),
-        ),
-        marksPerQuestion: 3,
-        description: 'Answer in 2-3 sentences',
-      ),
-      QuestionSection(
-        sectionName: 'Section C - Long Answer',
-        questions: List.generate(
-          3,
-          (index) => Question(questionText: 'Question ${index + 1} here'),
-        ),
-        marksPerQuestion: 10,
-        description: 'Answer in detail',
-      ),
-    ]);
   }
 
-  Future<void> _loadSchoolDetails() async {
+  Future<void> _loadPaperData(int paperId) async {
+    setState(() {
+      _isLoadingData = true;
+    });
+
     try {
       final loginProvider = context.read<LoginProvider>();
-      final teacher = loginProvider.currentUser?.teacher;
+      final userUuid = loginProvider.currentUser?.uuid;
+      if (userUuid == null) return;
 
-      if (teacher != null) {
-        // First try to check if we can get institution details
-        // Since we only have ID, we might need to fetch public institutions to find name
-        // Or if the teacher object already has it embedded (depends on backend)
+      final qpProvider = context.read<QuestionPaperProvider>();
+      await qpProvider.loadQuestionPaperById(userUuid, paperId);
 
-        // Assuming we can search/list.
-        // Ideally we would have getInstitutionById.
-        // As a fallback, we will just use a generic name if fetch fails, or keep 'Springfield High School'
-        // But the requirement says "fetched automatically".
+      if (!mounted) return;
 
-        // If we can't easily get it by ID, we might skip logic or rely on hardcoded for this demo
-        // if the API isn't ready.
-        // However, let's try to simulate fetching or extracting.
+      final paperWrapper = qpProvider.questionPaper;
+      if (paperWrapper == null || paperWrapper['data'] == null) {
+        throw Exception('Paper data not found');
+      }
 
-        // If institutionId is available
-        // final institutionId = teacher.institutionId;
-        // In a real app we would call: final inst = await institutionService.getInstitutionById(institutionId);
-        // _schoolNameController.text = inst.name;
+      final paper = paperWrapper['data'] as Map<String, dynamic>;
+      final exam = paper['examination'] as Map<String, dynamic>?;
+      final subject = exam?['subject'] as Map<String, dynamic>?;
+      final course = subject?['course'] as Map<String, dynamic>?;
 
-        // As I can't guarantee the API, I will set a placeholder if it's empty
-        if (_schoolNameController.text.isEmpty) {
-           _schoolNameController.text = 'Loading School Name...';
+      // Safe Parsing Helpers
+      int? parseInt(dynamic val) =>
+          val is int ? val : int.tryParse(val.toString());
+
+      setState(() {
+        _existingExaminationId = parseInt(paper['examinationId']);
+        _examNameController.text = paper['title'] ?? exam?['examName'] ?? '';
+
+        // Handle dropdowns
+        if (course != null) {
+          _selectedCourseId = parseInt(course['id']);
+        }
+        if (subject != null) {
+          _selectedSubjectId = parseInt(subject['id']);
+          _originalSubjectId = _selectedSubjectId;
         }
 
-        // Placeholder for actual API call
-        // await Future.delayed(const Duration(seconds: 1));
-        // setState(() {
-        //   _schoolNameController.text = "Springfield High School"; // Mock fetch
-        // });
-      }
+        // Handle Date
+        final examDateStr = exam?['examDate'];
+        if (examDateStr != null) {
+          try {
+            final dt = DateTime.parse(examDateStr.toString());
+            _dateController.text = DateFormat('d MMMM, yyyy').format(dt);
+          } catch (_) {}
+        }
+
+        // Other fields
+        _durationController.text =
+            exam?['durationMinutes']?.toString() ?? '180';
+        _maxMarksController.text = paper['totalMarks']?.toString() ?? '100';
+        _instructionsController.text = paper['instructions'] ?? '';
+
+        // Sections
+        sections.clear();
+        final sectionsData = paper['sections'] as List<dynamic>?;
+        if (sectionsData != null) {
+          for (final sData in sectionsData) {
+            final sMap = sData as Map<String, dynamic>;
+            final questionsData = sMap['questions'] as List<dynamic>?;
+
+            final parsedQuestions = <Question>[];
+            if (questionsData != null) {
+              for (final qData in questionsData) {
+                final qMap = qData as Map<String, dynamic>;
+
+                // Options
+                final optionsData = qMap['options'] as List<dynamic>?;
+                List<String>? mcqOptions;
+                if (optionsData != null && optionsData.isNotEmpty) {
+                  mcqOptions =
+                      optionsData.map((o) => o['text'].toString()).toList();
+                }
+
+                parsedQuestions.add(
+                  Question(
+                    questionText: qMap['text'] ?? '',
+                    type:
+                        (qMap['questionType'] == 'MCQ')
+                            ? QuestionType.mcq
+                            : QuestionType.written,
+                    customMarks: parseInt(qMap['marks']),
+                    mcqOptions: mcqOptions,
+                  ),
+                );
+              }
+            }
+
+            int estimatedMarks = 1;
+            if (parsedQuestions.isNotEmpty &&
+                parsedQuestions.first.customMarks != null) {
+              estimatedMarks = parsedQuestions.first.customMarks!;
+            }
+
+            sections.add(
+              QuestionSection(
+                sectionName: sMap['name'] ?? 'Section',
+                description: sMap['description'],
+                marksPerQuestion: estimatedMarks,
+                questions: parsedQuestions,
+              ),
+            );
+          }
+        }
+
+        _isLoadingData = false;
+        _updateMaxMarks();
+      });
     } catch (e) {
-      print('Error loading school details: $e');
+      debugPrint('Error parsing paper data: $e');
+      if (mounted) {
+        setState(() => _isLoadingData = false);
+
+        final isNotFound =
+            e.toString().contains('404') || e.toString().contains('not found');
+        if (isNotFound) {
+          showCustomSnackbar(
+            message: 'Question paper not found or has been deleted.',
+            type: SnackbarType.warning,
+          );
+          // Optionally pop back?
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) Navigator.pop(context);
+          });
+        } else {
+          showCustomSnackbar(
+            message: 'Error loading paper: $e',
+            type: SnackbarType.error,
+          );
+        }
+      }
     }
   }
 
@@ -187,23 +291,21 @@ class _QuestionPaperTemplateScreenState
         status: 'ACTIVE',
       );
 
-      // Process the data to extract Class (Course) -> Section -> Subject
+      // Process the data to extract Class (Course) -> Subject
       final coursesMap = <int, String>{};
-      final courseSectionsMap = <int, Set<String>>{};
-      final sectionSubjectsMap = <String, List<Map<String, dynamic>>>{};
+      final courseSubjectsMap = <int, List<Map<String, dynamic>>>{};
       final subjectsMap = <int, String>{};
 
       for (final section in sections) {
         final sectionMap = section as Map<String, dynamic>;
         final subject = sectionMap['subject'] as Map<String, dynamic>?;
         final course = sectionMap['course'] as Map<String, dynamic>?;
-        final sectionName = sectionMap['sectionName'] as String? ?? '';
 
         if (subject != null) {
           final subjectId = subject['id'] as int?;
           final subjectName = subject['name'] as String? ?? 'Unknown';
           if (subjectId != null) {
-             subjectsMap[subjectId] = subjectName;
+            subjectsMap[subjectId] = subjectName;
           }
         }
 
@@ -214,22 +316,16 @@ class _QuestionPaperTemplateScreenState
           if (courseId != null) {
             coursesMap[courseId] = courseName;
 
-            if (!courseSectionsMap.containsKey(courseId)) {
-              courseSectionsMap[courseId] = <String>{};
-            }
-            if (sectionName.isNotEmpty) {
-              courseSectionsMap[courseId]!.add(sectionName);
-            }
-
             if (subject != null) {
-              final key = '${courseId}_$sectionName';
-              if (!sectionSubjectsMap.containsKey(key)) {
-                sectionSubjectsMap[key] = [];
+              if (!courseSubjectsMap.containsKey(courseId)) {
+                courseSubjectsMap[courseId] = [];
               }
               // Avoid duplicates
-              final existing = sectionSubjectsMap[key]!.any((s) => s['id'] == subject['id']);
+              final existing = courseSubjectsMap[courseId]!.any(
+                (s) => s['id'] == subject['id'],
+              );
               if (!existing) {
-                 sectionSubjectsMap[key]!.add(subject);
+                courseSubjectsMap[courseId]!.add(subject);
               }
             }
           }
@@ -238,20 +334,22 @@ class _QuestionPaperTemplateScreenState
 
       setState(() {
         _coursesMap = coursesMap;
-        _courseSectionsMap = courseSectionsMap;
-        _sectionSubjectsMap = sectionSubjectsMap;
+        _courseSubjectsMap = courseSubjectsMap;
         _subjectsMap = subjectsMap;
         _isLoadingData = false;
 
         // Initialize Exam Name Dropdown
         if (_examNames.contains(_examNameController.text)) {
-           _selectedExamNameDropdown = _examNameController.text;
-           _isCustomExamName = false;
+          _selectedExamNameDropdown = _examNameController.text;
+          _isCustomExamName = false;
         } else {
-           // Maybe it's custom?
-           // For start, default to Mid-Term
-           _selectedExamNameDropdown = 'Mid-Term Examination';
-           _examNameController.text = 'Mid-Term Examination';
+          if (_examNameController.text.isEmpty) {
+            _selectedExamNameDropdown = 'Mid-Term Examination';
+            _examNameController.text = 'Mid-Term Examination';
+          } else {
+            _selectedExamNameDropdown = 'Add manually';
+            _isCustomExamName = true;
+          }
         }
       });
     } on Exception catch (e) {
@@ -264,14 +362,229 @@ class _QuestionPaperTemplateScreenState
 
   @override
   void dispose() {
-    _schoolNameController.dispose();
-    _schoolAddressController.dispose();
     _examNameController.dispose();
     _dateController.dispose();
     _durationController.dispose();
     _maxMarksController.dispose();
     _instructionsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _savePaper() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final loginProvider = context.read<LoginProvider>();
+    final user = loginProvider.currentUser;
+    final teacher = user?.teacher;
+    final userUuid = user?.uuid;
+
+    if (userUuid == null || teacher == null) {
+      showCustomSnackbar(
+        message: 'User information not found',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+
+    if (_selectedCourseId == null || _selectedSubjectId == null) {
+      showCustomSnackbar(
+        message: 'Please select class and subject',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingData = true;
+    });
+
+    int? examinationId = _existingExaminationId;
+
+    // If subject changed, we cannot use the existing examination (which is linked to the old subject)
+    // We must treat this as a potentially new exam
+    if (_originalSubjectId != null &&
+        _selectedSubjectId != _originalSubjectId) {
+      examinationId = null;
+    }
+
+    final examName =
+        _isCustomExamName
+            ? _examNameController.text.trim()
+            : _selectedExamNameDropdown ?? 'Examination';
+
+    // 1. Create Examination Payload (Only if creating new exam)
+    DateTime examDate = DateTime.now();
+    try {
+      final dateText = _dateController.text;
+      if (dateText.isNotEmpty) {
+        final cleanText = dateText.replaceAll(RegExp(r'(st|nd|rd|th)'), '');
+        examDate = DateFormat('d MMMM, yyyy').parse(cleanText);
+      }
+    } catch (e) {
+      debugPrint('Error parsing date: $e');
+    }
+
+    final durationMin = int.tryParse(_durationController.text) ?? 180;
+    final totalMarksVal = int.tryParse(_maxMarksController.text) ?? 100;
+
+    final examProvider = context.read<ExaminationProvider>();
+    final qpProvider = context.read<QuestionPaperProvider>();
+
+    try {
+      // If we don't have an exam ID (New Paper), create one
+      if (examinationId == null) {
+        int? semesterId;
+        if (examProvider.semesters.isNotEmpty) {
+          semesterId = examProvider.semesters.first.id;
+        } else {
+          await examProvider.loadSemesters(userUuid);
+          if (examProvider.semesters.isNotEmpty) {
+            semesterId = examProvider.semesters.first.id;
+          }
+        }
+
+        if (semesterId == null) {
+          if (mounted) {
+            setState(() => _isLoadingData = false);
+            showCustomSnackbar(
+              message: 'No active academic semester found.',
+              type: SnackbarType.error,
+            );
+          }
+          return;
+        }
+
+        final createExamDto = CreateExaminationDto(
+          courseId: _selectedSubjectId!,
+          semesterId: semesterId,
+          examName: examName,
+          examType: 'THEORY',
+          totalMarks: totalMarksVal,
+          passingMarks: (totalMarksVal * 0.4).toInt(),
+          durationMinutes: durationMin,
+          examDate: examDate,
+          startTime: DateTime(
+            examDate.year,
+            examDate.month,
+            examDate.day,
+            9,
+            0,
+          ),
+          status: 'SCHEDULED',
+        );
+
+        final successExam = await examProvider.createExamination(
+          userUuid,
+          createExamDto,
+        );
+
+        if (!successExam) {
+          throw Exception(
+            'Failed to create examination: ${examProvider.error}',
+          );
+        }
+
+        final createdExam = examProvider.examinations.first;
+        examinationId = createdExam.id;
+      }
+
+      // If updating, delete the OLD paper first to avoid duplicates (Simulate Full Update)
+      // TODO: Ideally we should use a transaction or a better update endpoint
+      if (widget.paperId != null && examinationId != null) {
+        try {
+          await qpProvider.deleteQuestionPaper(userUuid, widget.paperId!);
+        } catch (e) {
+          debugPrint("Error deleting old paper: $e");
+          // Continue anyway? If delete fails, we might have duplicate or error.
+        }
+      }
+
+      if (examinationId == null) {
+        throw Exception('Examination ID is missing');
+      }
+
+      // 3. Construct Question Paper Payload
+      final sectionsPayload =
+          sections.map((section) {
+            return {
+              'sectionName': section.sectionName,
+              'instructions': '', // Ensure not null
+              'sortOrder': 0,
+              'questions':
+                  section.questions.map((question) {
+                    List<Map<String, dynamic>>? optionsPayload;
+
+                    if (question.mcqOptions != null) {
+                      int optIndex = 0;
+                      optionsPayload = [];
+                      for (final optText in question.mcqOptions!) {
+                        optionsPayload.add({
+                          'optionText': optText,
+                          'optionLabel': String.fromCharCode(65 + optIndex),
+                          'isCorrect': false,
+                        });
+                        optIndex++;
+                      }
+                    }
+
+                    return {
+                      'questionText': question.questionText,
+                      'questionType': _mapQuestionTypeToBackend(question.type),
+                      'marks': question.customMarks ?? section.marksPerQuestion,
+                      'options':
+                          optionsPayload ?? [], // Ensure not null just in case
+                    };
+                  }).toList(),
+            };
+          }).toList();
+
+      final questionPaperPayload = {
+        'examinationId': examinationId,
+        'title': examName,
+        'instructions': _instructionsController.text,
+        'sections': sectionsPayload,
+      };
+
+      final successQP = await qpProvider.createFullQuestionPaper(
+        userUuid,
+        questionPaperPayload,
+      );
+
+      setState(() => _isLoadingData = false);
+
+      if (successQP && mounted) {
+        showCustomSnackbar(
+          message:
+              widget.paperId != null
+                  ? 'Question Paper updated successfully!'
+                  : 'Question Paper saved successfully!',
+          type: SnackbarType.success,
+        );
+        Navigator.of(context).pop(true);
+      } else if (mounted) {
+        showCustomSnackbar(
+          message: qpProvider.createError ?? 'Failed to save question paper',
+          type: SnackbarType.error,
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoadingData = false);
+      if (mounted) {
+        showCustomSnackbar(
+          message: 'An unexpected error occurred: $e',
+          type: SnackbarType.error,
+        );
+      }
+    }
+  }
+
+  String _mapQuestionTypeToBackend(QuestionType type) {
+    if (type == QuestionType.mcq) {
+      return 'MCQ';
+    }
+    return 'SHORT_ANSWER';
   }
 
   void _addSection() {
@@ -325,6 +638,7 @@ class _QuestionPaperTemplateScreenState
                                     : descriptionController.text,
                           ),
                         );
+                        _updateMaxMarks();
                       });
                       Navigator.pop(context);
                     }
@@ -354,6 +668,7 @@ class _QuestionPaperTemplateScreenState
                               : descriptionController.text,
                     ),
                   );
+                  _updateMaxMarks();
                 });
                 Navigator.pop(context);
               }
@@ -403,6 +718,7 @@ class _QuestionPaperTemplateScreenState
                         if (confirm == true && context.mounted) {
                           setState(() {
                             sections.removeAt(sectionIndex);
+                            _updateMaxMarks();
                           });
                           Navigator.pop(context);
                         }
@@ -456,6 +772,7 @@ class _QuestionPaperTemplateScreenState
                           ? null
                           : descriptionController.text,
                 );
+                _updateMaxMarks();
               });
               Navigator.pop(context);
             },
@@ -477,6 +794,7 @@ class _QuestionPaperTemplateScreenState
               setState(() {
                 sections[sectionIndex].questions[questionIndex] =
                     updatedQuestion;
+                    _updateMaxMarks();
               });
             },
           ),
@@ -497,11 +815,13 @@ class _QuestionPaperTemplateScreenState
         builder:
             (context) => QuestionPaperPreviewScreen(
               template: QuestionPaperTemplate(
-                schoolName: _schoolNameController.text,
-                schoolAddress: _schoolAddressController.text,
+                schoolName:
+                    'Springfield High School', // TODO: Get from provider
+                schoolAddress:
+                    '123 Education Street', // TODO: Get from provider
                 examName: _examNameController.text,
                 className: courseName,
-                section: _selectedSection ?? '',
+                section: '',
                 subject: subjectName,
                 date: _dateController.text,
                 duration: _durationController.text,
@@ -516,6 +836,50 @@ class _QuestionPaperTemplateScreenState
 
   int _calculateTotalMarks() =>
       sections.fold(0, (sum, section) => sum + section.totalMarks);
+
+  void _updateMaxMarks() {
+    _maxMarksController.text = _calculateTotalMarks().toString();
+  }
+
+  Future<void> _selectDate() async {
+    final now = DateTime.now();
+    DateTime initialDate = now;
+
+    try {
+      final currentText = _dateController.text;
+      if (currentText.isNotEmpty) {
+        final cleanText = currentText.replaceAll(RegExp(r'(st|nd|rd|th)'), '');
+        initialDate = DateFormat('d MMMM, yyyy').parse(cleanText);
+      }
+    } catch (_) {
+      initialDate = now;
+    }
+
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.blue500,
+              onPrimary: Colors.white,
+              onSurface: AppTheme.slate800,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _dateController.text = DateFormat('d MMMM, yyyy').format(pickedDate);
+      });
+    }
+  }
 
   Widget _buildClassDropdown() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,118 +900,65 @@ class _QuestionPaperTemplateScreenState
           borderRadius: BorderRadius.circular(15),
           color: CustomAppColors.slate50,
         ),
-        child: _isLoadingData
-            ? const SizedBox(
-              height: 48,
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-            : DropdownButton<int>(
-              isExpanded: true,
-              value: _selectedCourseId,
-              underline: const SizedBox(),
-              hint: const Text(
-                'Select Class',
-                style: TextStyle(
-                  fontSize: AppTheme.fontSizeBase,
-                  color: CustomAppColors.grey01,
-                ),
-              ),
-              icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                color: AppTheme.slate800,
-                fontWeight: FontWeight.normal,
-              ),
-              items: _coursesMap.entries.map((entry) => DropdownMenuItem<int>(
-                  value: entry.key,
-                  child: Text(
-                    'Class ${entry.value}',
-                    style: const TextStyle(fontWeight: FontWeight.normal),
+        child:
+            _isLoadingData
+                ? const SizedBox(
+                  height: 48,
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                )).toList(),
-              onChanged: (courseId) {
-                setState(() {
-                  _selectedCourseId = courseId;
-                  _selectedSection = null; // Reset dependants
-                  _selectedSubjectId = null;
-                });
-              },
-            ),
+                )
+                : DropdownButton<int>(
+                  isExpanded: true,
+                  value: _selectedCourseId,
+                  underline: const SizedBox(),
+                  hint: const Text(
+                    'Select Class',
+                    style: TextStyle(
+                      fontSize: AppTheme.fontSizeBase,
+                      color: CustomAppColors.grey01,
+                    ),
+                  ),
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                  style: const TextStyle(
+                    fontSize: AppTheme.fontSizeBase,
+                    color: AppTheme.slate800,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  items:
+                      _coursesMap.entries
+                          .map(
+                            (entry) => DropdownMenuItem<int>(
+                              value: entry.key,
+                              child: Text(
+                                'Class ${entry.value}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (courseId) {
+                    setState(() {
+                      _selectedCourseId = courseId;
+                      _selectedSubjectId = null;
+                    });
+                  },
+                ),
       ),
     ],
   );
 
-  Widget _buildSectionDropdown() {
-    final availableSections = _selectedCourseId != null
-        ? ((_courseSectionsMap[_selectedCourseId]?.toList() ?? [])..sort())
-        : <String>[];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Section',
-          style: TextStyle(
-            fontWeight: AppTheme.fontWeightBold,
-            fontSize: AppTheme.fontSizeSm,
-            color: AppTheme.slate800,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            border: Border.all(color: CustomAppColors.lightGrey01),
-            borderRadius: BorderRadius.circular(15),
-            color: CustomAppColors.slate50,
-          ),
-          child: DropdownButton<String>(
-            isExpanded: true,
-            value: _selectedSection,
-            underline: const SizedBox(),
-            hint: Text(
-              _selectedCourseId == null
-                  ? 'Select class first'
-                  : 'Select section',
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                color: CustomAppColors.grey01,
-              ),
-            ),
-            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-            style: const TextStyle(
-              fontSize: AppTheme.fontSizeBase,
-              color: AppTheme.slate800,
-            ),
-            items: availableSections.map((section) => DropdownMenuItem<String>(
-                value: section,
-                child: Text(section),
-              )).toList(),
-            onChanged: _selectedCourseId == null
-                ? null
-                : (section) {
-                  setState(() {
-                    _selectedSection = section;
-                    _selectedSubjectId = null; // Reset subject
-                  });
-                },
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildSubjectDropdown() {
-    final key = '${_selectedCourseId}_$_selectedSection';
-    final availableSubjects = (_selectedCourseId != null && _selectedSection != null)
-        ? (_sectionSubjectsMap[key] ?? [])
-        : <Map<String, dynamic>>[];
+    final availableSubjects =
+        _selectedCourseId != null
+            ? (_courseSubjectsMap[_selectedCourseId] ?? [])
+            : <Map<String, dynamic>>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,8 +984,8 @@ class _QuestionPaperTemplateScreenState
             value: _selectedSubjectId,
             underline: const SizedBox(),
             hint: Text(
-              _selectedSection == null
-                  ? 'Select section first'
+              _selectedCourseId == null
+                  ? 'Select class first'
                   : 'Select subject',
               style: const TextStyle(
                 fontSize: AppTheme.fontSizeBase,
@@ -686,17 +997,23 @@ class _QuestionPaperTemplateScreenState
               fontSize: AppTheme.fontSizeBase,
               color: AppTheme.slate800,
             ),
-            items: availableSubjects.map((subject) => DropdownMenuItem<int>(
-                value: subject['id'] as int,
-                child: Text(subject['name'] as String? ?? 'Unknown'),
-              )).toList(),
-            onChanged: (_selectedSection == null)
-                ? null
-                : (subjectId) {
-                  setState(() {
-                    _selectedSubjectId = subjectId;
-                  });
-                },
+            items:
+                availableSubjects
+                    .map(
+                      (subject) => DropdownMenuItem<int>(
+                        value: subject['id'] as int,
+                        child: Text(subject['name'] as String? ?? 'Unknown'),
+                      ),
+                    )
+                    .toList(),
+            onChanged:
+                _selectedCourseId == null
+                    ? null
+                    : (subjectId) {
+                      setState(() {
+                        _selectedSubjectId = subjectId;
+                      });
+                    },
           ),
         ),
       ],
@@ -744,7 +1061,7 @@ class _QuestionPaperTemplateScreenState
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Back to Academic Management',
+                        'Back to Question Papers',
                         style: context.textTheme.bodySm.copyWith(
                           fontWeight: AppTheme.fontWeightMedium,
                           color: AppTheme.blue500,
@@ -757,7 +1074,9 @@ class _QuestionPaperTemplateScreenState
 
               // Header
               Text(
-                'Create Question Paper',
+                widget.paperId != null
+                    ? 'Edit Question Paper'
+                    : 'Create Question Paper',
                 style: context.textTheme.h2.copyWith(color: AppTheme.slate800),
               ),
               const SizedBox(height: 4),
@@ -775,12 +1094,6 @@ class _QuestionPaperTemplateScreenState
                 subtitle: 'Enter exam and school information',
                 icon: Icons.description_outlined,
                 children: [
-                  CustomTextField(
-                    label: 'School Name',
-                    controller: _schoolNameController,
-                    isEnabled: false,
-                  ),
-                  const SizedBox(height: 16),
                   // Exam Name Dropdown
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -795,67 +1108,71 @@ class _QuestionPaperTemplateScreenState
                       ),
                       const SizedBox(height: 6),
                       Container(
-                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                         decoration: BoxDecoration(
-                           border: Border.all(color: CustomAppColors.lightGrey01),
-                           borderRadius: BorderRadius.circular(15),
-                           color: CustomAppColors.slate50,
-                         ),
-                         child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _selectedExamNameDropdown,
-                            underline: const SizedBox(),
-                            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-                            style: const TextStyle(
-                              fontSize: AppTheme.fontSizeBase,
-                              color: AppTheme.slate800,
-                              fontWeight: FontWeight.normal,
-                            ),
-                             items: _examNames.map((name) => DropdownMenuItem<String>(
-                                 value: name,
-                                 child: Text(
-                                   name,
-                                   style: const TextStyle(
-                                     fontWeight: FontWeight.normal,
-                                     fontSize: AppTheme.fontSizeBase,
-                                     color: AppTheme.slate800,
-                                   ),
-                                 ),
-                               )).toList(),
-                             onChanged: (value) {
-                               setState(() {
-                                 _selectedExamNameDropdown = value;
-                                 if (value == 'Add manually') {
-                                    _isCustomExamName = true;
-                                    _examNameController.clear();
-                                 } else {
-                                    _isCustomExamName = false;
-                                    _examNameController.text = value ?? '';
-                                 }
-                               });
-                             },
-                         ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: CustomAppColors.lightGrey01,
+                          ),
+                          borderRadius: BorderRadius.circular(15),
+                          color: CustomAppColors.slate50,
+                        ),
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: _selectedExamNameDropdown,
+                          underline: const SizedBox(),
+                          icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                          style: const TextStyle(
+                            fontSize: AppTheme.fontSizeBase,
+                            color: AppTheme.slate800,
+                            fontWeight: FontWeight.normal,
+                          ),
+                          items:
+                              _examNames
+                                  .map(
+                                    (name) => DropdownMenuItem<String>(
+                                      value: name,
+                                      child: Text(
+                                        name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: AppTheme.fontSizeBase,
+                                          color: AppTheme.slate800,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedExamNameDropdown = value;
+                              if (value == 'Add manually') {
+                                _isCustomExamName = true;
+                                _examNameController.clear();
+                              } else {
+                                _isCustomExamName = false;
+                                _examNameController.text = value ?? '';
+                              }
+                            });
+                          },
+                        ),
                       ),
                       if (_isCustomExamName)
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
                           child: CustomTextField(
-                             hintText: 'Enter examination name',
-                             controller: _examNameController,
+                            hintText: 'Enter examination name',
+                            controller: _examNameController,
                           ),
                         ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  // Row for Class and Section
-                  Row(
-                    children: [
-                      Expanded(child: _buildClassDropdown()),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildSectionDropdown()),
-                    ],
-                  ),
+                  // Class Dropdown
+                  _buildClassDropdown(),
                   const SizedBox(height: 16),
 
                   // Subject
@@ -870,6 +1187,13 @@ class _QuestionPaperTemplateScreenState
                         child: CustomTextField(
                           label: 'Date',
                           controller: _dateController,
+                          isEnabled: false, // Make read-only
+                          onTap: _selectDate,
+                          prefixIcon: const Icon(
+                            Icons.calendar_today,
+                            size: 18,
+                            color: AppTheme.slate500,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -886,6 +1210,7 @@ class _QuestionPaperTemplateScreenState
                           label: 'Max Marks',
                           controller: _maxMarksController,
                           keyboardType: TextInputType.number,
+                          isEnabled: false, // Auto-calculated
                         ),
                       ),
                     ],
@@ -983,8 +1308,7 @@ class _QuestionPaperTemplateScreenState
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
+                    child: OutlinedButton.icon(
                       onPressed: () async {
                         final subjectName =
                             _selectedSubjectId != null
@@ -998,11 +1322,13 @@ class _QuestionPaperTemplateScreenState
                         try {
                           await PdfTemplateService.generateQuestionPaperPdf(
                             QuestionPaperTemplate(
-                              schoolName: _schoolNameController.text,
-                              schoolAddress: _schoolAddressController.text,
+                              schoolName:
+                                  'Springfield High School', // TODO provider
+                              schoolAddress:
+                                  '123 Education Street', // TODO provider
                               examName: _examNameController.text,
                               className: courseName,
-                              section: _selectedSection ?? '',
+                              section: '',
                               subject: subjectName,
                               date: _dateController.text,
                               duration: _durationController.text,
@@ -1030,6 +1356,35 @@ class _QuestionPaperTemplateScreenState
                       icon: const Icon(Icons.picture_as_pdf),
                       label: Text(
                         'Generate PDF',
+                        style: context.textTheme.labelBase,
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: const BorderSide(color: AppTheme.blue500),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        foregroundColor: AppTheme.blue500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoadingData ? null : _savePaper,
+                      icon:
+                          _isLoadingData
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : const Icon(Icons.save),
+                      label: Text(
+                        _isLoadingData ? 'Saving...' : 'Save Paper',
                         style: context.textTheme.labelBase,
                       ),
                       style: ElevatedButton.styleFrom(
@@ -1104,6 +1459,7 @@ class _QuestionPaperTemplateScreenState
                               'Question ${section.questions.length + 1} here',
                         ),
                       );
+                      _updateMaxMarks();
                     });
                   },
                   icon: const Icon(Icons.add),
@@ -1153,6 +1509,7 @@ class _QuestionPaperTemplateScreenState
             onPressed: () {
               setState(() {
                 sections[sectionIndex].questions.removeAt(questionIndex);
+                _updateMaxMarks();
               });
             },
           ),
@@ -1364,19 +1721,29 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
           if (_hasImage) ...[
             CustomTextField(
               controller: _imagePlaceholderController,
-              label: 'Image Placeholder Text (Optional)',
-              hintText: 'e.g., [Diagram will be inserted here]',
+              label: 'Image URL / Placeholder',
+              hintText: 'Enter image URL or description',
             ),
             const SizedBox(height: 16),
           ],
 
-          // MCQ Options (if MCQ type)
+          // Marks
+          CustomTextField(
+            controller: _customMarksController,
+            label: 'Marks',
+            keyboardType: TextInputType.number,
+            hintText: 'Default: ${widget.defaultMarks}',
+          ),
+
+          const SizedBox(height: 24),
+
+          // MCQ Options
           if (_questionType == QuestionType.mcq) ...[
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Answer Options',
+                  'Options',
                   style: TextStyle(
                     fontSize: AppTheme.fontSizeSm,
                     fontWeight: AppTheme.fontWeightBold,
@@ -1388,95 +1755,78 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Add Option'),
                   style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.blue500,
+                    visualDensity: VisualDensity.compact,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            ..._optionControllers.asMap().entries.map((entry) {
-              final index = entry.key;
-              final controller = entry.value;
+            ...List.generate(_optionControllers.length, (index) {
               return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 8.0),
                 child: Row(
                   children: [
                     Container(
                       width: 28,
                       height: 28,
-                      decoration: BoxDecoration(
-                        color: AppTheme.blue500.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: CustomAppColors.slate100,
+                        shape: BoxShape.circle,
                       ),
-                      child: Center(
-                        child: Text(
-                          String.fromCharCode(65 + index), // A, B, C, D
-                          style: const TextStyle(
-                            fontWeight: AppTheme.fontWeightBold,
-                            color: AppTheme.blue500,
-                            fontSize: AppTheme.fontSizeSm,
-                          ),
+                      child: Text(
+                        String.fromCharCode(65 + index),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.slate600,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: CustomTextField(
-                        controller: controller,
-                        hintText: 'Option ${String.fromCharCode(65 + index)}',
+                        controller: _optionControllers[index],
+                        hintText: 'Option ${index + 1}',
                       ),
                     ),
                     if (_optionControllers.length > 2)
                       IconButton(
-                        icon: const Icon(Icons.close, size: 18),
+                        icon: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: Colors.grey[400],
+                        ),
                         onPressed: () => _removeOption(index),
-                        color: AppTheme.danger,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
                       ),
                   ],
                 ),
               );
             }),
-            const SizedBox(height: 16),
           ],
-
-          // Custom Marks
-          CustomTextField(
-            controller: _customMarksController,
-            label: 'Custom Marks (Optional)',
-            hintText: 'Default: ${widget.defaultMarks}',
-            keyboardType: TextInputType.number,
-          ),
         ],
       ),
     ),
     onConfirm: () {
-      final mcqOptions =
-          _questionType == QuestionType.mcq
-              ? _optionControllers
-                  .map((c) => c.text.trim())
-                  .where((text) => text.isNotEmpty)
-                  .toList()
-              : null;
-
-      final updatedQuestion = Question(
-        questionText: _questionController.text,
-        customMarks:
-            _customMarksController.text.isEmpty
-                ? null
-                : int.tryParse(_customMarksController.text),
-        type: _questionType,
-        hasImage: _hasImage,
-        imagePlaceholder:
-            _hasImage && _imagePlaceholderController.text.isNotEmpty
-                ? _imagePlaceholderController.text
-                : null,
-        mcqOptions: mcqOptions,
-      );
-
-      widget.onSave(updatedQuestion);
-      Navigator.pop(context);
+      if (_questionController.text.isNotEmpty) {
+        final options =
+            _questionType == QuestionType.mcq
+                ? _optionControllers.map((c) => c.text).toList()
+                : null;
+        widget.onSave(
+          Question(
+            questionText: _questionController.text,
+            type: _questionType,
+            customMarks: int.tryParse(_customMarksController.text),
+            hasImage: _hasImage,
+            imagePlaceholder:
+                _hasImage && _imagePlaceholderController.text.isNotEmpty
+                    ? _imagePlaceholderController.text
+                    : null,
+            mcqOptions: options,
+          ),
+        );
+        Navigator.pop(context);
+      }
     },
   );
 
@@ -1485,379 +1835,41 @@ class _QuestionEditDialogState extends State<_QuestionEditDialog> {
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
-  }) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(10),
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: BoxDecoration(
-        color:
-            isSelected
-                ? AppTheme.blue500.withValues(alpha: 0.1)
-                : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isSelected ? AppTheme.blue500 : CustomAppColors.lightGrey01,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 18,
-            color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: AppTheme.fontSizeSm,
-              fontWeight:
-                  isSelected
-                      ? AppTheme.fontWeightBold
-                      : AppTheme.fontWeightMedium,
-              color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-// Preview Screen
-class QuestionPaperPreviewScreen extends StatelessWidget {
-  const QuestionPaperPreviewScreen({required this.template, super.key});
-
-  final QuestionPaperTemplate template;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Question Paper Preview'),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.download),
-          onPressed: () async {
-            try {
-              await PdfTemplateService.generateQuestionPaperPdf(template);
-              if (context.mounted) {
-                showCustomSnackbar(
-                  message: 'PDF downloaded successfully',
-                  type: SnackbarType.success,
-                );
-              }
-            } on Exception catch (e) {
-              if (context.mounted) {
-                showCustomSnackbar(
-                  message: 'Failed to generate PDF: $e',
-                  type: SnackbarType.warning,
-                );
-              }
-            }
-          },
-        ),
-      ],
-    ),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(width: 2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    template.schoolName.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    template.schoolAddress,
-                    style: const TextStyle(fontSize: 11),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(border: Border.all(width: 2)),
-                    child: Text(
-                      template.examName.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Exam Details
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Class: ${template.className} - ${template.section}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Subject: ${template.subject}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Date: ${template.date}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Time: ${template.duration}',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Max. Marks: ${template.maxMarks}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-            const Divider(color: Colors.black, thickness: 2),
-            const SizedBox(height: 16),
-
-            // Instructions
-            if (template.instructions != null) ...[
-              const Text(
-                'GENERAL INSTRUCTIONS:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                template.instructions!,
-                style: const TextStyle(fontSize: 12),
-              ),
-              const SizedBox(height: 16),
-              const Divider(color: Colors.black, thickness: 1),
-              const SizedBox(height: 20),
-            ],
-
-            // Sections
-            ...template.sections.map(_buildSection),
-
-            const SizedBox(height: 32),
-
-            // Footer
-            const Center(
-              child: Column(
-                children: [
-                  Divider(color: Colors.black),
-                  SizedBox(height: 16),
-                  Text(
-                    '*** END OF QUESTION PAPER ***',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-
-  Widget _buildSection(QuestionSection section) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          border: Border.all(),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              section.sectionName.toUpperCase(),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            if (section.description != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                section.description!,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-      const SizedBox(height: 16),
-      ...List.generate(
-        section.questions.length,
-        (index) => _buildQuestion(
-          index + 1,
-          section.questions[index],
-          section.marksPerQuestion,
-        ),
-      ),
-      const SizedBox(height: 24),
-    ],
-  );
-
-  Widget _buildQuestion(int number, Question question, int defaultMarks) {
-    final marks = question.customMarks ?? defaultMarks;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Question number and text
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$number. ',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  question.questionText,
-                  style: const TextStyle(fontSize: 13),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(border: Border.all()),
-                child: Text(
-                  '[$marks]',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+          color: isSelected ? AppTheme.blue50 : Colors.white,
+          border: Border.all(
+            color: isSelected ? AppTheme.blue500 : CustomAppColors.lightGrey01,
+            width: isSelected ? 2 : 1,
           ),
-
-          // Image placeholder (if exists)
-          if (question.hasImage) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Container(
-                width: double.infinity,
-                height: 120,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[400]!),
-                  color: Colors.grey[100],
-                ),
-                child: Center(
-                  child: Text(
-                    question.imagePlaceholder ?? '[Image/Diagram]',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppTheme.blue500 : AppTheme.slate500,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight:
+                    isSelected
+                        ? AppTheme.fontWeightBold
+                        : AppTheme.fontWeightMedium,
+                color: isSelected ? AppTheme.blue500 : AppTheme.slate600,
               ),
             ),
           ],
-
-          // MCQ Options (if MCQ type)
-          if (question.type == QuestionType.mcq &&
-              question.mcqOptions != null) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ...question.mcqOptions!.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final option = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${String.fromCharCode(65 + index)}. ',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          Expanded(
-                            child: Text(
-                              option,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

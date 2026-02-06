@@ -1,0 +1,183 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../provider/login_signup/login_provider.dart';
+import '../../../../utils/custom_colors.dart';
+import '../../../../utils/user_utils.dart';
+import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../providers/student_exams_provider.dart';
+
+class ExamsScreen extends StatelessWidget {
+  const ExamsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = context.watch<LoginProvider>().currentUser;
+    final userInitials = user != null ? UserUtils.getInitials(user.name) : 'ST';
+    final userName = user?.name ?? 'Student';
+    final grade = user?.student?.gradeLevel ?? 'Class 10';
+    final rollNumber = user?.student?.rollNumber ?? '23';
+
+    return ChangeNotifierProvider(
+      create: (context) {
+        final provider = StudentExamsProvider();
+        if (user != null) {
+          provider.loadExaminations(user);
+        }
+        return provider;
+      },
+      child: CustomMainScreenWithAppbar(
+        title: 'Exams & Question Papers',
+        appBarConfig: AppBarConfig.student(
+          userInitials: userInitials,
+          userName: userName,
+          grade: grade,
+          rollNumber: rollNumber,
+          onNotificationIconPressed: () {},
+        ),
+        child: Consumer<StudentExamsProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (provider.error != null) {
+              return Center(child: Text('Error: ${provider.error}'));
+            }
+
+            if (provider.examinations.isEmpty) {
+              return const Center(child: Text('No examinations found'));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.examinations.length,
+              itemBuilder: (context, index) {
+                final exam = provider.examinations[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: CustomAppColors.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                exam.subject,
+                                style: const TextStyle(
+                                  color: CustomAppColors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              exam.date,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          exam.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${exam.startTime ?? "N/A"} (${exam.duration ?? 0} mins)',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Marks: ${exam.totalMarks}',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Status: ${exam.status}',
+                              style: TextStyle(
+                                color: _getStatusColor(exam.status),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                // Navigate to question paper view
+                                context.pushNamed(
+                                  'student_question_paper',
+                                  pathParameters: {
+                                    'examId': exam.id.toString(),
+                                  },
+                                );
+                              },
+                              icon: const Icon(Icons.visibility, size: 16),
+                              label: const Text('View Paper'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: CustomAppColors.primary,
+                                foregroundColor: Colors.white,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
+        return Colors.green;
+      case 'ONGOING':
+        return Colors.blue;
+      case 'SCHEDULED':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+}

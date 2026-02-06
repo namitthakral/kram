@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../models/student_dashboard_models.dart';
+import '../providers/student_assignment_provider.dart';
 
 class AssignmentsScreen extends StatelessWidget {
   const AssignmentsScreen({super.key});
@@ -16,79 +19,79 @@ class AssignmentsScreen extends StatelessWidget {
     final grade = user?.student?.gradeLevel ?? 'Class 10';
     final rollNumber = user?.student?.rollNumber ?? '23';
 
-    return CustomMainScreenWithAppbar(
-      title: 'Assignments',
-      appBarConfig: AppBarConfig.student(
-        userInitials: userInitials,
-        userName: userName,
-        grade: grade,
-        rollNumber: rollNumber,
-        onNotificationIconPressed: () {},
-      ),
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            const ColoredBox(
-              color: Colors.white,
-              child: TabBar(
-                labelColor: CustomAppColors.primary,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: CustomAppColors.primary,
-                tabs: [Tab(text: 'Pending'), Tab(text: 'Completed')],
+    return ChangeNotifierProvider(
+      create: (context) {
+        final provider = StudentAssignmentProvider();
+        if (user != null) {
+          provider.loadAssignments(user);
+        }
+        return provider;
+      },
+      child: CustomMainScreenWithAppbar(
+        title: 'Assignments',
+        appBarConfig: AppBarConfig.student(
+          userInitials: userInitials,
+          userName: userName,
+          grade: grade,
+          rollNumber: rollNumber,
+          onNotificationIconPressed: () {},
+        ),
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              const ColoredBox(
+                color: Colors.white,
+                child: TabBar(
+                  labelColor: CustomAppColors.primary,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: CustomAppColors.primary,
+                  tabs: [Tab(text: 'Pending'), Tab(text: 'Completed')],
+                ),
               ),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _buildAssignmentList(context, false),
-                  _buildAssignmentList(context, true),
-                ],
+              Expanded(
+                child: Consumer<StudentAssignmentProvider>(
+                  builder: (context, provider, child) {
+                    if (provider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (provider.error != null) {
+                      return Center(child: Text('Error: ${provider.error}'));
+                    }
+
+                    return TabBarView(
+                      children: [
+                        _buildAssignmentList(
+                          context,
+                          provider.pendingAssignments,
+                          false,
+                        ),
+                        _buildAssignmentList(
+                          context,
+                          provider.completedAssignments,
+                          true,
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildAssignmentList(BuildContext context, bool isCompleted) {
-    final assignments =
-        isCompleted
-            ? [
-              {
-                'subject': 'History',
-                'title': 'World War II Essay',
-                'date': 'Submitted: Oct 10',
-                'status': 'Graded: A',
-              },
-              {
-                'subject': 'English',
-                'title': 'Poetry Analysis',
-                'date': 'Submitted: Oct 05',
-                'status': 'Graded: B+',
-              },
-            ]
-            : [
-              {
-                'subject': 'Mathematics',
-                'title': 'Algebra Problem Set',
-                'date': 'Due: Tomorrow',
-                'status': 'Pending',
-              },
-              {
-                'subject': 'Science',
-                'title': 'Lab Report: Photosynthesis',
-                'date': 'Due: Oct 25',
-                'status': 'In Progress',
-              },
-              {
-                'subject': 'Computer Science',
-                'title': 'Python Project',
-                'date': 'Due: Oct 30',
-                'status': 'Not Started',
-              },
-            ];
+  Widget _buildAssignmentList(
+    BuildContext context,
+    List<Assignment> assignments,
+    bool isCompleted,
+  ) {
+    if (assignments.isEmpty) {
+      return const Center(child: Text('No assignments found'));
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -118,7 +121,7 @@ class AssignmentsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        item['subject']!,
+                        item.subject,
                         style: const TextStyle(
                           color: CustomAppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -127,12 +130,9 @@ class AssignmentsScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      item['date']!,
+                      'Due: ${item.dueDate}',
                       style: TextStyle(
-                        color:
-                            item['date']!.contains('Tomorrow')
-                                ? Colors.red
-                                : Colors.grey,
+                        color: Colors.grey,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -141,7 +141,7 @@ class AssignmentsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  item['title']!,
+                  item.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -152,7 +152,11 @@ class AssignmentsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      item['status']!,
+                      item.status == AssignmentStatus.pending
+                          ? 'Pending'
+                          : (item.grade != null
+                              ? 'Graded: ${item.grade}'
+                              : 'Submitted'),
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 14,

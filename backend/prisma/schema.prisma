@@ -132,13 +132,13 @@ model Institution {
 model InstitutionGradingConfig {
   id                      Int      @id @default(autoincrement())
   institutionId           Int      @unique @map("institution_id")
-  
+
   // Grading Formula Weights (must sum to 100)
   attendanceWeight        Decimal  @default(10) @map("attendance_weight") @db.Decimal(5, 2)
   assignmentWeight        Decimal  @default(30) @map("assignment_weight") @db.Decimal(5, 2)
   examWeight              Decimal  @default(50) @map("exam_weight") @db.Decimal(5, 2)
   participationWeight     Decimal  @default(10) @map("participation_weight") @db.Decimal(5, 2)
-  
+
   // Grade Boundaries (percentage scores)
   gradeAPlusThreshold     Decimal  @default(93) @map("grade_a_plus_threshold") @db.Decimal(5, 2)
   gradeAThreshold         Decimal  @default(85) @map("grade_a_threshold") @db.Decimal(5, 2)
@@ -146,7 +146,7 @@ model InstitutionGradingConfig {
   gradeBThreshold         Decimal  @default(70) @map("grade_b_threshold") @db.Decimal(5, 2)
   gradeCThreshold         Decimal  @default(60) @map("grade_c_threshold") @db.Decimal(5, 2)
   // Below C threshold = D
-  
+
   // Grade Points Mapping
   gradeAPlusPoints        Decimal  @default(4.0) @map("grade_a_plus_points") @db.Decimal(3, 1)
   gradeAPoints            Decimal  @default(3.7) @map("grade_a_points") @db.Decimal(3, 1)
@@ -154,36 +154,36 @@ model InstitutionGradingConfig {
   gradeBPoints            Decimal  @default(3.0) @map("grade_b_points") @db.Decimal(3, 1)
   gradeCPoints            Decimal  @default(2.0) @map("grade_c_points") @db.Decimal(3, 1)
   gradeDPoints            Decimal  @default(1.0) @map("grade_d_points") @db.Decimal(3, 1)
-  
+
   // Risk Status Thresholds
   atRiskAttendance        Decimal  @default(75) @map("at_risk_attendance") @db.Decimal(5, 2)
   atRiskAssignment        Decimal  @default(60) @map("at_risk_assignment") @db.Decimal(5, 2)
   atRiskExam              Decimal  @default(60) @map("at_risk_exam") @db.Decimal(5, 2)
   atRiskGradePoints       Decimal  @default(2.0) @map("at_risk_grade_points") @db.Decimal(3, 1)
-  
+
   needsImprovementAttendance  Decimal  @default(85) @map("needs_improvement_attendance") @db.Decimal(5, 2)
   needsImprovementAssignment  Decimal  @default(70) @map("needs_improvement_assignment") @db.Decimal(5, 2)
   needsImprovementExam        Decimal  @default(70) @map("needs_improvement_exam") @db.Decimal(5, 2)
   needsImprovementGradePoints Decimal  @default(3.0) @map("needs_improvement_grade_points") @db.Decimal(3, 1)
-  
+
   excellentAttendance     Decimal  @default(95) @map("excellent_attendance") @db.Decimal(5, 2)
   excellentAssignment     Decimal  @default(90) @map("excellent_assignment") @db.Decimal(5, 2)
   excellentExam           Decimal  @default(90) @map("excellent_exam") @db.Decimal(5, 2)
   excellentGradePoints    Decimal  @default(3.7) @map("excellent_grade_points") @db.Decimal(3, 1)
-  
+
   goodAttendance          Decimal  @default(90) @map("good_attendance") @db.Decimal(5, 2)
   goodAssignment          Decimal  @default(80) @map("good_assignment") @db.Decimal(5, 2)
   goodExam                Decimal  @default(80) @map("good_exam") @db.Decimal(5, 2)
   goodGradePoints         Decimal  @default(3.3) @map("good_grade_points") @db.Decimal(3, 1)
-  
+
   // Metadata
   isActive                Boolean  @default(true) @map("is_active")
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
   institution             Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  
+
   @@map("institution_grading_configs")
 }
 
@@ -192,17 +192,17 @@ model InstitutionGradingConfig {
 model InstitutionIdConfig {
   id                      Int      @id @default(autoincrement())
   institutionId           Int      @unique @map("institution_id")
-  
+
   // ID Format Templates
   // Available placeholders: {YEAR}, {YY}, {INST}, {COURSE}, {BRANCH}, {SECTION}, {SEQ:N}, {MONTH}, {MM}
   admissionNumberFormat   String   @default("{YEAR}/{COURSE}/{SEQ:5}") @map("admission_number_format") @db.VarChar(100)
   rollNumberFormat        String   @default("{COURSE}-{SECTION}-{SEQ:3}") @map("roll_number_format") @db.VarChar(100)
   teacherEmployeeIdFormat String   @default("EMP-{YEAR}-{SEQ:5}") @map("teacher_employee_id_format") @db.VarChar(100)
   staffEmployeeIdFormat   String   @default("STF-{YEAR}-{SEQ:5}") @map("staff_employee_id_format") @db.VarChar(100)
-  
+
   // Sequence Configuration
   sequenceResetPolicy     SequenceResetPolicy @default(YEARLY) @map("sequence_reset_policy")
-  
+
   // Current Sequence Counters (reset based on policy)
   admissionSeqYear        Int      @default(0) @map("admission_seq_year")
   admissionSeqCounter     Int      @default(0) @map("admission_seq_counter")
@@ -212,15 +212,15 @@ model InstitutionIdConfig {
   teacherSeqCounter       Int      @default(0) @map("teacher_seq_counter")
   staffSeqYear            Int      @default(0) @map("staff_seq_year")
   staffSeqCounter         Int      @default(0) @map("staff_seq_counter")
-  
+
   // Metadata
   isActive                Boolean  @default(true) @map("is_active")
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
   institution             Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  
+
   @@map("institution_id_configs")
 }
 
@@ -253,11 +253,11 @@ enum InstitutionStatus {
 // ============================================================================
 // ACADEMIC STRUCTURE MODELS
 // ============================================================================
-// 
+//
 // INDIAN EDUCATION SYSTEM TERMINOLOGY:
 // - Program (Course in Indian context) = Degree/Stream (e.g., B.Sc. CS, Commerce, Science-Medical)
 // - Course (Subject/Paper in Indian context) = Individual subject (e.g., Data Structures, Physics, English)
-// 
+//
 // Note: This schema uses international terminology in database
 // but APIs should expose Indian terminology for better UX
 // ============================================================================
@@ -309,7 +309,7 @@ model Semester {
 
 // Course model - Represents "Course" in Indian context
 // In Indian education: Course = Degree/Stream program
-// Examples: 
+// Examples:
 // - Colleges: "B.Sc. Computer Science", "B.Com", "BCA", "M.Tech"
 // - Schools (11-12): "Science - Medical", "Science - Non-Medical", "Commerce", "Arts"
 // - Schools (K-10): Optional, can use general "Primary Education" or none
@@ -340,7 +340,7 @@ model Course {
 
 // Subject model - Represents "Subject/Paper" in Indian context
 // In Indian education: Subject = Individual academic subject/paper
-// Examples: 
+// Examples:
 // - Colleges: "Data Structures", "DBMS", "Web Development", "Organic Chemistry"
 // - Schools: "English", "Hindi", "Mathematics", "Physics", "Chemistry", "Biology"
 model Subject {
@@ -859,6 +859,7 @@ enum ExamType {
   ASSIGNMENT
   PROJECT
   PRACTICAL
+  THEORY
 }
 
 enum ExamStatus {
@@ -1029,22 +1030,22 @@ model Communication {
   communicationType CommunicationType        @map("communication_type")
   priority          CommunicationPriority    @default(MEDIUM)
   targetAudience    String[]                 // Array of roles: ["student", "teacher", "parent"]
-  
+
   // Optional targeting fields (for granular control)
   departmentIds     Int[]                    @map("department_ids") // Specific departments
   programIds        Int[]                    @map("program_ids")    // Specific programs
   classIds          Int[]                    @map("class_ids")      // Specific classes
-  
+
   // Flags and metadata
   isEmergency       Boolean                  @default(false) @map("is_emergency")
   isPinned          Boolean                  @default(false) @map("is_pinned")
   isActive          Boolean                  @default(true) @map("is_active")
-  
+
   // Attachments and dates
   attachmentUrl     String?                  @map("attachment_url") @db.VarChar(500)
   publishDate       DateTime                 @default(now()) @map("publish_date")
   expiryDate        DateTime?                @map("expiry_date")
-  
+
   // Audit fields
   createdBy         Int                      @map("created_by")
   createdAt         DateTime                 @default(now()) @map("created_at")

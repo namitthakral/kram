@@ -67,8 +67,10 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
 
     await assignmentProvider.loadClassSectionsForTeacher(user!.teacher!.id);
 
-    if (mounted) _checkAutoSelection(assignmentProvider);
-    await examProvider.loadSemesters();
+    if (mounted) {
+      _checkAutoSelection(assignmentProvider);
+    }
+    await examProvider.loadSemesters(uuid);
 
     // If editing, load examination data
     if (widget.examinationId != null) {
@@ -77,7 +79,9 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         widget.examinationId!,
       );
       if (exam != null) {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
 
         // COMPREHENSIVE DEBUG LOGGING
         debugPrint('=== EXAMINATION EDIT MODE DEBUG ===');
@@ -148,7 +152,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         if (matchedCourse != null && mounted) {
           // Now that we have the course, the subjects are already loaded
 
-
           setState(() {
             _selectedCourse = matchedCourse;
 
@@ -164,7 +167,9 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   }
 
   Future<void> _checkAutoSelection(AssignmentProvider provider) async {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     var stateChanged = false;
 
@@ -175,8 +180,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
       // Load details for the single course immediately
       await provider.loadDetailsForCourse(_selectedCourse!.id);
     }
-
-
 
     // 3. Auto-select Subject
     if (_selectedCourse != null &&
@@ -424,7 +427,9 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
             });
             if (course != null) {
               await provider.loadDetailsForCourse(course.id);
-              if (context.mounted) _checkAutoSelection(provider);
+              if (context.mounted) {
+                _checkAutoSelection(provider);
+              }
             }
           },
           validator: (value) {
@@ -435,8 +440,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
           },
         ),
   );
-
-
 
   Widget _buildSubjectDropdown() => Consumer<AssignmentProvider>(
     builder:
@@ -616,44 +619,44 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   );
 
   Widget _buildFloatingActionButton() => DecoratedBox(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF155dfc).withOpacity(0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _submitForm,
-        backgroundColor: const Color(0xFF155dfc),
-        elevation: 0,
-        highlightElevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon:
-            _isLoading
-                ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-                : const Icon(Icons.check_circle_outline, color: Colors.white),
-        label: Text(
-          widget.examinationId == null
-              ? context.translate('create_examination')
-              : context.translate('update_examination'),
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+    decoration: BoxDecoration(
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF155dfc).withOpacity(0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: FloatingActionButton.extended(
+      onPressed: _isLoading ? null : _submitForm,
+      backgroundColor: const Color(0xFF155dfc),
+      elevation: 0,
+      highlightElevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon:
+          _isLoading
+              ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+              : const Icon(Icons.check_circle_outline, color: Colors.white),
+      label: Text(
+        widget.examinationId == null
+            ? context.translate('create_examination')
+            : context.translate('update_examination'),
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
       ),
-    );
+    ),
+  );
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {

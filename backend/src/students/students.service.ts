@@ -987,6 +987,90 @@ export class StudentsService {
     }
   }
 
+  async getExaminationsByUuid(
+    uuid: string,
+    status?: string,
+    currentUser?: UserWithRelations
+  ) {
+    // Find student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: { user: { uuid } },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Check permissions
+    if (
+      currentUser &&
+      currentUser.role.roleName === 'student' &&
+      currentUser.student?.id !== student.id
+    ) {
+      throw new ForbiddenException('Access denied')
+    }
+
+    // Get student's enrollments to find their courses
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { studentId: student.id },
+      include: { subject: true },
+    })
+
+    const courseIds = enrollments.map(e => e.subjectId)
+
+    // Build where clause
+    const where: Prisma.ExaminationWhereInput = {
+      subjectId: { in: courseIds },
+      // Only show scheduled, ongoing, or completed exams
+      status: status
+        ? (status as any)
+        : { in: ['SCHEDULED', 'ONGOING', 'COMPLETED'] },
+    }
+
+    const examinations = await this.prisma.examination.findMany({
+      where,
+      include: {
+        subject: { select: { subjectName: true, subjectCode: true } },
+        results: {
+          where: { studentId: student.id },
+          take: 1,
+        },
+      },
+      orderBy: { examDate: 'desc' },
+    })
+
+    const examinationData = examinations.map(exam => {
+      const result = exam.results[0]
+      let examStatus = exam.status
+      let grade: string | undefined
+      let score: string | undefined
+
+      if (result) {
+        if (result.marksObtained) {
+          score = `${result.marksObtained}/${exam.totalMarks}`
+        }
+      }
+
+      return {
+        id: exam.id,
+        name: exam.examName,
+        subject: exam.subject.subjectName,
+        date: exam.examDate?.toISOString().split('T')[0],
+        startTime: exam.startTime?.toISOString().slice(11, 16),
+        duration: exam.durationMinutes,
+        totalMarks: exam.totalMarks,
+        status: examStatus,
+        score,
+        grade,
+      }
+    })
+
+    return {
+      success: true,
+      data: examinationData,
+    }
+  }
+
   async getPerformanceTrendsByUuid(
     uuid: string,
     startMonth?: string,

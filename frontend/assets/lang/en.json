@@ -512,5 +512,10 @@
   "no_examinations_found": "No examinations found",
   "delete_examination": "Delete Examination",
   "delete_examination_confirmation": "Are you sure you want to delete this examination? This action cannot be undone.",
-  "filter_examinations": "Filter Examinations"
+  "filter_examinations": "Filter Examinations",
+  "exams": "Exams",
+  "timetable": "Timetable",
+  "my_grades": "My Grades",
+  "assignments": "Assignments",
+  "events": "Events"
 }

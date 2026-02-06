@@ -11,6 +11,7 @@ import '../../../widgets/custom_widgets/custom_tab_bar.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../providers/dashboard_tab_provider.dart';
 import '../providers/student_dashboard_provider.dart';
+import '../providers/student_provider.dart';
 import '../widgets/assignment_card.dart';
 import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
@@ -43,6 +44,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     if (user?.uuid != null) {
       debugPrint('✅ Loading dashboard data for UUID: ${user!.uuid}');
       context.read<StudentDashboardProvider>().loadAllDashboardData(user.uuid!);
+      context.read<StudentProvider>().loadStudentData(user.uuid!);
     } else {
       debugPrint('❌ Cannot load dashboard data - user UUID is null');
     }

@@ -4,9 +4,26 @@ import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../providers/student_timetable_provider.dart';
 
-class TimetableScreen extends StatelessWidget {
+class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
+
+  @override
+  State<TimetableScreen> createState() => _TimetableScreenState();
+}
+
+class _TimetableScreenState extends State<TimetableScreen> {
+  String _selectedDay = 'MONDAY';
+  final Map<String, String> _dayMapping = {
+    'Mon': 'MONDAY',
+    'Tue': 'TUESDAY',
+    'Wed': 'WEDNESDAY',
+    'Thu': 'THURSDAY',
+    'Fri': 'FRIDAY',
+    'Sat': 'SATURDAY',
+    'Sun': 'SUNDAY',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -16,51 +33,134 @@ class TimetableScreen extends StatelessWidget {
     final grade = user?.student?.gradeLevel ?? 'Class 10';
     final rollNumber = user?.student?.rollNumber ?? '23';
 
-    return CustomMainScreenWithAppbar(
-      title: 'Timetable',
-      appBarConfig: AppBarConfig.student(
-        userInitials: userInitials,
-        userName: userName,
-        grade: grade,
-        rollNumber: rollNumber,
-        onNotificationIconPressed: () {},
-      ),
-      child: Column(
-        children: [
-          _buildDaySelector(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildTimeSlot(context, '09:00 AM', 'Mathematics', 'Room 101', 'Mr. Roberts', Colors.blue),
-                _buildTimeSlot(context, '10:00 AM', 'Physics', 'Lab 2', 'Ms. Davis', Colors.orange),
-                _buildTimeSlot(context, '11:00 AM', 'Break', '', '', Colors.grey, isBreak: true),
-                _buildTimeSlot(context, '11:30 AM', 'Computer Science', 'Comp Lab', 'Mr. Wilson', Colors.purple),
-                _buildTimeSlot(context, '12:30 PM', 'English', 'Room 101', 'Mrs. Smith', Colors.green),
-              ],
+    return ChangeNotifierProvider(
+      create: (context) {
+        final provider = StudentTimetableProvider();
+        if (user != null) {
+          provider.loadTimetable(user);
+        }
+        return provider;
+      },
+      child: CustomMainScreenWithAppbar(
+        title: 'Timetable',
+        appBarConfig: AppBarConfig.student(
+          userInitials: userInitials,
+          userName: userName,
+          grade: grade,
+          rollNumber: rollNumber,
+          onNotificationIconPressed: () {},
+        ),
+        child: Column(
+          children: [
+            _buildDaySelector(),
+            Expanded(
+              child: Consumer<StudentTimetableProvider>(
+                builder: (context, provider, child) {
+                  if (provider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (provider.error != null) {
+                    return Center(child: Text('Error: ${provider.error}'));
+                  }
+
+                  final dayEntries = provider.timetable[_selectedDay];
+                  if (dayEntries == null ||
+                      (dayEntries is List && dayEntries.isEmpty)) {
+                    return const Center(child: Text('No classes for this day'));
+                  }
+
+                  final entries = dayEntries as List<dynamic>;
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      // Degrade gracefully if structure differs
+                      final subjectName =
+                          entry['subject']?['name'] ??
+                          entry['subject']?['subjectName'] ??
+                          'Subject';
+                      final roomName =
+                          entry['room']?['roomNumber'] ??
+                          entry['room']?['roomName'] ??
+                          'Room';
+
+                      // Handle teacher name parsing based on observation log
+                      String teacherName = 'Teacher';
+                      if (entry['teacher'] != null) {
+                        teacherName =
+                            entry['teacher']['name'] ??
+                            entry['teacher']['user']?['name'] ??
+                            'Teacher';
+                      }
+
+                      // Format time range
+                      final timeSlot = entry['timeSlot'];
+                      final startTimeStr = timeSlot?['startTime'] ?? '00:00';
+                      // Use endTime if available, otherwise just use startTime
+                      final endTimeStr = timeSlot?['endTime'];
+
+                      final formattedTime =
+                          endTimeStr != null
+                              ? '${_formatTime(startTimeStr)} - ${_formatTime(endTimeStr)}'
+                              : _formatTime(startTimeStr);
+
+                      return _buildTimeSlot(
+                        context,
+                        formattedTime,
+                        subjectName,
+                        roomName,
+                        teacherName,
+                        _getSubjectColor(subjectName),
+                        isBreak:
+                            entry['type'] == 'BREAK' ||
+                            subjectName.toLowerCase() == 'break',
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDaySelector() => SizedBox(
-      height: 60,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        children: [
-          _buildDayChip('Mon', true),
-          _buildDayChip('Tue', false),
-          _buildDayChip('Wed', false),
-          _buildDayChip('Thu', false),
-          _buildDayChip('Fri', false),
-        ],
-      ),
-    );
+  String _formatTime(String time) {
+    if (time.contains(':')) {
+      final parts = time.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = parts[1];
+      final amPm = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+      return '$hour12:$minute $amPm';
+    }
+    return time;
+  }
 
-  Widget _buildDayChip(String day, bool isSelected) => Container(
+  Widget _buildDaySelector() => SizedBox(
+    height: 60,
+    child: ListView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      children:
+          _dayMapping.keys.map((dayLabel) {
+            final isSelected = _dayMapping[dayLabel] == _selectedDay;
+            return _buildDayChip(dayLabel, isSelected);
+          }).toList(),
+    ),
+  );
+
+  Widget _buildDayChip(String day, bool isSelected) => GestureDetector(
+    onTap: () {
+      setState(() {
+        _selectedDay = _dayMapping[day]!;
+      });
+    },
+    child: Container(
       margin: const EdgeInsets.only(right: 12),
       child: Chip(
         label: Text(
@@ -70,48 +170,59 @@ class TimetableScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: isSelected ? CustomAppColors.primary : Colors.grey.shade200,
+        backgroundColor:
+            isSelected ? CustomAppColors.primary : Colors.grey.shade200,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         side: BorderSide.none,
       ),
-    );
+    ),
+  );
 
   Widget _buildTimeSlot(
-      BuildContext context, String time, String subject, String room, String teacher, Color color,
-      {bool isBreak = false}) => Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              time,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
+    BuildContext context,
+    String time,
+    String subject,
+    String room,
+    String teacher,
+    Color color, {
+    bool isBreak = false,
+  }) => Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90, // Increased width for longer time strings like "9:00 AM - 10:30 AM"
+          child: Text(
+            time,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+              fontSize: 12, // Slightly smaller font to fit
             ),
           ),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isBreak ? Colors.grey.shade100 : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
-                boxShadow: isBreak
-                    ? []
-                    : [
+        ),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isBreak ? Colors.grey.shade100 : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow:
+                  isBreak
+                      ? []
+                      : [
                         BoxShadow(
                           color: Colors.grey.shade100,
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
                       ],
-              ),
-              child: isBreak
-                  ? Center(
+            ),
+            child:
+                isBreak
+                    ? Center(
                       child: Text(
                         subject.toUpperCase(),
                         style: TextStyle(
@@ -121,11 +232,11 @@ class TimetableScreen extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Row(
+                    : Row(
                       children: [
                         Container(
                           width: 4,
-                          height: 40,
+                          height: 48,
                           decoration: BoxDecoration(
                             color: color,
                             borderRadius: BorderRadius.circular(2),
@@ -146,7 +257,11 @@ class TimetableScreen extends StatelessWidget {
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade600),
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     room,
@@ -156,7 +271,11 @@ class TimetableScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                                  Icon(
+                                    Icons.person_outline,
+                                    size: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     teacher,
@@ -172,9 +291,22 @@ class TimetableScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-            ),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
+
+  Color _getSubjectColor(String subject) {
+    final colors = [
+      Colors.blue,
+      Colors.orange,
+      Colors.purple,
+      Colors.green,
+      Colors.red,
+      Colors.teal,
+      Colors.indigo,
+    ];
+    return colors[subject.hashCode % colors.length];
+  }
 }

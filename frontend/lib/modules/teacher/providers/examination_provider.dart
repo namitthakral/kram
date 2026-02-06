@@ -41,9 +41,9 @@ class ExaminationProvider with ChangeNotifier {
   }
 
   /// Load active semesters for dropdown
-  Future<void> loadSemesters() async {
+  Future<void> loadSemesters(String userUuid) async {
     try {
-      _semesters = await _teacherService.getActiveSemesters();
+      _semesters = await _teacherService.getActiveSemesters(userUuid);
       notifyListeners();
     } on Exception catch (e) {
       debugPrint('Error loading semesters: $e');

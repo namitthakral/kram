@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+
 import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../providers/student_events_provider.dart';
 
 class EventsScreen extends StatelessWidget {
   const EventsScreen({super.key});
@@ -15,57 +18,77 @@ class EventsScreen extends StatelessWidget {
     final grade = user?.student?.gradeLevel ?? 'Class 10';
     final rollNumber = user?.student?.rollNumber ?? '23';
 
-    return CustomMainScreenWithAppbar(
-      title: 'Events',
-      appBarConfig: AppBarConfig.student(
-        userInitials: userInitials,
-        userName: userName,
-        grade: grade,
-        rollNumber: rollNumber,
-        onNotificationIconPressed: () {},
-      ),
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildEventCard(
-            context,
-            'Oct',
-            '28',
-            'Science Fair',
-            'Main Auditorium',
-            '9:00 AM - 2:00 PM',
-            Colors.blue,
-          ),
-          _buildEventCard(
-            context,
-            'Nov',
-            '05',
-            'Sports Day',
-            'School Ground',
-            '8:00 AM - 4:00 PM',
-            Colors.orange,
-          ),
-          _buildEventCard(
-            context,
-            'Nov',
-            '14',
-            'Children\'s Day Celebration',
-            'Assembly Hall',
-            '10:00 AM - 12:00 PM',
-            Colors.pink,
-          ),
-          _buildEventCard(
-            context,
-            'Dec',
-            '20',
-            'Annual Cultural Fest',
-            'Main Auditorium',
-            '5:00 PM - 9:00 PM',
-            Colors.purple,
-          ),
-        ],
+    return ChangeNotifierProvider(
+      create: (context) {
+        final provider = StudentEventsProvider();
+        if (user != null) {
+          provider.loadEvents(user);
+        }
+        return provider;
+      },
+      child: CustomMainScreenWithAppbar(
+        title: 'Events',
+        appBarConfig: AppBarConfig.student(
+          userInitials: userInitials,
+          userName: userName,
+          grade: grade,
+          rollNumber: rollNumber,
+          onNotificationIconPressed: () {},
+        ),
+        child: Consumer<StudentEventsProvider>(
+          builder: (context, provider, child) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (provider.error != null) {
+              return Center(child: Text('Error: ${provider.error}'));
+            }
+
+            if (provider.events.isEmpty) {
+              return const Center(child: Text('No upcoming events'));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.events.length,
+              itemBuilder: (context, index) {
+                final event = provider.events[index];
+                // Assuming event structure: { title, startDate, location, type, etc. }
+                // Adjust fields based on actual API response
+                final dateStr = event['startDate'] as String? ?? DateTime.now().toIso8601String();
+                final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+
+                final month = DateFormat('MMM').format(date);
+                final day = DateFormat('dd').format(date);
+                final time = event['startTime'] ?? 'All Day';
+
+                return _buildEventCard(
+                  context,
+                  month,
+                  day,
+                  event['title'] ?? 'Event',
+                  event['location'] ?? 'School',
+                  time,
+                  _getEventColor(event['type']),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
+  }
+
+  Color _getEventColor(String? type) {
+    if (type == null) return Colors.blue;
+    switch (type.toLowerCase()) {
+      case 'sports': return Colors.orange;
+      case 'cultural': return Colors.purple;
+      case 'academic': return Colors.blue;
+      case 'holiday': return Colors.green;
+      default: return Colors.pink;
+    }
   }
 
   Widget _buildEventCard(
@@ -86,7 +109,7 @@ class EventsScreen extends StatelessWidget {
             Container(
               width: 80,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   bottomLeft: Radius.circular(16),

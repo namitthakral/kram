@@ -14,11 +14,8 @@ import '../../modules/parent/screens/fee_payment_screen.dart';
 import '../../modules/parent/screens/parent_dashboard_screen.dart';
 import '../../modules/staff/screens/staff_messages_screen.dart';
 import '../../modules/staff/screens/staff_schedule_screen.dart';
-import '../../modules/student/screens/assignments_screen.dart';
-import '../../modules/student/screens/events_screen.dart';
-import '../../modules/student/screens/my_grades_screen.dart';
+import '../../modules/student/screens/student_academic_screen.dart';
 import '../../modules/student/screens/student_dashboard_screen.dart';
-import '../../modules/student/screens/timetable_screen.dart';
 import '../../modules/super_admin/screens/analytics_screen.dart';
 import '../../modules/super_admin/screens/institutions_screen.dart';
 import '../../modules/super_admin/screens/security_screen.dart';
@@ -71,24 +68,9 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconReport, // Placeholder for My Grades
-      iconFilledUrl: CustomImages.iconReportFilled,
-      labelKey: 'my_grades',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconSchedule,
-      iconFilledUrl: CustomImages.iconScheduleFilled,
-      labelKey: 'timetable',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconAcademic, // Placeholder for assignments
+      iconUrl: CustomImages.iconAcademic, // Academic Master Screen
       iconFilledUrl: CustomImages.iconAcademicFilled,
-      labelKey: 'assignments',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconDate, // Placeholder for events
-      iconFilledUrl: CustomImages.iconDate,
-      labelKey: 'events',
+      labelKey: 'academic',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -99,10 +81,7 @@ class RoleNavigationConfig {
 
   static final List<Widget> _studentPages = [
     const StudentDashboardScreen(),
-    const MyGradesScreen(),
-    const TimetableScreen(),
-    const AssignmentsScreen(),
-    const EventsScreen(),
+    const StudentAcademicScreen(),
     const ProfileScreen(),
   ];
 
@@ -429,8 +408,28 @@ class RoleNavigationConfig {
     }
 
     // Check if it's a nested route under /academic
-    if (normalizedRoute.startsWith('/academic/')) {
-      return routes.indexOf('/academic');
+    if (normalizedRoute.startsWith('/academic/') ||
+        normalizedRoute.startsWith('/student-academic/')) {
+      return routes.indexOf(
+        normalizedRoute.startsWith('/student-academic/')
+            ? '/student-academic'
+            : '/academic',
+      );
+    }
+
+    // Check for Student Academic sub-routes
+    // These are top-level routes but belong to the 'Academic' tab (index 1)
+    if (roleId == 3) {
+      const studentAcademicRoutes = [
+        '/grades',
+        '/timetable',
+        '/assignments',
+        '/exams',
+        '/events',
+      ];
+      if (studentAcademicRoutes.any((r) => normalizedRoute.startsWith(r))) {
+        return routes.indexOf('/student-academic');
+      }
     }
 
     // Check if it's a nested route under /classes
@@ -444,65 +443,43 @@ class RoleNavigationConfig {
 
   /// Get route paths for a specific role
   static List<String> _getRoutePathsForRole(int roleId) => switch (roleId) {
-        // Super Admin routes
-        1 => [
-            '/dashboard',
-            '/institutions',
-            '/analytics',
-            '/system-settings',
-            '/security',
-            '/profile',
-          ],
-        // Admin routes
-        2 => [
-            '/dashboard',
-            '/students',
-            '/staff',
-            '/fees',
-            '/transport',
-            '/academic',
-            '/reports',
-            '/profile',
-          ],
-        // Student routes
-        3 => [
-            '/dashboard',
-            '/grades',
-            '/timetable',
-            '/assignments',
-            '/events',
-            '/profile',
-          ],
-        // Parent routes
-        4 => [
-            '/dashboard',
-            '/child-progress',
-            '/fee-payment',
-            '/announcements',
-            '/profile',
-          ],
-        // Teacher routes
-        5 => [
-            '/dashboard',
-            '/classes',
-            '/academic',
-            '/profile',
-          ],
-        // Librarian routes
-        6 => [
-            '/dashboard',
-            '/books',
-            '/issued-books',
-            '/profile',
-          ],
-        // Staff routes
-        7 => [
-            '/dashboard',
-            '/schedule',
-            '/messages',
-            '/profile',
-          ],
-        // Default
-        _ => ['/dashboard', '/profile'],
-      };
+    // Super Admin routes
+    1 => [
+      '/dashboard',
+      '/institutions',
+      '/analytics',
+      '/system-settings',
+      '/security',
+      '/profile',
+    ],
+    // Admin routes
+    2 => [
+      '/dashboard',
+      '/students',
+      '/staff',
+      '/fees',
+      '/transport',
+      '/academic',
+      '/reports',
+      '/profile',
+    ],
+    // Student routes
+    3 => ['/dashboard', '/student-academic', '/profile'],
+    // Parent routes
+    4 => [
+      '/dashboard',
+      '/child-progress',
+      '/fee-payment',
+      '/announcements',
+      '/profile',
+    ],
+    // Teacher routes
+    5 => ['/dashboard', '/classes', '/academic', '/profile'],
+    // Librarian routes
+    6 => ['/dashboard', '/books', '/issued-books', '/profile'],
+    // Staff routes
+    7 => ['/dashboard', '/schedule', '/messages', '/profile'],
+    // Default
+    _ => ['/dashboard', '/profile'],
+  };
 }

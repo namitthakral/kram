@@ -158,6 +158,15 @@ export class StudentsController {
     )
   }
 
+  @Get(':user_uuid/examinations')
+  async getExaminations(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('status') status?: string
+  ) {
+    return this.studentsService.getExaminationsByUuid(userUuid, status, user)
+  }
+
   // ==================== Report Card Generation ====================
 
   @Get(':user_uuid/report-card')
