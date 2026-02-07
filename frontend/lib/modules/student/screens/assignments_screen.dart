@@ -9,6 +9,7 @@ import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../../widgets/custom_widgets/custom_tab_bar.dart';
 import '../models/student_dashboard_models.dart';
 import '../providers/student_assignment_provider.dart';
+import '../providers/student_provider.dart';
 
 class AssignmentsScreen extends StatefulWidget {
   const AssignmentsScreen({super.key});
@@ -22,11 +23,25 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final studentProvider = context.watch<StudentProvider>();
+
     final user = context.watch<LoginProvider>().currentUser;
     final userInitials = user != null ? UserUtils.getInitials(user.name) : 'ST';
     final userName = user?.name ?? 'Student';
-    final grade = user?.student?.gradeLevel ?? 'Class 10';
-    final rollNumber = user?.student?.rollNumber ?? '23';
+
+    // Get dynamic grade/class info
+    final className = studentProvider.studentClassName;
+    final section = studentProvider.studentSection;
+    final grade =
+        (className.isNotEmpty || section.isNotEmpty)
+            ? '$className $section'.trim()
+            : 'Class N/A';
+
+    final rollNumber = user?.student?.rollNumber ?? 'N/A';
+
+    // Get GPA from dashboard stats
+    final statsData = studentProvider.dashboardStats;
+    final gpa = statsData?['gpa']?.toString();
 
     return ChangeNotifierProvider(
       create: (context) {
@@ -43,6 +58,7 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
           userName: userName,
           grade: grade,
           rollNumber: rollNumber,
+          gpa: gpa,
           onNotificationIconPressed: () {},
         ),
         child: Column(
@@ -156,96 +172,119 @@ class _AssignmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          context.goNamed(
-            'student_assignment_detail',
-            pathParameters: {'id': item.id.toString()},
-            extra: item,
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: CustomAppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      item.subject,
-                      style: const TextStyle(
-                        color: CustomAppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
+    margin: const EdgeInsets.only(bottom: 12),
+    elevation: 2,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: InkWell(
+      onTap: () {
+        context.goNamed(
+          'student_assignment_detail',
+          pathParameters: {'id': item.id.toString()},
+          extra: item,
+        );
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: CustomAppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    item.subject,
+                    style: const TextStyle(
+                      color: CustomAppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(
-                        item.status,
-                      ).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.access_time,
-                          size: 12,
-                          color: _getStatusColor(item.status),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Due: ${item.dueDate}',
-                          style: TextStyle(
-                            color: _getStatusColor(item.status),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                item.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 8),
-              Row(
-                children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(item.status).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: _getStatusColor(item.status),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Due: ${item.dueDate}',
+                        style: TextStyle(
+                          color: _getStatusColor(item.status),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              item.title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Status',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.status == AssignmentStatus.pending
+                            ? 'Pending'
+                            : (item.grade != null
+                                ? 'Graded: ${item.grade}'
+                                : 'Submitted'),
+                        style: TextStyle(
+                          color: _getStatusColor(item.status),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (item.score != null) ...[
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Status',
+                          'Score',
                           style: TextStyle(
                             color: Colors.grey.shade500,
                             fontSize: 12,
@@ -253,13 +292,8 @@ class _AssignmentCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          item.status == AssignmentStatus.pending
-                              ? 'Pending'
-                              : (item.grade != null
-                                  ? 'Graded: ${item.grade}'
-                                  : 'Submitted'),
-                          style: TextStyle(
-                            color: _getStatusColor(item.status),
+                          item.score!,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
@@ -267,59 +301,36 @@ class _AssignmentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (item.score != null) ...[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Score',
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item.score!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.goNamed(
-                        'student_assignment_detail',
-                        pathParameters: {'id': item.id.toString()},
-                        extra: item,
-                      );
-                    },
-                    icon: Icon(
-                      !isCompleted ? Icons.upload_file : Icons.visibility,
-                      size: 16,
-                    ),
-                    label: Text(!isCompleted ? 'Submit' : 'View'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: CustomAppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
                 ],
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    context.goNamed(
+                      'student_assignment_detail',
+                      pathParameters: {'id': item.id.toString()},
+                      extra: item,
+                    );
+                  },
+                  icon: Icon(
+                    !isCompleted ? Icons.upload_file : Icons.visibility,
+                    size: 16,
+                  ),
+                  label: Text(!isCompleted ? 'Submit' : 'View'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: CustomAppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  );
 }

@@ -4,6 +4,7 @@ import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../providers/student_provider.dart';
 import '../providers/student_timetable_provider.dart';
 
 class TimetableScreen extends StatefulWidget {
@@ -56,11 +57,25 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final studentProvider = context.watch<StudentProvider>();
+
     final user = context.watch<LoginProvider>().currentUser;
     final userInitials = user != null ? UserUtils.getInitials(user.name) : 'ST';
     final userName = user?.name ?? 'Student';
-    final grade = user?.student?.gradeLevel ?? 'Class 10';
-    final rollNumber = user?.student?.rollNumber ?? '23';
+
+    // Get dynamic grade/class info
+    final className = studentProvider.studentClassName;
+    final section = studentProvider.studentSection;
+    final grade =
+        (className.isNotEmpty || section.isNotEmpty)
+            ? '$className $section'.trim()
+            : 'Class N/A';
+
+    final rollNumber = user?.student?.rollNumber ?? 'N/A';
+
+    // Get GPA from dashboard stats
+    final statsData = studentProvider.dashboardStats;
+    final gpa = statsData?['gpa']?.toString();
 
     return ChangeNotifierProvider(
       create: (context) {
@@ -77,6 +92,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           userName: userName,
           grade: grade,
           rollNumber: rollNumber,
+          gpa: gpa,
           onNotificationIconPressed: () {},
         ),
         child: Column(

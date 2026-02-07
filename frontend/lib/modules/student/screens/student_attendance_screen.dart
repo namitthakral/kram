@@ -326,6 +326,10 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
 
     final rollNumber = student?.rollNumber ?? 'N/A';
 
+    // Get GPA from dashboard stats
+    final statsData = studentProvider.dashboardStats;
+    final gpa = statsData?['gpa']?.toString();
+
     return CustomMainScreenWithAppbar(
       title: 'Attendance',
       appBarConfig: AppBarConfig.student(
@@ -333,6 +337,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         userName: userName,
         grade: grade,
         rollNumber: rollNumber,
+        gpa: gpa,
         onNotificationIconPressed: () {
           // Notification handler to be implemented
         },

@@ -382,11 +382,21 @@ class StudentService {
   Future<List<dynamic>> getUpcomingEvents(
     String userUuid, {
     int limit = 10,
+    String? startDate,
+    String? endDate,
   }) async {
     try {
+      final queryParams = <String, dynamic>{'limit': limit.toString()};
+      if (startDate != null) {
+        queryParams['startDate'] = startDate;
+      }
+      if (endDate != null) {
+        queryParams['endDate'] = endDate;
+      }
+
       final response = await _apiService.dio.get(
         '/students/$userUuid/upcoming-events',
-        queryParameters: {'limit': limit.toString()},
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {

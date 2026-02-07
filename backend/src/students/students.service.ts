@@ -1574,6 +1574,8 @@ export class StudentsService {
   async getUpcomingEventsByUuid(
     uuid: string,
     limit: number = 10,
+    startDateStr?: string,
+    endDateStr?: string,
     currentUser?: UserWithRelations
   ): Promise<StudentUpcomingEventsResponse> {
     // Find student by UUID
@@ -1595,6 +1597,9 @@ export class StudentsService {
     }
 
     const now = new Date()
+    const startDate = startDateStr ? new Date(startDateStr) : now
+    const endDate = endDateStr ? new Date(endDateStr) : undefined
+
     const events: Array<{
       id: number
       title: string
@@ -1615,7 +1620,7 @@ export class StudentsService {
     // Get upcoming exams for enrolled courses
     const upcomingExams = await this.prisma.examination.findMany({
       where: {
-        examDate: { gte: now },
+        examDate: endDate ? { gte: startDate, lte: endDate } : { gte: startDate },
         status: { in: ['SCHEDULED', 'ONGOING'] },
         subjectId: { in: enrolledCourseIds },
       },
@@ -1643,7 +1648,7 @@ export class StudentsService {
     // Get upcoming assignments for enrolled courses
     const upcomingAssignments = await this.prisma.assignment.findMany({
       where: {
-        dueDate: { gte: now },
+        dueDate: endDate ? { gte: startDate, lte: endDate } : { gte: startDate },
         status: 'PUBLISHED',
         subjectId: { in: enrolledCourseIds },
         submissions: {

@@ -468,14 +468,57 @@ class Teacher {
 }
 
 class Parent {
-  Parent({required this.id, required this.parentId});
+  Parent({
+    required this.id,
+    this.userId,
+    this.studentId,
+    this.relation,
+    this.occupation,
+    this.annualIncome,
+    this.educationLevel,
+    this.isPrimaryContact = false,
+    this.createdAt,
+    this.updatedAt,
+  });
 
-  factory Parent.fromJson(Map<String, dynamic> json) =>
-      Parent(id: json['id'], parentId: json['parentId']);
+  factory Parent.fromJson(Map<String, dynamic> json) => Parent(
+    id: json['id'],
+    userId: json['userId'],
+    studentId: json['studentId'],
+    relation: json['relation'],
+    occupation: json['occupation'],
+    annualIncome: json['annualIncome'],
+    educationLevel: json['educationLevel'],
+    isPrimaryContact: json['isPrimaryContact'] ?? false,
+    createdAt:
+        json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+    updatedAt:
+        json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+  );
+
   final int id;
-  final String parentId;
+  final int? userId;
+  final int? studentId;
+  final String? relation;
+  final String? occupation;
+  final String? annualIncome;
+  final String? educationLevel;
+  final bool isPrimaryContact;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
-  Map<String, dynamic> toJson() => {'id': id, 'parentId': parentId};
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'userId': userId,
+    'studentId': studentId,
+    'relation': relation,
+    'occupation': occupation,
+    'annualIncome': annualIncome,
+    'educationLevel': educationLevel,
+    'isPrimaryContact': isPrimaryContact,
+    'createdAt': createdAt?.toIso8601String(),
+    'updatedAt': updatedAt?.toIso8601String(),
+  };
 }
 
 class Staff {

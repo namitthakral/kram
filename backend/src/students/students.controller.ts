@@ -149,11 +149,15 @@ export class StudentsController {
   async getUpcomingEvents(
     @Param('user_uuid') userUuid: string,
     @CurrentUser() user: UserWithRelations,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
   ) {
     return this.studentsService.getUpcomingEventsByUuid(
       userUuid,
       parseInt(limit || '10'),
+      startDate,
+      endDate,
       user
     )
   }

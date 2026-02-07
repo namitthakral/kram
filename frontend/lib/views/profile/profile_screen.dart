@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../modules/student/providers/student_provider.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../utils/app_bar_config_helper.dart';
 import '../../utils/custom_snackbar.dart';
 import '../../utils/extensions.dart';
 import '../../utils/router_service.dart';
+import '../../utils/user_utils.dart';
 import '../../widgets/custom_widgets/custom_dialog.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';
@@ -32,14 +34,44 @@ class ProfileScreen extends StatelessWidget {
       return const SizedBox();
     }
 
-    // Use CustomMainScreenWithAppbar for consistent header
-    return CustomMainScreenWithAppbar(
-      title: 'Profile',
-      appBarConfig: AppBarConfigHelper.getConfigForUser(
+    // For students, use a detailed config consistent with other screens
+    AppBarConfig appBarConfig;
+    if (user.role?.id == 3) {
+      final studentProvider = context.watch<StudentProvider>();
+      final userInitials = UserUtils.getInitials(user.name);
+      final userName = user.name;
+
+      final className = studentProvider.studentClassName;
+      final section = studentProvider.studentSection;
+      final grade =
+          (className.isNotEmpty || section.isNotEmpty)
+              ? '$className $section'.trim()
+              : 'Class N/A';
+
+      final rollNumber = user.student?.rollNumber ?? 'N/A';
+      final statsData = studentProvider.dashboardStats;
+      final gpa = statsData?['gpa']?.toString();
+
+      appBarConfig = AppBarConfig.student(
+        userInitials: userInitials,
+        userName: userName,
+        grade: grade,
+        rollNumber: rollNumber,
+        gpa: gpa,
+        onNotificationIconPressed: () {},
+      );
+    } else {
+      appBarConfig = AppBarConfigHelper.getConfigForUser(
         user,
         onNotificationIconPressed: () {},
         isProfileScreen: true,
-      ),
+      );
+    }
+
+    // Use CustomMainScreenWithAppbar for consistent header
+    return CustomMainScreenWithAppbar(
+      title: 'Profile',
+      appBarConfig: appBarConfig,
       child: SingleChildScrollView(
         child: ResponsivePadding(
           mobile: const EdgeInsets.all(16),

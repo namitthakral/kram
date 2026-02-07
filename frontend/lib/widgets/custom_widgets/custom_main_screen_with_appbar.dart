@@ -36,6 +36,7 @@ class AppBarConfig {
     required String rollNumber,
     this.gpa,
     this.onNotificationIconPressed,
+    this.actions = const [],
     this.elevation = 5.0,
   }) : type = AppBarType.profile,
        profileIcon = null,
@@ -43,7 +44,6 @@ class AppBarConfig {
        showBackButton = false,
        showCircularBackButton = false,
        onBackButtonTapped = null,
-       actions = const [],
        userDetails =
            gpa != null
                ? '$grade • Roll No: $rollNumber • GPA: $gpa'

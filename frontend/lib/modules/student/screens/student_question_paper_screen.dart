@@ -4,14 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../../core/services/question_paper_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../provider/login_signup/login_provider.dart';
-import '../../../../utils/custom_colors.dart';
 import '../../../../utils/custom_snackbar.dart';
-import '../../../../utils/enum.dart';
 import '../../../../utils/extensions.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../teacher/models/template_models.dart';
 import '../../teacher/services/pdf_template_service.dart';
+import '../providers/student_provider.dart';
 
 class StudentQuestionPaperScreen extends StatefulWidget {
   const StudentQuestionPaperScreen({required this.examId, super.key});
@@ -76,22 +75,36 @@ class _StudentQuestionPaperScreenState
 
   @override
   Widget build(BuildContext context) {
+    final studentProvider = context.watch<StudentProvider>();
+
     final user = context.watch<LoginProvider>().currentUser;
     final userInitials = user != null ? UserUtils.getInitials(user.name) : 'ST';
     final userName = user?.name ?? 'Student';
-    final grade = user?.student?.gradeLevel ?? 'Class 10';
-    final rollNumber = user?.student?.rollNumber ?? '23';
+
+    // Get dynamic grade/class info
+    final className = studentProvider.studentClassName;
+    final section = studentProvider.studentSection;
+    final grade =
+        (className.isNotEmpty || section.isNotEmpty)
+            ? '$className $section'.trim()
+            : 'Class N/A';
+
+    final rollNumber = user?.student?.rollNumber ?? 'N/A';
+
+    // Get GPA from dashboard stats
+    final statsData = studentProvider.dashboardStats;
+    final gpa = statsData?['gpa']?.toString();
 
     return CustomMainScreenWithAppbar(
       title: 'Question Paper',
       isLoading: _isLoading,
-      appBarConfig: AppBarConfig(
-        type: AppBarType.profile,
-        showBackButton: false,
-        iconBackgroundColor: CustomAppColors.primary,
+      appBarConfig: AppBarConfig.student(
         userInitials: userInitials,
         userName: userName,
-        userDetails: '$grade • Roll No: $rollNumber',
+        grade: grade,
+        rollNumber: rollNumber,
+        gpa: gpa,
+        onNotificationIconPressed: () {},
         actions: [
           if (_questionPaper != null)
             IconButton(

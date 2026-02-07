@@ -46,6 +46,7 @@ class StudentAcademicScreen extends StatelessWidget {
         userName: userName,
         grade: grade,
         rollNumber: rollNumber,
+        gpa: gpa.toString(),
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(
