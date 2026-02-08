@@ -98,17 +98,22 @@ The script will:
 
 ### How It Works
 
-Every time the container deploys or restarts, it **automatically runs database migrations** via:
+Every time the container deploys or restarts, it **automatically runs database migrations** via a dedicated entrypoint script.
 
-```bash
-npx prisma migrate deploy
-```
+The container startup process:
+1. ✅ Checks DATABASE_URL is set
+2. ✅ Runs `npx prisma migrate deploy`
+3. ✅ Verifies migration status
+4. ✅ **Fails immediately** if migrations fail
+5. ✅ Starts NestJS application only if migrations succeed
 
-This is configured in the `Dockerfile`:
+This is configured in `scripts/docker-entrypoint.sh` and called from the `Dockerfile`:
 
 ```dockerfile
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 ```
+
+**Key Benefit:** The container will **fail to start** if migrations fail, making issues visible immediately in logs!
 
 ### What This Means
 

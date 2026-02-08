@@ -77,6 +77,8 @@ nest-cli.json
 # Postman
 *.postman_collection.json
 
-# Setup scripts
-setup.sh
+# Setup scripts (but keep docker-entrypoint.sh)
+scripts/setup.sh
+scripts/lightsail-deploy.sh
+!scripts/docker-entrypoint.sh
 

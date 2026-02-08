@@ -1,4 +1,3 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 async function listModels() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -21,7 +20,7 @@ async function listModels() {
     } else {
       console.log("No models found or error:", data);
     }
-  } on Exception catch (e) {
+  } catch (e) {
     console.error("Error listing models:", e);
   }
 }
