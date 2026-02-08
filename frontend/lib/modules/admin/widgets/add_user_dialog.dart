@@ -58,8 +58,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Dialog(
+  Widget build(BuildContext context) => Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -273,15 +272,13 @@ class _AddUserDialogState extends State<AddUserDialog> {
         ),
       ),
     );
-  }
 
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
     required String hint,
     String? Function(String?)? validator,
-  }) {
-    return Column(
+  }) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -318,7 +315,6 @@ class _AddUserDialogState extends State<AddUserDialog> {
         ),
       ],
     );
-  }
 
   Widget _buildDropdown({
     required String label,
@@ -326,8 +322,7 @@ class _AddUserDialogState extends State<AddUserDialog> {
     required String hint,
     required List<String> items,
     required void Function(String?) onChanged,
-  }) {
-    return Column(
+  }) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -362,20 +357,16 @@ class _AddUserDialogState extends State<AddUserDialog> {
               vertical: 14,
             ),
           ),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
+          items: items.map((String item) => DropdownMenuItem<String>(
               value: item,
               child: Text(item),
-            );
-          }).toList(),
+            )).toList(),
           onChanged: onChanged,
         ),
       ],
     );
-  }
 
-  Widget _buildPermissionsGrid() {
-    return Column(
+  Widget _buildPermissionsGrid() => Column(
       children: [
         Row(
           children: [
@@ -438,14 +429,12 @@ class _AddUserDialogState extends State<AddUserDialog> {
         ),
       ],
     );
-  }
 
   Widget _buildPermissionSwitch({
     required String label,
     required bool value,
     required void Function(bool) onChanged,
-  }) {
-    return Row(
+  }) => Row(
       children: [
         Switch(
           value: value,
@@ -465,5 +454,4 @@ class _AddUserDialogState extends State<AddUserDialog> {
         ),
       ],
     );
-  }
 }

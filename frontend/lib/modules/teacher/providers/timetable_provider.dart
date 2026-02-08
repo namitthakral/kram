@@ -226,20 +226,20 @@ class TimetableProvider extends ChangeNotifier {
   }
 
   /// Create a new timetable entry
-  Future<bool> createTimetableEntry(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>?> createTimetableEntry(Map<String, dynamic> data) async {
     _isCreating = true;
     _createError = null;
     notifyListeners();
 
     try {
-      await _timetableService.createTimetableEntry(data);
+      final result = await _timetableService.createTimetableEntry(data);
       _createError = null;
       debugPrint('✅ Timetable entry created successfully');
-      return true;
+      return result;
     } on Exception catch (e) {
       _createError = e.toString().replaceAll('Exception: ', '');
       debugPrint('❌ Error creating timetable entry: $e');
-      return false;
+      return null;
     } finally {
       _isCreating = false;
       notifyListeners();
@@ -318,6 +318,71 @@ class TimetableProvider extends ChangeNotifier {
     _timetableError = null;
     _isLoadingTimetable = false;
     notifyListeners();
+  }
+
+
+
+  /// Create a new time slot
+  Future<bool> createTimeSlot(Map<String, dynamic> data) async {
+    _isCreating = true;
+    _createError = null;
+    notifyListeners();
+
+    try {
+      await _timetableService.createTimeSlot(data);
+      _createError = null;
+      debugPrint('✅ Time slot created successfully');
+      return true;
+    } on Exception catch (e) {
+      _createError = e.toString().replaceAll('Exception: ', '');
+      debugPrint('❌ Error creating time slot: $e');
+      return false;
+    } finally {
+      _isCreating = false;
+      notifyListeners();
+    }
+  }
+
+  /// Update a time slot
+  Future<bool> updateTimeSlot(int id, Map<String, dynamic> data) async {
+    _isCreating = true;
+    _createError = null;
+    notifyListeners();
+
+    try {
+      await _timetableService.updateTimeSlot(id, data);
+      _createError = null;
+      debugPrint('✅ Time slot updated successfully');
+      return true;
+    } on Exception catch (e) {
+      _createError = e.toString().replaceAll('Exception: ', '');
+      debugPrint('❌ Error updating time slot: $e');
+      return false;
+    } finally {
+      _isCreating = false;
+      notifyListeners();
+    }
+  }
+
+  /// Delete a time slot
+  Future<bool> deleteTimeSlot(int id) async {
+    _isCreating = true;
+    _createError = null;
+    notifyListeners();
+
+    try {
+      await _timetableService.deleteTimeSlot(id);
+      _createError = null;
+      debugPrint('✅ Time slot deleted successfully');
+      return true;
+    } on Exception catch (e) {
+      _createError = e.toString().replaceAll('Exception: ', '');
+      debugPrint('❌ Error deleting time slot: $e');
+      return false;
+    } finally {
+      _isCreating = false;
+      notifyListeners();
+    }
   }
 
   /// Clear time slots

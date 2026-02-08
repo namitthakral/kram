@@ -2,23 +2,30 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../modules/ai_assistant/views/ai_chat_screen.dart';
 import '../provider/bottom_nav_provider.dart';
 import '../provider/login_signup/login_provider.dart';
 import '../utils/platform_helper.dart';
 import '../utils/router_service.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
 import '../widgets/custom_widgets/custom_navigation_rail.dart';
+import '../widgets/custom_widgets/draggable_floating_overlay.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({required this.child, super.key});
+
+  final Widget child;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -28,29 +35,48 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _initializeNavigation() {
+  Future<void> _initializeNavigation() async {
     final loginProvider = context.read<LoginProvider>();
     final navProvider = context.read<BottomNavProvider>();
-    final user = loginProvider.currentUser;
 
-    if (user?.role?.id != null) {
-      navProvider.initializeForRole(user!.role!.id);
+    // Check if user is already loaded
+    if (loginProvider.currentUser?.role?.id != null) {
+      navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
+      return;
+    }
+
+    // If no user loaded, try to restore session
+    // This handles hot restart case where provider state is lost but auth token exists
+    final isLoggedIn = await loginProvider.checkLoginStatus();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (isLoggedIn && loginProvider.currentUser?.role?.id != null) {
+      navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
     } else {
-      // If no role found, redirect to login
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          context.router.goToLogin();
-        }
-      });
+      // If still no valid session/role, redirect to login
+      context.router.goToLogin();
     }
   }
 
   @override
-  Widget build(BuildContext context) => const _HomeScreenContent();
+  Widget build(BuildContext context) =>
+      _HomeScreenContent(scaffoldKey: _scaffoldKey, child: widget.child);
 }
 
-class _HomeScreenContent extends StatelessWidget {
-  const _HomeScreenContent();
+class _HomeScreenContent extends StatefulWidget {
+  const _HomeScreenContent({required this.scaffoldKey, required this.child});
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final Widget child;
+
+  @override
+  State<_HomeScreenContent> createState() => _HomeScreenContentState();
+}
+
+class _HomeScreenContentState extends State<_HomeScreenContent> {
+  bool _isEndDrawerOpen = false;
 
   /// Check if should use bottom bar (mobile platforms or mobile screen sizes)
   bool _shouldUseBottomBar(BuildContext context) {
@@ -71,28 +97,76 @@ class _HomeScreenContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
-    builder: (context, navProvider, child) {
+    builder: (context, navProvider, _) {
       // Check if navigation is initialized
-      if (navProvider.pages.isEmpty) {
+      if (navProvider.navigationItems.isEmpty) {
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
-      // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
-      if (_shouldUseBottomBar(context)) {
-        return Scaffold(
-          body: navProvider.pages[navProvider.currentIndex],
-          bottomNavigationBar: const CustomBottomNavBar(),
-        );
-      }
-
-      // Desktop/Tablet (other platforms or larger screens) → Use Overlay Rail
-      return const Scaffold(body: _HomeScreenWithRail());
+      // Handle back button to navigate to first tab instead of exiting App
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, result) {
+          if (didPop) {
+            return;
+          }
+          // Navigate to dashboard instead of exiting
+          context.go('/dashboard');
+        },
+        child: _buildScaffold(context, navProvider),
+      );
     },
   );
+
+  Widget _buildScaffold(BuildContext context, BottomNavProvider navProvider) {
+    // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
+    if (_shouldUseBottomBar(context)) {
+      return DraggableFloatingOverlay(
+        isVisible: !_isEndDrawerOpen,
+        onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+        child: Scaffold(
+          key: widget.scaffoldKey,
+          body: widget.child,
+          bottomNavigationBar: const CustomBottomNavBar(),
+          endDrawer: const Drawer(
+            width: 380, // Slightly wider for chat
+            child: AiChatScreen(),
+          ),
+          onEndDrawerChanged: (isOpen) {
+            setState(() {
+              _isEndDrawerOpen = isOpen;
+            });
+          },
+          drawerEnableOpenDragGesture: false, // Prevent accidental swipe
+        ),
+      );
+    }
+
+    // Desktop/Tablet (other platforms or larger screens) → Use Overlay Rail
+    return DraggableFloatingOverlay(
+      isVisible: !_isEndDrawerOpen,
+      onPressed: () => widget.scaffoldKey.currentState?.openEndDrawer(),
+      child: Scaffold(
+        key: widget.scaffoldKey,
+        body: _HomeScreenWithRail(child: widget.child),
+        endDrawer: const Drawer(
+          width: 400, // Wide drawer for desktop
+          child: AiChatScreen(),
+        ),
+        onEndDrawerChanged: (isOpen) {
+          setState(() {
+            _isEndDrawerOpen = isOpen;
+          });
+        },
+        drawerEnableOpenDragGesture: false,
+      ),
+    );
+  }
 }
 
 class _HomeScreenWithRail extends StatefulWidget {
-  const _HomeScreenWithRail();
+  const _HomeScreenWithRail({required this.child});
+  final Widget child;
 
   @override
   State<_HomeScreenWithRail> createState() => _HomeScreenWithRailState();
@@ -104,9 +178,9 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
 
   @override
   Widget build(BuildContext context) => Consumer<BottomNavProvider>(
-    builder: (context, navProvider, child) {
+    builder: (context, navProvider, _) {
       // Check if navigation is initialized
-      if (navProvider.pages.isEmpty) {
+      if (navProvider.navigationItems.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
 
@@ -115,7 +189,7 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
           // Main content with left padding to avoid rail overlap
           Padding(
             padding: const EdgeInsets.only(left: 80),
-            child: navProvider.pages[navProvider.currentIndex],
+            child: widget.child,
           ),
           // Backdrop overlay when rail is extended
           if (_isRailExtended)
@@ -130,8 +204,8 @@ class _HomeScreenWithRailState extends State<_HomeScreenWithRail> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.black.withValues(alpha: 0.5),
-                        Colors.black.withValues(alpha: 0.2),
+                        Colors.black.withOpacity(0.5),
+                        Colors.black.withOpacity(0.2),
                       ],
                     ),
                   ),

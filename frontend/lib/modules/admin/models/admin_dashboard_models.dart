@@ -10,13 +10,20 @@ class AdminDashboardStats {
 
   factory AdminDashboardStats.fromJson(Map<String, dynamic> json) =>
       AdminDashboardStats(
-        totalStudents: json['total_students'] ?? 0,
-        totalTeachers: json['total_teachers'] ?? 0,
-        totalClasses: json['total_classes'] ?? 0,
-        attendanceRate: (json['attendance_rate'] ?? 0.0).toDouble(),
-        feeCollection: (json['fee_collection'] ?? 0.0).toDouble(),
-        pendingFees: (json['pending_fees'] ?? 0.0).toDouble(),
+        totalStudents: json['total_students'] as int? ?? 0,
+        totalTeachers: json['total_teachers'] as int? ?? 0,
+        totalClasses: json['total_classes'] as int? ?? 0,
+        attendanceRate: _parseDouble(json['attendance_rate']),
+        feeCollection: _parseDouble(json['fee_collection']),
+        pendingFees: _parseDouble(json['pending_fees']),
       );
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
   final int totalStudents;
   final int totalTeachers;
   final int totalClasses;
@@ -36,12 +43,19 @@ class TeacherPerformance {
 
   factory TeacherPerformance.fromJson(Map<String, dynamic> json) =>
       TeacherPerformance(
-        teacherName: json['teacher_name'] ?? '',
-        subject: json['subject'] ?? '',
-        students: json['students'] ?? 0,
-        avgGrade: (json['avg_grade'] ?? 0.0).toDouble(),
-        rating: (json['rating'] ?? 0.0).toDouble(),
+        teacherName: json['teacher_name']?.toString() ?? '',
+        subject: json['subject']?.toString() ?? '',
+        students: json['students'] as int? ?? 0,
+        avgGrade: _parseDouble(json['avg_grade']),
+        rating: _parseDouble(json['rating']),
       );
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
   final String teacherName;
   final String subject;
   final int students;
@@ -58,10 +72,17 @@ class AttendanceTrend {
 
   factory AttendanceTrend.fromJson(Map<String, dynamic> json) =>
       AttendanceTrend(
-        month: json['month'] ?? '',
-        actualAttendance: (json['actual_attendance'] ?? 0.0).toDouble(),
-        targetAttendance: (json['target_attendance'] ?? 95.0).toDouble(),
+        month: json['month']?.toString() ?? '',
+        actualAttendance: _parseDouble(json['actual_attendance']),
+        targetAttendance: _parseDouble(json['target_attendance']) == 0.0 ? 95.0 : _parseDouble(json['target_attendance']),
       );
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
   final String month;
   final double actualAttendance;
   final double targetAttendance;
@@ -71,7 +92,10 @@ class GradeDistribution {
   GradeDistribution({required this.grade, required this.count});
 
   factory GradeDistribution.fromJson(Map<String, dynamic> json) =>
-      GradeDistribution(grade: json['grade'] ?? '', count: json['count'] ?? 0);
+      GradeDistribution(
+        grade: json['grade']?.toString() ?? '',
+        count: json['count'] as int? ?? 0,
+      );
   final String grade;
   final int count;
 }
@@ -86,11 +110,18 @@ class ClassPerformance {
 
   factory ClassPerformance.fromJson(Map<String, dynamic> json) =>
       ClassPerformance(
-        className: json['class_name'] ?? '',
-        studentCount: json['student_count'] ?? 0,
-        avgGrade: (json['avg_grade'] ?? 0.0).toDouble(),
-        attendanceRate: (json['attendance_rate'] ?? 0.0).toDouble(),
+        className: json['class_name']?.toString() ?? '',
+        studentCount: json['student_count'] as int? ?? 0,
+        avgGrade: _parseDouble(json['avg_grade']),
+        attendanceRate: _parseDouble(json['attendance_rate']),
       );
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
   final String className;
   final int studentCount;
   final double avgGrade;
@@ -107,11 +138,18 @@ class FinancialOverview {
 
   factory FinancialOverview.fromJson(Map<String, dynamic> json) =>
       FinancialOverview(
-        month: json['month'] ?? '',
-        expenses: (json['expenses'] ?? 0.0).toDouble(),
-        feeCollection: (json['fee_collection'] ?? 0.0).toDouble(),
-        profit: (json['profit'] ?? 0.0).toDouble(),
+        month: json['month']?.toString() ?? '',
+        expenses: _parseDouble(json['expenses']),
+        feeCollection: _parseDouble(json['fee_collection']),
+        profit: _parseDouble(json['profit']),
       );
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
   final String month;
   final double expenses;
   final double feeCollection;
@@ -127,12 +165,12 @@ class SystemAlert {
   });
 
   factory SystemAlert.fromJson(Map<String, dynamic> json) => SystemAlert(
-    category: json['category'] ?? '',
-    message: json['message'] ?? '',
-    severity: json['severity'] ?? 'low',
+    category: json['category']?.toString() ?? '',
+    message: json['message']?.toString() ?? '',
+    severity: json['severity']?.toString() ?? 'low',
     timestamp:
         json['timestamp'] != null
-            ? DateTime.parse(json['timestamp'])
+            ? DateTime.parse(json['timestamp'].toString())
             : DateTime.now(),
   );
   final String category;

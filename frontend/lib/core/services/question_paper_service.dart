@@ -43,6 +43,46 @@ class QuestionPaperService {
 
   // ============ Question Paper Methods (Teacher) ============
 
+  /// Get all question papers for a teacher
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/question-papers
+  ///
+  /// [userUuid] - Teacher user UUID
+  Future<List<dynamic>> getAllQuestionPapers(String userUuid) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/question-papers',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get question papers',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get question papers',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get question papers',
+      );
+    }
+  }
+
   /// Create an empty question paper for an examination
   ///
   /// Endpoint: POST /teachers/:user_uuid/examinations/:examId/question-paper
@@ -76,7 +116,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to create question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create question paper',
@@ -115,7 +155,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to create full question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to create full question paper',
@@ -153,7 +193,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get question paper',
@@ -191,7 +231,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get question paper',
@@ -232,7 +272,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to update question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update question paper',
@@ -270,7 +310,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to publish question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to publish question paper',
@@ -303,7 +343,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to delete question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete question paper',
@@ -346,7 +386,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to add section',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to add section',
@@ -387,7 +427,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to update section',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update section',
@@ -420,7 +460,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to delete section',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete section',
@@ -463,7 +503,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to add question',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to add question',
@@ -504,7 +544,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to bulk add questions',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to bulk add questions',
@@ -545,7 +585,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to update question',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update question',
@@ -578,7 +618,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to delete question',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete question',
@@ -605,6 +645,10 @@ class QuestionPaperService {
       );
 
       if (response.statusCode == 200) {
+        final data = response.data['data'];
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
         return response.data as Map<String, dynamic>;
       } else {
         throw DioException(
@@ -619,7 +663,7 @@ class QuestionPaperService {
         e,
         defaultMessage: 'Failed to get published question paper',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get published question paper',

@@ -39,16 +39,18 @@ class AuthService {
           AppConstants.accessTokenKey,
           loginResponse.accessToken,
         );
-        log('💾 Stored access token');
+        log('💾 AuthService: Stored access token');
 
         if (loginResponse.refreshToken != null) {
           await _storage.write(
             AppConstants.refreshTokenKey,
             loginResponse.refreshToken!,
           );
-          log('💾 Stored refresh token');
+          log('💾 AuthService: Stored refresh token');
         } else {
-          log('⚠️ No refresh token received from backend');
+          log(
+            '⚠️ AuthService: No refresh token received from backend in login response',
+          );
         }
 
         // Calculate and store token expiry time
@@ -59,13 +61,15 @@ class AuthService {
           AppConstants.tokenExpiryKey,
           expiryTime.toIso8601String(),
         );
-        log('💾 Stored token expiry: $expiryTime');
+        log('💾 AuthService: Stored token expiry: $expiryTime');
 
         await _storage.write(
           AppConstants.userKey,
           jsonEncode(loginResponse.user.toJson()),
         );
-        log('✅ Login successful for user: ${loginResponse.user.email}');
+        log(
+          '✅ AuthService: Login successful for user: ${loginResponse.user.email}',
+        );
 
         return loginResponse;
       } else {
@@ -83,7 +87,7 @@ class AuthService {
       } else {
         throw Exception('Login failed: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Login failed: $e');
     }
   }
@@ -115,7 +119,7 @@ class AuthService {
       } else {
         throw Exception('Registration failed: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Registration failed: $e');
     }
   }
@@ -125,6 +129,7 @@ class AuthService {
   /// The caller is responsible for navigation to login screen.
   Future<void> logout() async {
     try {
+      log('🚪 AuthService: Logging out user...');
       // Reset data source to default
       _dataSource.resetToDefault();
 
@@ -133,7 +138,9 @@ class AuthService {
       await _storage.delete(AppConstants.refreshTokenKey);
       await _storage.delete(AppConstants.tokenExpiryKey);
       await _storage.delete(AppConstants.userKey);
-    } on Exception {
+      log('✅ AuthService: Logout complete, data cleared');
+    } on Exception catch (e) {
+      log('⚠️ AuthService: Error during logout clearing: $e');
       // Continue with logout even if clearing fails
     }
   }
@@ -183,23 +190,41 @@ class AuthService {
     }
   }
 
+  /// Check if refresh token exists in storage
+  Future<bool> hasRefreshToken() async {
+    final token = await _storage.read(AppConstants.refreshTokenKey);
+    return token != null && token.isNotEmpty;
+  }
+
   /// Refresh auth token
   Future<String> refreshToken() async {
     try {
+      log(
+        '🔄 AuthService: Attempting to retrieve refresh token from storage...',
+      );
       final refreshToken = await _storage.read(AppConstants.refreshTokenKey);
+
       if (refreshToken == null || refreshToken.isEmpty) {
-        log('❌ No refresh token available in storage');
+        log(
+          '❌ AuthService: No refresh token available in storage during refresh attempt',
+        );
+        // Debug: list all keys to see what's actually there
+        final allKeys = await _storage.readAll();
+        log(
+          '🔎 AuthService debugging: Available keys in storage: ${allKeys.keys.join(', ')}',
+        );
+
         throw Exception('No refresh token available');
       }
 
-      log('🔄 Calling refresh token API endpoint...');
+      log('🔄 AuthService: Calling refresh token API endpoint...');
       final response = await _apiService.dio.post(
         '/auth/refresh',
         options: Options(headers: {'Authorization': 'Bearer $refreshToken'}),
       );
 
       if (response.statusCode == 200) {
-        log('✅ Refresh token API call successful');
+        log('✅ AuthService: Refresh token API call successful');
 
         // Backend returns { tokens: { accessToken, refreshToken, expiresIn } }
         // Extract the tokens object from the response
@@ -208,7 +233,16 @@ class AuthService {
 
         // Store new access token
         await _storage.write(AppConstants.accessTokenKey, tokens.accessToken);
-        log('💾 Stored new access token');
+
+        // Verify access token write
+        final verifyAccess = await _storage.read(AppConstants.accessTokenKey);
+        if (verifyAccess != tokens.accessToken) {
+          log(
+            '❌ AuthService: CRITICAL - Access Token write verification failed!',
+          );
+        } else {
+          log('💾 AuthService: Stored and verified new access token');
+        }
 
         // Update refresh token if provided
         if (tokens.refreshToken != null && tokens.refreshToken!.isNotEmpty) {
@@ -216,7 +250,21 @@ class AuthService {
             AppConstants.refreshTokenKey,
             tokens.refreshToken!,
           );
-          log('💾 Stored new refresh token');
+          // Verify refresh token write
+          final verifyRefresh = await _storage.read(
+            AppConstants.refreshTokenKey,
+          );
+          if (verifyRefresh != tokens.refreshToken) {
+            log(
+              '❌ AuthService: CRITICAL - Refresh Token write verification failed!',
+            );
+          } else {
+            log('💾 AuthService: Stored and verified new refresh token');
+          }
+        } else {
+          log(
+            'ℹ️ AuthService: backend did not rotate refresh token (not returned in response)',
+          );
         }
 
         // Calculate and store new expiry time
@@ -227,15 +275,28 @@ class AuthService {
           AppConstants.tokenExpiryKey,
           expiryTime.toIso8601String(),
         );
-        log('💾 Stored new token expiry: $expiryTime');
+        log('💾 AuthService: Stored new token expiry: $expiryTime');
 
         return tokens.accessToken;
       } else {
-        log('❌ Token refresh failed with status: ${response.statusCode}');
-        throw Exception('Token refresh failed');
+        log(
+          '❌ AuthService: Token refresh failed with status: ${response.statusCode}',
+        );
+        log('❌ Response body: ${response.data}');
+        throw Exception(
+          'Token refresh failed: ${response.statusCode} - ${response.statusMessage}',
+        );
       }
-    } catch (e) {
-      log('❌ Token refresh error: $e');
+    } on DioException catch (e) {
+      log('❌ AuthService: Token refresh DioError: ${e.message}');
+      if (e.response != null) {
+        log(
+          '❌ Response status: ${e.response?.statusCode}, data: ${e.response?.data}',
+        );
+      }
+      throw Exception('Token refresh failed: ${e.message}');
+    } on Exception catch (e) {
+      log('❌ AuthService: Token refresh error: $e');
       // Don't logout here - let the API interceptor handle it
       // This prevents premature logout during refresh attempts
       throw Exception('Token refresh failed: $e');
@@ -286,10 +347,7 @@ class AuthService {
     try {
       final response = await _apiService.dio.post(
         '/auth/change-password',
-        data: {
-          'oldPassword': oldPassword,
-          'newPassword': newPassword,
-        },
+        data: {'oldPassword': oldPassword, 'newPassword': newPassword},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -306,13 +364,12 @@ class AuthService {
       if (e.response?.statusCode == 401) {
         throw Exception('Current password is incorrect');
       } else if (e.response?.statusCode == 400) {
-        final errorMessage =
-            e.response?.data['message'] ?? 'Invalid password';
+        final errorMessage = e.response?.data['message'] ?? 'Invalid password';
         throw Exception(errorMessage);
       } else {
         throw Exception('Failed to change password: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to change password: $e');
     }
   }
@@ -331,10 +388,7 @@ class AuthService {
         final user = User.fromJson(userData);
 
         // Update stored user data
-        await _storage.write(
-          AppConstants.userKey,
-          jsonEncode(user.toJson()),
-        );
+        await _storage.write(AppConstants.userKey, jsonEncode(user.toJson()));
 
         return user;
       } else {
@@ -350,7 +404,7 @@ class AuthService {
       } else {
         throw Exception('Failed to get profile: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get profile: $e');
     }
   }
@@ -399,7 +453,7 @@ class AuthService {
       } else {
         throw Exception('Failed to activate account: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to activate account: $e');
     }
   }

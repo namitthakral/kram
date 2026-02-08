@@ -87,7 +87,13 @@ class StudentDashboardProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _dashboardStats = await _studentService.getDashboardStats(userUuid);
+      final response = await _studentService.getDashboardStats(userUuid);
+      // Extract data if wrapped in 'data' key (standard API response)
+      if (response.containsKey('success') && response.containsKey('data')) {
+        _dashboardStats = response['data'] as Map<String, dynamic>;
+      } else {
+        _dashboardStats = response;
+      }
       _statsError = null;
       debugPrint('✅ Dashboard stats loaded successfully: $_dashboardStats');
     } on Exception catch (e) {
@@ -334,10 +340,15 @@ class StudentDashboardProvider extends ChangeNotifier {
         }
 
         return Assignment(
+          id:
+              assignment['id'] is int
+                  ? assignment['id']
+                  : int.tryParse(assignment['id']?.toString() ?? '') ?? 0,
           title: assignment['title'] ?? 'Untitled Assignment',
           subject: assignment['subject'] ?? 'Unknown',
           dueDate: assignment['dueDate'] ?? '',
           status: status,
+          type: AssignmentType.assignment,
           grade: assignment['grade'],
           score: assignment['score'],
         );

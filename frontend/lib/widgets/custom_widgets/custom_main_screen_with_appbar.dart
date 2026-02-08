@@ -5,6 +5,7 @@ import '../../utils/custom_colors.dart';
 import '../../utils/enum.dart';
 import '../../utils/extensions.dart';
 import '../../utils/responsive_utils.dart';
+import 'unified_loader.dart';
 
 /// Configuration class for app bar customization
 class AppBarConfig {
@@ -35,6 +36,7 @@ class AppBarConfig {
     required String rollNumber,
     this.gpa,
     this.onNotificationIconPressed,
+    this.actions = const [],
     this.elevation = 5.0,
   }) : type = AppBarType.profile,
        profileIcon = null,
@@ -42,7 +44,6 @@ class AppBarConfig {
        showBackButton = false,
        showCircularBackButton = false,
        onBackButtonTapped = null,
-       actions = const [],
        userDetails =
            gpa != null
                ? '$grade • Roll No: $rollNumber • GPA: $gpa'
@@ -240,36 +241,45 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
     super.key,
     this.appBarConfig = const AppBarConfig(),
     this.bottomWidget,
-    this.floatingActionButtonWidget,
+    this.floatingActionButton,
     this.bottomWidgetPadding = const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 32.0),
+    this.isLoading = false,
   });
 
   final Widget child;
   final String title;
   final AppBarConfig appBarConfig;
-  final Widget? bottomWidget, floatingActionButtonWidget;
+  final Widget? bottomWidget;
+  final Widget? floatingActionButton;
   final EdgeInsetsGeometry bottomWidgetPadding;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     // Get responsive padding
     final padding = ResponsiveUtils.responsivePadding(context);
 
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(
-          appBarConfig.type == AppBarType.profile
-              ? kToolbarHeight + 8
-              : kToolbarHeight,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(
+              appBarConfig.type == AppBarType.profile
+                  ? kToolbarHeight + 8
+                  : kToolbarHeight,
+            ),
+            child: _CustomAppBar(title: title, config: appBarConfig),
+          ),
+          bottomNavigationBar:
+              bottomWidget == null
+                  ? null
+                  : Padding(padding: bottomWidgetPadding, child: bottomWidget),
+          body: _buildResponsiveBody(context, padding),
+          floatingActionButton: floatingActionButton,
         ),
-        child: _CustomAppBar(title: title, config: appBarConfig),
-      ),
-      bottomNavigationBar:
-          bottomWidget == null
-              ? null
-              : Padding(padding: bottomWidgetPadding, child: bottomWidget),
-      body: _buildResponsiveBody(context, padding),
-      floatingActionButton: floatingActionButtonWidget,
+        // Full-screen loader overlay
+        if (isLoading) const Positioned.fill(child: UnifiedLoader()),
+      ],
     );
   }
 
@@ -317,11 +327,10 @@ class _CustomAppBar extends StatelessWidget {
                 child: Container(height: 1, color: const Color(0xFFE5E7EB)),
               )
               : null,
-      // Leading (back button) - only for standard type
+      // Leading (back button)
       leading:
           !isProfileType && config.showBackButton
               ? IconButton(
-                // padding: const EdgeInsets.only(left: 16),
                 icon: SvgPicture.asset(
                   'assets/images/icons/ic_back_arrow.svg',
                   width: 20,

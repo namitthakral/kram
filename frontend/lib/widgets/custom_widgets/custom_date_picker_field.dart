@@ -127,12 +127,28 @@ class CustomDatePickerField extends StatelessWidget {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    final initialDate = selectedDate ?? DateTime.now();
+
+    // Ensure firstDate and lastDate encompass the initialDate
+    // This prevents crashes if the selected date (e.g. from editing an old record)
+    // is outside the restricted range (e.g. future dates only).
+    var effectiveFirstDate =
+        firstDate ?? DateTime.now().subtract(const Duration(days: 365));
+    if (initialDate.isBefore(effectiveFirstDate)) {
+      effectiveFirstDate = initialDate;
+    }
+
+    var effectiveLastDate =
+        lastDate ?? DateTime.now().add(const Duration(days: 365));
+    if (initialDate.isAfter(effectiveLastDate)) {
+      effectiveLastDate = initialDate;
+    }
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? DateTime.now(),
-      firstDate:
-          firstDate ?? DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: lastDate ?? DateTime.now().add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: effectiveFirstDate,
+      lastDate: effectiveLastDate,
     );
 
     if (picked != null) {

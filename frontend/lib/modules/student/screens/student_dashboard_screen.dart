@@ -8,9 +8,10 @@ import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_tab_bar.dart';
-import '../../teacher/widgets/stat_card.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../providers/dashboard_tab_provider.dart';
 import '../providers/student_dashboard_provider.dart';
+import '../providers/student_provider.dart';
 import '../widgets/assignment_card.dart';
 import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
@@ -43,6 +44,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     if (user?.uuid != null) {
       debugPrint('✅ Loading dashboard data for UUID: ${user!.uuid}');
       context.read<StudentDashboardProvider>().loadAllDashboardData(user.uuid!);
+      context.read<StudentProvider>().loadStudentData(user.uuid!);
     } else {
       debugPrint('❌ Cannot load dashboard data - user UUID is null');
     }
@@ -68,20 +70,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     // Use real user data
     final userInitials = UserUtils.getInitials(user.name);
     final userName = user.name;
-    const grade = 'Grade 10B'; // To be fetched from API when available
+
+    // Get dynamic grade/class info
+    final studentProvider = context.watch<StudentProvider>();
+    final className = studentProvider.studentClassName;
+    final section = studentProvider.studentSection;
+    final grade =
+        (className.isNotEmpty || section.isNotEmpty)
+            ? '$className $section'.trim()
+            : 'Class N/A';
+
     final rollNumber = student?.rollNumber ?? 'N/A';
 
     // Get GPA from dashboard stats
-    // Backend returns: { success: true, data: { currentGpa: 3.8, maxGpa: 4.0, ... } }
     final statsData = dashboardProvider.dashboardStats;
     final dataObject = statsData?['data'] ?? statsData;
     final gpa = dataObject?['currentGpa'] ?? dataObject?['gpa'];
     final gpaString = gpa?.toString();
-
-    // Debug: Print dashboard stats to see what we're getting
-    debugPrint('Dashboard Stats Full: ${dashboardProvider.dashboardStats}');
-    debugPrint('Data Object: $dataObject');
-    debugPrint('GPA Value: $gpa, GPA String: $gpaString');
 
     return CustomMainScreenWithAppbar(
       title: context.translate('student_dashboard'),
@@ -95,35 +100,38 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           // Notification handler to be implemented
         },
       ),
-      child: RefreshIndicator(
-        onRefresh: () async {
-          if (user.uuid != null) {
-            await dashboardProvider.refresh(user.uuid!);
-          }
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Statistics Cards
-              _buildStatsSection(isMobile, dashboardProvider),
-              const SizedBox(height: 24),
+      child:
+          dashboardProvider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                onRefresh: () async {
+                  if (user.uuid != null) {
+                    await dashboardProvider.refresh(user.uuid!);
+                  }
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Statistics Cards
+                      _buildStatsSection(isMobile, dashboardProvider),
+                      const SizedBox(height: 24),
 
-              // Main Content - Responsive Layout
-              if (isMobile)
-                _buildMobileLayout(dashboardProvider)
-              else
-                _buildDesktopLayout(dashboardProvider),
+                      // Main Content - Responsive Layout
+                      if (isMobile)
+                        _buildMobileLayout(dashboardProvider)
+                      else
+                        _buildDesktopLayout(dashboardProvider),
 
-              const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-              // Charts Section with Tabs
-              _buildChartsSection(isMobile, dashboardProvider),
-            ],
-          ),
-        ),
-      ),
+                      // Charts Section with Tabs
+                      _buildChartsSection(isMobile, dashboardProvider),
+                    ],
+                  ),
+                ),
+              ),
     );
   }
 
@@ -149,7 +157,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     children: [
       // Left Column - Subject Performance
       Expanded(
-        flex: 2,
         child: _buildSubjectPerformanceSection(
           dashboardProvider: dashboardProvider,
         ),
@@ -169,14 +176,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     bool isMobile,
     StudentDashboardProvider dashboardProvider,
   ) {
-    if (dashboardProvider.isLoadingStats) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
+    // Loading handled at page level, so we don't need individual loaders here
+    // However, if we want to support partial loading later, we can check specific flags
+    // if (dashboardProvider.isLoadingStats) { ... }
 
     if (dashboardProvider.statsError != null) {
       return Center(
@@ -257,7 +259,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       mainAxisSpacing: mainAxisSpacing,
       childAspectRatio: childAspectRatio,
       children: [
-        StatCard(
+        DashboardStatCard(
           title: context.translate('current_gpa'),
           value: gpa.toString(),
           subtitle: context.translate('out_of_4'),
@@ -265,7 +267,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           iconColor: const Color(0xFF7f22fe),
           icon: Icons.school,
         ),
-        StatCard(
+        DashboardStatCard(
           title: context.translate('attendance'),
           value: '${attendance.toStringAsFixed(1)}%',
           subtitle: context.translate('this_semester'),
@@ -273,7 +275,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           iconColor: const Color(0xFF4f39f6),
           icon: Icons.calendar_today,
         ),
-        StatCard(
+        DashboardStatCard(
           title: context.translate('class_rank'),
           value: classRank.toString(),
           subtitle: context.translate('current_ranking'),
@@ -281,7 +283,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           iconColor: const Color(0xFFe7000b),
           icon: Icons.trending_up,
         ),
-        StatCard(
+        DashboardStatCard(
           title: context.translate('assignments_due'),
           value: assignmentsDue.toString(),
           subtitle: context.translate('this_week'),
@@ -297,20 +299,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     required StudentDashboardProvider dashboardProvider,
     bool isMobile = false,
   }) {
-    if (dashboardProvider.isLoadingSubjectPerformance) {
-      return const DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      );
-    }
+    // Loading handled at page level
 
     if (dashboardProvider.subjectPerformanceError != null) {
       return DecoratedBox(
@@ -378,20 +367,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     required StudentDashboardProvider dashboardProvider,
     bool isMobile = false,
   }) {
-    if (dashboardProvider.isLoadingUpcomingEvents) {
-      return const DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-        ),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(),
-          ),
-        ),
-      );
-    }
+    // Loading handled at page level
 
     final events = dashboardProvider.getUpcomingEventsList();
 

@@ -71,10 +71,225 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to load class sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load class sections',
+      );
+    }
+  }
+
+  /// Get all courses with their sections
+  ///
+  /// Endpoint: GET /courses/with-sections
+  ///
+  /// [institutionId] - Optional filter by institution (defaults to 1 if not provided in some contexts, but let's allow caller to decide or default here)
+  Future<List<dynamic>> getCoursesWithSections({int institutionId = 1}) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'institutionId': institutionId.toString(),
+      };
+
+      final response = await _apiService.dio.get(
+        '/courses/with-sections',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get courses with sections',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get courses with sections',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get courses with sections',
+      );
+    }
+  }
+
+  /// Get all courses (simple list)
+  ///
+  /// Endpoint: GET /courses
+  Future<List<dynamic>> getAllCourses({int institutionId = 1}) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'institutionId': institutionId.toString(),
+      };
+
+      final response = await _apiService.dio.get(
+        '/courses',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          // Handle potential 'data' wrapper
+          if (data['data'] is List) {
+            return data['data'] as List<dynamic>;
+          }
+          // Handle if it returns a paginated structure directly
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get courses',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get courses',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get courses',
+      );
+    }
+  }
+
+  /// Get course by ID
+  ///
+  /// Endpoint: GET /courses/:id
+  Future<Map<String, dynamic>> getCourseById(int id) async {
+    try {
+      final response = await _apiService.dio.get('/courses/$id');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic>) {
+          return data['data'] is Map<String, dynamic>
+              ? data['data'] as Map<String, dynamic>
+              : data;
+        }
+        return {};
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get course',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get course',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get course',
+      );
+    }
+  }
+
+  /// Get sections for a specific course
+  ///
+  /// Endpoint: GET /courses/:id/sections
+  ///
+  /// [courseId] - Course ID
+  Future<List<dynamic>> getCourseSections(int courseId) async {
+    try {
+      final response = await _apiService.dio.get('/courses/$courseId/sections');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          if (data['data'] is List) {
+            return data['data'] as List<dynamic>;
+          } else if (data['data'] is Map<String, dynamic>) {
+            final innerData = data['data'] as Map<String, dynamic>;
+            if (innerData.containsKey('sections') &&
+                innerData['sections'] is List) {
+              return innerData['sections'] as List<dynamic>;
+            }
+          }
+          // Fallback if structure doesn't match expected patterns
+          return [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get course sections',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get course sections',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get course sections',
+      );
+    }
+  }
+
+  /// Get subjects for a specific course
+  ///
+  /// Endpoint: GET /subjects/course/:courseId
+  ///
+  /// [courseId] - Course ID
+  Future<List<dynamic>> getSubjectsForCourse(int courseId) async {
+    try {
+      final response = await _apiService.dio.get('/subjects/course/$courseId');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          return data['data'] as List<dynamic>? ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get subjects for course',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get subjects for course',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get subjects for course',
       );
     }
   }
@@ -112,7 +327,7 @@ class ClassSectionService {
         e,
         defaultMessage: 'Failed to load enrolled students',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load enrolled students',

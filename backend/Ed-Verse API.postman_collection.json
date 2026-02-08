@@ -2037,6 +2037,32 @@
           "response": []
         },
         {
+          "name": "Get All Question Papers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                }
+              ]
+            },
+            "description": "Get all question papers created by the teacher."
+          },
+          "response": []
+        },
+        {
           "name": "Create Question Paper",
           "request": {
             "method": "POST",
@@ -2132,6 +2158,37 @@
               ]
             },
             "description": "Get question paper by examination ID with all sections and questions."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Question Paper by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/teachers/:user_uuid/question-papers/:paperId",
+              "host": ["{{api_url}}"],
+              "path": ["teachers", ":user_uuid", "question-papers", ":paperId"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440000",
+                  "description": "Teacher UUID"
+                },
+                {
+                  "key": "paperId",
+                  "value": "1",
+                  "description": "Question Paper ID"
+                }
+              ]
+            },
+            "description": "Get question paper by its ID."
           },
           "response": []
         },
@@ -3648,6 +3705,106 @@
               "body": "{\n  \"success\": true,\n  \"data\": {\n    \"studentInfo\": {\n      \"name\": \"John Doe\",\n      \"edverseId\": \"EDV-S-2024-000001\",\n      \"admissionNumber\": \"2024/001\",\n      \"rollNumber\": \"CS101\",\n      \"courseName\": \"B.Sc. Computer Science\",\n      \"courseCode\": \"BSCS\",\n      \"currentSemester\": 3,\n      \"currentYear\": 2,\n      \"section\": \"A\",\n      \"institutionName\": \"Example University\"\n    },\n    \"semesterInfo\": {\n      \"semesterId\": 3,\n      \"semesterName\": \"Semester 3\",\n      \"semesterNumber\": 3,\n      \"academicYear\": \"2024-25\",\n      \"startDate\": \"2024-07-01\",\n      \"endDate\": \"2024-12-31\"\n    },\n    \"subjectRecords\": [\n      {\n        \"subjectName\": \"Data Structures\",\n        \"subjectCode\": \"CS201\",\n        \"credits\": 4,\n        \"marksObtained\": 85,\n        \"maxMarks\": 100,\n        \"percentage\": 85,\n        \"grade\": \"A\",\n        \"gradePoints\": 3.7,\n        \"status\": \"PASSED\",\n        \"teacherRemarks\": \"Good performance\"\n      },\n      {\n        \"subjectName\": \"Database Management\",\n        \"subjectCode\": \"CS202\",\n        \"credits\": 3,\n        \"marksObtained\": 78,\n        \"maxMarks\": 100,\n        \"percentage\": 78,\n        \"grade\": \"B+\",\n        \"gradePoints\": 3.3,\n        \"status\": \"PASSED\"\n      }\n    ],\n    \"examSummaries\": [\n      {\n        \"examType\": \"MID_TERM\",\n        \"examName\": \"Mid-Term Examination\",\n        \"totalMarks\": 50,\n        \"marksObtained\": 42,\n        \"percentage\": 84,\n        \"grade\": \"A\",\n        \"rank\": 5\n      },\n      {\n        \"examType\": \"FINAL\",\n        \"examName\": \"Final Examination\",\n        \"totalMarks\": 100,\n        \"marksObtained\": 85,\n        \"percentage\": 85,\n        \"grade\": \"A\"\n      }\n    ],\n    \"attendanceSummary\": {\n      \"totalClasses\": 120,\n      \"classesAttended\": 108,\n      \"classesAbsent\": 12,\n      \"percentage\": 90,\n      \"status\": \"excellent\"\n    },\n    \"performanceSummary\": {\n      \"sgpa\": 8.5,\n      \"cgpa\": 8.2,\n      \"totalCreditsEarned\": 20,\n      \"totalCreditsAttempted\": 20,\n      \"classRank\": 5,\n      \"totalStudents\": 60,\n      \"percentile\": 91.67,\n      \"overallGrade\": \"A\",\n      \"overallStatus\": \"PASSED\"\n    },\n    \"remarks\": {\n      \"classTeacherRemarks\": \"Excellent student with consistent performance\",\n      \"strengths\": [\"Problem solving\", \"Teamwork\", \"Communication\"],\n      \"areasForImprovement\": [\"Time management\"]\n    },\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"reportCardNumber\": \"RC-1-123-3-M5K2L9\"\n  }\n}"
             }
           ]
+        },
+        {
+          "name": "Get Student Examinations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/examinations?status=upcoming",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "examinations"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "upcoming",
+                  "description": "Filter by status: upcoming, completed, etc. (optional)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get a list of examinations for the student."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Academic Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/academic-records",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "academic-records"],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get academic records for the student."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Student Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/students/:user_uuid/attendance?startDate=2024-01-01&endDate=2024-01-31",
+              "host": ["{{api_url}}"],
+              "path": ["students", ":user_uuid", "attendance"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01",
+                  "description": "Start date (optional)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-01-31",
+                  "description": "End date (optional)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "user_uuid",
+                  "value": "550e8400-e29b-41d4-a716-446655440001",
+                  "description": "Student UUID"
+                }
+              ]
+            },
+            "description": "Get attendance records for the student."
+          },
+          "response": []
         }
       ]
     },

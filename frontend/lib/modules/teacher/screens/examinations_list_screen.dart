@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +14,7 @@ import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../providers/examination_provider.dart';
-import 'examination_form_screen.dart';
+
 
 /// Screen to display and manage all examinations for a teacher
 class ExaminationsListScreen extends StatefulWidget {
@@ -43,13 +44,14 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     }
 
     final provider = context.read<ExaminationProvider>();
-    await provider.loadSemesters();
+    await provider.loadSemesters(uuid);
     await provider.loadExaminations(uuid);
   }
 
   @override
   Widget build(BuildContext context) {
     final loginProvider = context.watch<LoginProvider>();
+    final examProvider = context.watch<ExaminationProvider>();
     final user = loginProvider.currentUser;
     final teacher = user?.teacher;
 
@@ -65,6 +67,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
 
     return CustomMainScreenWithAppbar(
       title: context.translate('my_examinations'),
+      isLoading: examProvider.isLoading,
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
         userName: userName,
@@ -74,7 +77,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
           // Notification handler to be implemented
         },
       ),
-      bottomWidget: _buildFloatingButton(context),
+      floatingActionButton: _buildFloatingActionButton(context),
       child: Column(
         children: [
           // Search bar and filter - always visible
@@ -109,23 +112,23 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
           ),
           // Content area
           Expanded(
-            child: Consumer<ExaminationProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading && provider.examinations.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+            child: Builder(
+              builder: (context) {
+                if (examProvider.isLoading && examProvider.examinations.isEmpty) {
+                  return const SizedBox(); // UnifiedLoader handles this
                 }
 
-                if (provider.error != null) {
-                  return _buildErrorState(provider.error!);
+                if (examProvider.error != null) {
+                  return _buildErrorState(examProvider.error!);
                 }
 
-                if (provider.examinations.isEmpty) {
+                if (examProvider.examinations.isEmpty) {
                   return _buildEmptyState();
                 }
 
                 // Filter examinations based on search query
                 final filteredExaminations =
-                    provider.examinations.where((examination) {
+                    examProvider.examinations.where((examination) {
                       if (_searchQuery.isEmpty) {
                         return true;
                       }
@@ -153,7 +156,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                             ),
                           )
                           : ListView.builder(
-                            padding: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.only(bottom: 80),
                             itemCount: filteredExaminations.length,
                             itemBuilder: (context, index) {
                               final examination = filteredExaminations[index];
@@ -233,33 +236,17 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     ),
   );
 
-  Widget _buildFloatingButton(BuildContext context) {
-    final isMobile = context.isMobile;
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _navigateToCreate,
-        icon: const Icon(Icons.add),
-        label: Text(
-          context.translate('new_examination'),
-          style: TextStyle(fontSize: isMobile ? 14 : 16),
-        ),
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(
-            vertical: isMobile ? 14 : 16,
-            horizontal: 24,
-          ),
-        ),
-      ),
+  Widget? _buildFloatingActionButton(BuildContext context) => FloatingActionButton.extended(
+      onPressed: _navigateToCreate,
+      icon: const Icon(Icons.add),
+      label: Text(context.translate('new_examination')),
     );
-  }
 
   void _showFilterDialog(BuildContext context) {
     final provider = context.read<ExaminationProvider>();
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
-      config: const BottomSheetConfig(height: 0.5, canDismiss: true),
+      config: const BottomSheetConfig(height: 0.65, canDismiss: true),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -307,7 +294,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                   onPressed: () {
                     provider.clearFilters();
                     Navigator.pop(context);
-                    _loadData();
+                    // No need to reload - filtering is local
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -323,7 +310,7 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    _loadData();
+                    // No need to reload - filtering is local
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -342,19 +329,13 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
   }
 
   void _navigateToCreate() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ExaminationFormScreen()),
-    ).then((_) => _loadData());
+    context.pushNamed('create_exam').then((_) => _loadData());
   }
 
   void _navigateToEdit(int examId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExaminationFormScreen(examinationId: examId),
-      ),
-    ).then((_) => _loadData());
+    context
+        .pushNamed('edit_exam', pathParameters: {'id': examId.toString()})
+        .then((_) => _loadData());
   }
 
   Future<void> _confirmDelete(int examId) async {

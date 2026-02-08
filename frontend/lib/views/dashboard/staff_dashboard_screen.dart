@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../modules/teacher/widgets/stat_card.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
@@ -9,6 +8,7 @@ import '../../utils/responsive_utils.dart';
 import '../../utils/router_service.dart';
 import '../../utils/user_utils.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../widgets/custom_widgets/dashboard_widgets.dart';
 
 class StaffDashboardScreen extends StatelessWidget {
   const StaffDashboardScreen({super.key});
@@ -64,7 +64,7 @@ class StaffDashboardScreen extends StatelessWidget {
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
       children: const [
-        StatCard(
+        DashboardStatCard(
           title: 'My Attendance',
           value: '95%',
           subtitle: 'This month',
@@ -72,7 +72,7 @@ class StaffDashboardScreen extends StatelessWidget {
           backgroundColor: CustomAppColors.primary,
           iconColor: CustomAppColors.primary,
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Tasks Pending',
           value: '8',
           subtitle: 'Need attention',
@@ -80,7 +80,7 @@ class StaffDashboardScreen extends StatelessWidget {
           backgroundColor: Color(0xFFf59e0b),
           iconColor: Color(0xFFf59e0b),
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Tasks Completed',
           value: '24',
           subtitle: 'This week',
@@ -88,7 +88,7 @@ class StaffDashboardScreen extends StatelessWidget {
           backgroundColor: Color(0xFF10b981),
           iconColor: Color(0xFF10b981),
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Notices',
           value: '3',
           subtitle: 'Unread',

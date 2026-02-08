@@ -62,6 +62,10 @@ class DropDownFormField<T> extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
     final textColor = theme.colorScheme.onSurface;
 
+    // Validate that value exists in items to prevent assertion errors
+    final validatedValue =
+        value != null && items.contains(value) ? value : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -77,8 +81,8 @@ class DropDownFormField<T> extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         DropdownButtonFormField<T>(
-          key: ValueKey<T?>(value),
-          initialValue: value,
+          key: ValueKey<T?>(validatedValue),
+          initialValue: validatedValue,
           isExpanded: true,
           decoration: InputDecoration(
             filled: filled,

@@ -46,10 +46,10 @@ class CustomFormDialog extends StatelessWidget {
               // Header
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: CustomAppColors.slate50,
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
+                      BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: Row(
                   children: [

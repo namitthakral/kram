@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../modules/teacher/widgets/stat_card.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
@@ -9,6 +8,7 @@ import '../../utils/responsive_utils.dart';
 import '../../utils/router_service.dart';
 import '../../utils/user_utils.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../widgets/custom_widgets/dashboard_widgets.dart';
 
 class SuperAdminDashboardScreen extends StatelessWidget {
   const SuperAdminDashboardScreen({super.key});
@@ -42,6 +42,8 @@ class SuperAdminDashboardScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SystemHealthWidget(healthPercentage: 99.9),
+            const SizedBox(height: 24),
             _buildStatsSection(context),
             const SizedBox(height: 24),
             _buildSystemOverviewSection(context),
@@ -64,7 +66,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
       children: const [
-        StatCard(
+        DashboardStatCard(
           title: 'Total Institutions',
           value: '48',
           subtitle: 'Active institutions',
@@ -72,7 +74,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           backgroundColor: CustomAppColors.primary,
           iconColor: CustomAppColors.primary,
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Total Users',
           value: '12.5K',
           subtitle: 'Across all institutions',
@@ -80,7 +82,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           backgroundColor: Color(0xFF10b981),
           iconColor: Color(0xFF10b981),
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Active Sessions',
           value: '1,234',
           subtitle: 'Currently online',
@@ -88,13 +90,13 @@ class SuperAdminDashboardScreen extends StatelessWidget {
           backgroundColor: Color(0xFF8B5CF6),
           iconColor: Color(0xFF8B5CF6),
         ),
-        StatCard(
-          title: 'System Health',
-          value: '99.9%',
-          subtitle: 'Uptime',
-          icon: Icons.health_and_safety,
-          backgroundColor: Color(0xFF00a63e),
-          iconColor: Color(0xFF00a63e),
+        DashboardStatCard(
+          title: 'Storage Used',
+          value: '45.2 GB',
+          subtitle: 'of 100 GB (45%)',
+          icon: Icons.storage,
+          backgroundColor: Color(0xFFf59e0b),
+          iconColor: Color(0xFFf59e0b),
         ),
       ],
     );

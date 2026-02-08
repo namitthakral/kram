@@ -26,6 +26,7 @@ model Examination {
   semester            Semester         @relation(fields: [semesterId], references: [id])
   creator             Teacher          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   results             ExamResult[]
+  questionPaper       QuestionPaper?
 
   @@map("examinations")
 }

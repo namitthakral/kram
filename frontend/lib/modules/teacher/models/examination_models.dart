@@ -14,6 +14,8 @@ class Examination {
     required this.status,
     required this.createdAt,
     required this.updatedAt,
+    this.referenceCourseId,
+    this.sectionId,
     this.semesterName,
     this.startTime,
     this.endTime,
@@ -24,6 +26,8 @@ class Examination {
   factory Examination.fromJson(Map<String, dynamic> json) => Examination(
     id: json['id'] as int,
     courseId: json['subjectId'] as int,
+    referenceCourseId: json['subject']?['courseId'] as int?,
+    sectionId: json['sectionId'] as int?,
     courseName: json['subject']?['subjectName'] ?? json['courseName'] ?? '',
     semesterId: json['semesterId'] as int,
     semesterName: json['semester']?['semesterName'] ?? json['semesterName'],
@@ -32,23 +36,25 @@ class Examination {
     totalMarks: json['totalMarks'] as int,
     passingMarks: json['passingMarks'] as int,
     durationMinutes: json['durationMinutes'] as int,
-    examDate: DateTime.parse(json['examDate'] as String),
+    examDate: DateTime.parse(json['examDate'] as String).toLocal(),
     startTime:
         json['startTime'] != null
-            ? DateTime.parse(json['startTime'] as String)
+            ? DateTime.parse(json['startTime'] as String).toLocal()
             : null,
     endTime:
         json['endTime'] != null
-            ? DateTime.parse(json['endTime'] as String)
+            ? DateTime.parse(json['endTime'] as String).toLocal()
             : null,
     venue: json['venue'] as String?,
     instructions: json['instructions'] as String?,
     status: json['status'] as String,
-    createdAt: DateTime.parse(json['createdAt'] as String),
-    updatedAt: DateTime.parse(json['updatedAt'] as String),
+    createdAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+    updatedAt: DateTime.parse(json['updatedAt'] as String).toLocal(),
   );
   final int id;
   final int courseId;
+  final int? referenceCourseId;
+  final int? sectionId;
   final String courseName;
   final int semesterId;
   final String? semesterName;
@@ -94,6 +100,7 @@ class CreateExaminationDto {
     required this.passingMarks,
     required this.durationMinutes,
     required this.examDate,
+    this.sectionId,
     this.startTime,
     this.endTime,
     this.venue,
@@ -101,6 +108,7 @@ class CreateExaminationDto {
     this.status = 'SCHEDULED',
   });
   final int courseId;
+  final int? sectionId;
   final int semesterId;
   final String examName;
   final String examType;
@@ -115,7 +123,8 @@ class CreateExaminationDto {
   final String status;
 
   Map<String, dynamic> toJson() => {
-    'courseId': courseId,
+    'subjectId': courseId,
+    if (sectionId != null) 'sectionId': sectionId,
     'semesterId': semesterId,
     'examName': examName,
     'examType': examType,
@@ -123,16 +132,22 @@ class CreateExaminationDto {
     'passingMarks': passingMarks,
     'durationMinutes': durationMinutes,
     'examDate': examDate.toIso8601String(),
-    if (startTime != null) 'startTime': startTime!.toIso8601String(),
-    if (endTime != null) 'endTime': endTime!.toIso8601String(),
-    if (venue != null) 'venue': venue,
-    if (instructions != null) 'instructions': instructions,
+    'startTime':
+        startTime != null
+            ? '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}'
+            : null,
+    // Backend rejects endTime in payload, likely calculated from duration
+    // 'endTime': endTime?.toIso8601String(),
+    'venue': venue,
+    'instructions': instructions,
     'status': status,
   };
 }
 
 class UpdateExaminationDto {
   UpdateExaminationDto({
+    this.subjectId,
+    this.semesterId,
     this.examName,
     this.examType,
     this.totalMarks,
@@ -145,6 +160,8 @@ class UpdateExaminationDto {
     this.instructions,
     this.status,
   });
+  final int? subjectId;
+  final int? semesterId;
   final String? examName;
   final String? examType;
   final int? totalMarks;
@@ -158,16 +175,22 @@ class UpdateExaminationDto {
   final String? status;
 
   Map<String, dynamic> toJson() => {
+    if (subjectId != null) 'subjectId': subjectId,
+    if (semesterId != null) 'semesterId': semesterId,
     if (examName != null) 'examName': examName,
     if (examType != null) 'examType': examType,
     if (totalMarks != null) 'totalMarks': totalMarks,
     if (passingMarks != null) 'passingMarks': passingMarks,
     if (durationMinutes != null) 'durationMinutes': durationMinutes,
     if (examDate != null) 'examDate': examDate!.toIso8601String(),
-    if (startTime != null) 'startTime': startTime!.toIso8601String(),
-    if (endTime != null) 'endTime': endTime!.toIso8601String(),
-    if (venue != null) 'venue': venue,
-    if (instructions != null) 'instructions': instructions,
+    'startTime':
+        startTime != null
+            ? '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}'
+            : null,
+    // Backend rejects endTime in update payload, likely calculated from duration
+    // 'endTime': endTime?.toIso8601String(),
+    'venue': venue,
+    'instructions': instructions,
     if (status != null) 'status': status,
   };
 }

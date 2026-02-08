@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -43,6 +44,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
   Widget build(BuildContext context) {
     final navProvider = context.watch<BottomNavProvider>();
     final theme = Theme.of(context);
+    final currentRoute = GoRouterState.of(context).uri.path;
 
     return Stack(
       children: [
@@ -102,15 +104,16 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                               ) {
                                 final index = entry.key;
                                 final item = entry.value;
-                                final isSelected =
-                                    navProvider.currentIndex == index;
+                                final selectedIndex = navProvider
+                                    .getCurrentIndex(currentRoute);
+                                final isSelected = selectedIndex == index;
 
                                 return _NavigationRailItem(
                                   item: item,
                                   isSelected: isSelected,
                                   isExtended: _isExtended,
                                   onTap: () {
-                                    navProvider.setIndex(index);
+                                    navProvider.navigateToIndex(context, index);
                                     // Collapse drawer when an option is clicked
                                     if (_isExtended) {
                                       setExtended(false);
@@ -380,9 +383,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
         ],
       ),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(
-        color: AppTheme.danger.withValues(alpha: 0.25),
-      ),
+      border: Border.all(color: AppTheme.danger.withValues(alpha: 0.25)),
       boxShadow: [
         BoxShadow(
           color: AppTheme.danger.withValues(alpha: 0.1),
@@ -443,7 +444,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
     ),
   );
 
-  void _showLogoutDialog(BuildContext context) async {
+  Future<void> _showLogoutDialog(BuildContext context) async {
     final result = await CustomDialog.showConfirmation(
       context: context,
       title: context.translate('logout_title'),
@@ -473,16 +474,19 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
       navProvider.reset(); // Reset navigation state
 
       if (context.mounted) {
-        Navigator.of(context).pop();
-      }
+        Navigator.of(context).pop(); // Close loading dialog
 
-      if (context.mounted) {
-        context.router.goToLogin();
+        // Use addPostFrameCallback to ensure dialog is fully dismissed before navigating
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            context.router.goToLogin();
 
-        showCustomSnackbar(
-          message: context.translate('logout_success'),
-          type: SnackbarType.success,
-        );
+            showCustomSnackbar(
+              message: context.translate('logout_success'),
+              type: SnackbarType.success,
+            );
+          }
+        });
       }
     }
   }
@@ -579,9 +583,14 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                   horizontal: widget.isExtended ? 16 : 12,
                   vertical: widget.isExtended ? 16 : 14,
                 ),
-                child: Row(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final showExtended =
+                        widget.isExtended && constraints.maxWidth > 50;
+
+                    return Row(
                   mainAxisAlignment:
-                      widget.isExtended
+                      showExtended
                           ? MainAxisAlignment.start
                           : MainAxisAlignment.center,
                   children: [
@@ -613,7 +622,7 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                                 : theme.iconTheme.color?.withValues(alpha: 0.7),
                       ),
                     ),
-                    if (widget.isExtended) ...[
+                    if (showExtended) ...[
                       const SizedBox(width: 14),
                       Expanded(
                         child: Text(
@@ -654,7 +663,9 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                         ),
                     ],
                   ],
-                ),
+                );
+              },
+            ),
               ),
             ),
           ),

@@ -21,7 +21,7 @@ import {
 
 @Injectable()
 export class QuestionPaperService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ============ Question Paper Methods ============
 
@@ -142,12 +142,11 @@ export class QuestionPaperService {
           0
         )
 
-        const section = await tx.questionSection.create({
+        const section = await tx.questionPaperSection.create({
           data: {
             questionPaperId: paper.id,
-            sectionName: sectionDto.sectionName,
-            instructions: sectionDto.instructions,
-            totalMarks: sectionMarks,
+            name: sectionDto.sectionName,
+            description: sectionDto.instructions,
             sortOrder: sectionDto.sortOrder ?? sIdx,
           },
         })
@@ -159,25 +158,19 @@ export class QuestionPaperService {
           const question = await tx.question.create({
             data: {
               sectionId: section.id,
-              questionText: questionDto.questionText,
+              text: questionDto.questionText,
               questionType: questionDto.questionType,
               marks: questionDto.marks,
-              negativeMarks: questionDto.negativeMarks,
-              difficultyLevel: questionDto.difficultyLevel ?? 'MEDIUM',
-              correctAnswer: questionDto.correctAnswer,
-              answerHint: questionDto.answerHint,
-              imageUrl: questionDto.imageUrl,
               sortOrder: questionDto.sortOrder ?? qIdx,
             },
           })
 
           // Create options if provided (for MCQ questions)
           if (questionDto.options && questionDto.options.length > 0) {
-            await tx.questionOption.createMany({
+            await tx.option.createMany({
               data: questionDto.options.map((opt, optIdx) => ({
                 questionId: question.id,
-                optionText: opt.optionText,
-                optionLabel: opt.optionLabel,
+                text: opt.optionText,
                 isCorrect: opt.isCorrect ?? false,
                 sortOrder: opt.sortOrder ?? optIdx,
               })),
@@ -227,6 +220,43 @@ export class QuestionPaperService {
     return {
       success: true,
       data: questionPaper,
+    }
+  }
+
+  async getAllQuestionPapers(userUuid: string) {
+    const teacher = await this.getTeacherByUuid(userUuid)
+
+    const questionPapers = await this.prisma.questionPaper.findMany({
+      where: { createdBy: teacher.id },
+      include: {
+        examination: {
+          select: {
+            id: true,
+            examName: true,
+            examDate: true,
+            subject: {
+              select: {
+                id: true,
+                subjectName: true,
+                subjectCode: true,
+                course: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true
+                  }
+                }
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return {
+      success: true,
+      data: questionPapers,
     }
   }
 
@@ -385,17 +415,16 @@ export class QuestionPaperService {
     }
 
     // Get max sort order
-    const maxSort = await this.prisma.questionSection.aggregate({
+    const maxSort = await this.prisma.questionPaperSection.aggregate({
       where: { questionPaperId: paperId },
       _max: { sortOrder: true },
     })
 
-    const section = await this.prisma.questionSection.create({
+    const section = await this.prisma.questionPaperSection.create({
       data: {
         questionPaperId: paperId,
-        sectionName: dto.sectionName,
-        instructions: dto.instructions,
-        totalMarks: dto.totalMarks ?? 0,
+        name: dto.sectionName,
+        description: dto.instructions,
         sortOrder: dto.sortOrder ?? (maxSort._max.sortOrder ?? 0) + 1,
       },
       include: { questions: true },
@@ -415,7 +444,7 @@ export class QuestionPaperService {
   ) {
     const teacher = await this.getTeacherByUuid(userUuid)
 
-    const section = await this.prisma.questionSection.findUnique({
+    const section = await this.prisma.questionPaperSection.findUnique({
       where: { id: sectionId },
       include: { questionPaper: true },
     })
@@ -434,7 +463,7 @@ export class QuestionPaperService {
       throw new BadRequestException('Cannot modify a published question paper')
     }
 
-    const updated = await this.prisma.questionSection.update({
+    const updated = await this.prisma.questionPaperSection.update({
       where: { id: sectionId },
       data: dto,
       include: { questions: { include: { options: true } } },
@@ -450,7 +479,7 @@ export class QuestionPaperService {
   async deleteSection(userUuid: string, sectionId: number) {
     const teacher = await this.getTeacherByUuid(userUuid)
 
-    const section = await this.prisma.questionSection.findUnique({
+    const section = await this.prisma.questionPaperSection.findUnique({
       where: { id: sectionId },
       include: { questionPaper: true, questions: true },
     })
@@ -470,7 +499,7 @@ export class QuestionPaperService {
     }
 
     // Delete section (cascade will delete questions and options)
-    await this.prisma.questionSection.delete({ where: { id: sectionId } })
+    await this.prisma.questionPaperSection.delete({ where: { id: sectionId } })
 
     // Update paper totals
     await this.updatePaperTotals(section.questionPaperId)
@@ -490,7 +519,7 @@ export class QuestionPaperService {
   ) {
     const teacher = await this.getTeacherByUuid(userUuid)
 
-    const section = await this.prisma.questionSection.findUnique({
+    const section = await this.prisma.questionPaperSection.findUnique({
       where: { id: sectionId },
       include: { questionPaper: true },
     })
@@ -518,25 +547,19 @@ export class QuestionPaperService {
     const question = await this.prisma.question.create({
       data: {
         sectionId,
-        questionText: dto.questionText,
+        text: dto.questionText,
         questionType: dto.questionType,
         marks: dto.marks,
-        negativeMarks: dto.negativeMarks,
-        difficultyLevel: dto.difficultyLevel ?? 'MEDIUM',
-        correctAnswer: dto.correctAnswer,
-        answerHint: dto.answerHint,
-        imageUrl: dto.imageUrl,
         sortOrder: dto.sortOrder ?? (maxSort._max.sortOrder ?? 0) + 1,
       },
     })
 
     // Create options if provided
     if (dto.options && dto.options.length > 0) {
-      await this.prisma.questionOption.createMany({
+      await this.prisma.option.createMany({
         data: dto.options.map((opt, idx) => ({
           questionId: question.id,
-          optionText: opt.optionText,
-          optionLabel: opt.optionLabel,
+          text: opt.optionText,
           isCorrect: opt.isCorrect ?? false,
           sortOrder: opt.sortOrder ?? idx,
         })),
@@ -566,7 +589,7 @@ export class QuestionPaperService {
   ) {
     const teacher = await this.getTeacherByUuid(userUuid)
 
-    const section = await this.prisma.questionSection.findUnique({
+    const section = await this.prisma.questionPaperSection.findUnique({
       where: { id: sectionId },
       include: { questionPaper: true },
     })
@@ -603,24 +626,18 @@ export class QuestionPaperService {
         const question = await this.prisma.question.create({
           data: {
             sectionId,
-            questionText: questionDto.questionText,
+            text: questionDto.questionText,
             questionType: questionDto.questionType,
             marks: questionDto.marks,
-            negativeMarks: questionDto.negativeMarks,
-            difficultyLevel: questionDto.difficultyLevel ?? 'MEDIUM',
-            correctAnswer: questionDto.correctAnswer,
-            answerHint: questionDto.answerHint,
-            imageUrl: questionDto.imageUrl,
             sortOrder: questionDto.sortOrder ?? currentSort++,
           },
         })
 
         if (questionDto.options && questionDto.options.length > 0) {
-          await this.prisma.questionOption.createMany({
+          await this.prisma.option.createMany({
             data: questionDto.options.map((opt, idx) => ({
               questionId: question.id,
-              optionText: opt.optionText,
-              optionLabel: opt.optionLabel,
+              text: opt.optionText,
               isCorrect: opt.isCorrect ?? false,
               sortOrder: opt.sortOrder ?? idx,
             })),
@@ -753,16 +770,15 @@ export class QuestionPaperService {
       throw new BadRequestException('Cannot modify a published question paper')
     }
 
-    const maxSort = await this.prisma.questionOption.aggregate({
+    const maxSort = await this.prisma.option.aggregate({
       where: { questionId },
       _max: { sortOrder: true },
     })
 
-    const option = await this.prisma.questionOption.create({
+    const option = await this.prisma.option.create({
       data: {
         questionId,
-        optionText: dto.optionText,
-        optionLabel: dto.optionLabel,
+        text: dto.optionText,
         isCorrect: dto.isCorrect ?? false,
         sortOrder: dto.sortOrder ?? (maxSort._max.sortOrder ?? 0) + 1,
       },
@@ -778,7 +794,7 @@ export class QuestionPaperService {
   async updateOption(userUuid: string, optionId: number, dto: UpdateOptionDto) {
     const teacher = await this.getTeacherByUuid(userUuid)
 
-    const option = await this.prisma.questionOption.findUnique({
+    const option = await this.prisma.option.findUnique({
       where: { id: optionId },
       include: {
         question: {
@@ -801,7 +817,7 @@ export class QuestionPaperService {
       throw new BadRequestException('Cannot modify a published question paper')
     }
 
-    const updated = await this.prisma.questionOption.update({
+    const updated = await this.prisma.option.update({
       where: { id: optionId },
       data: dto,
     })
@@ -816,7 +832,7 @@ export class QuestionPaperService {
   async deleteOption(userUuid: string, optionId: number) {
     const teacher = await this.getTeacherByUuid(userUuid)
 
-    const option = await this.prisma.questionOption.findUnique({
+    const option = await this.prisma.option.findUnique({
       where: { id: optionId },
       include: {
         question: {
@@ -839,7 +855,7 @@ export class QuestionPaperService {
       throw new BadRequestException('Cannot modify a published question paper')
     }
 
-    await this.prisma.questionOption.delete({ where: { id: optionId } })
+    await this.prisma.option.delete({ where: { id: optionId } })
 
     return {
       success: true,
@@ -905,22 +921,17 @@ export class QuestionPaperService {
         ...section,
         questions: section.questions.map(question => ({
           id: question.id,
-          questionText: question.questionText,
+          questionText: question.text,
           questionType: question.questionType,
           marks: question.marks,
-          negativeMarks: question.negativeMarks,
-          difficultyLevel: question.difficultyLevel,
-          imageUrl: question.imageUrl,
           sortOrder: question.sortOrder,
           options: question.options.map(opt => ({
             id: opt.id,
-            optionText: opt.optionText,
-            optionLabel: opt.optionLabel,
+            optionText: opt.text,
             sortOrder: opt.sortOrder,
-            // isCorrect is hidden
-          })),
-          // correctAnswer and answerHint are hidden
+          })),  // isCorrect is hidden
         })),
+        // correctAnswer and answerHint are hidden
       })),
     }
 
@@ -971,7 +982,14 @@ export class QuestionPaperService {
           examType: true,
           examDate: true,
           totalMarks: true,
-          subject: { select: { subjectName: true, subjectCode: true } },
+          subject: {
+            select: {
+              id: true,
+              subjectName: true,
+              subjectCode: true,
+              course: { select: { id: true, name: true, code: true } }
+            }
+          },
         },
       },
       creator: {
@@ -996,32 +1014,31 @@ export class QuestionPaperService {
   }
 
   private async updateSectionTotals(sectionId: number) {
-    const totals = await this.prisma.question.aggregate({
-      where: { sectionId },
-      _sum: { marks: true },
-    })
-
-    await this.prisma.questionSection.update({
-      where: { id: sectionId },
-      data: { totalMarks: totals._sum.marks ?? 0 },
-    })
+    // Section total marks are not stored in DB currently
+    return
   }
 
   private async updatePaperTotals(paperId: number) {
-    const sections = await this.prisma.questionSection.findMany({
+    const sections = await this.prisma.questionPaperSection.findMany({
       where: { questionPaperId: paperId },
-      include: { _count: { select: { questions: true } } },
+      include: { questions: { select: { marks: true } } },
     })
 
     const totalQuestions = sections.reduce(
-      (sum, s) => sum + s._count.questions,
+      (sum, s) => sum + s.questions.length,
       0
     )
-    const totalMarks = sections.reduce((sum, s) => sum + s.totalMarks, 0)
+    const totalMarks = sections.reduce(
+      (sum, s) => sum + s.questions.reduce((qSum, q) => qSum + q.marks, 0),
+      0
+    )
 
     await this.prisma.questionPaper.update({
       where: { id: paperId },
-      data: { totalQuestions, totalMarks },
+      data: {
+        totalQuestions,
+        totalMarks,
+      },
     })
   }
 }

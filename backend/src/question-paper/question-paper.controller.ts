@@ -29,7 +29,7 @@ import { QuestionPaperService } from './question-paper.service'
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class QuestionPaperController {
-  constructor(private readonly questionPaperService: QuestionPaperService) {}
+  constructor(private readonly questionPaperService: QuestionPaperService) { }
 
   // ============ Question Paper Endpoints ============
 
@@ -59,6 +59,12 @@ export class QuestionPaperController {
     @Body() dto: CreateFullQuestionPaperDto
   ) {
     return this.questionPaperService.createFullQuestionPaper(userUuid, dto)
+  }
+
+  @Get('teachers/:user_uuid/question-papers')
+  @Roles('teacher', 'super_admin', 'admin')
+  async getAllQuestionPapers(@Param('user_uuid') userUuid: string) {
+    return this.questionPaperService.getAllQuestionPapers(userUuid)
   }
 
   /**

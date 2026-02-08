@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../modules/teacher/widgets/stat_card.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
@@ -9,6 +8,7 @@ import '../../utils/responsive_utils.dart';
 import '../../utils/router_service.dart';
 import '../../utils/user_utils.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../widgets/custom_widgets/dashboard_widgets.dart';
 
 class LibrarianDashboardScreen extends StatelessWidget {
   const LibrarianDashboardScreen({super.key});
@@ -64,7 +64,7 @@ class LibrarianDashboardScreen extends StatelessWidget {
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
       children: const [
-        StatCard(
+        DashboardStatCard(
           title: 'Total Books',
           value: '5,432',
           subtitle: 'In collection',
@@ -72,7 +72,7 @@ class LibrarianDashboardScreen extends StatelessWidget {
           backgroundColor: CustomAppColors.primary,
           iconColor: CustomAppColors.primary,
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Issued Books',
           value: '234',
           subtitle: 'Currently issued',
@@ -80,7 +80,7 @@ class LibrarianDashboardScreen extends StatelessWidget {
           backgroundColor: Color(0xFF10b981),
           iconColor: Color(0xFF10b981),
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Overdue',
           value: '12',
           subtitle: 'Need follow-up',
@@ -88,7 +88,7 @@ class LibrarianDashboardScreen extends StatelessWidget {
           backgroundColor: Color(0xFFef4444),
           iconColor: Color(0xFFef4444),
         ),
-        StatCard(
+        DashboardStatCard(
           title: 'Available',
           value: '5,198',
           subtitle: 'Ready to issue',

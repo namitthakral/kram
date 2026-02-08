@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../provider/bottom_nav_provider.dart';
 import '../../provider/language_provider.dart';
 import '../../utils/extensions.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
@@ -12,9 +12,7 @@ class LanguageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CustomMainScreenWithAppbar(
     title: context.translate('language'),
-    appBarConfig: const AppBarConfig.standard(
-      showCircularBackButton: true,
-    ),
+    appBarConfig: const AppBarConfig.standard(showCircularBackButton: true),
     child: Consumer<LanguageProvider>(
       builder:
           (context, value, child) => Column(
@@ -55,7 +53,7 @@ class _CustomTile extends StatelessWidget {
           isSelected ? const Icon(Icons.check, color: Color(0xFFF39C12)) : null,
       onTap: () {
         languageProvider.setLocale(flag);
-        context.read<BottomNavProvider>().setIndex(0);
+        context.go('/dashboard');
       },
     );
   }

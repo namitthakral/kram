@@ -41,7 +41,7 @@ import { TeachersService } from './teachers.service'
 @Controller('teachers')
 @UseGuards(JwtAuthGuard)
 export class TeachersController {
-  constructor(private readonly teachersService: TeachersService) {}
+  constructor(private readonly teachersService: TeachersService) { }
 
   // NOTE: POST /teachers has been removed. Use POST /users with roleId=teacher instead.
   // This unified approach handles EdVerse ID generation and profile creation in one step.
@@ -88,6 +88,15 @@ export class TeachersController {
       userUuid,
       parsedSemesterId
     )
+  }
+
+  @Get(':user_uuid/semesters/active')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher')
+  getActiveSemesters(@Param('user_uuid') userUuid: string) {
+    // Note: userUuid is present for authorization/logging context,
+    // but sememsters are institution-wide.
+    return this.teachersService.getActiveSemesters()
   }
 
   @Get(':user_uuid/dashboard-stats')

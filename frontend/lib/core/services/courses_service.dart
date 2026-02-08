@@ -68,7 +68,7 @@ class CoursesService {
         e,
         defaultMessage: 'Failed to get courses',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get courses',
@@ -114,7 +114,7 @@ class CoursesService {
         e,
         defaultMessage: 'Failed to get courses with sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get courses with sections',
@@ -146,7 +146,7 @@ class CoursesService {
         e,
         defaultMessage: 'Failed to get course',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get course',
@@ -184,7 +184,7 @@ class CoursesService {
         e,
         defaultMessage: 'Failed to get course sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get course sections',
@@ -252,7 +252,7 @@ class CoursesService {
         e,
         defaultMessage: 'Failed to get class sections',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get class sections',

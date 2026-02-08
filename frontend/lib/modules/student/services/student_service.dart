@@ -47,13 +47,20 @@ class StudentService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw Exception('Student not found');
+        // Return default empty stats if not found
+        return {
+          'gpa': '0.0',
+          'attendance': 0.0,
+          'totalAssignments': 0,
+          'pendingAssignments': 0,
+          'upcomingEvents': 0,
+        };
       }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load dashboard stats',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load dashboard stats',
@@ -86,7 +93,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load student data',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load student data',
@@ -118,7 +125,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load academic records',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load academic records',
@@ -167,7 +174,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load attendance data',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load attendance data',
@@ -214,11 +221,14 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return [];
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load assignments',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load assignments',
@@ -263,11 +273,14 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {'labels': [], 'datasets': []};
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load performance trends',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load performance trends',
@@ -307,11 +320,17 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {
+          'history': [],
+          'summary': {'present': 0, 'absent': 0, 'late': 0},
+        };
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load attendance history',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load attendance history',
@@ -339,11 +358,14 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {};
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load subject performance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load subject performance',
@@ -360,11 +382,21 @@ class StudentService {
   Future<List<dynamic>> getUpcomingEvents(
     String userUuid, {
     int limit = 10,
+    String? startDate,
+    String? endDate,
   }) async {
     try {
+      final queryParams = <String, dynamic>{'limit': limit.toString()};
+      if (startDate != null) {
+        queryParams['startDate'] = startDate;
+      }
+      if (endDate != null) {
+        queryParams['endDate'] = endDate;
+      }
+
       final response = await _apiService.dio.get(
         '/students/$userUuid/upcoming-events',
-        queryParameters: {'limit': limit.toString()},
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -383,11 +415,14 @@ class StudentService {
         );
       }
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return [];
+      }
       throw ApiErrorHandler.handleDioException(
         e,
         defaultMessage: 'Failed to load upcoming events',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load upcoming events',
@@ -451,7 +486,7 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load students',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load students',
@@ -505,10 +540,102 @@ class StudentService {
         e,
         defaultMessage: 'Failed to load report card',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to load report card',
+      );
+    }
+  }
+
+  /// Get student examinations
+  ///
+  /// Endpoint: GET /students/:user_uuid/examinations
+  ///
+  /// [userUuid] - Student's user UUID
+  /// [status] - Optional filter by status
+  Future<List<dynamic>> getExaminations(
+    String userUuid, {
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (status != null) {
+        queryParams['status'] = status;
+      }
+
+      final response = await _apiService.dio.get(
+        '/students/$userUuid/examinations',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List<dynamic>?;
+        return data ?? [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load examinations',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return [];
+      }
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load examinations',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load examinations',
+      );
+    }
+  }
+
+  /// Get student timetable
+  ///
+  /// Endpoint: GET /timetable/class/:courseId/:section
+  ///
+  /// [courseId] - Course ID
+  /// [section] - Section name
+  /// [semesterId] - Semester ID
+  Future<Map<String, dynamic>> getTimetable(
+    int courseId,
+    String section,
+    int semesterId,
+  ) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/timetable/class/$courseId/$section',
+        queryParameters: {'semesterId': semesterId.toString()},
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load timetable',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return {};
+      }
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load timetable',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load timetable',
       );
     }
   }

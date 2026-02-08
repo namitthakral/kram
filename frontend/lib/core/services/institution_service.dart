@@ -62,7 +62,7 @@ class InstitutionService {
       }
     } on DioException catch (e) {
       throw Exception('Failed to get public institutions: ${e.message}');
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -92,7 +92,7 @@ class InstitutionService {
       }
 
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get institution by code: $e');
     }
   }

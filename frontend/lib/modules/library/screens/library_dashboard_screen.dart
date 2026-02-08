@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../modules/teacher/widgets/stat_card.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../../utils/extensions.dart';
@@ -11,6 +10,7 @@ import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../models/library_models.dart';
 import '../providers/library_dashboard_provider.dart';
 import '../providers/library_filter_provider.dart';
@@ -183,7 +183,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
         children: [
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
-            child: StatCard(
+            child: DashboardStatCard(
               title: context.translate('total_books'),
               value: stats.totalBooks.toString(),
               subtitle:
@@ -195,7 +195,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           ),
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
-            child: StatCard(
+            child: DashboardStatCard(
               title: context.translate('available_books'),
               value: stats.availableBooks.toString(),
               subtitle:
@@ -207,7 +207,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           ),
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
-            child: StatCard(
+            child: DashboardStatCard(
               title: context.translate('books_issued'),
               value: stats.booksIssued.toString(),
               subtitle: context.translate(
@@ -221,7 +221,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
           ),
           SizedBox(
             width: (MediaQuery.of(context).size.width - 48 - 12) / 2,
-            child: StatCard(
+            child: DashboardStatCard(
               title: context.translate('overdue_books'),
               value: stats.overdueBooks.toString(),
               subtitle: context.translate('require_immediate_action'),
@@ -238,7 +238,7 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
     return Row(
       children: [
         Expanded(
-          child: StatCard(
+          child: DashboardStatCard(
             title: context.translate('total_books'),
             value: stats.totalBooks.toString(),
             subtitle:
@@ -248,42 +248,42 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
             icon: Icons.menu_book_rounded,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            title: context.translate('available_books'),
-            value: stats.availableBooks.toString(),
-            subtitle:
-                '${stats.availablePercentage.toStringAsFixed(1)}% ${context.translate("available")}',
-            backgroundColor: const Color(0xFF10B981),
-            iconColor: const Color(0xFF10B981),
-            icon: Icons.check_circle_outline,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            title: context.translate('books_issued'),
-            value: stats.booksIssued.toString(),
-            subtitle: context.translate(
-              'to_members',
-              params: {'count': stats.membersCount.toString()},
+          const SizedBox(width: 16),
+          Expanded(
+            child: DashboardStatCard(
+              title: context.translate('available_books'),
+              value: stats.availableBooks.toString(),
+              subtitle:
+                  '${stats.availablePercentage.toStringAsFixed(1)}% ${context.translate("available")}',
+              backgroundColor: const Color(0xFF10B981),
+              iconColor: const Color(0xFF10B981),
+              icon: Icons.check_circle_outline,
             ),
-            backgroundColor: const Color(0xFF3B82F6),
-            iconColor: const Color(0xFF3B82F6),
-            icon: Icons.library_books_outlined,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: StatCard(
-            title: context.translate('overdue_books'),
-            value: stats.overdueBooks.toString(),
-            subtitle: context.translate('require_immediate_action'),
-            backgroundColor: const Color(0xFFEF4444),
-            iconColor: const Color(0xFFEF4444),
-            icon: Icons.warning_amber_rounded,
+          const SizedBox(width: 16),
+          Expanded(
+            child: DashboardStatCard(
+              title: context.translate('books_issued'),
+              value: stats.booksIssued.toString(),
+              subtitle: context.translate(
+                'to_members',
+                params: {'count': stats.membersCount.toString()},
+              ),
+              backgroundColor: const Color(0xFF3B82F6),
+              iconColor: const Color(0xFF3B82F6),
+              icon: Icons.library_books_outlined,
+            ),
           ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: DashboardStatCard(
+              title: context.translate('overdue_books'),
+              value: stats.overdueBooks.toString(),
+              subtitle: context.translate('require_immediate_action'),
+              backgroundColor: const Color(0xFFEF4444),
+              iconColor: const Color(0xFFEF4444),
+              icon: Icons.warning_amber_rounded,
+            ),
         ),
       ],
     );

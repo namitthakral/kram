@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +8,7 @@ import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_date_picker_field.dart';
+import '../../../widgets/custom_widgets/custom_dropdown_field.dart';
 import '../../../widgets/custom_widgets/custom_form_section.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
@@ -20,7 +20,8 @@ import '../widgets/manual_question_template_widget.dart';
 /// Screen for creating a new assignment
 /// Follows the project's design patterns and UI theme
 class CreateAssignmentScreen extends StatefulWidget {
-  const CreateAssignmentScreen({super.key});
+  const CreateAssignmentScreen({super.key, this.assignmentId});
+  final int? assignmentId;
 
   @override
   State<CreateAssignmentScreen> createState() => _CreateAssignmentScreenState();
@@ -30,16 +31,16 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _instructionsController = TextEditingController();
   final _marksController = TextEditingController(text: '25');
 
+  Course? _selectedCourse;
   Subject? _selectedSubject;
-  ClassSection? _selectedClassSection;
-  DateTime? _assignedDate = DateTime.now();
-  DateTime? _dueDate;
-  bool _isLoading = false;
 
-  // File attachment
-  PlatformFile? _selectedFile;
+  DateTime? _dueDate;
+
+  bool _isLoading = false;
+  String _status = 'DRAFT';
 
   // Assignment type: 'pdf', 'manual', or 'description_only'
   String _assignmentType = 'description_only';
@@ -61,7 +62,138 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     final teacherId = loginProvider.currentUser?.teacher?.id;
 
     if (teacherId != null) {
-      await provider.loadClassSectionsForTeacher(teacherId);
+      await provider.loadCourses();
+      if (mounted) _checkAutoSelection(provider);
+    }
+
+    // Load assignment data if editing
+    if (widget.assignmentId != null) {
+      _loadAssignmentData(provider, loginProvider.currentUser?.uuid);
+    }
+  }
+
+  Future<void> _loadAssignmentData(
+    AssignmentProvider provider,
+    String? uuid,
+  ) async {
+    if (uuid == null) return;
+
+    try {
+      setState(() => _isLoading = true);
+      final assignment = await provider.getAssignment(
+        uuid,
+        widget.assignmentId!,
+      );
+
+      if (mounted) {
+        // COMPREHENSIVE DEBUG LOGGING
+        debugPrint('=== ASSIGNMENT EDIT MODE DEBUG ===');
+        debugPrint('Assignment ID: ${assignment.id}');
+        debugPrint('Assignment.courseId (subjectId): ${assignment.courseId}');
+        debugPrint(
+          'Assignment.referenceCourseId: ${assignment.referenceCourseId}',
+        );
+        debugPrint('Assignment.sectionId: ${assignment.sectionId}');
+        debugPrint('Assignment.sectionName: ${assignment.sectionName}');
+        debugPrint('Assignment.courseName: ${assignment.courseName}');
+        debugPrint(
+          'Available courses: ${provider.courses.map((c) => 'id=${c.id}, name=${c.courseName}').join(', ')}',
+        );
+        debugPrint('=================================');
+
+        _titleController.text = assignment.title;
+        _descriptionController.text = assignment.description;
+        _instructionsController.text = assignment.instructions ?? '';
+        _marksController.text = assignment.maxMarks.toString();
+
+        setState(() {
+          _dueDate = assignment.dueDate;
+          _status = assignment.status;
+        });
+
+        // Pre-fill dropdowns logic
+        // We need to find which course contains the subject with assignment.courseId (subjectId)
+        Course? matchedCourse;
+
+        Subject? matchedSubject;
+
+        // Strategy: Load all courses, then for each course, load its details and check if it contains our subject
+        debugPrint(
+          'Looking for course that contains subject with ID: ${assignment.courseId}',
+        );
+
+        for (final course in provider.courses) {
+          await provider.loadDetailsForCourse(course.id);
+
+          // Check if this course has the subject we're looking for
+          try {
+            final foundSubject = provider.subjects.firstWhere(
+              (s) => s.id == assignment.courseId,
+            );
+
+            // Found it! This is the right course
+            matchedCourse = course;
+            matchedSubject = foundSubject;
+            debugPrint(
+              'Found course: ${course.courseName} contains subject: ${foundSubject.name}',
+            );
+            break;
+          } on Exception {
+            // This course doesn't have our subject, continue searching
+            debugPrint(
+              'Course ${course.courseName} does not contain subject ${assignment.courseId}',
+            );
+            continue;
+          }
+        }
+
+        if (matchedCourse != null && mounted) {
+          setState(() {
+            _selectedCourse = matchedCourse;
+            _selectedSubject = matchedSubject;
+          });
+        } else {
+          debugPrint(
+            'ERROR: Could not find course containing subject ${assignment.courseId}',
+          );
+        }
+
+        setState(() => _isLoading = false);
+      }
+    } on Exception catch (e) {
+      if (mounted) {
+        showCustomSnackbar(
+          message: 'Failed to load assignment: $e',
+          type: SnackbarType.error,
+        );
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _checkAutoSelection(AssignmentProvider provider) async {
+    if (!mounted) return;
+
+    var stateChanged = false;
+
+    // 1. Auto-select Course
+    if (_selectedCourse == null && provider.courses.length == 1) {
+      _selectedCourse = provider.courses.first;
+      stateChanged = true;
+      // Load details for the single course immediately
+      await provider.loadDetailsForCourse(_selectedCourse!.id);
+    }
+
+    // 3. Auto-select Subject - use object from provider's list
+    if (_selectedCourse != null &&
+        _selectedSubject == null &&
+        provider.subjects.length == 1) {
+      _selectedSubject = provider.subjects.first;
+      stateChanged = true;
+    }
+
+    if (stateChanged && mounted) {
+      setState(() {});
     }
   }
 
@@ -69,6 +201,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _instructionsController.dispose();
     _marksController.dispose();
     super.dispose();
   }
@@ -85,7 +218,8 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     final employeeId = teacher?.employeeId ?? 'N/A';
 
     return CustomMainScreenWithAppbar(
-      title: 'Create Assignment',
+      title:
+          widget.assignmentId == null ? 'Create Assignment' : 'Edit Assignment',
       appBarConfig: AppBarConfig.teacher(
         userInitials: userInitials,
         userName: userName,
@@ -93,545 +227,342 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         employeeId: employeeId,
         onNotificationIconPressed: () {},
       ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back Navigation
-              InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.arrow_back,
-                        size: 18,
-                        color: AppTheme.blue500,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Back to Assignments',
-                        style: context.textTheme.bodySm.copyWith(
-                          fontWeight: AppTheme.fontWeightMedium,
-                          color: AppTheme.blue500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: CustomAppColors.slate50,
-                  borderRadius: BorderRadius.circular(16),
-                ),
+      floatingActionButton: _buildFloatingActionButton(),
+      child: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          children: [
+            // Back Navigation
+            InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 24),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.blue500.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: const Color(0xFF155dfc).withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.assignment,
-                        color: AppTheme.blue500,
-                        size: 24,
+                        Icons.arrow_back,
+                        size: 16,
+                        color: Color(0xFF155dfc),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Create New Assignment',
-                            style: TextStyle(
-                              fontSize: AppTheme.fontSizeXl,
-                              fontWeight: AppTheme.fontWeightBold,
-                              color: AppTheme.slate800,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Assign homework or projects to students',
-                            style: TextStyle(
-                              fontSize: AppTheme.fontSizeSm,
-                              color: AppTheme.slate600,
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'Back to Assignments',
+                      style: context.textTheme.bodySm.copyWith(
+                        fontWeight: AppTheme.fontWeightMedium,
+                        color: const Color(0xFF155dfc),
                       ),
                     ),
                   ],
                 ),
               ),
+            ),
 
-              const SizedBox(height: 24),
+            // Assignment Details Section
+            CustomFormSection(
+              title: 'Assignment Details',
+              subtitle: 'Enter the assignment information',
+              icon: Icons.edit_note,
+              children: [
+                // Assignment Title
+                CustomTextField(
+                  label: 'Assignment Title',
+                  controller: _titleController,
+                  hintText: 'e.g., Essay on Climate Change',
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter assignment title';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
 
-              // Assignment Details Section
-              CustomFormSection(
-                title: 'Assignment Details',
-                subtitle: 'Enter the assignment information',
-                icon: Icons.edit_note,
+                // Description
+                CustomTextField(
+                  label: 'Description',
+                  controller: _descriptionController,
+                  hintText: 'Describe the assignment requirements...',
+                  maxLines: 4,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter description';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Instructions Field (Visible always or populated by manual)
+                CustomTextField(
+                  label: 'Instructions / Questions',
+                  controller: _instructionsController,
+                  hintText: 'Enter detailed instructions or questions...',
+                  maxLines: 6,
+                ),
+                const SizedBox(height: 16),
+
+                // Total Marks
+                CustomTextField(
+                  label: 'Total Marks',
+                  controller: _marksController,
+                  hintText: '25',
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter total marks';
+                    }
+                    final marks = int.tryParse(value);
+                    if (marks == null || marks <= 0) {
+                      return 'Please enter a valid number';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Course & Class Section
+            CustomFormSection(
+              title: 'Subject & Class',
+              subtitle: 'Select the target subject and class',
+              icon: Icons.class_,
+              children: [
+                _buildCourseDropdown(),
+                const SizedBox(height: 16),
+
+                _buildSubjectDropdown(),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Schedule & Status Section (Side-by-Side)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Assignment Title
-                  CustomTextField(
-                    label: 'Assignment Title',
-                    controller: _titleController,
-                    hintText: 'e.g., Essay on Climate Change',
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter assignment title';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Description
-                  CustomTextField(
-                    label: 'Description',
-                    controller: _descriptionController,
-                    hintText: 'Describe the assignment requirements...',
-                    maxLines: 4,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter description';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Total Marks
-                  CustomTextField(
-                    label: 'Total Marks',
-                    controller: _marksController,
-                    hintText: '25',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter total marks';
-                      }
-                      final marks = int.tryParse(value);
-                      if (marks == null || marks <= 0) {
-                        return 'Please enter a valid number';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Course & Class Section
-              CustomFormSection(
-                title: 'Subject & Class',
-                subtitle: 'Select the target subject and class',
-                icon: Icons.class_,
-                children: [
-                  // Subject and Class in a row
-                  Row(
-                    children: [
-                      Expanded(child: _buildSubjectDropdown()),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildClassDropdown()),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Schedule Section
-              CustomFormSection(
-                title: 'Schedule',
-                subtitle: 'Set assignment and due dates',
-                icon: Icons.calendar_today,
-                children: [
-                  // Assigned Date and Due Date in a row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomDatePickerField(
-                          label: 'Assigned Date',
-                          selectedDate: _assignedDate,
-                          hintText: 'dd/mm/yyyy',
-                          onDateSelected: (date) {
-                            setState(() {
-                              _assignedDate = date;
-                            });
-                          },
-                          firstDate: DateTime.now().subtract(
-                            const Duration(days: 365),
-                          ),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 365),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: CustomDatePickerField(
-                          label: 'Due Date',
-                          selectedDate: _dueDate,
-                          hintText: 'dd/mm/yyyy',
-                          onDateSelected: (date) {
-                            setState(() {
-                              _dueDate = date;
-                            });
-                          },
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(
-                            const Duration(days: 365),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Assignment Type Section
-              CustomFormSection(
-                title: 'Assignment Type',
-                subtitle: 'Choose how to create the assignment',
-                icon: Icons.assignment,
-                children: [
-                  // Assignment type options
-                  _buildAssignmentTypeOption(
-                    value: 'description_only',
-                    icon: Icons.description,
-                    title: 'Description Only',
-                    subtitle: 'Just use the description field above',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAssignmentTypeOption(
-                    value: 'pdf',
-                    icon: Icons.picture_as_pdf,
-                    title: 'Upload PDF/File',
-                    subtitle: 'Attach a PDF or document file',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAssignmentTypeOption(
-                    value: 'manual',
-                    icon: Icons.edit_note,
-                    title: 'Manual Question Paper',
-                    subtitle: 'Create questions using template (no header)',
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Show file picker if PDF is selected
-                  if (_assignmentType == 'pdf') ...[
-                    InkWell(
-                      onTap: _pickFile,
-                      borderRadius: BorderRadius.circular(15),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color:
-                                _selectedFile != null
-                                    ? AppTheme.blue500
-                                    : CustomAppColors.lightGrey01,
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                          color: CustomAppColors.slate50,
-                        ),
-                        child: Row(
+                  Expanded(
+                    flex: 3,
+                    child: CustomFormSection(
+                      title: 'Schedule',
+                      subtitle: 'Set assignment and due dates',
+                      icon: Icons.calendar_today,
+                      children: [
+                        // Dates in a Row for compact layout
+                        Row(
                           children: [
-                            Icon(
-                              _selectedFile != null
-                                  ? Icons.check_circle
-                                  : Icons.attach_file,
-                              color:
-                                  _selectedFile != null
-                                      ? AppTheme.blue500
-                                      : AppTheme.slate600,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
-                                _selectedFile != null
-                                    ? _selectedFile!.name
-                                    : 'Choose file',
-                                style: TextStyle(
-                                  fontSize: AppTheme.fontSizeBase,
-                                  color:
-                                      _selectedFile != null
-                                          ? AppTheme.slate800
-                                          : AppTheme.slate600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (_selectedFile != null)
-                              IconButton(
-                                icon: const Icon(Icons.close, size: 18),
-                                onPressed: () {
+                              child: CustomDatePickerField(
+                                label: 'Due Date',
+                                selectedDate: _dueDate,
+                                hintText: 'dd/mm/yyyy',
+                                onDateSelected: (date) {
                                   setState(() {
-                                    _selectedFile = null;
+                                    _dueDate = date;
                                   });
                                 },
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now().add(
+                                  const Duration(days: 365),
+                                ),
                               ),
+                            ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Supported formats: PDF, DOC, DOCX, images',
-                      style: TextStyle(
-                        fontSize: AppTheme.fontSizeSm,
-                        color: AppTheme.slate500,
-                      ),
-                    ),
-                  ],
-
-                  // Show template builder if manual is selected
-                  if (_assignmentType == 'manual') ...[
-                    ElevatedButton.icon(
-                      onPressed: _openManualTemplateBuilder,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        backgroundColor: AppTheme.blue500,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon: const Icon(Icons.edit_note, size: 20),
-                      label: Text(
-                        _manualTemplateSections == null
-                            ? 'Create Questions'
-                            : 'Edit Questions (${_getTotalQuestions()} questions)',
-                        style: const TextStyle(
-                          fontSize: AppTheme.fontSizeBase,
-                          fontWeight: AppTheme.fontWeightMedium,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Create question paper without header (manual process)',
-                      style: TextStyle(
-                        fontSize: AppTheme.fontSizeSm,
-                        color: AppTheme.slate500,
+                  ),
+                  if (widget.assignmentId != null) ...[
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 2,
+                      child: CustomFormSection(
+                        title: 'Status',
+                        subtitle: 'Set assignment status',
+                        icon: Icons.info_outline,
+                        children: [_buildStatusDropdown()],
                       ),
                     ),
                   ],
                 ],
               ),
+            ),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed:
-                          _isLoading ? null : () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: AppTheme.slate500),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+            // Assignment Type Section
+            CustomFormSection(
+              title: 'Assignment Type',
+              subtitle: 'Choose how to create the assignment',
+              icon: Icons.assignment,
+              children: [
+                // Assignment type options
+                _buildAssignmentTypeOption(
+                  value: 'description_only',
+                  icon: Icons.description,
+                  title: 'Description Only',
+                  subtitle: 'Just use the description field above',
+                ),
+                const SizedBox(height: 12),
+                _buildAssignmentTypeOption(
+                  value: 'manual',
+                  icon: Icons.edit_note,
+                  title: 'Manual Question Paper',
+                  subtitle: 'Create questions using template (no header)',
+                ),
+
+                const SizedBox(height: 16),
+
+                // Show template builder if manual is selected
+                if (_assignmentType == 'manual') ...[
+                  ElevatedButton.icon(
+                    onPressed: _openManualTemplateBuilder,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
                       ),
-                      child: Text(
-                        'Cancel',
-                        style: context.textTheme.labelBase.copyWith(
-                          color: AppTheme.slate600,
-                        ),
+                      backgroundColor: AppTheme.blue500,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.edit_note, size: 20),
+                    label: Text(
+                      _manualTemplateSections == null
+                          ? 'Create Questions'
+                          : 'Edit Questions (${_getTotalQuestions()} questions)',
+                      style: const TextStyle(
+                        fontSize: AppTheme.fontSizeBase,
+                        fontWeight: AppTheme.fontWeightMedium,
+                        color: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: AppTheme.blue500,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      icon:
-                          _isLoading
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                              : const Icon(Icons.add, size: 20),
-                      label: Text(
-                        _isLoading ? 'Creating...' : 'Create Assignment',
-                        style: context.textTheme.labelBase.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Create question paper without header (manual process)',
+                    style: TextStyle(
+                      fontSize: AppTheme.fontSizeSm,
+                      color: AppTheme.slate500,
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
   }
 
+  Widget _buildFloatingActionButton() => DecoratedBox(
+    decoration: BoxDecoration(
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF155dfc).withOpacity(0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: FloatingActionButton.extended(
+      onPressed: _isLoading ? null : _submitForm,
+      backgroundColor: const Color(0xFF155dfc),
+      elevation: 0,
+      highlightElevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon:
+          _isLoading
+              ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+              : Icon(
+                widget.assignmentId == null
+                    ? Icons.add
+                    : Icons.check_circle_outline,
+                color: Colors.white,
+              ),
+      label: Text(
+        widget.assignmentId == null ? 'Create Assignment' : 'Update Assignment',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildCourseDropdown() {
+    final provider = context.watch<AssignmentProvider>();
+    return DropDownFormField<Course>(
+      label: 'Course',
+      value: _selectedCourse,
+      hintText: 'Select course',
+      items: provider.courses,
+      displayText: (course) => '${course.courseCode} - ${course.courseName}',
+      onChanged: (course) async {
+        setState(() {
+          _selectedCourse = course;
+          _selectedSubject = null;
+        });
+        if (course != null) {
+          await provider.loadDetailsForCourse(course.id);
+          if (context.mounted) _checkAutoSelection(provider);
+        }
+      },
+      validator: (value) => value == null ? 'Please select a course' : null,
+    );
+  }
+
   Widget _buildSubjectDropdown() {
     final provider = context.watch<AssignmentProvider>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Subject',
-          style: TextStyle(
-            fontWeight: AppTheme.fontWeightBold,
-            fontSize: AppTheme.fontSizeSm,
-            color: AppTheme.slate800,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: CustomAppColors.lightGrey01),
-            borderRadius: BorderRadius.circular(15),
-            color: CustomAppColors.slate50,
-          ),
-          child: DropdownButton<Subject>(
-            isExpanded: true,
-            value: _selectedSubject,
-            underline: const SizedBox(),
-            hint: const Text(
-              'Select subject',
-              style: TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                color: CustomAppColors.grey01,
-              ),
-            ),
-            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-            style: const TextStyle(
-              fontSize: AppTheme.fontSizeBase,
-              color: AppTheme.slate800,
-            ),
-            items:
-                provider.subjects
-                    .map(
-                      (subject) => DropdownMenuItem<Subject>(
-                        value: subject,
-                        child: Text(subject.name),
-                      ),
-                    )
-                    .toList(),
-            onChanged: (subject) {
-              setState(() {
-                _selectedSubject = subject;
-                _selectedClassSection = null; // Reset class when subject changes
-              });
-
-              // Filter class sections for the selected subject
-              if (subject != null) {
-                provider.filterClassSectionsBySubject(subject.id);
-              }
-            },
-          ),
-        ),
-      ],
+    return DropDownFormField<Subject>(
+      label: 'Subject',
+      value: _selectedSubject,
+      hintText: 'Select subject',
+      isEnabled: _selectedCourse != null,
+      items: provider.subjects,
+      displayText: (subject) => subject.name,
+      onChanged: (subject) {
+        setState(() {
+          _selectedSubject = subject;
+        });
+      },
+      validator: (value) => value == null ? 'Please select a subject' : null,
     );
   }
 
-  Widget _buildClassDropdown() {
-    final provider = context.watch<AssignmentProvider>();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Class',
-          style: TextStyle(
-            fontWeight: AppTheme.fontWeightBold,
-            fontSize: AppTheme.fontSizeSm,
-            color: AppTheme.slate800,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: CustomAppColors.lightGrey01),
-            borderRadius: BorderRadius.circular(15),
-            color: CustomAppColors.slate50,
-          ),
-          child: DropdownButton<ClassSection>(
-            isExpanded: true,
-            value: _selectedClassSection,
-            underline: const SizedBox(),
-            hint: const Text(
-              'Select class',
-              style: TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                color: CustomAppColors.grey01,
-              ),
-            ),
-            icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-            style: const TextStyle(
-              fontSize: AppTheme.fontSizeBase,
-              color: AppTheme.slate800,
-            ),
-            items:
-                provider.classSections
-                    .map(
-                      (classSection) => DropdownMenuItem<ClassSection>(
-                        value: classSection,
-                        child: Text(classSection.displayName),
-                      ),
-                    )
-                    .toList(),
-            onChanged:
-                _selectedSubject == null
-                    ? null
-                    : (classSection) {
-                      setState(() {
-                        _selectedClassSection = classSection;
-                      });
-                    },
-          ),
-        ),
-      ],
-    );
-  }
+  Widget _buildStatusDropdown() => DropDownFormField<String>(
+    label: 'Status',
+    value: _status,
+    hintText: 'Select status',
+    items: const ['DRAFT', 'PUBLISHED', 'CLOSED'],
+    displayText: (status) => status, // Capitalize or format as needed
+    onChanged: (value) {
+      if (value != null) {
+        setState(() => _status = value);
+      }
+    },
+  );
 
   Widget _buildAssignmentTypeOption({
     required String value,
@@ -642,9 +573,9 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     onTap: () {
       setState(() {
         _assignmentType = value;
-        // Clear previous selections
-        if (value != 'pdf') _selectedFile = null;
-        if (value != 'manual') _manualTemplateSections = null;
+        if (value != 'manual') {
+          _manualTemplateSections = null;
+        }
       });
     },
     borderRadius: BorderRadius.circular(12),
@@ -718,30 +649,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     ),
   );
 
-  Future<void> _pickFile() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _selectedFile = result.files.first;
-        });
-        showCustomSnackbar(
-          message: 'File selected: ${result.files.first.name}',
-          type: SnackbarType.success,
-        );
-      }
-    } catch (e) {
-      showCustomSnackbar(
-        message: 'Error picking file: $e',
-        type: SnackbarType.warning,
-      );
-    }
-  }
-
   Future<void> _openManualTemplateBuilder() async {
     final result = await Navigator.push<List<QuestionSection>>(
       context,
@@ -758,11 +665,30 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       setState(() {
         _manualTemplateSections = result;
       });
+
+      // Generate instructions text from template
+      final buffer = StringBuffer();
+      for (final section in result) {
+        buffer.writeln('--- ${section.sectionName} ---');
+        if (section.description != null && section.description!.isNotEmpty) {
+          buffer.writeln(section.description);
+        }
+        buffer.writeln();
+        for (var i = 0; i < section.questions.length; i++) {
+          final q = section.questions[i];
+          final marks = q.customMarks ?? section.marksPerQuestion;
+          buffer.writeln('${i + 1}. ${q.questionText} ($marks marks)');
+        }
+        buffer.writeln();
+      }
+      _instructionsController.text = buffer.toString();
     }
   }
 
   int _getTotalQuestions() {
-    if (_manualTemplateSections == null) return 0;
+    if (_manualTemplateSections == null) {
+      return 0;
+    }
     return _manualTemplateSections!.fold(
       0,
       (sum, section) => sum + section.questions.length,
@@ -775,6 +701,14 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     }
 
     // Additional validation
+    if (_selectedCourse == null) {
+      showCustomSnackbar(
+        message: 'Please select a course',
+        type: SnackbarType.warning,
+      );
+      return;
+    }
+
     if (_selectedSubject == null) {
       showCustomSnackbar(
         message: 'Please select a subject',
@@ -783,25 +717,9 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       return;
     }
 
-    if (_assignedDate == null) {
-      showCustomSnackbar(
-        message: 'Please select an assigned date',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
-
     if (_dueDate == null) {
       showCustomSnackbar(
         message: 'Please select a due date',
-        type: SnackbarType.warning,
-      );
-      return;
-    }
-
-    if (_dueDate!.isBefore(_assignedDate!)) {
-      showCustomSnackbar(
-        message: 'Due date must be after assigned date',
         type: SnackbarType.warning,
       );
       return;
@@ -824,30 +742,64 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
       return;
     }
 
+    // Prepare instructions based on assignment type
+    String? instructions = _instructionsController.text.trim();
+    if (instructions.isEmpty) {
+      if (_assignmentType == 'manual' && _manualTemplateSections != null) {
+        // Fallback to regenerating if text field was cleared but template exists
+        // (Logic reused from above, simplified here for brevity or just rely on controller)
+      } else {
+        instructions = null;
+      }
+    }
+
     final dto = CreateAssignmentDto(
       subjectId: _selectedSubject!.id,
-      sectionId: _selectedClassSection?.id,
+
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
+      instructions: instructions,
       maxMarks: int.parse(_marksController.text.trim()),
-      assignedDate: _assignedDate!,
+
       dueDate: _dueDate!,
+      status: _status,
     );
 
-    final success = await provider.createAssignment(uuid, dto);
+    final success =
+        widget.assignmentId == null
+            ? await provider.createAssignment(uuid, dto)
+            : await provider.updateAssignment(
+              uuid,
+              widget.assignmentId!,
+              UpdateAssignmentDto(
+                title: dto.title,
+                description: dto.description,
+                instructions: dto.instructions,
+                maxMarks: dto.maxMarks,
+                dueDate: dto.dueDate,
+                status: dto.status,
+              ),
+            );
 
     setState(() => _isLoading = false);
 
     if (mounted) {
       if (success) {
         showCustomSnackbar(
-          message: 'Assignment created successfully',
+          message:
+              widget.assignmentId == null
+                  ? 'Assignment created successfully'
+                  : 'Assignment updated successfully',
           type: SnackbarType.success,
         );
         Navigator.pop(context, true); // Return true to indicate success
       } else {
         showCustomSnackbar(
-          message: provider.error ?? 'Failed to create assignment',
+          message:
+              provider.error ??
+              (widget.assignmentId == null
+                  ? 'Failed to create assignment'
+                  : 'Failed to update assignment'),
           type: SnackbarType.warning,
         );
       }

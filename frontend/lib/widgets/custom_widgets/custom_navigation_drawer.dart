@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -38,24 +39,36 @@ class CustomNavigationDrawer extends StatelessWidget {
           // Navigation Items
           Expanded(
             child: Consumer<BottomNavProvider>(
-              builder:
-                  (context, navProvider, child) => ListView(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    children:
-                        NavigationItems.items.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final item = entry.value;
-                          final isSelected = navProvider.currentIndex == index;
+              builder: (context, navProvider, child) {
+                final currentRoute = GoRouterState.of(context).uri.path;
 
-                          return _buildNavigationItem(
-                            context,
-                            theme,
-                            item: item,
-                            isSelected: isSelected,
-                            onTap: () => navProvider.setIndex(index),
-                          );
-                        }).toList(),
-                  ),
+                return ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children:
+                      navProvider.navigationItems.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+
+                        if (navProvider.isItemHidden(index)) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final selectedIndex = navProvider.getCurrentIndex(
+                          currentRoute,
+                        );
+                        final isSelected = selectedIndex == index;
+
+                        return _buildNavigationItem(
+                          context,
+                          theme,
+                          item: item,
+                          isSelected: isSelected,
+                          onTap:
+                              () => navProvider.navigateToIndex(context, index),
+                        );
+                      }).toList(),
+                );
+              },
             ),
           ),
 
@@ -125,7 +138,9 @@ class CustomNavigationDrawer extends StatelessWidget {
 
             // User Role or Email
             Text(
-              user?.role?.roleName.capitalize ?? user?.email ?? 'No role assigned',
+              user?.role?.roleName.capitalize ??
+                  user?.email ??
+                  'No role assigned',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
               ),
@@ -263,7 +278,7 @@ class CustomNavigationDrawer extends StatelessWidget {
     ),
   );
 
-  void _showLogoutDialog(BuildContext context) async {
+  Future<void> _showLogoutDialog(BuildContext context) async {
     final result = await CustomDialog.showConfirmation(
       context: context,
       title: context.translate('logout_title'),
@@ -291,16 +306,19 @@ class CustomNavigationDrawer extends StatelessWidget {
       await loginProvider.logout();
 
       if (context.mounted) {
-        Navigator.of(context).pop();
-      }
+        Navigator.of(context).pop(); // Close loading dialog
 
-      if (context.mounted) {
-        context.router.goToLogin();
+        // Use addPostFrameCallback to ensure dialog is fully dismissed before navigating
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            context.router.goToLogin();
 
-        showCustomSnackbar(
-          message: context.translate('logout_success'),
-          type: SnackbarType.success,
-        );
+            showCustomSnackbar(
+              message: context.translate('logout_success'),
+              type: SnackbarType.success,
+            );
+          }
+        });
       }
     }
   }

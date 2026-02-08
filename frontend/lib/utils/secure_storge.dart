@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,13 +39,21 @@ class SecureStorageService {
     if (_isWeb) {
       _prefs ??= await SharedPreferences.getInstance();
     } else {
-      _storage ??= const FlutterSecureStorage(
-        aOptions: AndroidOptions(
-          encryptedSharedPreferences: true,
-          resetOnError: true,
-        ),
-        iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-      );
+      if (_storage == null) {
+        log('🔐 Initializing FlutterSecureStorage...');
+        _storage = const FlutterSecureStorage(
+          aOptions: AndroidOptions(
+            encryptedSharedPreferences: true,
+            resetOnError: true,
+          ),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock,
+          ),
+          mOptions: MacOsOptions(
+            accessibility: KeychainAccessibility.first_unlock,
+          ),
+        );
+      }
     }
   }
 
@@ -51,15 +61,21 @@ class SecureStorageService {
   ///
   /// Stores in both the secure storage and the memory cache.
   Future<void> write(String key, String value) async {
-    await _initStorage();
+    try {
+      await _initStorage();
 
-    if (_isWeb) {
-      await _prefs!.setString(key, value);
-    } else {
-      await _storage!.write(key: key, value: value);
+      if (_isWeb) {
+        await _prefs!.setString(key, value);
+      } else {
+        await _storage!.write(key: key, value: value);
+      }
+
+      _cache[key] = value; // Update cache
+      log('💾 SecureStorage: Written key: $key');
+    } on Exception catch (e) {
+      log('❌ SecureStorage: Error writing key $key: $e');
+      rethrow;
     }
-
-    _cache[key] = value; // Update cache
   }
 
   /// Reads a value securely.
@@ -68,36 +84,50 @@ class SecureStorageService {
   Future<String?> read(String key) async {
     // Try to get from cache first
     if (_cache.containsKey(key)) {
+      // log('💾 SecureStorage: Cache hit for key: $key');
       return _cache[key];
     }
 
-    await _initStorage();
+    try {
+      await _initStorage();
 
-    // If not in cache, get from storage and update cache
-    final String? value;
-    if (_isWeb) {
-      value = _prefs!.getString(key);
-    } else {
-      value = await _storage!.read(key: key);
-    }
+      // If not in cache, get from storage and update cache
+      final String? value;
+      if (_isWeb) {
+        value = _prefs!.getString(key);
+      } else {
+        value = await _storage!.read(key: key);
+      }
 
-    if (value != null) {
-      _cache[key] = value;
+      if (value != null) {
+        _cache[key] = value;
+        log('💾 SecureStorage: Read from disk key: $key');
+      } else {
+        log('⚠️ SecureStorage: Key not found: $key');
+      }
+      return value;
+    } on Exception catch (e) {
+      log('❌ SecureStorage: Error reading key $key: $e');
+      return null;
     }
-    return value;
   }
 
   /// Deletes a value.
   Future<void> delete(String key) async {
-    await _initStorage();
+    try {
+      await _initStorage();
 
-    if (_isWeb) {
-      await _prefs!.remove(key);
-    } else {
-      await _storage!.delete(key: key);
+      if (_isWeb) {
+        await _prefs!.remove(key);
+      } else {
+        await _storage!.delete(key: key);
+      }
+
+      _cache.remove(key); // Update cache
+      log('🗑️ SecureStorage: Deleted key: $key');
+    } on Exception catch (e) {
+      log('❌ SecureStorage: Error deleting key $key: $e');
     }
-
-    _cache.remove(key); // Update cache
   }
 
   /// Clears all stored values.
@@ -115,6 +145,7 @@ class SecureStorageService {
     }
 
     _cache.clear(); // Clear cache
+    log('🗑️ SecureStorage: All data cleared');
   }
 
   /// Checks if a key exists.
@@ -144,8 +175,8 @@ class SecureStorageService {
       allValues = {};
       final keys = _prefs!.getKeys();
       for (final key in keys) {
-        final value = _prefs!.getString(key);
-        if (value != null) {
+        final dynamic value = _prefs!.get(key);
+        if (value is String) {
           allValues[key] = value;
         }
       }
@@ -155,6 +186,7 @@ class SecureStorageService {
 
     // Update cache with all values
     _cache.addAll(allValues);
+    log('💾 SecureStorage: Read all ${allValues.length} keys');
     return allValues;
   }
 
@@ -178,6 +210,7 @@ class SecureStorageService {
 
     // Update cache
     _cache.addAll(values);
+    log('💾 SecureStorage: Batch wrote ${values.length} keys');
   }
 
   /// Refreshes the cache from secure storage.

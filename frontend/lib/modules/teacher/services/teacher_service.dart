@@ -52,7 +52,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load dashboard stats: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -78,7 +78,7 @@ class TeacherService {
           error: 'Failed to load recent activity',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load recent activity: $e');
     }
   }
@@ -107,7 +107,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load attendance trends: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -138,7 +138,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load subject performance: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -169,7 +169,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load grade distribution: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -199,7 +199,7 @@ class TeacherService {
       } else {
         throw Exception('Failed to load teacher data: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -235,7 +235,7 @@ class TeacherService {
           error: 'Failed to load teacher subjects',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher subjects: $e');
     }
   }
@@ -271,7 +271,7 @@ class TeacherService {
           error: 'Failed to load teacher classes',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher classes: $e');
     }
   }
@@ -302,7 +302,7 @@ class TeacherService {
           error: 'Failed to load teachers',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teachers: $e');
     }
   }
@@ -332,7 +332,7 @@ class TeacherService {
           error: 'Failed to create assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create assignment: $e');
     }
   }
@@ -344,6 +344,8 @@ class TeacherService {
     String userUuid, {
     int? courseId,
     String? status,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -352,6 +354,12 @@ class TeacherService {
       }
       if (status != null) {
         queryParams['status'] = status;
+      }
+      if (startDate != null) {
+        queryParams['startDate'] = startDate.toIso8601String();
+      }
+      if (endDate != null) {
+        queryParams['endDate'] = endDate.toIso8601String();
       }
 
       final response = await _apiService.dio.get(
@@ -407,7 +415,7 @@ class TeacherService {
           error: 'Failed to load assignments',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       await Future.error(e);
       throw Exception('Failed to load assignments: $e');
     }
@@ -432,7 +440,7 @@ class TeacherService {
           error: 'Failed to load assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load assignment: $e');
     }
   }
@@ -461,7 +469,7 @@ class TeacherService {
           error: 'Failed to update assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update assignment: $e');
     }
   }
@@ -483,7 +491,7 @@ class TeacherService {
           error: 'Failed to delete assignment',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete assignment: $e');
     }
   }
@@ -513,7 +521,7 @@ class TeacherService {
           error: 'Failed to create examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create examination: $e');
     }
   }
@@ -525,6 +533,8 @@ class TeacherService {
     String userUuid, {
     int? courseId,
     String? status,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -533,6 +543,12 @@ class TeacherService {
       }
       if (status != null) {
         queryParams['status'] = status;
+      }
+      if (startDate != null) {
+        queryParams['startDate'] = startDate.toIso8601String();
+      }
+      if (endDate != null) {
+        queryParams['endDate'] = endDate.toIso8601String();
       }
 
       final response = await _apiService.dio.get(
@@ -588,7 +604,7 @@ class TeacherService {
           error: 'Failed to load examinations',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       await Future.error(e);
       throw Exception('Failed to load examinations: $e');
     }
@@ -613,7 +629,7 @@ class TeacherService {
           error: 'Failed to load examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load examination: $e');
     }
   }
@@ -642,7 +658,7 @@ class TeacherService {
           error: 'Failed to update examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update examination: $e');
     }
   }
@@ -664,12 +680,82 @@ class TeacherService {
           error: 'Failed to delete examination',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete examination: $e');
     }
   }
 
-  // ==================== HELPER METHODS ====================
+  // ==================== RESULT MANAGEMENT ====================
+
+  /// Get results for an examination
+  ///
+  /// Endpoint: GET /teachers/:user_uuid/examinations/:examId/results
+  Future<List<dynamic>> getExamResults(String userUuid, int examId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/examinations/$examId/results',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) {
+          return data;
+        } else if (data is Map<String, dynamic>) {
+          // Case 1: data['data'] is the list (handled originally)
+          if (data['data'] is List) {
+            return data['data'] as List<dynamic>;
+          }
+          // Case 2: data['data']['results'] is the list (User's log case)
+          else if (data['data'] is Map<String, dynamic> &&
+              data['data']['results'] is List) {
+            return data['data']['results'] as List<dynamic>;
+          }
+          // Case 3: data['results'] might be the list (direct object response)
+          else if (data['results'] is List) {
+            return data['results'] as List<dynamic>;
+          }
+        }
+        return <dynamic>[];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load exam results',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load exam results: $e');
+    }
+  }
+
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/examinations/:examId/results/bulk
+  Future<Map<String, dynamic>> enterExamResultsBulk(
+    String userUuid,
+    int examId,
+    List<Map<String, dynamic>> results,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/examinations/$examId/results/bulk',
+        data: {'results': results},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to save exam results',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to save exam results: $e');
+    }
+  }
 
   /// Get teacher's courses (for dropdowns)
   ///
@@ -692,7 +778,7 @@ class TeacherService {
       }
 
       return courses;
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load teacher courses: $e');
     }
   }
@@ -713,18 +799,31 @@ class TeacherService {
       }
 
       return sections;
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to load sections: $e');
     }
   }
 
   /// Get active semesters
-  Future<List<Semester>> getActiveSemesters() async {
+  Future<List<Semester>> getActiveSemesters(String userUuid) async {
     try {
-      // This would need a backend endpoint, for now return empty
-      // In a real app, you'd call GET /semesters?status=ACTIVE
-      return [];
-    } catch (e) {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/semesters/active',
+      );
+
+      if (response.statusCode == 200) {
+        // Handle list response
+        final List<dynamic> data = response.data;
+        return data.map((json) => Semester.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load semesters',
+        );
+      }
+    } on Exception catch (e) {
       throw Exception('Failed to load semesters: $e');
     }
   }
@@ -754,7 +853,7 @@ class TeacherService {
           error: 'Failed to mark attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to mark attendance: $e');
     }
   }
@@ -782,7 +881,7 @@ class TeacherService {
           error: 'Failed to mark bulk attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to mark bulk attendance: $e');
     }
   }
@@ -811,7 +910,7 @@ class TeacherService {
           error: 'Failed to update attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update attendance: $e');
     }
   }
@@ -833,7 +932,7 @@ class TeacherService {
           error: 'Failed to delete attendance',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete attendance: $e');
     }
   }
@@ -864,7 +963,7 @@ class TeacherService {
           error: 'Failed to create exam result',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to create exam result: $e');
     }
   }
@@ -893,7 +992,7 @@ class TeacherService {
           error: 'Failed to upload bulk results',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to upload bulk results: $e');
     }
   }
@@ -901,32 +1000,6 @@ class TeacherService {
   /// Get all results for an exam
   ///
   /// Endpoint: GET /teachers/:user_uuid/examinations/:examId/results
-  Future<List<dynamic>> getExamResults(String userUuid, int examId) async {
-    try {
-      final response = await _apiService.dio.get(
-        '/teachers/$userUuid/examinations/$examId/results',
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data is List) {
-          return data;
-        } else if (data is Map<String, dynamic>) {
-          return data['data'] as List<dynamic>? ?? [];
-        }
-        return [];
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-          type: DioExceptionType.badResponse,
-          error: 'Failed to get exam results',
-        );
-      }
-    } catch (e) {
-      throw Exception('Failed to get exam results: $e');
-    }
-  }
 
   /// Update an exam result
   ///
@@ -953,7 +1026,7 @@ class TeacherService {
           error: 'Failed to update exam result',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to update exam result: $e');
     }
   }
@@ -979,7 +1052,7 @@ class TeacherService {
           error: 'Failed to delete exam result',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to delete exam result: $e');
     }
   }
@@ -1024,7 +1097,7 @@ class TeacherService {
           error: 'Failed to get pending submissions',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get pending submissions: $e');
     }
   }
@@ -1067,7 +1140,7 @@ class TeacherService {
           error: 'Failed to get at-risk students',
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Failed to get at-risk students: $e');
     }
   }

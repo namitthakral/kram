@@ -1,153 +1,106 @@
-import 'package:flutter/foundation.dart';
-
+import 'package:flutter/material.dart';
 import '../models/dashboard_stats.dart';
 import '../services/teacher_service.dart';
 
-class TeacherDashboardProvider extends ChangeNotifier {
+class TeacherDashboardProvider with ChangeNotifier {
   final TeacherService _teacherService = TeacherService();
 
+  bool _isLoading = false;
+  String? _error;
+
+  // Stats
   DashboardStats? _dashboardStats;
+
+  // Charts Data
   AttendanceTrendsResponse? _attendanceTrends;
   SubjectPerformanceResponse? _subjectPerformance;
   GradeDistributionResponse? _gradeDistribution;
 
-  bool _isLoading = false;
-  bool _isLoadingCharts = false;
-  String? _error;
-  String? _chartsError;
+  // Recent Activity
+  List<StudentActivity> _activities = [];
 
+  // Getters
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  // Support both naming conventions (new and old)
+  DashboardStats? get stats => _dashboardStats;
   DashboardStats? get dashboardStats => _dashboardStats;
+
+  List<StudentActivity> get activities => _activities;
+
   AttendanceTrendsResponse? get attendanceTrends => _attendanceTrends;
   SubjectPerformanceResponse? get subjectPerformance => _subjectPerformance;
   GradeDistributionResponse? get gradeDistribution => _gradeDistribution;
 
-  bool get isLoading => _isLoading;
-  bool get isLoadingCharts => _isLoadingCharts;
-  String? get error => _error;
-  String? get chartsError => _chartsError;
-  bool get hasData => _dashboardStats != null;
-  bool get hasChartData =>
-      _attendanceTrends != null ||
-      _subjectPerformance != null ||
-      _gradeDistribution != null;
-
-  Future<void> fetchDashboardStats(String userUuid) async {
+  // Method used by AcademicManagementScreen (New)
+  Future<void> loadDashboardData(String userUuid) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _dashboardStats = await _teacherService.getDashboardStats(userUuid);
+      // Load stats and activities
+      final results = await Future.wait([
+        _teacherService.getDashboardStats(userUuid),
+        _teacherService.getRecentActivity(userUuid),
+      ]);
+
+      _dashboardStats = results[0] as DashboardStats;
+      _activities = results[1] as List<StudentActivity>;
       _error = null;
     } on Exception catch (e) {
-      _error = e.toString();
-      debugPrint('Error fetching dashboard stats: $e');
+      _error = 'Failed to load dashboard data: $e';
+      debugPrint('Dashboard API Error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> fetchAttendanceTrends(String userUuid) async {
-    _isLoadingCharts = true;
-    _chartsError = null;
+  // Methods used by TeacherDashboardScreen (Old/Main)
+  Future<void> fetchDashboardStats(String userUuid) async {
+    // Re-use logic or independent? Independent allows separate calls.
+    // But we need to handle loading state carefully if multiple calls happen.
+
+    // If already loading, we might not want to reset flag, but complex.
+    // For now, simple implementation.
+    _isLoading = true;
     notifyListeners();
 
     try {
-      _attendanceTrends = await _teacherService.getAttendanceTrends(userUuid);
-      _chartsError = null;
+      _dashboardStats = await _teacherService.getDashboardStats(userUuid);
+      _error = null;
     } on Exception catch (e) {
-      _chartsError = e.toString();
-      debugPrint('Error fetching attendance trends: $e');
+      _error = 'Failed to fetch stats: $e';
+      debugPrint('Stats Error: $e');
     } finally {
-      _isLoadingCharts = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> fetchSubjectPerformance(String userUuid) async {
-    _isLoadingCharts = true;
-    _chartsError = null;
-    notifyListeners();
-
-    try {
-      _subjectPerformance = await _teacherService.getSubjectPerformance(
-        userUuid,
-      );
-      _chartsError = null;
-    } on Exception catch (e) {
-      _chartsError = e.toString();
-      debugPrint('Error fetching subject performance: $e');
-    } finally {
-      _isLoadingCharts = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> fetchGradeDistribution(String userUuid) async {
-    _isLoadingCharts = true;
-    _chartsError = null;
-    notifyListeners();
-
-    try {
-      _gradeDistribution = await _teacherService.getGradeDistribution(userUuid);
-      _chartsError = null;
-    } on Exception catch (e) {
-      _chartsError = e.toString();
-      debugPrint('Error fetching grade distribution: $e');
-    } finally {
-      _isLoadingCharts = false;
+      _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> fetchAllChartData(String userUuid) async {
-    _isLoadingCharts = true;
-    _chartsError = null;
+    _isLoading = true;
     notifyListeners();
 
     try {
-      await Future.wait([
-        _teacherService
-            .getAttendanceTrends(userUuid)
-            .then((value) => _attendanceTrends = value),
-        _teacherService
-            .getSubjectPerformance(userUuid)
-            .then((value) => _subjectPerformance = value),
-        _teacherService
-            .getGradeDistribution(userUuid)
-            .then((value) => _gradeDistribution = value),
+      final results = await Future.wait([
+        _teacherService.getAttendanceTrends(userUuid),
+        _teacherService.getSubjectPerformance(userUuid),
+        _teacherService.getGradeDistribution(userUuid),
       ]);
-      _chartsError = null;
+
+      _attendanceTrends = results[0] as AttendanceTrendsResponse;
+      _subjectPerformance = results[1] as SubjectPerformanceResponse;
+      _gradeDistribution = results[2] as GradeDistributionResponse;
+      _error = null;
     } on Exception catch (e) {
-      _chartsError = e.toString();
-      debugPrint('Error fetching chart data: $e');
+      _error = 'Failed to fetch chart data: $e';
+      debugPrint('Charts Error: $e');
     } finally {
-      _isLoadingCharts = false;
+      _isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<void> refresh(String userUuid) async {
-    await fetchDashboardStats(userUuid);
-  }
-
-  Future<void> refreshAll(String userUuid) async {
-    await Future.wait([
-      fetchDashboardStats(userUuid),
-      fetchAllChartData(userUuid),
-    ]);
-  }
-
-  void clearData() {
-    _dashboardStats = null;
-    _attendanceTrends = null;
-    _subjectPerformance = null;
-    _gradeDistribution = null;
-    _error = null;
-    _chartsError = null;
-    _isLoading = false;
-    _isLoadingCharts = false;
-    notifyListeners();
   }
 }

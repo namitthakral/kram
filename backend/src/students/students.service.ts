@@ -34,7 +34,7 @@ import {
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Helper: Get attendance summary from database view
@@ -829,8 +829,8 @@ export class StudentsService {
         gpa:
           record._sum.creditsEarned && record._avg.gradePoints
             ? (parseFloat(record._avg.gradePoints.toString()) *
-                record._sum.creditsEarned) /
-              record._sum.creditsEarned
+              record._sum.creditsEarned) /
+            record._sum.creditsEarned
             : 0,
       }))
       .sort((a, b) => b.gpa - a.gpa)
@@ -970,6 +970,8 @@ export class StudentsService {
         marksObtained: submission?.marksObtained
           ? parseFloat(submission.marksObtained.toString())
           : undefined,
+        description: assignment.description,
+        instructions: assignment.instructions,
       }
     })
 
@@ -984,6 +986,220 @@ export class StudentsService {
         assignments: filteredAssignments,
         totalCount: filteredAssignments.length,
       },
+    }
+  }
+
+  async getExaminationsByUuid(
+    uuid: string,
+    status?: string,
+    currentUser?: UserWithRelations
+  ) {
+    // Find student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: { user: { uuid } },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Check permissions
+    if (
+      currentUser &&
+      currentUser.role.roleName === 'student' &&
+      currentUser.student?.id !== student.id
+    ) {
+      throw new ForbiddenException('Access denied')
+    }
+
+    // Get student's enrollments to find their courses
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { studentId: student.id },
+      include: { subject: true },
+    })
+
+    const courseIds = enrollments.map(e => e.subjectId)
+
+    // Build where clause
+    const where: Prisma.ExaminationWhereInput = {
+      subjectId: { in: courseIds },
+      // Only show scheduled, ongoing, or completed exams
+      status: status
+        ? (status as any)
+        : { in: ['SCHEDULED', 'ONGOING', 'COMPLETED'] },
+    }
+
+    const examinations = await this.prisma.examination.findMany({
+      where,
+      include: {
+        subject: { select: { subjectName: true, subjectCode: true } },
+        results: {
+          where: { studentId: student.id },
+          take: 1,
+        },
+      },
+      orderBy: { examDate: 'desc' },
+    })
+
+    const examinationData = examinations.map(exam => {
+      const result = exam.results[0]
+      let examStatus = exam.status
+      let grade: string | undefined
+      let score: string | undefined
+
+      if (result) {
+        if (result.marksObtained) {
+          score = `${result.marksObtained}/${exam.totalMarks}`
+        }
+      }
+
+      return {
+        id: exam.id,
+        name: exam.examName,
+        subject: exam.subject.subjectName,
+        date: exam.examDate?.toISOString().split('T')[0],
+        startTime: exam.startTime?.toISOString(),
+        duration: exam.durationMinutes,
+        totalMarks: exam.totalMarks,
+        status: examStatus,
+        score,
+        grade,
+      }
+    })
+
+    return {
+      success: true,
+      data: examinationData,
+    }
+  }
+
+  async getPublishedQuestionPaperByUuid(
+    uuid: string,
+    examId: number,
+    currentUser: UserWithRelations
+  ) {
+    // Find student by UUID
+    const student = await this.prisma.student.findFirst({
+      where: { user: { uuid } },
+    })
+
+    if (!student) {
+      throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Check permissions
+    if (
+      currentUser &&
+      currentUser.role.roleName === 'student' &&
+      currentUser.student?.id !== student.id
+    ) {
+      throw new ForbiddenException('Access denied')
+    }
+
+    // Find the examination and its linked question paper
+    const examination = await this.prisma.examination.findUnique({
+      where: { id: examId },
+      include: {
+        subject: {
+          include: {
+            course: true,
+          },
+        },
+        semester: {
+          include: {
+            academicYear: {
+              include: {
+                institution: true,
+              },
+            },
+          },
+        },
+        questionPaper: {
+          include: {
+            sections: {
+              include: {
+                questions: {
+                  include: {
+                    options: {
+                      orderBy: {
+                        sortOrder: 'asc',
+                      },
+                    },
+                  },
+                  orderBy: {
+                    sortOrder: 'asc',
+                  },
+                },
+              },
+              orderBy: {
+                sortOrder: 'asc',
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!examination) {
+      throw new NotFoundException('Examination not found')
+    }
+
+    if (!examination.questionPaper) {
+      throw new NotFoundException(
+        'Question paper not found for this examination'
+      )
+    }
+
+    // Check if question paper is published
+    if (
+      examination.questionPaper.status !== 'PUBLISHED' &&
+      examination.questionPaper.status !== 'DRAFT'
+    ) {
+      throw new ForbiddenException('Question paper is not published yet')
+    }
+
+    const { questionPaper, subject, semester } = examination
+    const institution = semester.academicYear.institution
+
+    // Map to QuestionPaperTemplate structure
+    // Map to QuestionPaperTemplate structure
+    const data = {
+      schoolName: institution.name,
+      schoolAddress: institution.address || '',
+      examName: examination.examName,
+      className: subject.course?.name || semester.semesterName,
+      section: '', // Examination is not tied to a single section
+      subject: subject.subjectName,
+      date: examination.examDate
+        ? examination.examDate.toISOString().split('T')[0]
+        : '',
+      duration: examination.durationMinutes
+        ? examination.durationMinutes.toString()
+        : '0',
+      maxMarks: questionPaper.totalMarks,
+      sections: questionPaper.sections.map(section => ({
+        sectionName: section.name,
+        description: section.description,
+        marksPerQuestion: 0, // All questions have custom marks
+        questions: section.questions.map(question => ({
+          questionText: question.text,
+          customMarks: question.marks,
+          type:
+            question.questionType === 'MCQ'
+              ? 'mcq'
+              : 'written', // Map to QuestionType enum string
+          hasImage: false, // Not yet supported in backend
+          imagePlaceholder: null,
+          mcqOptions: question.options.map(o => o.text),
+        })),
+      })),
+      instructions: questionPaper.instructions,
+      logo: null,
+    }
+
+    return {
+      success: true,
+      data,
     }
   }
 
@@ -1174,8 +1390,8 @@ export class StudentsService {
         monthData.percentage =
           monthData.totalClasses > 0
             ? Math.round(
-                (monthData.attendedClasses / monthData.totalClasses) * 100
-              )
+              (monthData.attendedClasses / monthData.totalClasses) * 100
+            )
             : 0
       }
     })
@@ -1299,9 +1515,9 @@ export class StudentsService {
       )
       const nextTest = nextExam
         ? nextExam.examDate.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          })
+          month: 'short',
+          day: 'numeric',
+        })
         : 'TBD'
 
       // Calculate percentage and grade
@@ -1358,6 +1574,8 @@ export class StudentsService {
   async getUpcomingEventsByUuid(
     uuid: string,
     limit: number = 10,
+    startDateStr?: string,
+    endDateStr?: string,
     currentUser?: UserWithRelations
   ): Promise<StudentUpcomingEventsResponse> {
     // Find student by UUID
@@ -1379,6 +1597,9 @@ export class StudentsService {
     }
 
     const now = new Date()
+    const startDate = startDateStr ? new Date(startDateStr) : now
+    const endDate = endDateStr ? new Date(endDateStr) : undefined
+
     const events: Array<{
       id: number
       title: string
@@ -1399,7 +1620,7 @@ export class StudentsService {
     // Get upcoming exams for enrolled courses
     const upcomingExams = await this.prisma.examination.findMany({
       where: {
-        examDate: { gte: now },
+        examDate: endDate ? { gte: startDate, lte: endDate } : { gte: startDate },
         status: { in: ['SCHEDULED', 'ONGOING'] },
         subjectId: { in: enrolledCourseIds },
       },
@@ -1427,7 +1648,7 @@ export class StudentsService {
     // Get upcoming assignments for enrolled courses
     const upcomingAssignments = await this.prisma.assignment.findMany({
       where: {
-        dueDate: { gte: now },
+        dueDate: endDate ? { gte: startDate, lte: endDate } : { gte: startDate },
         status: 'PUBLISHED',
         subjectId: { in: enrolledCourseIds },
         submissions: {
@@ -1589,22 +1810,22 @@ export class StudentsService {
       // Get exam results if requested
       queryParams.includeExamDetails !== false
         ? this.prisma.examResult.findMany({
-            where: {
-              studentId: student.id,
-              exam: {
-                semesterId: semester.id,
+          where: {
+            studentId: student.id,
+            exam: {
+              semesterId: semester.id,
+            },
+          },
+          include: {
+            exam: {
+              select: {
+                examName: true,
+                examType: true,
+                totalMarks: true,
               },
             },
-            include: {
-              exam: {
-                select: {
-                  examName: true,
-                  examType: true,
-                  totalMarks: true,
-                },
-              },
-            },
-          })
+          },
+        })
         : Promise.resolve([]),
 
       // Get student progress for remarks
@@ -1804,10 +2025,10 @@ export class StudentsService {
     const percentile =
       classRank !== null && totalStudentsInClass > 0
         ? Math.round(
-            ((totalStudentsInClass - classRank) / totalStudentsInClass) *
-              100 *
-              100
-          ) / 100
+          ((totalStudentsInClass - classRank) / totalStudentsInClass) *
+          100 *
+          100
+        ) / 100
         : null
 
     // Determine overall grade based on SGPA

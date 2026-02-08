@@ -65,7 +65,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to mark attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       print('Unexpected error: $e');
       throw ApiErrorHandler.handleException(
         e,
@@ -119,7 +119,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to mark attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to mark attendance',
@@ -165,7 +165,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to update attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to update attendance',
@@ -203,7 +203,7 @@ class AttendanceService {
         e,
         defaultMessage: 'Failed to delete attendance',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to delete attendance',
@@ -211,22 +211,50 @@ class AttendanceService {
     }
   }
 
-  /// Get existing attendance records for a class section and date
+  /// Get filtered attendance records
   ///
-  /// Endpoint: GET /class-sections/:sectionId/attendance?date=YYYY-MM-DD
-  ///
-  /// [sectionId] - ClassSection ID
-  /// [date] - Date in YYYY-MM-DD format
-  Future<Map<String, dynamic>> getAttendance({
-    required int sectionId,
-    required String date,
+  /// Endpoint: GET /teachers/:user_uuid/attendance/records
+  Future<Map<String, dynamic>> getAttendanceRecords(
+    String teacherUuid, {
+    int? sectionId,
+    int? studentId,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? status,
+    int limit = 50,
+    int offset = 0,
+    String sortBy = 'date',
+    String sortOrder = 'desc',
   }) async {
     try {
+      final queryParams = <String, dynamic>{
+        'limit': limit,
+        'offset': offset,
+        'sortBy': sortBy,
+        'sortOrder': sortOrder,
+      };
+
+      if (sectionId != null) {
+        queryParams['sectionId'] = sectionId;
+      }
+      if (studentId != null) {
+        queryParams['studentId'] = studentId;
+      }
+      if (startDate != null) {
+        queryParams['startDate'] =
+            "${startDate.year}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}";
+      }
+      if (endDate != null) {
+        queryParams['endDate'] =
+            "${endDate.year}-${endDate.month.toString().padLeft(2, '0')}-${endDate.day.toString().padLeft(2, '0')}";
+      }
+      if (status != null) {
+        queryParams['status'] = status;
+      }
+
       final response = await _apiService.dio.get(
-        '/class-sections/$sectionId/attendance',
-        queryParameters: {
-          'date': date,
-        },
+        '/teachers/$teacherUuid/attendance/records',
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -236,29 +264,18 @@ class AttendanceService {
           requestOptions: response.requestOptions,
           response: response,
           type: DioExceptionType.badResponse,
-          error: 'Failed to fetch attendance',
+          error: 'Failed to fetch attendance records',
         );
       }
     } on DioException catch (e) {
-      // If it's a 404 or no attendance found, return empty data
-      if (e.response?.statusCode == 404) {
-        return {
-          'success': true,
-          'data': {
-            'attendance': <Map<String, dynamic>>[],
-            'count': 0,
-          },
-        };
-      }
-
       throw ApiErrorHandler.handleDioException(
         e,
-        defaultMessage: 'Failed to fetch attendance',
+        defaultMessage: 'Failed to fetch attendance records',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(
         e,
-        defaultMessage: 'Failed to fetch attendance',
+        defaultMessage: 'Failed to fetch attendance records',
       );
     }
   }

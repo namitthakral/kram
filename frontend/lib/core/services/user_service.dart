@@ -44,7 +44,7 @@ class UserService {
       } else {
         throw Exception('Failed to get profile: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -80,7 +80,7 @@ class UserService {
       } else {
         throw Exception('Failed to get user: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -116,7 +116,7 @@ class UserService {
       } else {
         throw Exception('Failed to get user: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -129,10 +129,7 @@ class UserService {
   /// [data] - Map of fields to update
   Future<User> updateUser(String uuid, Map<String, dynamic> data) async {
     try {
-      final response = await _apiService.dio.patch(
-        '/users/$uuid',
-        data: data,
-      );
+      final response = await _apiService.dio.patch('/users/$uuid', data: data);
 
       if (response.statusCode == 200) {
         return User.fromJson(response.data as Map<String, dynamic>);
@@ -158,7 +155,7 @@ class UserService {
       } else {
         throw Exception('Failed to update user: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -210,7 +207,7 @@ class UserService {
       } else {
         throw Exception('Failed to get users: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -238,7 +235,7 @@ class UserService {
       } else {
         throw Exception('Failed to get user stats: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -258,10 +255,7 @@ class UserService {
     try {
       final response = await _apiService.dio.get(
         '/users/role/$roleId',
-        queryParameters: {
-          'page': page.toString(),
-          'limit': limit.toString(),
-        },
+        queryParameters: {'page': page.toString(), 'limit': limit.toString()},
       );
 
       if (response.statusCode == 200) {
@@ -280,7 +274,7 @@ class UserService {
       } else {
         throw Exception('Failed to get users by role: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -310,7 +304,7 @@ class UserService {
       } else {
         throw Exception('Failed to delete user: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
@@ -346,7 +340,7 @@ class UserService {
       } else {
         throw Exception('Failed to create user: ${e.message}');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       throw Exception('Unexpected error: $e');
     }
   }
