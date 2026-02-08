@@ -6,6 +6,10 @@
 
 set -e  # Exit on error
 
+# Change to backend directory (script must run from backend/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
 # Add local bin to PATH for lightsailctl
 export PATH="$HOME/bin:$PATH"
 

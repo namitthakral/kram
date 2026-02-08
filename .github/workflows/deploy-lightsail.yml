@@ -83,6 +83,7 @@ jobs:
               if: steps.frontend-check.outputs.frontend_changed == 'true' || inputs.skip_frontend == false
               run: |
                   echo "📦 Copying Flutter build to backend..."
+                  mkdir -p backend/public/dashboard
                   rm -rf backend/public/dashboard/*
                   cp -r frontend/build/web/* backend/public/dashboard/
                   echo "✅ Dashboard files copied"
