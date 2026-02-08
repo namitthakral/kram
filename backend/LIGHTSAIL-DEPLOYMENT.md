@@ -82,15 +82,20 @@ cd /Users/namitthakral/ed-verse/backend
 ```
 
 The script will:
-1. ✅ Build Docker image for linux/amd64
-2. ✅ Create/update Lightsail container service
-3. ✅ Push image to Lightsail
-4. ✅ Deploy with environment variables
-5. ✅ **Run database migrations automatically**
-6. ✅ Wait for deployment to complete
-7. ✅ Show you the live URL
+1. ✅ **Check Flutter frontend for changes** (automatic!)
+2. ✅ **Rebuild Flutter web if needed** (automatic!)
+3. ✅ Build Docker image for linux/amd64
+4. ✅ Create/update Lightsail container service
+5. ✅ Push image to Lightsail
+6. ✅ Deploy with environment variables
+7. ✅ **Run database migrations automatically**
+8. ✅ Wait for deployment to complete
+9. ✅ Show you the live URL
 
-**Time:** 5-10 minutes (first time), 3-5 minutes (updates)
+**Time:** 
+- First deployment: 8-12 minutes
+- Updates (backend only): 3-5 minutes  
+- Updates (with frontend changes): 5-8 minutes
 
 ---
 
@@ -329,16 +334,65 @@ View in browser:
 ```bash
 cd /Users/namitthakral/ed-verse/backend
 
-# Make your code changes, then:
+# Make your code changes (backend OR frontend), then:
 ./scripts/lightsail-deploy.sh
 ```
 
-This will:
-1. Build new Docker image
-2. Push to Lightsail
-3. Deploy new version
-4. **Automatically run database migrations**
-5. Restart container with new code
+This will **automatically**:
+1. ✅ Check if Flutter frontend changed
+2. ✅ Rebuild Flutter web if needed (skipped if no changes)
+3. ✅ Build new Docker image with latest code
+4. ✅ Push to Lightsail
+5. ✅ Deploy new version
+6. ✅ **Run database migrations**
+7. ✅ Restart container with new code
+
+**The script is smart!** It detects:
+- Frontend changes in `../frontend/lib/**/*.dart`
+- Compares with last dashboard build time
+- Automatically rebuilds only when needed
+- Shows you when rebuilding happens
+
+### Frontend-Only Updates
+
+If you only changed the Flutter frontend:
+
+```bash
+cd /Users/namitthakral/ed-verse/backend
+
+# The script will detect frontend changes and rebuild automatically
+./scripts/lightsail-deploy.sh
+```
+
+**What you'll see:**
+```
+📱 Checking Flutter Frontend
+⚠️  Frontend code changed since last build
+   Frontend modified: 2026-02-08 11:30:00
+   Dashboard built: 2026-01-27 12:46:00
+
+🔨 Rebuilding Flutter web app...
+✅ Flutter build successful
+📦 Copying Flutter build to backend...
+✅ Dashboard updated
+```
+
+### Backend-Only Updates
+
+If you only changed backend code:
+
+```bash
+cd /Users/namitthakral/ed-verse/backend
+
+# The script will skip frontend rebuild
+./scripts/lightsail-deploy.sh
+```
+
+**What you'll see:**
+```
+📱 Checking Flutter Frontend
+✅ Dashboard is up to date
+```
 
 ### Manual Update (If needed)
 
@@ -449,6 +503,41 @@ aws lightsail get-container-services \
   --profile kram
 
 # If stuck, force redeploy
+./scripts/lightsail-deploy.sh
+```
+
+### Frontend Not Updating
+
+**Issue:** Made UI changes but still seeing old dashboard
+
+**Causes:**
+1. Flutter web wasn't rebuilt
+2. CloudFront cache serving old files
+
+**Solution:**
+```bash
+# 1. Redeploy (will auto-rebuild frontend)
+cd /Users/namitthakral/ed-verse/backend
+./scripts/lightsail-deploy.sh
+
+# 2. Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+  --distribution-id E36FPX6Q6TAGJV \
+  --paths "/*" \
+  --profile kram
+
+# 3. Hard refresh browser (Cmd + Shift + R)
+```
+
+**Manual Flutter rebuild:**
+```bash
+# If auto-rebuild fails
+cd /Users/namitthakral/ed-verse/frontend
+flutter build web --release
+cp -r build/web/* ../backend/public/dashboard/
+
+# Then deploy
+cd ../backend
 ./scripts/lightsail-deploy.sh
 ```
 

@@ -57,6 +57,79 @@ fi
 echo -e "${GREEN}✅ AWS credentials configured${NC}"
 echo ""
 
+# Step 0: Check and rebuild Flutter frontend if needed
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}📱 Checking Flutter Frontend${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
+
+FRONTEND_DIR="../frontend"
+DASHBOARD_DIR="./public/dashboard"
+REBUILD_FRONTEND=false
+
+if [ -d "$FRONTEND_DIR" ]; then
+    # Check if dashboard build exists
+    if [ ! -d "$DASHBOARD_DIR" ] || [ ! -f "$DASHBOARD_DIR/main.dart.js" ]; then
+        echo -e "${YELLOW}⚠️  Dashboard build not found${NC}"
+        REBUILD_FRONTEND=true
+    else
+        # Compare modification times
+        FRONTEND_LAST_MODIFIED=$(find "$FRONTEND_DIR/lib" -type f -name "*.dart" -exec stat -f "%m %N" {} \; 2>/dev/null | sort -rn | head -1 | cut -d' ' -f1)
+        DASHBOARD_LAST_BUILT=$(stat -f "%m" "$DASHBOARD_DIR/main.dart.js" 2>/dev/null)
+        
+        if [ -n "$FRONTEND_LAST_MODIFIED" ] && [ -n "$DASHBOARD_LAST_BUILT" ]; then
+            if [ "$FRONTEND_LAST_MODIFIED" -gt "$DASHBOARD_LAST_BUILT" ]; then
+                echo -e "${YELLOW}⚠️  Frontend code changed since last build${NC}"
+                FRONTEND_LAST_MODIFIED_DATE=$(date -r "$FRONTEND_LAST_MODIFIED" "+%Y-%m-%d %H:%M:%S")
+                DASHBOARD_LAST_BUILT_DATE=$(date -r "$DASHBOARD_LAST_BUILT" "+%Y-%m-%d %H:%M:%S")
+                echo -e "${YELLOW}   Frontend modified: $FRONTEND_LAST_MODIFIED_DATE${NC}"
+                echo -e "${YELLOW}   Dashboard built: $DASHBOARD_LAST_BUILT_DATE${NC}"
+                REBUILD_FRONTEND=true
+            else
+                echo -e "${GREEN}✅ Dashboard is up to date${NC}"
+            fi
+        fi
+    fi
+    
+    if [ "$REBUILD_FRONTEND" = true ]; then
+        echo ""
+        echo -e "${YELLOW}🔨 Rebuilding Flutter web app...${NC}"
+        cd "$FRONTEND_DIR"
+        
+        # Check if flutter is installed
+        if ! command -v flutter &> /dev/null; then
+            echo -e "${RED}❌ Flutter not found!${NC}"
+            echo -e "${YELLOW}Please install Flutter or build manually:${NC}"
+            echo "  cd $FRONTEND_DIR"
+            echo "  flutter build web --release"
+            echo "  cp -r build/web/* ../backend/public/dashboard/"
+            exit 1
+        fi
+        
+        # Build Flutter web
+        if flutter build web --release; then
+            echo -e "${GREEN}✅ Flutter build successful${NC}"
+            
+            # Copy to backend
+            cd - > /dev/null
+            echo -e "${YELLOW}📦 Copying Flutter build to backend...${NC}"
+            rm -rf "$DASHBOARD_DIR"/*
+            cp -r "$FRONTEND_DIR/build/web"/* "$DASHBOARD_DIR/"
+            echo -e "${GREEN}✅ Dashboard updated${NC}"
+        else
+            echo -e "${RED}❌ Flutter build failed${NC}"
+            exit 1
+        fi
+        
+        cd - > /dev/null
+    fi
+else
+    echo -e "${YELLOW}⚠️  Frontend directory not found at: $FRONTEND_DIR${NC}"
+    echo -e "${YELLOW}   Skipping frontend rebuild check${NC}"
+fi
+
+echo ""
+
 # Step 1: Check if service exists
 echo -e "${YELLOW}📋 Checking if Lightsail service exists...${NC}"
 if aws lightsail get-container-services --service-name "$SERVICE_NAME" --region "$REGION" --profile "$AWS_PROFILE" &> /dev/null; then
@@ -69,6 +142,10 @@ fi
 echo ""
 
 # Step 2: Build Docker image
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}🐳 Building Docker Image${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
 echo -e "${YELLOW}🔨 Building Docker image for linux/amd64...${NC}"
 docker build --platform linux/amd64 -t "$SERVICE_NAME:latest" .
 
