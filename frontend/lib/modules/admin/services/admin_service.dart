@@ -294,6 +294,88 @@ class AdminService {
     }
   }
 
+  // ==================== INSTITUTION SETTINGS ====================
+
+  /// Get ID configuration for an institution
+  ///
+  /// Endpoint: GET /institutions/:institutionId/id-config
+  Future<Map<String, dynamic>> getIdConfig(int institutionId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/institutions/$institutionId/id-config',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load ID configuration',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load ID configuration: $e');
+    }
+  }
+
+  /// Update ID configuration for an institution
+  ///
+  /// Endpoint: PATCH /institutions/:institutionId/id-config
+  Future<Map<String, dynamic>> updateIdConfig(
+    int institutionId,
+    Map<String, dynamic> config,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/institutions/$institutionId/id-config',
+        data: config,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update ID configuration',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to update ID configuration: $e');
+    }
+  }
+
+  /// Preview ID format
+  ///
+  /// Endpoint: POST /institutions/:institutionId/id-config/preview
+  Future<Map<String, dynamic>> previewIdFormat(
+    int institutionId,
+    Map<String, dynamic> previewData,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/institutions/$institutionId/id-config/preview',
+        data: previewData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to preview ID format',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to preview ID format: $e');
+    }
+  }
+
   // ==================== USER MANAGEMENT ====================
 
   /// Create institutional user

@@ -176,6 +176,7 @@ class User {
     this.teacher,
     this.parent,
     this.staff,
+    this.institutionId,
     this.mustChangePassword,
     this.isTemporaryPassword,
   });
@@ -192,6 +193,7 @@ class User {
     teacher: json['teacher'] != null ? Teacher.fromJson(json['teacher']) : null,
     parent: json['parent'] != null ? Parent.fromJson(json['parent']) : null,
     staff: json['staff'] != null ? Staff.fromJson(json['staff']) : null,
+    institutionId: json['institutionId'],
     status: json['status'],
     mustChangePassword: json['mustChangePassword'] ?? false,
     isTemporaryPassword: json['isTemporaryPassword'] ?? false,
@@ -215,6 +217,7 @@ class User {
   final Teacher? teacher;
   final Parent? parent;
   final Staff? staff;
+  final int? institutionId;
   final String status;
   final bool? mustChangePassword;
   final bool? isTemporaryPassword;
@@ -233,6 +236,7 @@ class User {
     'teacher': teacher?.toJson(),
     'parent': parent?.toJson(),
     'staff': staff?.toJson(),
+    'institutionId': institutionId,
     'status': status,
     'mustChangePassword': mustChangePassword,
     'isTemporaryPassword': isTemporaryPassword,

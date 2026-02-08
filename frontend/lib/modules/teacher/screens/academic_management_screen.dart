@@ -10,7 +10,6 @@ import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
-
 import '../providers/assignment_provider.dart';
 import '../providers/examination_provider.dart';
 import '../providers/teacher_dashboard_provider.dart';
@@ -71,7 +70,8 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
             ? '${dashboardProvider.stats!.attendancePercentage.toStringAsFixed(1)}%'
             : '--';
 
-    final isLoading = dashboardProvider.isLoading || assignmentProvider.isLoading;
+    final isLoading =
+        dashboardProvider.isLoading || assignmentProvider.isLoading;
 
     return CustomMainScreenWithAppbar(
       title: context.translate('academic_management'),
@@ -146,9 +146,7 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                     'Academic Modules',
                     style: TextStyle(
                       fontSize:
-                          isMobile
-                              ? AppTheme.fontSizeXl
-                              : AppTheme.fontSize2xl,
+                          isMobile ? AppTheme.fontSizeXl : AppTheme.fontSize2xl,
                       fontWeight: AppTheme.fontWeightBold,
                       color: CustomAppColors.slate800,
                     ),
@@ -178,37 +176,37 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                 childAspectRatio: 1.1,
               ),
               delegate: SliverChildListDelegate([
-                _ActionGridCard(
+                FeatureActionCard(
                   title: 'Attendance',
                   icon: Icons.calendar_today,
                   color: const Color(0xFF4F7CFF),
                   onTap: () => context.pushNamed('attendance_view'),
                 ),
-                _ActionGridCard(
+                FeatureActionCard(
                   title: 'Marks',
                   icon: Icons.grade,
                   color: const Color(0xFF10B981),
                   onTap: () => context.pushNamed('marks_list'),
                 ),
-                _ActionGridCard(
+                FeatureActionCard(
                   title: 'Examinations',
                   icon: Icons.assignment,
                   color: const Color(0xFFF59E0B),
                   onTap: () => context.pushNamed('examinations_list'),
                 ),
-                _ActionGridCard(
+                FeatureActionCard(
                   title: 'Timetables',
                   icon: Icons.schedule,
                   color: const Color(0xFF8B5CF6),
                   onTap: () => context.pushNamed('timetables_list'),
                 ),
-                _ActionGridCard(
+                FeatureActionCard(
                   title: 'Question Papers',
                   icon: Icons.description,
                   color: const Color(0xFFEC4899),
                   onTap: () => context.pushNamed('question_papers_list'),
                 ),
-                _ActionGridCard(
+                FeatureActionCard(
                   title: 'Assignments',
                   icon: Icons.assignment_ind,
                   color: const Color(0xFF6366F1),
@@ -229,9 +227,7 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                     'Recent Activities',
                     style: TextStyle(
                       fontSize:
-                          isMobile
-                              ? AppTheme.fontSizeXl
-                              : AppTheme.fontSize2xl,
+                          isMobile ? AppTheme.fontSizeXl : AppTheme.fontSize2xl,
                       fontWeight: AppTheme.fontWeightBold,
                       color: CustomAppColors.slate800,
                     ),
@@ -252,63 +248,6 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
       ),
     );
   }
-}
-
-class _ActionGridCard extends StatelessWidget {
-  const _ActionGridCard({
-    required this.title,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String title;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(16),
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        color: CustomAppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: CustomAppColors.black01.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: color, size: 36),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: AppTheme.fontSizeSm,
-              fontWeight: AppTheme.fontWeightSemibold,
-              color: CustomAppColors.slate800,
-              height: 1.3,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
 }
 
 class _RecentActivitiesSection extends StatelessWidget {

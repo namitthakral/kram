@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../provider/login_signup/login_provider.dart';
+import '../../../../utils/extensions.dart';
+import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
 class AdminReportsScreen extends StatelessWidget {
@@ -7,13 +11,14 @@ class AdminReportsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mock admin data
-    const userInitials = 'AD';
-    const userName = 'Admin';
-    const institutionName = 'Greenwood High';
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+    final userInitials = UserUtils.getInitials(user?.name ?? 'AD');
+    final userName = user?.name ?? 'Admin';
+    final institutionName = context.translate('edverse_institution');
 
     return CustomMainScreenWithAppbar(
-      title: 'Admin Reports',
+      title: context.translate('admin_reports'),
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,

@@ -2,15 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../models/navigation_item_model.dart';
 import '../../modules/admin/screens/admin_dashboard_screen.dart';
-import '../../modules/admin/screens/admin_reports_screen.dart';
-import '../../modules/admin/screens/fees_management_screen.dart';
-import '../../modules/admin/screens/transport_screen.dart';
+import '../../modules/admin/screens/admin_main_screen.dart';
 import '../../modules/library/screens/books_management_screen.dart';
 import '../../modules/library/screens/issued_books_screen.dart';
 import '../../modules/library/screens/library_dashboard_screen.dart';
-import '../../modules/parent/screens/announcements_screen.dart';
 import '../../modules/parent/screens/child_progress_screen.dart';
-import '../../modules/parent/screens/fee_payment_screen.dart';
 import '../../modules/parent/screens/parent_dashboard_screen.dart';
 import '../../modules/staff/screens/staff_messages_screen.dart';
 import '../../modules/staff/screens/staff_schedule_screen.dart';
@@ -98,16 +94,6 @@ class RoleNavigationConfig {
       labelKey: 'child_progress',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconShoppingCart, // Placeholder for fees
-      iconFilledUrl: CustomImages.iconShoppingCartFilled,
-      labelKey: 'fee_payment',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconMessage,
-      iconFilledUrl: CustomImages.iconMessageFilled,
-      labelKey: 'announcements',
-    ),
-    NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
       iconFilledUrl: CustomImages.iconProfileFilled,
       labelKey: 'profile',
@@ -117,8 +103,6 @@ class RoleNavigationConfig {
   static final List<Widget> _parentPages = [
     const ParentDashboardScreen(),
     const ChildProgressScreen(),
-    const FeePaymentScreen(),
-    const AnnouncementsScreen(),
     const ProfileScreen(),
   ];
 
@@ -192,34 +176,9 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconProfile, // Placeholder for students
-      iconFilledUrl: CustomImages.iconProfileFilled,
-      labelKey: 'students',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconUser, // Placeholder for staff
-      iconFilledUrl: CustomImages.iconUser,
-      labelKey: 'staff',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconShoppingCart, // Placeholder for fees
-      iconFilledUrl: CustomImages.iconShoppingCartFilled,
-      labelKey: 'fees',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconLocation, // Placeholder for bus/transport
-      iconFilledUrl: CustomImages.iconLocation,
-      labelKey: 'transport',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconAcademic,
-      iconFilledUrl: CustomImages.iconAcademicFilled,
-      labelKey: 'academic',
-    ),
-    NavigationItemModel(
-      iconUrl: CustomImages.iconReport,
-      iconFilledUrl: CustomImages.iconReportFilled,
-      labelKey: 'reports',
+      iconUrl: CustomImages.iconMenuBoard,
+      iconFilledUrl: CustomImages.iconMenuBoard,
+      labelKey: 'main',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -230,12 +189,7 @@ class RoleNavigationConfig {
 
   static final List<Widget> _adminPages = [
     const AdminDashboardScreen(),
-    const StudentDashboardScreen(), // Reusing for list view
-    const StaffDashboardScreen(), // Reusing for list view
-    const FeesManagementScreen(),
-    const TransportScreen(),
-    const AcademicManagementScreen(),
-    const AdminReportsScreen(),
+    const AdminMainScreen(),
     const ProfileScreen(),
   ];
 
@@ -454,13 +408,8 @@ class RoleNavigationConfig {
     ],
     // Admin routes
     2 => [
-      '/dashboard',
-      '/students',
-      '/staff',
-      '/fees',
-      '/transport',
-      '/academic',
-      '/reports',
+      '/admin-dashboard',
+      '/admin-main',
       '/profile',
     ],
     // Student routes
@@ -469,8 +418,6 @@ class RoleNavigationConfig {
     4 => [
       '/dashboard',
       '/child-progress',
-      '/fee-payment',
-      '/announcements',
       '/profile',
     ],
     // Teacher routes

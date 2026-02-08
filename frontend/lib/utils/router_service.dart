@@ -6,8 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../modules/admin/screens/admin_dashboard_screen.dart';
+import '../modules/admin/screens/admin_main_screen.dart';
 import '../modules/admin/screens/admin_reports_screen.dart';
+import '../modules/admin/screens/admin_user_management_screen.dart';
 import '../modules/admin/screens/fees_management_screen.dart';
+import '../modules/admin/screens/grading_config_screen.dart';
+import '../modules/admin/screens/institution_settings_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
 import '../modules/library/screens/books_management_screen.dart';
 import '../modules/library/screens/issued_books_screen.dart';
@@ -533,6 +537,51 @@ class RouterService {
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const AdminReportsScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin-dashboard',
+          name: 'admin_dashboard',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminDashboardScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin-main',
+          name: 'admin_main',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminMainScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin-users',
+          name: 'admin_users',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminUserManagementScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/institution-settings',
+          name: 'institution_settings',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const InstitutionSettingsScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/grading-config',
+          name: 'grading_config',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const GradingConfigScreen(),
               ),
         ),
 
