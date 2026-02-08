@@ -16,11 +16,10 @@ RUN npm install
 # Copy all source code (needed for build)
 COPY . .
 
-# Generate Prisma Client
-RUN npm run build:schema && npx prisma generate
-
-# Build the NestJS application
-RUN npm run build
+# Build the NestJS application (includes schema generation)
+RUN npm run build && \
+    echo "✅ Build completed" && \
+    ls -la dist/src/main.js || (echo "❌ main.js not found!" && exit 1)
 
 # ============================================================================
 # Stage 2: Production
