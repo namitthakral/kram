@@ -197,18 +197,42 @@ IMAGE_NAME=$(aws lightsail get-container-images --service-name "$SERVICE_NAME" -
 echo -e "${GREEN}✅ Image pushed: $IMAGE_NAME${NC}"
 echo ""
 
-# Step 5: Create deployment configuration
-echo -e "${YELLOW}⚙️  Creating deployment configuration...${NC}"
+# Step 5: Load environment variables
+echo -e "${YELLOW}⚙️  Loading environment variables...${NC}"
 
-# Set environment variables (non-interactive mode)
-echo ""
-echo -e "${BLUE}Using environment variables...${NC}"
+# Load from .env file if it exists
+if [ -f "../.env" ]; then
+    echo -e "${BLUE}Loading from .env file...${NC}"
+    export $(grep -v '^#' ../.env | xargs)
+elif [ -f ".env" ]; then
+    echo -e "${BLUE}Loading from .env file...${NC}"
+    export $(grep -v '^#' .env | xargs)
+fi
 
-DATABASE_URL="postgresql://postgres:postgres@kram-db.chu82aoyy194.ap-south-1.rds.amazonaws.com:5432/postgres"
-JWT_SECRET="kLwCEfoXnjyHVsjQi+BdIB5EOE35DOiYXzeT9oNYAcLbom/vt+qLaGrk0SDaSAfW"
-JWT_REFRESH_SECRET="refresh_secret_key_here"
+# Check if required environment variables are set
+if [ -z "$DATABASE_URL" ]; then
+    echo -e "${RED}❌ DATABASE_URL not set${NC}"
+    echo "Please set environment variables or create a .env file"
+    echo "See .env.example for reference"
+    exit 1
+fi
 
-echo -e "${GREEN}✅ Environment variables configured${NC}"
+if [ -z "$JWT_SECRET" ]; then
+    echo -e "${RED}❌ JWT_SECRET not set${NC}"
+    echo "Please set environment variables or create a .env file"
+    exit 1
+fi
+
+if [ -z "$JWT_REFRESH_SECRET" ]; then
+    echo -e "${RED}❌ JWT_REFRESH_SECRET not set${NC}"
+    echo "Please set environment variables or create a .env file"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Environment variables loaded${NC}"
+echo -e "${BLUE}   DATABASE_URL: ${DATABASE_URL:0:30}...${NC}"
+echo -e "${BLUE}   JWT_SECRET: ${JWT_SECRET:0:20}...${NC}"
+echo -e "${BLUE}   JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:0:20}...${NC}"
 
 # Create deployment JSON
 cat > deployment.json <<EOF

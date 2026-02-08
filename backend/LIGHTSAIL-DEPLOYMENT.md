@@ -72,7 +72,26 @@ lightsailctl version
 
 ## 🚀 Deployment
 
-### Deploy to Lightsail
+### Option 1: GitHub Actions (Automated) ⭐ **Recommended**
+
+**Easiest way to deploy:**
+
+1. Push your changes to GitHub
+2. Go to **Actions** tab → **Deploy to AWS Lightsail**
+3. Click **"Run workflow"**
+4. Wait 8-12 minutes
+5. Done! ✅
+
+**Benefits:**
+- ✅ No local setup needed
+- ✅ Automatic frontend rebuild detection
+- ✅ CloudFront cache invalidation
+- ✅ Deployment logs in GitHub
+- ✅ Can deploy from anywhere
+
+See [GitHub Actions Deployment Guide](../../.github/DEPLOYMENT.md) for setup.
+
+### Option 2: Local Deployment Script
 
 ```bash
 cd /Users/namitthakral/ed-verse/backend

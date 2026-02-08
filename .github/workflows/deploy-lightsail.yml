@@ -1,0 +1,311 @@
+name: Deploy to AWS Lightsail
+
+on:
+    workflow_dispatch:
+        inputs:
+            skip_frontend:
+                description: "Skip frontend rebuild (backend changes only)"
+                required: false
+                type: boolean
+                default: false
+            invalidate_cache:
+                description: "Invalidate CloudFront cache after deployment"
+                required: false
+                type: boolean
+                default: true
+            deployment_reason:
+                description: "Deployment reason/notes"
+                required: false
+                type: string
+                default: "Manual deployment"
+
+env:
+    AWS_REGION: ap-south-1
+    SERVICE_NAME: kram
+    CLOUDFRONT_DISTRIBUTION_ID: E36FPX6Q6TAGJV
+
+jobs:
+    deploy:
+        name: Deploy to Lightsail
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        steps:
+            - name: 📥 Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 2 # Need history for change detection
+
+            - name: 📋 Display deployment info
+              run: |
+                  echo "🚀 Deploying to AWS Lightsail"
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  echo "Service: ${{ env.SERVICE_NAME }}"
+                  echo "Region: ${{ env.AWS_REGION }}"
+                  echo "Triggered by: ${{ github.actor }}"
+                  echo "Commit: ${{ github.sha }}"
+                  echo "Branch: ${{ github.ref_name }}"
+                  echo "Reason: ${{ inputs.deployment_reason }}"
+                  echo "Skip Frontend: ${{ inputs.skip_frontend }}"
+                  echo "Invalidate Cache: ${{ inputs.invalidate_cache }}"
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            - name: 🔍 Check frontend changes
+              id: frontend-check
+              if: inputs.skip_frontend == false
+              run: |
+                  # Check if frontend files changed in last commit
+                  if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q "^frontend/lib/\|^frontend/pubspec"; then
+                    echo "Frontend code changed"
+                    echo "frontend_changed=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "No frontend changes detected"
+                    echo "frontend_changed=false" >> $GITHUB_OUTPUT
+                  fi
+
+            - name: 🎨 Setup Flutter
+              if: steps.frontend-check.outputs.frontend_changed == 'true' || inputs.skip_frontend == false
+              uses: subosito/flutter-action@v2
+              with:
+                  flutter-version: "3.24.0"
+                  channel: "stable"
+                  cache: true
+
+            - name: 🔨 Build Flutter Web
+              if: steps.frontend-check.outputs.frontend_changed == 'true' || inputs.skip_frontend == false
+              run: |
+                  echo "📱 Building Flutter web app..."
+                  cd frontend
+                  flutter pub get
+                  flutter build web --release
+                  echo "✅ Flutter build complete"
+
+            - name: 📦 Copy Flutter build to backend
+              if: steps.frontend-check.outputs.frontend_changed == 'true' || inputs.skip_frontend == false
+              run: |
+                  echo "📦 Copying Flutter build to backend..."
+                  rm -rf backend/public/dashboard/*
+                  cp -r frontend/build/web/* backend/public/dashboard/
+                  echo "✅ Dashboard files copied"
+                  ls -lh backend/public/dashboard/main.dart.js
+
+            - name: 🔑 Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: 📥 Install Lightsail plugin
+              run: |
+                  echo "Installing lightsailctl..."
+                  curl -s "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o lightsailctl
+                  sudo mv lightsailctl /usr/local/bin/
+                  sudo chmod +x /usr/local/bin/lightsailctl
+                  lightsailctl version
+                  echo "✅ lightsailctl installed"
+
+            - name: 🐳 Build Docker image
+              run: |
+                  echo "🔨 Building Docker image for linux/amd64..."
+                  cd backend
+                  docker build --platform linux/amd64 -t ${{ env.SERVICE_NAME }}:latest .
+                  echo "✅ Docker image built successfully"
+
+            - name: 📤 Push image to Lightsail
+              run: |
+                  echo "📤 Pushing image to Lightsail..."
+                  cd backend
+                  aws lightsail push-container-image \
+                    --service-name ${{ env.SERVICE_NAME }} \
+                    --label ${{ env.SERVICE_NAME }} \
+                    --image ${{ env.SERVICE_NAME }}:latest \
+                    --region ${{ env.AWS_REGION }}
+                  echo "✅ Image pushed to Lightsail"
+
+            - name: 🚀 Deploy to Lightsail
+              run: |
+                  echo "🚀 Deploying to Lightsail..."
+                  cd backend
+
+                  # Get the pushed image name
+                  IMAGE_NAME=$(aws lightsail get-container-images \
+                    --service-name ${{ env.SERVICE_NAME }} \
+                    --region ${{ env.AWS_REGION }} \
+                    --query 'containerImages[0].image' \
+                    --output text)
+
+                  echo "Using image: $IMAGE_NAME"
+
+                  # Create deployment configuration
+                  cat > deployment.json <<EOF
+                  {
+                    "serviceName": "${{ env.SERVICE_NAME }}",
+                    "containers": {
+                      "app": {
+                        "image": "$IMAGE_NAME",
+                        "environment": {
+                          "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
+                          "JWT_SECRET": "${{ secrets.JWT_SECRET }}",
+                          "JWT_REFRESH_SECRET": "${{ secrets.JWT_REFRESH_SECRET }}",
+                          "NODE_ENV": "production",
+                          "PORT": "3000"
+                        },
+                        "ports": {
+                          "3000": "HTTP"
+                        }
+                      }
+                    },
+                    "publicEndpoint": {
+                      "containerName": "app",
+                      "containerPort": 3000,
+                      "healthCheck": {
+                        "path": "/health",
+                        "intervalSeconds": 30,
+                        "timeoutSeconds": 10,
+                        "healthyThreshold": 2,
+                        "unhealthyThreshold": 3
+                      }
+                    }
+                  }
+                  EOF
+
+                  # Deploy
+                  aws lightsail create-container-service-deployment \
+                    --region ${{ env.AWS_REGION }} \
+                    --cli-input-json file://deployment.json
+
+                  rm deployment.json
+                  echo "✅ Deployment initiated"
+
+            - name: ⏳ Wait for deployment
+              run: |
+                  echo "⏳ Waiting for deployment to complete..."
+
+                  for i in {1..40}; do
+                    STATE=$(aws lightsail get-container-services \
+                      --service-name ${{ env.SERVICE_NAME }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'containerServices[0].currentDeployment.state' \
+                      --output text 2>/dev/null || echo "UNKNOWN")
+                    
+                    echo "[$i/40] Deployment state: $STATE"
+                    
+                    if [ "$STATE" = "ACTIVE" ]; then
+                      echo "✅ Deployment completed successfully!"
+                      break
+                    elif [ "$STATE" = "FAILED" ]; then
+                      echo "❌ Deployment failed!"
+                      exit 1
+                    fi
+                    
+                    sleep 15
+                  done
+
+                  # Final check
+                  FINAL_STATE=$(aws lightsail get-container-services \
+                    --service-name ${{ env.SERVICE_NAME }} \
+                    --region ${{ env.AWS_REGION }} \
+                    --query 'containerServices[0].currentDeployment.state' \
+                    --output text)
+
+                  if [ "$FINAL_STATE" != "ACTIVE" ]; then
+                    echo "⚠️ Deployment did not complete in time. Current state: $FINAL_STATE"
+                    echo "Check Lightsail console for details"
+                    exit 1
+                  fi
+
+            - name: 🧪 Test health endpoint
+              run: |
+                  echo "🧪 Testing API health..."
+
+                  # Test via custom domain
+                  HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.kramedu.in/health || echo "000")
+
+                  if [ "$HEALTH_STATUS" = "200" ]; then
+                    echo "✅ API health check passed (Status: $HEALTH_STATUS)"
+                  else
+                    echo "⚠️ API health check returned status: $HEALTH_STATUS"
+                    echo "This might be due to CloudFront cache, checking Lightsail origin..."
+                    
+                    # Get Lightsail URL
+                    LIGHTSAIL_URL=$(aws lightsail get-container-services \
+                      --service-name ${{ env.SERVICE_NAME }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'containerServices[0].url' \
+                      --output text)
+                    
+                    ORIGIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${LIGHTSAIL_URL}health" || echo "000")
+                    
+                    if [ "$ORIGIN_STATUS" = "200" ]; then
+                      echo "✅ Lightsail origin health check passed (Status: $ORIGIN_STATUS)"
+                    else
+                      echo "❌ Health check failed on Lightsail origin (Status: $ORIGIN_STATUS)"
+                      exit 1
+                    fi
+                  fi
+
+            - name: 🔄 Invalidate CloudFront cache
+              if: inputs.invalidate_cache == true
+              run: |
+                  echo "🔄 Invalidating CloudFront cache..."
+
+                  INVALIDATION_ID=$(aws cloudfront create-invalidation \
+                    --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+                    --paths "/*" \
+                    --query 'Invalidation.Id' \
+                    --output text)
+
+                  echo "Invalidation ID: $INVALIDATION_ID"
+                  echo "✅ CloudFront cache invalidation initiated"
+                  echo "⏳ Cache will be cleared in 3-5 minutes"
+
+            - name: 📊 Deployment summary
+              if: success()
+              run: |
+                  echo ""
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  echo "🎉 Deployment Successful!"
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  echo ""
+                  echo "🌐 Your application is live at:"
+                  echo "   API: https://api.kramedu.in"
+                  echo "   Dashboard: https://dashboard.kramedu.in"
+                  echo ""
+
+                  # Get service info
+                  VERSION=$(aws lightsail get-container-services \
+                    --service-name ${{ env.SERVICE_NAME }} \
+                    --region ${{ env.AWS_REGION }} \
+                    --query 'containerServices[0].currentDeployment.version' \
+                    --output text)
+
+                  echo "📦 Deployment Version: $VERSION"
+                  echo "🔗 Commit: ${{ github.sha }}"
+                  echo "👤 Deployed by: ${{ github.actor }}"
+                  echo "📝 Reason: ${{ inputs.deployment_reason }}"
+                  echo ""
+                  echo "⏳ If you invalidated CloudFront cache, wait 3-5 minutes for changes to appear"
+                  echo ""
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            - name: 🚨 Deployment failed
+              if: failure()
+              run: |
+                  echo ""
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  echo "❌ Deployment Failed"
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  echo ""
+                  echo "Check the logs above for errors"
+                  echo ""
+                  echo "Common issues:"
+                  echo "  1. AWS credentials not configured"
+                  echo "  2. Docker build failed"
+                  echo "  3. Database migrations failed"
+                  echo "  4. Health check failed"
+                  echo ""
+                  echo "View detailed logs:"
+                  echo "  aws lightsail get-container-log --service-name ${{ env.SERVICE_NAME }} --container-name app --region ${{ env.AWS_REGION }}"
+                  echo ""
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
