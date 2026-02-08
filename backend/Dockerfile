@@ -17,9 +17,16 @@ RUN npm install
 COPY . .
 
 # Build the NestJS application (includes schema generation)
-RUN npm run build && \
-    echo "✅ Build completed" && \
-    ls -la dist/src/main.js || (echo "❌ main.js not found!" && exit 1)
+RUN echo "📦 Starting build..." && \
+    npm run build && \
+    echo "✅ Build command completed" && \
+    echo "📁 Checking dist directory structure:" && \
+    ls -la dist/ && \
+    echo "📁 Checking dist/src directory:" && \
+    ls -la dist/src/ 2>/dev/null || echo "⚠️ dist/src/ doesn't exist" && \
+    echo "📁 Looking for main.js:" && \
+    find dist -name "main.js" -type f || echo "❌ main.js not found anywhere in dist!" && \
+    ls -la dist/src/main.js || (echo "❌ main.js not found at expected location!" && exit 1)
 
 # ============================================================================
 # Stage 2: Production
