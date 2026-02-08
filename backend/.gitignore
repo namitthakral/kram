@@ -5,3 +5,7 @@
 
 # Temporary deployment files
 deployment.json
+
+# Flutter dashboard build files (regenerated on each deploy)
+public/dashboard/*
+!public/dashboard/.gitkeep
