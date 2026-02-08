@@ -5,14 +5,13 @@ publish_to: none
 
 environment:
   sdk: '>=3.7.0 <4.0.0'
-  flutter: ^3.29.2
 
 dependencies:
   cached_network_image: ^3.4.1
   dio: ^5.4.0
   flutter:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  flutter_lints: ^5.0.0
   flutter_localizations:
     sdk: flutter
   flutter_secure_storage: ^9.2.4
