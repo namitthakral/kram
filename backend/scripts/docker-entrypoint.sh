@@ -57,4 +57,4 @@ echo "=================================================="
 echo ""
 
 # Start the application
-exec node dist/src/main
+exec node dist/src/main.js

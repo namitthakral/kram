@@ -168,20 +168,53 @@ jobs:
               run: |
                   echo "⏳ Waiting for deployment to complete..."
 
+                  # Get the version we just deployed
+                  DEPLOYED_VERSION=$(aws lightsail get-container-service-deployments \
+                    --service-name ${{ env.SERVICE_NAME }} \
+                    --region ${{ env.AWS_REGION }} \
+                    --query 'deployments[0].version' \
+                    --output text)
+
+                  echo "Tracking deployment version: $DEPLOYED_VERSION"
+
                   for i in {1..40}; do
-                    STATE=$(aws lightsail get-container-services \
+                    # Check both current and next deployment
+                    CURRENT_STATE=$(aws lightsail get-container-services \
                       --service-name ${{ env.SERVICE_NAME }} \
                       --region ${{ env.AWS_REGION }} \
                       --query 'containerServices[0].currentDeployment.state' \
                       --output text 2>/dev/null || echo "UNKNOWN")
                     
-                    echo "[$i/40] Deployment state: $STATE"
+                    CURRENT_VERSION=$(aws lightsail get-container-services \
+                      --service-name ${{ env.SERVICE_NAME }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'containerServices[0].currentDeployment.version' \
+                      --output text 2>/dev/null || echo "0")
                     
-                    if [ "$STATE" = "ACTIVE" ]; then
-                      echo "✅ Deployment completed successfully!"
+                    NEXT_STATE=$(aws lightsail get-container-services \
+                      --service-name ${{ env.SERVICE_NAME }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'containerServices[0].nextDeployment.state' \
+                      --output text 2>/dev/null || echo "None")
+                    
+                    echo "[$i/40] Current: v$CURRENT_VERSION ($CURRENT_STATE) | Next: $NEXT_STATE"
+                    
+                    # Check if our deployment is now current and active
+                    if [ "$CURRENT_VERSION" = "$DEPLOYED_VERSION" ] && [ "$CURRENT_STATE" = "ACTIVE" ]; then
+                      echo "✅ Deployment v$DEPLOYED_VERSION completed successfully!"
                       break
-                    elif [ "$STATE" = "FAILED" ]; then
-                      echo "❌ Deployment failed!"
+                    fi
+                    
+                    # Check if next deployment failed
+                    if [ "$NEXT_STATE" = "FAILED" ]; then
+                      echo "❌ Deployment v$DEPLOYED_VERSION failed!"
+                      echo "Fetching container logs..."
+                      aws lightsail get-container-log \
+                        --service-name ${{ env.SERVICE_NAME }} \
+                        --container-name app \
+                        --region ${{ env.AWS_REGION }} \
+                        --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S 2>/dev/null || date -u -v-5M +%Y-%m-%dT%H:%M:%S) \
+                        | tail -20 || true
                       exit 1
                     fi
                     
@@ -189,15 +222,21 @@ jobs:
                   done
 
                   # Final check
+                  FINAL_VERSION=$(aws lightsail get-container-services \
+                    --service-name ${{ env.SERVICE_NAME }} \
+                    --region ${{ env.AWS_REGION }} \
+                    --query 'containerServices[0].currentDeployment.version' \
+                    --output text)
+
                   FINAL_STATE=$(aws lightsail get-container-services \
                     --service-name ${{ env.SERVICE_NAME }} \
                     --region ${{ env.AWS_REGION }} \
                     --query 'containerServices[0].currentDeployment.state' \
                     --output text)
 
-                  if [ "$FINAL_STATE" != "ACTIVE" ]; then
-                    echo "⚠️ Deployment did not complete in time. Current state: $FINAL_STATE"
-                    echo "Check Lightsail console for details"
+                  if [ "$FINAL_VERSION" != "$DEPLOYED_VERSION" ] || [ "$FINAL_STATE" != "ACTIVE" ]; then
+                    echo "⚠️ Deployment did not complete. Expected v$DEPLOYED_VERSION to be ACTIVE"
+                    echo "Current: v$FINAL_VERSION ($FINAL_STATE)"
                     exit 1
                   fi
 
