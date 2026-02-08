@@ -5,8 +5,8 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { ThrottlerModule } from '@nestjs/throttler'
 import { join } from 'path'
-import { AiModule } from './ai/ai.module'
 import { AdminModule } from './admin/admin.module'
+import { AiModule } from './ai/ai.module'
 import { AuthModule } from './auth/auth.module'
 import { CommunicationsModule } from './communications/communications.module'
 import { CoursesModule } from './courses/courses.module'
@@ -29,7 +29,7 @@ import { UsersModule } from './users/users.module'
 
     // Serve Flutter web app at root
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'public', 'dashboard'),
+      rootPath: join(__dirname, '..', 'public', 'dashboard'),
       exclude: ['/api/(.*)', '/health'],
       serveStaticOptions: {
         index: ['index.html'],
