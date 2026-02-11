@@ -4,9 +4,14 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API Configuration
-  // For local development, use: 'http://localhost:3000' or 'http://192.168.1.11:3000'
-  // For production: API subdomain without redundant /api prefix
-  static const String baseUrl = 'https://api.kramedu.in';
+  // baseUrl is set via --dart-define at launch time
+  // Defaults to production if not specified
+  // Local: 'http://localhost:3000'
+  // Production: 'https://api.kramedu.in'
+  static const String baseUrl = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'https://api.kramedu.in',
+  );
   static const String apiVersion = ''; // No prefix needed - routes are at root
   static const Duration apiTimeout = Duration(seconds: 30);
 
