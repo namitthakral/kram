@@ -4885,6 +4885,807 @@
               "body": "{\n  \"communicationId\": 1,\n  \"title\": \"Important: Semester End Examination Schedule\",\n  \"totalReads\": 45,\n  \"readBy\": [\n    {\n      \"id\": 1,\n      \"userId\": 5,\n      \"readAt\": \"2026-01-29T15:30:00.000Z\",\n      \"user\": {\n        \"id\": 5,\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\"\n      }\n    }\n  ]\n}"
             }
           ]
+        },
+        {
+          "name": "Get Communication Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/analytics/institution?institutionId=1&startMonth=2024-01&endMonth=2024-12",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "analytics", "institution"],
+              "query": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Institution ID (required)"
+                },
+                {
+                  "key": "startMonth",
+                  "value": "2024-01",
+                  "description": "Start month (YYYY-MM format)",
+                  "disabled": true
+                },
+                {
+                  "key": "endMonth",
+                  "value": "2024-12",
+                  "description": "End month (YYYY-MM format)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get communication analytics with engagement metrics. Uses optimized database view for better performance. Only super_admin and admin can access."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Communication Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_url}}/communications/statistics?institutionId=1&isActive=true",
+              "host": ["{{api_url}}"],
+              "path": ["communications", "statistics"],
+              "query": [
+                {
+                  "key": "institutionId",
+                  "value": "1",
+                  "description": "Filter by institution ID",
+                  "disabled": true
+                },
+                {
+                  "key": "communicationType",
+                  "value": "GENERAL",
+                  "description": "Filter by communication type",
+                  "disabled": true
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "description": "Filter by active status",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get communication statistics with read counts and percentages. Uses optimized database view. Only super_admin, admin, and teacher can access."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Fees",
+      "description": "Complete fees management system for schools and colleges",
+      "item": [
+        {
+          "name": "Fee Structures",
+          "item": [
+            {
+              "name": "Create Fee Structure",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"institutionId\": 1,\n  \"courseId\": 5,\n  \"academicYearId\": 2,\n  \"feeType\": \"TUITION\",\n  \"amount\": 50000,\n  \"currency\": \"INR\",\n  \"frequency\": \"SEMESTER\",\n  \"installmentsAllowed\": 3,\n  \"dueDate\": \"2026-07-31\",\n  \"lateFeeAmount\": 500,\n  \"lateFeeType\": \"FLAT\",\n  \"gracePeriodDays\": 7,\n  \"description\": \"Semester tuition fee for 2024-25\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/structures",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures"]
+                },
+                "description": "Create a new fee structure (super_admin, admin, accountant only)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Fee Structures",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures?institutionId=1&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures"],
+                  "query": [
+                    {
+                      "key": "institutionId",
+                      "value": "1",
+                      "description": "Filter by institution"
+                    },
+                    {
+                      "key": "courseId",
+                      "value": "5",
+                      "description": "Filter by course",
+                      "disabled": true
+                    },
+                    {
+                      "key": "academicYearId",
+                      "value": "2",
+                      "description": "Filter by academic year",
+                      "disabled": true
+                    },
+                    {
+                      "key": "feeType",
+                      "value": "TUITION",
+                      "description": "Filter by fee type",
+                      "disabled": true
+                    },
+                    {
+                      "key": "isActive",
+                      "value": "true",
+                      "description": "Filter by active status",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "Get all fee structures with pagination and filters"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Fee Structure by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "1"]
+                },
+                "description": "Get a single fee structure by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Fee Structure",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 55000,\n  \"dueDate\": \"2026-08-15\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "1"]
+                },
+                "description": "Update a fee structure (super_admin, admin, accountant only)"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Fee Structure",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "1"]
+                },
+                "description": "Soft delete a fee structure (super_admin, admin only)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Bulk Fee Structures",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/bulk?ids=1,2,3",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "bulk"],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "1,2,3",
+                      "description": "Comma-separated structure IDs"
+                    }
+                  ]
+                },
+                "description": "Get multiple fee structures by IDs"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Bulk Fee Structures",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"structures\": [\n    {\n      \"institutionId\": 1,\n      \"courseId\": 5,\n      \"academicYearId\": 2,\n      \"feeType\": \"TUITION\",\n      \"amount\": 50000,\n      \"currency\": \"INR\",\n      \"frequency\": \"SEMESTER\"\n    },\n    {\n      \"institutionId\": 1,\n      \"courseId\": 6,\n      \"academicYearId\": 2,\n      \"feeType\": \"LIBRARY\",\n      \"amount\": 5000,\n      \"currency\": \"INR\",\n      \"frequency\": \"YEARLY\"\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/bulk",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "bulk"]
+                },
+                "description": "Create multiple fee structures at once"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Fee Structures by Course",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/course/5",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "course", "5"]
+                },
+                "description": "Get all fee structures for a specific course"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Fee Structures by Institution",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/institution/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "institution", "1"]
+                },
+                "description": "Get all fee structures for a specific institution"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Fee Structures by Academic Year",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/structures/academic-year/2",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "structures", "academic-year", "2"]
+                },
+                "description": "Get all fee structures for a specific academic year"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Student Fees",
+          "item": [
+            {
+              "name": "Create Student Fee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"studentId\": 10,\n  \"feeStructureId\": 1,\n  \"totalAmount\": 50000,\n  \"discountAmount\": 5000,\n  \"discountReason\": \"Merit scholarship\",\n  \"netAmount\": 45000,\n  \"dueDate\": \"2026-07-31\",\n  \"status\": \"PENDING\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/students",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students"]
+                },
+                "description": "Assign a fee structure to a student"
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Student Fees",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/students?institutionId=1&status=PENDING&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students"],
+                  "query": [
+                    {
+                      "key": "institutionId",
+                      "value": "1",
+                      "description": "Filter by institution"
+                    },
+                    {
+                      "key": "studentId",
+                      "value": "10",
+                      "description": "Filter by student",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "PENDING",
+                      "description": "Filter by status (PENDING, PARTIAL, PAID, OVERDUE, WAIVED)"
+                    },
+                    {
+                      "key": "isOverdue",
+                      "value": "true",
+                      "description": "Filter overdue fees",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "Get all student fees with pagination and filters"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Student Fee by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/students/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "1"]
+                },
+                "description": "Get a single student fee record by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Student Fee",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"discountAmount\": 7000,\n  \"discountReason\": \"Additional scholarship awarded\",\n  \"netAmount\": 43000\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/students/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "1"]
+                },
+                "description": "Update a student fee record"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Student Fee",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/students/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "1"]
+                },
+                "description": "Soft delete a student fee record"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Fees by Student",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/students/student/10",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "student", "10"]
+                },
+                "description": "Get all fee records for a specific student"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Bulk Student Fees",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fees\": [\n    {\n      \"studentId\": 10,\n      \"feeStructureId\": 1,\n      \"totalAmount\": 50000,\n      \"netAmount\": 50000,\n      \"dueDate\": \"2026-07-31\"\n    },\n    {\n      \"studentId\": 11,\n      \"feeStructureId\": 1,\n      \"totalAmount\": 50000,\n      \"netAmount\": 50000,\n      \"dueDate\": \"2026-07-31\"\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/students/bulk",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "bulk"]
+                },
+                "description": "Assign fees to multiple students at once"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Institution Fee Summary",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/students/institution/1/summary",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "institution", "1", "summary"]
+                },
+                "description": "Get aggregated fee summary for an institution"
+              },
+              "response": []
+            },
+            {
+              "name": "Apply Fee Waiver",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"waiverAmount\": 50000,\n  \"waiverReason\": \"Financial hardship - complete fee waiver\",\n  \"approvedBy\": 2\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/students/1/waiver",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "students", "1", "waiver"]
+                },
+                "description": "Apply a waiver to a student fee"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Payments",
+          "item": [
+            {
+              "name": "Create Payment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"studentFeeId\": 1,\n  \"amount\": 15000,\n  \"paymentMethod\": \"UPI\",\n  \"paymentDate\": \"2026-06-15\",\n  \"transactionId\": \"UPI2026061512345\",\n  \"remarks\": \"First installment payment\",\n  \"receivedBy\": 3\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/payments",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments"]
+                },
+                "description": "Record a fee payment"
+              },
+              "response": []
+            },
+            {
+              "name": "Get All Payments",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/payments?institutionId=1&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments"],
+                  "query": [
+                    {
+                      "key": "institutionId",
+                      "value": "1",
+                      "description": "Filter by institution"
+                    },
+                    {
+                      "key": "studentId",
+                      "value": "10",
+                      "description": "Filter by student",
+                      "disabled": true
+                    },
+                    {
+                      "key": "paymentMethod",
+                      "value": "UPI",
+                      "description": "Filter by payment method",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "COMPLETED",
+                      "description": "Filter by status",
+                      "disabled": true
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2026-01-01",
+                      "description": "Filter from date",
+                      "disabled": true
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2026-12-31",
+                      "description": "Filter to date",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "Get all payments with pagination and filters"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Payment by ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "1"]
+                },
+                "description": "Get a single payment record by ID"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Payment",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"remarks\": \"Payment verified and confirmed\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "1"]
+                },
+                "description": "Update a payment record"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Payment",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "1"]
+                },
+                "description": "Soft delete a payment record"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Payments by Student",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/student/10",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "student", "10"]
+                },
+                "description": "Get all payments for a specific student"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Payments by Student Fee",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/student-fee/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "student-fee", "1"]
+                },
+                "description": "Get all payments for a specific student fee record"
+              },
+              "response": []
+            },
+            {
+              "name": "Process Refund",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refundAmount\": 5000,\n  \"refundReason\": \"Overpayment adjustment\",\n  \"refundMethod\": \"BANK_TRANSFER\",\n  \"processedBy\": 3\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/1/refund",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "1", "refund"]
+                },
+                "description": "Process a refund for a payment"
+              },
+              "response": []
+            },
+            {
+              "name": "Generate Payment Receipt",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/payments/1/receipt",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "payments", "1", "receipt"]
+                },
+                "description": "Generate and email payment receipt"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reports",
+          "item": [
+            {
+              "name": "Fee Defaulters Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/reports/defaulters?institutionId=1&overdueDays=30",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "reports", "defaulters"],
+                  "query": [
+                    {
+                      "key": "institutionId",
+                      "value": "1",
+                      "description": "Institution ID (required)"
+                    },
+                    {
+                      "key": "courseId",
+                      "value": "5",
+                      "description": "Filter by course",
+                      "disabled": true
+                    },
+                    {
+                      "key": "overdueDays",
+                      "value": "30",
+                      "description": "Minimum overdue days",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Get list of students with overdue fees"
+              },
+              "response": []
+            },
+            {
+              "name": "Fee Collection Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/reports/collection?institutionId=1&startDate=2026-01-01&endDate=2026-12-31",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "reports", "collection"],
+                  "query": [
+                    {
+                      "key": "institutionId",
+                      "value": "1",
+                      "description": "Institution ID (required)"
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2026-01-01",
+                      "description": "Start date (YYYY-MM-DD)"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2026-12-31",
+                      "description": "End date (YYYY-MM-DD)"
+                    },
+                    {
+                      "key": "paymentMethod",
+                      "value": "UPI",
+                      "description": "Filter by payment method",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Get fee collection summary for a period"
+              },
+              "response": []
+            },
+            {
+              "name": "Outstanding Fees Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_url}}/fees/reports/outstanding?institutionId=1",
+                  "host": ["{{api_url}}"],
+                  "path": ["fees", "reports", "outstanding"],
+                  "query": [
+                    {
+                      "key": "institutionId",
+                      "value": "1",
+                      "description": "Institution ID (required)"
+                    },
+                    {
+                      "key": "courseId",
+                      "value": "5",
+                      "description": "Filter by course",
+                      "disabled": true
+                    },
+                    {
+                      "key": "academicYearId",
+                      "value": "2",
+                      "description": "Filter by academic year",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Get outstanding fees summary"
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }

@@ -1,0 +1,172 @@
+# Ed-Verse Project Rules
+
+## Performance Optimization (MANDATORY)
+
+**ALL APIs must be performance-optimized following these standards:**
+
+### Database Optimization
+- ✅ Create indexes for all frequently queried fields
+- ✅ Use composite indexes for multi-column queries
+- ✅ Create partial indexes for filtered queries
+- ✅ Create database views for complex aggregations
+
+### Query Optimization
+- ✅ Use selective field loading (never `include: true`)
+- ✅ Paginate all list endpoints (max 100 items)
+- ✅ Avoid N+1 query problems
+- ✅ Target < 100ms query execution time
+
+### Implementation Standards
+- ✅ Create migration file with indexes + views
+- ✅ Add helper methods using database views
+- ✅ Document performance characteristics
+- ✅ Test with realistic data volumes
+
+**See `.cursor/rules/api-performance-optimization.md` for complete guidelines.**
+
+---
+
+## Code Quality
+
+### TypeScript - STRICT NO `any` POLICY ⚠️
+
+**CRITICAL: NEVER use `any` type under any circumstances!**
+
+#### Required Type Safety Practices:
+1. **Always define explicit interfaces** for:
+   - Database view results
+   - API responses
+   - Complex objects
+   - Function parameters and return types
+
+2. **For Prisma Raw Queries:**
+   ```typescript
+   // ❌ WRONG - returns unknown
+   this.prisma.$queryRawUnsafe(query)
+   
+   // ✅ CORRECT - define interface first
+   interface MyViewResult { id: number; name: string }
+   this.prisma.$queryRawUnsafe<MyViewResult[]>(query)
+   ```
+
+3. **For Array Methods:**
+   ```typescript
+   // ❌ WRONG
+   items.filter((item: any) => item.status === 'ACTIVE')
+   
+   // ✅ CORRECT
+   items.filter((item: MyInterface) => item.status === 'ACTIVE')
+   ```
+
+4. **For Prisma Where Clauses:**
+   ```typescript
+   // ❌ WRONG - using any or improper spread
+   where.student = { ...where.student as any, courseId }
+   
+   // ✅ CORRECT - build proper type
+   const studentFilter: Prisma.StudentWhereInput = {}
+   if (courseId) studentFilter.courseId = courseId
+   where.student = studentFilter
+   ```
+
+5. **Type Assertions:**
+   - Use `as Type` ONLY when you're certain of the type
+   - Never use `as any` - it defeats TypeScript's purpose
+   - Prefer type guards and proper interfaces
+
+6. **Import Types Properly:**
+   - Import enums from `@prisma/client`
+   - Import Decimal from `@prisma/client/runtime/library`
+   - Import Prisma namespace for Where/Select types
+
+- Use strict type checking everywhere
+- Proper error handling with try-catch
+- Use DTOs for validation
+
+### NestJS
+- Use dependency injection
+- Apply guards for authentication/authorization
+- Use decorators appropriately
+- Follow module structure
+
+---
+
+## Security
+
+### Authentication & Authorization
+- All endpoints require JWT authentication
+- Apply role-based access control with `@Roles()` decorator
+- Validate all inputs with class-validator
+- Sanitize user inputs
+
+### Data Protection
+- Never expose sensitive data (passwords, tokens)
+- Use select queries to limit data exposure
+- Implement audit trails for sensitive operations
+- Follow GDPR/data privacy best practices
+
+---
+
+## API Standards
+
+### Endpoint Naming
+- Use plural nouns for resources (`/students`, `/fees`)
+- Use kebab-case for multi-word resources
+- Use HTTP methods correctly (GET, POST, PUT, DELETE)
+
+### Response Format
+```typescript
+{
+  data: [],
+  meta: {
+    total: 100,
+    page: 1,
+    limit: 10,
+    totalPages: 10
+  }
+}
+```
+
+### Error Handling
+- Use appropriate HTTP status codes
+- Return descriptive error messages
+- Never expose internal errors to clients
+
+---
+
+## Documentation
+
+### Code Comments
+- Document complex business logic
+- Add JSDoc for public methods
+- Explain "why" not "what"
+
+### API Documentation
+- Create README.md for each module
+- Document all endpoints with examples
+- Include performance characteristics
+- **MANDATORY: Add/update endpoints in Postman collection**
+  - Create request with proper method (GET, POST, PUT, DELETE)
+  - Add request body examples
+  - Add query parameters
+  - Include authentication headers
+  - Add example responses
+  - Organize in appropriate folders
+
+---
+
+## Testing
+
+### Before Deployment
+- Test with realistic data volumes
+- Verify query performance < 100ms
+- Test with concurrent requests
+- Check for N+1 queries
+- **Test all endpoints in Postman**
+- Export Postman collection updates
+
+---
+
+**Project Type:** Education Management System (Schools & Colleges)
+**Tech Stack:** NestJS, Prisma, PostgreSQL, Flutter
+**Performance Target:** 93%+ improvement on optimized endpoints

@@ -10,6 +10,7 @@ import { AiModule } from './ai/ai.module'
 import { AuthModule } from './auth/auth.module'
 import { CommunicationsModule } from './communications/communications.module'
 import { CoursesModule } from './courses/courses.module'
+import { FeesModule } from './fees/fees.module'
 import { IdGenerationModule } from './id-generation/id-generation.module'
 import { InstitutionsModule } from './institutions/institutions.module'
 import { PrismaModule } from './prisma/prisma.module'
@@ -81,6 +82,7 @@ import { UsersModule } from './users/users.module'
     QuestionPaperModule,
     AiModule,
     CommunicationsModule,
+    FeesModule,
   ],
 })
 export class AppModule { }

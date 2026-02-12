@@ -8,6 +8,11 @@ on:
                 required: false
                 type: boolean
                 default: false
+            has_schema_changes:
+                description: "Has database schema changes (runs migrations)"
+                required: false
+                type: boolean
+                default: false
             invalidate_cache:
                 description: "Invalidate CloudFront cache after deployment"
                 required: false
@@ -47,6 +52,7 @@ jobs:
                   echo "Branch: ${{ github.ref_name }}"
                   echo "Reason: ${{ inputs.deployment_reason }}"
                   echo "Skip Frontend: ${{ inputs.skip_frontend }}"
+                  echo "Has Schema Changes: ${{ inputs.has_schema_changes }}"
                   echo "Invalidate Cache: ${{ inputs.invalidate_cache }}"
                   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
@@ -76,12 +82,59 @@ jobs:
                   echo "✅ Dashboard files copied"
                   ls -lh backend/public/dashboard/main.dart.js
 
+            - name: 🔧 Setup Node.js
+              if: inputs.has_schema_changes == true
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+                  cache-dependency-path: backend/package-lock.json
+
+            - name: 📦 Install backend dependencies
+              if: inputs.has_schema_changes == true
+              run: |
+                  echo "📦 Installing backend dependencies..."
+                  cd backend
+                  npm ci
+                  echo "✅ Dependencies installed"
+
             - name: 🔑 Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
                   aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   aws-region: ${{ env.AWS_REGION }}
+
+            - name: 🗄️ Run database migrations
+              if: inputs.has_schema_changes == true
+              run: |
+                  echo "📊 Running database migrations on production..."
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                  cd backend
+                  
+                  # Generate Prisma client
+                  echo "🔧 Generating Prisma client..."
+                  DATABASE_URL="${{ secrets.DATABASE_URL }}" npm run db:generate
+                  echo "✅ Prisma client generated"
+                  echo ""
+                  
+                  # Deploy migrations
+                  echo "🚀 Deploying migrations..."
+                  DATABASE_URL="${{ secrets.DATABASE_URL }}" npx prisma migrate deploy
+                  echo "✅ Migrations deployed successfully"
+                  echo ""
+                  
+                  # Check migration status
+                  echo "🔍 Verifying migration status..."
+                  DATABASE_URL="${{ secrets.DATABASE_URL }}" npx prisma migrate status
+                  echo ""
+                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            - name: ⏭️ Skipping database migrations
+              if: inputs.has_schema_changes == false
+              run: |
+                  echo "⏭️ Skipping database migrations (no schema changes)"
+                  echo "ℹ️  If you have schema changes, re-run with 'Has database schema changes' checked"
 
             - name: 📥 Install Lightsail plugin
               run: |
@@ -327,8 +380,9 @@ jobs:
                   echo "Common issues:"
                   echo "  1. AWS credentials not configured"
                   echo "  2. Docker build failed"
-                  echo "  3. Database migrations failed"
+                  echo "  3. Database migrations failed (if schema changes checked)"
                   echo "  4. Health check failed"
+                  echo "  5. Schema changes made but migrations not checked"
                   echo ""
                   echo "View detailed logs:"
                   echo "  aws lightsail get-container-log --service-name ${{ env.SERVICE_NAME }} --container-name app --region ${{ env.AWS_REGION }}"

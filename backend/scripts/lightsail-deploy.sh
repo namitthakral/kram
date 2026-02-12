@@ -202,15 +202,20 @@ echo -e "${GREEN}✅ Image pushed: $IMAGE_NAME${NC}"
 echo ""
 
 # Step 5: Load environment variables
-echo -e "${YELLOW}⚙️  Loading environment variables...${NC}"
+echo -e "${YELLOW}⚙️  Loading production environment variables...${NC}"
 
-# Load from .env file if it exists
-if [ -f "../.env" ]; then
-    echo -e "${BLUE}Loading from .env file...${NC}"
-    export $(grep -v '^#' ../.env | xargs)
-elif [ -f ".env" ]; then
-    echo -e "${BLUE}Loading from .env file...${NC}"
-    export $(grep -v '^#' .env | xargs)
+# Always load from .env.production for deployment
+if [ -f ".env.production" ]; then
+    echo -e "${BLUE}Loading from .env.production file...${NC}"
+    export $(grep -v '^#' .env.production | xargs)
+elif [ -f "../.env.production" ]; then
+    echo -e "${BLUE}Loading from ../.env.production file...${NC}"
+    export $(grep -v '^#' ../.env.production | xargs)
+else
+    echo -e "${RED}❌ .env.production not found!${NC}"
+    echo "Deployment requires .env.production file with production credentials"
+    echo "This ensures deployment uses production database, not local development database"
+    exit 1
 fi
 
 # Check if required environment variables are set
@@ -233,10 +238,11 @@ if [ -z "$JWT_REFRESH_SECRET" ]; then
     exit 1
 fi
 
-echo -e "${GREEN}✅ Environment variables loaded${NC}"
-echo -e "${BLUE}   DATABASE_URL: ${DATABASE_URL:0:30}...${NC}"
+echo -e "${GREEN}✅ Production environment variables loaded${NC}"
+echo -e "${BLUE}   DATABASE_URL: ${DATABASE_URL:0:40}...${NC}"
 echo -e "${BLUE}   JWT_SECRET: ${JWT_SECRET:0:20}...${NC}"
 echo -e "${BLUE}   JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:0:20}...${NC}"
+echo -e "${BLUE}   NODE_ENV: production${NC}"
 
 # Create deployment JSON
 cat > deployment.json <<EOF

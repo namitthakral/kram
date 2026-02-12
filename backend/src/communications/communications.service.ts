@@ -16,6 +16,74 @@ import { UpdateCommunicationDto } from './dto/update-communication.dto';
 export class CommunicationsService {
   constructor(private prisma: PrismaService) {}
 
+  // ==================== OPTIMIZED HELPER METHODS ====================
+
+  /**
+   * Get communication statistics from optimized database view
+   * Uses communication_statistics view for better performance
+   */
+  private async getCommunicationStatisticsFromView(filters?: {
+    institutionId?: number;
+    communicationType?: string;
+    isActive?: boolean;
+  }) {
+    let query = 'SELECT * FROM communication_statistics WHERE 1=1';
+
+    if (filters?.institutionId) {
+      query += ` AND institution_id = ${filters.institutionId}`;
+    }
+    if (filters?.communicationType) {
+      query += ` AND communication_type = '${filters.communicationType}'`;
+    }
+    if (filters?.isActive !== undefined) {
+      query += ` AND is_active = ${filters.isActive}`;
+    }
+
+    query += ' ORDER BY is_emergency DESC, is_pinned DESC, publish_date DESC';
+
+    return this.prisma.$queryRawUnsafe(query);
+  }
+
+  /**
+   * Get unread communications summary from optimized database view
+   * Uses unread_communications_summary view for better performance
+   */
+  private async getUnreadCommunicationsFromView(institutionId: number) {
+    return this.prisma.$queryRawUnsafe(`
+      SELECT * FROM unread_communications_summary
+      WHERE institution_id = ${institutionId}
+      ORDER BY is_emergency DESC, is_pinned DESC, publish_date DESC
+    `);
+  }
+
+  /**
+   * Get communication analytics from optimized database view
+   * Uses communication_analytics view for reporting
+   */
+  private async getCommunicationAnalyticsFromView(
+    institutionId: number,
+    startMonth?: Date,
+    endMonth?: Date,
+  ) {
+    let query = `
+      SELECT * FROM communication_analytics
+      WHERE institution_id = ${institutionId}
+    `;
+
+    if (startMonth) {
+      query += ` AND publish_month >= '${startMonth.toISOString()}'`;
+    }
+    if (endMonth) {
+      query += ` AND publish_month <= '${endMonth.toISOString()}'`;
+    }
+
+    query += ' ORDER BY publish_month DESC';
+
+    return this.prisma.$queryRawUnsafe(query);
+  }
+
+  // ==================== CRUD METHODS ====================
+
   /**
    * Create a new communication
    */
@@ -124,17 +192,28 @@ export class CommunicationsService {
     // Get total count
     const total = await this.prisma.communication.count({ where });
 
-    // Get communications
+    // Get communications with selective loading (OPTIMIZED)
     const communications = await this.prisma.communication.findMany({
       where,
       skip,
       take: limit,
-      orderBy: [
-        { isPinned: 'desc' }, // Pinned first
-        { isEmergency: 'desc' }, // Emergency next
-        { publishDate: 'desc' }, // Most recent
-      ],
-      include: {
+      select: {
+        id: true,
+        institutionId: true,
+        title: true,
+        content: true,
+        communicationType: true,
+        priority: true,
+        targetAudience: true,
+        isEmergency: true,
+        isPinned: true,
+        isActive: true,
+        publishDate: true,
+        expiryDate: true,
+        attachmentUrl: true,
+        createdBy: true,
+        createdAt: true,
+        updatedAt: true,
         institution: {
           select: {
             id: true,
@@ -155,6 +234,11 @@ export class CommunicationsService {
           },
         },
       },
+      orderBy: [
+        { isPinned: 'desc' }, // Pinned first
+        { isEmergency: 'desc' }, // Emergency next
+        { publishDate: 'desc' }, // Most recent
+      ],
     });
 
     return {
@@ -169,12 +253,31 @@ export class CommunicationsService {
   }
 
   /**
-   * Get a single communication by ID
+   * Get a single communication by ID (OPTIMIZED)
    */
   async findOne(id: number, userId?: number) {
     const communication = await this.prisma.communication.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        institutionId: true,
+        title: true,
+        content: true,
+        communicationType: true,
+        priority: true,
+        targetAudience: true,
+        departmentIds: true,
+        programIds: true,
+        classIds: true,
+        isEmergency: true,
+        isPinned: true,
+        isActive: true,
+        publishDate: true,
+        expiryDate: true,
+        attachmentUrl: true,
+        createdBy: true,
+        createdAt: true,
+        updatedAt: true,
         institution: {
           select: {
             id: true,
@@ -195,7 +298,14 @@ export class CommunicationsService {
               select: {
                 id: true,
                 readAt: true,
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
+              take: 1,
             }
           : false,
         _count: {
@@ -255,7 +365,22 @@ export class CommunicationsService {
     return this.prisma.communication.update({
       where: { id },
       data: updateData,
-      include: {
+      select: {
+        id: true,
+        institutionId: true,
+        title: true,
+        content: true,
+        communicationType: true,
+        priority: true,
+        targetAudience: true,
+        isEmergency: true,
+        isPinned: true,
+        isActive: true,
+        publishDate: true,
+        expiryDate: true,
+        createdBy: true,
+        createdAt: true,
+        updatedAt: true,
         institution: {
           select: {
             id: true,
@@ -361,14 +486,20 @@ export class CommunicationsService {
   }
 
   /**
-   * Get unread communications for a user
+   * Get unread communications for a user (OPTIMIZED)
    */
   async getUnread(userId: number, institutionId?: number) {
-    // Get user to determine their role
+    // Get user to determine their role (selective loading)
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        role: true,
+      select: {
+        id: true,
+        role: {
+          select: {
+            id: true,
+            roleName: true,
+          },
+        },
         student: {
           select: {
             institutionId: true,
@@ -404,7 +535,7 @@ export class CommunicationsService {
 
     const roleName = user.role.roleName;
 
-    // Get all communications for this user's role
+    // Get all communications for this user's role (selective loading)
     const communications = await this.prisma.communication.findMany({
       where: {
         institutionId: userInstitutionId,
@@ -421,12 +552,19 @@ export class CommunicationsService {
           },
         },
       },
-      orderBy: [
-        { isPinned: 'desc' },
-        { isEmergency: 'desc' },
-        { publishDate: 'desc' },
-      ],
-      include: {
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        communicationType: true,
+        priority: true,
+        isEmergency: true,
+        isPinned: true,
+        publishDate: true,
+        expiryDate: true,
+        attachmentUrl: true,
+        createdBy: true,
+        createdAt: true,
         creator: {
           select: {
             id: true,
@@ -434,6 +572,11 @@ export class CommunicationsService {
           },
         },
       },
+      orderBy: [
+        { isPinned: 'desc' },
+        { isEmergency: 'desc' },
+        { publishDate: 'desc' },
+      ],
     });
 
     return {
@@ -443,26 +586,37 @@ export class CommunicationsService {
   }
 
   /**
-   * Get read statistics for a communication
+   * Get read statistics for a communication (OPTIMIZED)
    */
   async getReadStats(communicationId: number) {
     const communication = await this.prisma.communication.findUnique({
       where: { id: communicationId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        targetAudience: true,
+        institutionId: true,
+        publishDate: true,
         _count: {
           select: {
             readReceipts: true,
           },
         },
         readReceipts: {
-          include: {
+          select: {
+            id: true,
+            readAt: true,
             user: {
               select: {
                 id: true,
                 name: true,
                 email: true,
+                edverseId: true,
               },
             },
+          },
+          orderBy: {
+            readAt: 'desc',
           },
         },
       },
@@ -479,7 +633,50 @@ export class CommunicationsService {
       title: communication.title,
       totalReads: communication._count.readReceipts,
       readBy: communication.readReceipts,
+      publishDate: communication.publishDate,
+      targetAudience: communication.targetAudience,
     };
+  }
+
+  /**
+   * Get communication analytics (OPTIMIZED)
+   * Uses communication_analytics view for better performance
+   */
+  async getCommunicationAnalytics(
+    institutionId: number,
+    startMonth?: string,
+    endMonth?: string,
+  ) {
+    const start = startMonth ? new Date(startMonth) : undefined;
+    const end = endMonth ? new Date(endMonth) : undefined;
+
+    const analytics = await this.getCommunicationAnalyticsFromView(
+      institutionId,
+      start,
+      end,
+    );
+
+    return {
+      institutionId,
+      analytics,
+      metadata: {
+        startMonth: start?.toISOString().slice(0, 7),
+        endMonth: end?.toISOString().slice(0, 7),
+        generatedAt: new Date(),
+      },
+    };
+  }
+
+  /**
+   * Get communication statistics with read counts (OPTIMIZED)
+   * Uses communication_statistics view for better performance
+   */
+  async getCommunicationStatistics(filters?: {
+    institutionId?: number;
+    communicationType?: string;
+    isActive?: boolean;
+  }) {
+    return this.getCommunicationStatisticsFromView(filters);
   }
 }
 

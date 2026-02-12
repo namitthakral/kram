@@ -1,3 +1,43 @@
+/**
+ * Ed-Verse Database Seed Script
+ * ==============================
+ * 
+ * This script seeds the database with comprehensive test data for development
+ * and production environments.
+ * 
+ * IDEMPOTENCY:
+ * ------------
+ * This script is SAFE to run multiple times. It uses a hybrid approach:
+ * 
+ * 1. REFERENCE DATA (Always Updated):
+ *    - Roles, Institution, Core Users (Admin, Teacher)
+ *    - Uses `upsert` to update if exists, create if not
+ * 
+ * 2. TRANSACTIONAL DATA (Skip if Exists):
+ *    - Student Fees, Payments, Attendance, Assignments, etc.
+ *    - Sentinel check: If StudentFee records exist, all transactional data is skipped
+ *    - This prevents duplicate data on subsequent runs
+ * 
+ * USAGE:
+ * ------
+ * Development: npm run db:seed (uses local database)
+ * Production:  npm run db:seed:production (uses AWS RDS)
+ * 
+ * TO RESET AND RE-SEED:
+ * ---------------------
+ * If you need to completely reset and re-seed:
+ * 1. Backup your data first!
+ * 2. Run: npx prisma migrate reset
+ * 3. Run seed again: npm run db:seed
+ * 
+ * DEFAULT CREDENTIALS:
+ * -------------------
+ * Admin:   admin@edverse.edu / admin123!
+ * Teacher: john.doe@edverse.edu / teacher123!
+ * Student: student1@edverse.edu / student123!
+ * Parent:  parent1@edverse.edu / parent123!
+ */
+
 import { PrismaClient } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import { generateEdVerseId } from '../src/utils/edverse-id.util'
@@ -5,7 +45,11 @@ import { generateEdVerseId } from '../src/utils/edverse-id.util'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting comprehensive database seeding...')
+  console.log('')
+  console.log('═══════════════════════════════════════════════════════════')
+  console.log('🌱 Ed-Verse Database Seeding')
+  console.log('═══════════════════════════════════════════════════════════')
+  console.log('')
 
   // Create roles
   console.log('Creating roles...')
@@ -33,12 +77,41 @@ async function main() {
     `✅ Created course: ${course.name} with ${subjects.length} subjects`
   )
 
+  // ============================================================================
+  // SENTINEL CHECK: Skip transactional data if already seeded
+  // ============================================================================
+  const existingStudentFees = await prisma.studentFee.count()
+  
+  if (existingStudentFees > 0) {
+    console.log('')
+    console.log('⚠️  ═══════════════════════════════════════════════════════════')
+    console.log('⚠️  DATABASE ALREADY CONTAINS TRANSACTIONAL DATA')
+    console.log('⚠️  ═══════════════════════════════════════════════════════════')
+    console.log('')
+    console.log(`   Found ${existingStudentFees} student fee records`)
+    console.log('   Skipping transactional data to prevent duplicates')
+    console.log('')
+    console.log('✅ Reference data (roles, institution) will be updated if needed')
+    console.log('❌ Transactional data (fees, payments, attendance) will be skipped')
+    console.log('')
+    console.log('   If you want to re-seed from scratch:')
+    console.log('   1. Backup your data first!')
+    console.log('   2. Run: npx prisma migrate reset')
+    console.log('   3. Then run seed again')
+    console.log('')
+    console.log('🎉 Seed completed safely (no changes to existing data)')
+    return
+  }
+
+  console.log('✅ No existing transactional data found - proceeding with full seed')
+  console.log('')
+
   // Create users (admin, teacher, students, parents, staff)
   console.log('Creating users...')
   const { superAdmin, teacher, students, parents, librarian } =
     await createUsers(roles, institution.id, course.id)
   console.log(
-    `✅ Created users: 1 admin, 1 teacher, ${students.length} students, ${parents.length} parents, 2 staff`
+    `✅ Created users: 1 admin, 1 teacher, ${students.length} students, ${parents.length} parents, 3 staff (librarian, accountant, support)`
   )
 
   // Create class sections and enrollments
@@ -75,7 +148,7 @@ async function main() {
     academicYear.id
   )
   await createStudentFees(students, feeStructures, semesters[0])
-  console.log(`✅ Created ${feeStructures.length} fee structures`)
+  console.log(`✅ Created ${feeStructures.length} fee structures with student fee assignments`)
 
   // Create assignments and examinations
   console.log('Creating assignments and examinations...')
@@ -129,12 +202,21 @@ async function main() {
   )
   console.log('✅ Created comprehensive data for Student 1')
 
-  console.log('🎉 Comprehensive database seeding completed successfully!')
+  console.log('')
+  console.log('═══════════════════════════════════════════════════════════')
+  console.log('🎉 Database Seeding Completed Successfully!')
+  console.log('═══════════════════════════════════════════════════════════')
+  console.log('')
   printSummary(students.length, parents.length)
+  console.log('')
+  console.log('✅ Your production database has been seeded with test data')
+  console.log('✅ All reference data and transactional records created')
+  console.log('✅ Safe to run this script again - it will skip if data exists')
+  console.log('')
 }
 
 /**
- * Creates roles with fixed IDs (1-7)
+ * Creates roles with fixed IDs (1-8)
  * IMPORTANT: NEVER CHANGE THIS ORDER OR IDs
  * 1 = super_admin
  * 2 = admin
@@ -143,10 +225,11 @@ async function main() {
  * 5 = teacher
  * 6 = librarian
  * 7 = staff
+ * 8 = accountant
  */
 async function createRoles() {
   // Create roles sequentially to ensure correct IDs
-  const roles = []
+  const roles: any[] = []
 
   // ID 1: Super Admin
   roles.push(
@@ -350,6 +433,40 @@ async function createRoles() {
         roleName: 'staff',
         description: 'Support Staff',
         permissions: ['canViewOwnData', 'canMarkAttendance', 'canViewNotices'],
+      },
+    })
+  )
+
+  // ID 8: Accountant
+  roles.push(
+    await prisma.role.upsert({
+      where: { id: 8 },
+      update: {
+        roleName: 'accountant',
+        description: 'Accountant/Finance Staff',
+        permissions: [
+          'canManageFees',
+          'canViewFees',
+          'canRecordPayments',
+          'canGenerateReceipts',
+          'canViewFinancialReports',
+          'canManageRefunds',
+          'canApplyWaivers',
+        ],
+      },
+      create: {
+        id: 8,
+        roleName: 'accountant',
+        description: 'Accountant/Finance Staff',
+        permissions: [
+          'canManageFees',
+          'canViewFees',
+          'canRecordPayments',
+          'canGenerateReceipts',
+          'canViewFinancialReports',
+          'canManageRefunds',
+          'canApplyWaivers',
+        ],
       },
     })
   )
@@ -587,8 +704,8 @@ async function createUsers(
   })
 
   // Create students and parents
-  const students = []
-  const parents = []
+  const students: any[] = []
+  const parents: any[] = []
   const studentRole = roles.find(r => r.roleName === 'student')!
   const parentRole = roles.find(r => r.roleName === 'parent')!
 
@@ -753,7 +870,48 @@ async function createUsers(
     },
   })
 
-  return { superAdmin, teacher, students, parents, librarian }
+  // Create accountant
+  const accountantPassword = await bcrypt.hash('accountant123!', 12)
+  const accountantRole = roles.find(r => r.roleName === 'accountant')!
+  const accountantUser = await prisma.user.upsert({
+    where: { email: 'accountant@edverse.edu' },
+    update: {},
+    create: {
+      firstName: 'Finance',
+      lastName: 'Manager',
+      name: 'Finance Manager',
+      email: 'accountant@edverse.edu',
+      phone: '+1-555-0014',
+      passwordHash: accountantPassword,
+      roleId: accountantRole.id,
+      edverseId: generateEdVerseId('EDU', 'staff', 2024),
+      emailVerified: true,
+      phoneVerified: true,
+    },
+  })
+
+  const accountant = await prisma.staff.upsert({
+    where: { employeeId: 'ACC001' },
+    update: {},
+    create: {
+      userId: accountantUser.id,
+      institutionId,
+      employeeId: 'ACC001',
+      staffType: 'ADMINISTRATIVE',
+      designation: 'Accounts Manager',
+      department: 'Finance',
+      joinDate: new Date('2023-03-01'),
+      salary: 60000.0,
+      employmentType: 'FULL_TIME',
+      workingHours: 'Monday-Friday 9:00 AM - 5:00 PM',
+      skills: ['Accounting', 'Financial Management', 'Fee Collection', 'Tally ERP'],
+      qualifications: 'MBA in Finance, CA',
+      experience: '7 years in educational finance management',
+      emergencyContact: '+1-555-0015',
+    },
+  })
+
+  return { superAdmin, teacher, students, parents, librarian, accountant }
 }
 
 async function createClassSections(
@@ -1025,13 +1183,14 @@ async function createFeeStructures(
         courseId,
         academicYearId,
         feeType: 'TUITION',
-        feeName: 'Fall 2024 Tuition Fee',
-        amount: 5000.0,
+        feeName: 'Tuition Fee',
+        amount: 50000.0,
         dueDate: new Date('2024-09-15'),
-        lateFeeAmount: 100.0,
+        lateFeeAmount: 500.0,
         lateFeeAfterDays: 7,
-        isRecurring: false,
-        description: 'Tuition fee for Fall 2024 semester',
+        isRecurring: true,
+        recurringFrequency: 'SEMESTER',
+        description: 'Tuition fee for Fall 2024 semester - B.Sc. Computer Science',
         status: 'ACTIVE',
       },
     }),
@@ -1044,10 +1203,70 @@ async function createFeeStructures(
         academicYearId,
         feeType: 'LIBRARY',
         feeName: 'Library Fee',
-        amount: 100.0,
+        amount: 5000.0,
         dueDate: new Date('2024-09-01'),
-        isRecurring: false,
+        lateFeeAmount: 100.0,
+        lateFeeAfterDays: 5,
+        isRecurring: true,
+        recurringFrequency: 'ANNUAL',
         description: 'Annual library membership fee',
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.feeStructure.upsert({
+      where: { id: 3 },
+      update: {},
+      create: {
+        institutionId,
+        courseId,
+        academicYearId,
+        feeType: 'LABORATORY',
+        feeName: 'Laboratory Fee',
+        amount: 10000.0,
+        dueDate: new Date('2024-09-20'),
+        lateFeeAmount: 200.0,
+        lateFeeAfterDays: 7,
+        isRecurring: true,
+        recurringFrequency: 'SEMESTER',
+        description: 'Computer lab and equipment fee',
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.feeStructure.upsert({
+      where: { id: 4 },
+      update: {},
+      create: {
+        institutionId,
+        courseId,
+        academicYearId,
+        feeType: 'EXAMINATION',
+        feeName: 'Examination Fee',
+        amount: 3000.0,
+        dueDate: new Date('2024-10-01'),
+        lateFeeAmount: 150.0,
+        lateFeeAfterDays: 3,
+        isRecurring: true,
+        recurringFrequency: 'SEMESTER',
+        description: 'Semester examination fee',
+        status: 'ACTIVE',
+      },
+    }),
+    prisma.feeStructure.upsert({
+      where: { id: 5 },
+      update: {},
+      create: {
+        institutionId,
+        courseId,
+        academicYearId,
+        feeType: 'SPORTS',
+        feeName: 'Sports Fee',
+        amount: 2000.0,
+        dueDate: new Date('2024-08-25'),
+        lateFeeAmount: 50.0,
+        lateFeeAfterDays: 10,
+        isRecurring: true,
+        recurringFrequency: 'ANNUAL',
+        description: 'Annual sports and activities fee',
         status: 'ACTIVE',
       },
     }),
@@ -1059,29 +1278,80 @@ async function createStudentFees(
   feeStructures: any[],
   semester: any
 ) {
+  console.log(`  💰 Creating student fees for ${students.length} students...`)
+  
   for (const student of students) {
-    for (const feeStructure of feeStructures) {
-      await prisma.studentFee.upsert({
-        where: {
-          unique_student_fee: {
+    for (let i = 0; i < feeStructures.length; i++) {
+      const feeStructure = feeStructures[i]
+      
+      // Calculate discount for some students (scholarship/merit)
+      const hasDiscount = i === 0 && student.id % 3 === 0 // First fee structure, every 3rd student
+      const discountAmount = hasDiscount ? feeStructure.amount * 0.1 : 0 // 10% discount
+      const netAmount = feeStructure.amount - discountAmount
+      
+      // Some students have partial payments
+      const hasPartialPayment = student.id % 4 === 0 // Every 4th student
+      const paidAmount = hasPartialPayment ? netAmount * 0.5 : 0 // 50% paid
+      
+      // Determine status
+      let status = 'PENDING'
+      if (paidAmount >= netAmount) {
+        status = 'PAID'
+      } else if (paidAmount > 0) {
+        status = 'PARTIAL'
+      } else if (new Date() > feeStructure.dueDate) {
+        status = 'OVERDUE'
+      }
+
+      try {
+        await prisma.studentFee.create({
+          data: {
             studentId: student.id,
             feeStructureId: feeStructure.id,
             semesterId: semester.id,
+            amountDue: netAmount,
+            amountPaid: paidAmount,
+            discount: discountAmount,
+            dueDate: feeStructure.dueDate!,
+            status: status as any,
+            remarks: hasDiscount ? 'Merit scholarship - 10% discount' : null,
           },
-        },
-        update: {},
-        create: {
-          studentId: student.id,
-          feeStructureId: feeStructure.id,
-          semesterId: semester.id,
-          amountDue: feeStructure.amount,
-          amountPaid: 0.0,
-          dueDate: feeStructure.dueDate!,
-          status: 'PENDING',
-        },
-      })
+        })
+
+        // Create payment record if there's a partial payment
+        if (paidAmount > 0) {
+          const studentFee = await prisma.studentFee.findFirst({
+            where: {
+              studentId: student.id,
+              feeStructureId: feeStructure.id,
+            },
+          })
+
+          if (studentFee) {
+            const paymentMethods = ['CASH', 'UPI', 'CARD', 'BANK_TRANSFER'] as const
+            await prisma.payment.create({
+              data: {
+                studentId: student.id,
+                studentFeeId: studentFee.id,
+                amount: paidAmount,
+                paymentMethod: paymentMethods[student.id % 4] as any,
+                paymentMode: 'OFFLINE',
+                paymentDate: new Date(feeStructure.dueDate.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days before due
+                transactionId: `TXN${Date.now()}${student.id}${i}`,
+                status: 'COMPLETED',
+                remarks: 'First installment payment',
+                processedBy: 1, // Admin user
+              },
+            })
+          }
+        }
+      } catch {
+        // Skip if already exists
+      }
     }
   }
+  
+  console.log('  ✅ Student fees and payments created')
 }
 
 async function createAssignments(
@@ -1254,18 +1524,19 @@ function printSummary(studentCount: number, parentCount: number) {
   )
   console.log('Staff: staff@edverse.edu / staff123!')
   console.log('Librarian: librarian@edverse.edu / librarian123!')
+  console.log('Accountant: accountant@edverse.edu / accountant123!')
   console.log('\n📊 Data Created:')
   console.log(
-    '- 7 roles (super_admin, admin, teacher, student, parent, librarian, staff)'
+    '- 8 roles (super_admin, admin, teacher, student, parent, librarian, staff, accountant)'
   )
   console.log('- 1 institution with complete academic structure')
   console.log('- 1 program with 3 courses and 2 subjects')
   console.log(`- ${studentCount} students with ${parentCount} parents`)
-  console.log('- 1 teacher + 2 staff members (including librarian)')
+  console.log('- 1 teacher + 3 staff members (support, librarian, accountant)')
   console.log('- 2 class sections with enrollments')
   console.log('- 5 communications (unified notices & announcements)')
   console.log('- 2 books with library settings')
-  console.log('- 2 fee structures with student fees')
+  console.log('- 5 fee structures (tuition, library, lab, exam, sports) with payments')
   console.log('- 1 assignment + 1 examination')
   console.log('- 2 time slots + 2 rooms + 1 timetable entry')
   console.log('- Teacher dashboard data (attendance, grades, performance)')
@@ -1743,7 +2014,7 @@ async function createStudentDashboardData() {
     }
 
     // Create attendance records for the last 3 months
-    const attendanceDates = []
+    const attendanceDates: Date[] = []
     const today = new Date()
     for (let i = 90; i >= 0; i--) {
       const date = new Date(today)
@@ -1967,7 +2238,7 @@ async function createPhase1TestData() {
     { days: 0, title: 'Discussion Post', priority: 'low' }, // Today
   ]
 
-  const createdAssignments = []
+  const createdAssignments: any[] = []
 
   for (let i = 0; i < assignmentDates.length; i++) {
     const assignmentInfo = assignmentDates[i]

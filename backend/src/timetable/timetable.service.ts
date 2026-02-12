@@ -86,7 +86,17 @@ export class TimetableService {
   async findOneTimeSlot(id: number) {
     const timeSlot = await this.prisma.timeSlot.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        institutionId: true,
+        slotName: true,
+        startTime: true,
+        endTime: true,
+        slotType: true,
+        duration: true,
+        sortOrder: true,
+        isActive: true,
+        createdAt: true,
         institution: {
           select: { id: true, name: true, code: true },
         },
@@ -223,7 +233,18 @@ export class TimetableService {
   async findOneRoom(id: number) {
     const room = await this.prisma.room.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        institutionId: true,
+        roomNumber: true,
+        roomName: true,
+        building: true,
+        floor: true,
+        capacity: true,
+        roomType: true,
+        facilities: true,
+        isActive: true,
+        createdAt: true,
         institution: {
           select: { id: true, name: true, code: true },
         },
@@ -317,7 +338,7 @@ export class TimetableService {
         roomId: dto.roomId,
         isActive: dto.isActive ?? true,
       },
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
     })
 
     return {
@@ -373,7 +394,7 @@ export class TimetableService {
 
     const entries = await this.prisma.timeTable.findMany({
       where,
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
       orderBy: [{ dayOfWeek: 'asc' }, { timeSlot: { sortOrder: 'asc' } }],
     })
 
@@ -396,7 +417,7 @@ export class TimetableService {
         semesterId,
         isActive: true,
       },
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
       orderBy: [{ dayOfWeek: 'asc' }, { timeSlot: { sortOrder: 'asc' } }],
     })
 
@@ -417,8 +438,19 @@ export class TimetableService {
   async getTimetableByTeacher(teacherId: number, semesterId: number) {
     const teacher = await this.prisma.teacher.findUnique({
       where: { id: teacherId },
-      include: {
-        user: { select: { name: true, email: true } },
+      select: {
+        id: true,
+        employeeId: true,
+        designation: true,
+        institutionId: true,
+        user: { 
+          select: { 
+            id: true,
+            name: true, 
+            email: true,
+            phone: true,
+          } 
+        },
       },
     })
 
@@ -432,7 +464,7 @@ export class TimetableService {
         semesterId,
         isActive: true,
       },
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
       orderBy: [{ dayOfWeek: 'asc' }, { timeSlot: { sortOrder: 'asc' } }],
     })
 
@@ -468,7 +500,7 @@ export class TimetableService {
         semesterId,
         isActive: true,
       },
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
       orderBy: [{ dayOfWeek: 'asc' }, { timeSlot: { sortOrder: 'asc' } }],
     })
 
@@ -492,7 +524,7 @@ export class TimetableService {
   async findOneTimetableEntry(id: number) {
     const entry = await this.prisma.timeTable.findUnique({
       where: { id },
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
     })
 
     if (!entry) {
@@ -528,7 +560,7 @@ export class TimetableService {
     const updated = await this.prisma.timeTable.update({
       where: { id },
       data: dto,
-      include: this.getTimetableIncludes(),
+      select: this.getTimetableSelect(),
     })
 
     return {
@@ -571,20 +603,50 @@ export class TimetableService {
     return date.toTimeString().slice(0, 5) // "HH:mm"
   }
 
-  private getTimetableIncludes() {
+  /**
+   * Get optimized select fields for timetable queries
+   * Uses selective loading for better performance
+   */
+  private getTimetableSelect() {
     return {
-      institution: { select: { id: true, name: true, code: true } },
-      academicYear: { select: { id: true, yearName: true } },
+      id: true,
+      institutionId: true,
+      academicYearId: true,
+      semesterId: true,
+      courseId: true,
+      classLevel: true,
+      section: true,
+      subjectId: true,
+      teacherId: true,
+      roomId: true,
+      timeSlotId: true,
+      dayOfWeek: true,
+      isActive: true,
+      notes: true,
+      createdAt: true,
+      updatedAt: true,
+      institution: { 
+        select: { id: true, name: true, code: true } 
+      },
+      academicYear: { 
+        select: { id: true, yearName: true } 
+      },
       semester: {
         select: { id: true, semesterName: true, semesterNumber: true },
       },
-      course: { select: { id: true, name: true, code: true } },
-      subject: { select: { id: true, subjectName: true, subjectCode: true } },
+      course: { 
+        select: { id: true, courseName: true, courseCode: true } 
+      },
+      subject: { 
+        select: { id: true, subjectName: true, subjectCode: true } 
+      },
       teacher: {
         select: {
           id: true,
           employeeId: true,
-          user: { select: { name: true, email: true } },
+          user: { 
+            select: { id: true, name: true, email: true } 
+          },
         },
       },
       room: {
@@ -593,6 +655,7 @@ export class TimetableService {
           roomNumber: true,
           roomName: true,
           building: true,
+          capacity: true,
         },
       },
       timeSlot: {

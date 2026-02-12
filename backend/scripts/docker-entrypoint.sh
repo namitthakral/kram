@@ -1,7 +1,9 @@
 #!/bin/sh
 # ============================================================================
 # Ed-Verse Backend - Docker Entrypoint Script
-# Handles database migrations with proper error handling
+# ============================================================================
+# NOTE: This script does NOT run migrations!
+# Migrations should be run BEFORE deployment using deploy-to-production.sh
 # ============================================================================
 
 set -e  # Exit immediately if any command fails
@@ -11,49 +13,28 @@ echo "🚀 Ed-Verse Backend Starting..."
 echo "=================================================="
 echo ""
 
-# Function to handle errors
-handle_error() {
-    echo ""
-    echo "❌ ERROR: $1"
-    echo ""
-    echo "🔍 Troubleshooting tips:"
-    echo "  1. Check database connectivity"
-    echo "  2. Verify DATABASE_URL is correct"
-    echo "  3. Check migration files in prisma/migrations/"
-    echo "  4. View logs: aws lightsail get-container-log --service-name kram"
-    echo ""
-    exit 1
-}
-
 # Check if DATABASE_URL is set
 if [ -z "$DATABASE_URL" ]; then
-    handle_error "DATABASE_URL environment variable is not set"
+    echo "❌ ERROR: DATABASE_URL environment variable is not set"
+    echo ""
+    echo "🔍 Troubleshooting tips:"
+    echo "  1. Verify .env.production has DATABASE_URL"
+    echo "  2. Check deployment configuration"
+    echo "  3. View logs: aws lightsail get-container-log --service-name kram"
+    echo ""
+    exit 1
 fi
 
 echo "✅ Environment variables loaded"
+echo "📊 Database: ${DATABASE_URL:0:50}..."
 echo ""
 
-# Run database migrations
-echo "📊 Running database migrations..."
-echo "=================================================="
-if ! npx prisma migrate deploy; then
-    handle_error "Database migrations failed! Container will not start."
-fi
-
-echo ""
-echo "✅ Database migrations completed successfully!"
-echo ""
-
-# Check migration status
-echo "🔍 Verifying migration status..."
-if ! npx prisma migrate status; then
-    echo "⚠️  Warning: Migration status check failed (non-critical)"
-fi
-
-echo ""
 echo "=================================================="
 echo "🚀 Starting NestJS application..."
 echo "=================================================="
+echo ""
+echo "ℹ️  NOTE: Migrations should be run via deploy-to-production.sh"
+echo "   This container only runs the application."
 echo ""
 
 # Start the application

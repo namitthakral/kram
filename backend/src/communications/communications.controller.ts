@@ -109,5 +109,43 @@ export class CommunicationsController {
   getReadStats(@Param('id', ParseIntPipe) id: number) {
     return this.communicationsService.getReadStats(id);
   }
+
+  /**
+   * Get communication analytics (OPTIMIZED)
+   * GET /communications/analytics/institution
+   * Only super_admin and admin can view analytics
+   */
+  @Get('analytics/institution')
+  @Roles('super_admin', 'admin')
+  getCommunicationAnalytics(
+    @Query('institutionId', ParseIntPipe) institutionId: number,
+    @Query('startMonth') startMonth?: string,
+    @Query('endMonth') endMonth?: string,
+  ) {
+    return this.communicationsService.getCommunicationAnalytics(
+      institutionId,
+      startMonth,
+      endMonth,
+    );
+  }
+
+  /**
+   * Get communication statistics with read counts (OPTIMIZED)
+   * GET /communications/statistics
+   * Only super_admin, admin, and teacher can view statistics
+   */
+  @Get('statistics')
+  @Roles('super_admin', 'admin', 'teacher')
+  getCommunicationStatistics(
+    @Query('institutionId') institutionId?: number,
+    @Query('communicationType') communicationType?: string,
+    @Query('isActive') isActive?: boolean,
+  ) {
+    return this.communicationsService.getCommunicationStatistics({
+      institutionId: institutionId ? Number(institutionId) : undefined,
+      communicationType,
+      isActive: isActive !== undefined ? Boolean(isActive) : undefined,
+    });
+  }
 }
 
