@@ -9,7 +9,7 @@ export { ParentRelation, UserStatus }
 export interface User {
   id: number
   uuid?: string
-  edverseId?: string
+  kramid?: string
   firstName: string
   lastName: string
   name: string

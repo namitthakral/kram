@@ -1,13 +1,13 @@
 class LoginRequest {
-  LoginRequest({required this.password, this.email, this.phone, this.edverseId})
+  LoginRequest({required this.password, this.email, this.phone, this.kramid})
     : assert(
-        email != null || phone != null || edverseId != null,
-        'At least one of email, phone, or edverseId must be provided',
+        email != null || phone != null || kramid != null,
+        'At least one of email, phone, or kramid must be provided',
       );
 
   final String? email;
   final String? phone;
-  final String? edverseId;
+  final String? kramid;
   final String password;
 
   Map<String, dynamic> toJson() {
@@ -19,8 +19,8 @@ class LoginRequest {
     if (phone != null) {
       data['phone'] = phone!;
     }
-    if (edverseId != null) {
-      data['edverseId'] = edverseId!;
+    if (kramid != null) {
+      data['kramid'] = kramid!;
     }
 
     return data;
@@ -169,7 +169,7 @@ class User {
     required this.createdAt,
     required this.updatedAt,
     this.uuid,
-    this.edverseId,
+    this.kramid,
     this.phone,
     this.role,
     this.student,
@@ -184,7 +184,7 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) => User(
     id: json['id'],
     uuid: json['uuid'],
-    edverseId: json['edverseId'],
+    kramid: json['kramid'],
     name: json['name'],
     email: json['email'],
     phone: json['phone'],
@@ -208,7 +208,7 @@ class User {
   );
   final int id;
   final String? uuid;
-  final String? edverseId;
+  final String? kramid;
   final String name;
   final String email;
   final String? phone;
@@ -227,7 +227,7 @@ class User {
   Map<String, dynamic> toJson() => {
     'id': id,
     'uuid': uuid,
-    'edverseId': edverseId,
+    'kramid': kramid,
     'name': name,
     'email': email,
     'phone': phone,

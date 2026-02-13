@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 
+import 'core/constants/app_constants.dart';
 import 'core/services/api_service.dart';
 import 'core/services/app_lifecycle_service.dart';
 import 'modules/admin/providers/admin_analytics_tab_provider.dart';
@@ -70,6 +71,17 @@ void main() async {
   ApiService().init();
   RouterService().init(loginProvider);
   await loginProvider.init();
+
+  // Log API endpoint for developer awareness
+  if (kDebugMode) {
+    log('🌐 API Endpoint: ${AppConstants.baseUrl}');
+    if (AppConstants.baseUrl.contains('localhost') ||
+        AppConstants.baseUrl.contains('127.0.0.1')) {
+      log('✅ Using LOCAL development API');
+    } else {
+      log('🚀 Using PRODUCTION API');
+    }
+  }
 
   runApp(
     MultiProvider(
@@ -155,19 +167,19 @@ void main() async {
           create: (_) => TeacherClassesProvider(),
         ),
       ],
-      child: const EdVerseApp(),
+      child: const KramApp(),
     ),
   );
 }
 
-class EdVerseApp extends StatefulWidget {
-  const EdVerseApp({super.key});
+class KramApp extends StatefulWidget {
+  const KramApp({super.key});
 
   @override
-  State<EdVerseApp> createState() => _EdVerseAppState();
+  State<KramApp> createState() => _KramAppState();
 }
 
-class _EdVerseAppState extends State<EdVerseApp> {
+class _KramAppState extends State<KramApp> {
   final AppLifecycleService _lifecycleService = AppLifecycleService();
 
   @override
@@ -201,7 +213,7 @@ class _EdVerseAppState extends State<EdVerseApp> {
       child: Consumer<LanguageProvider>(
         builder:
             (context, languageProvider, child) => MaterialApp.router(
-              title: 'EdVerse',
+              title: 'Kram',
               // title: context.translate('app_name'),
               scaffoldMessengerKey: GlobalConstants.snackbarKey,
               debugShowCheckedModeBanner: false,

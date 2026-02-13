@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Ed-verse Monorepo Setup Script
-echo "🚀 Setting up Ed-verse monorepo..."
+# Kram Monorepo Setup Script
+echo "🚀 Setting up Kram monorepo..."
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then

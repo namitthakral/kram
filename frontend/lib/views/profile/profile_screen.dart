@@ -243,12 +243,12 @@ class ProfileScreen extends StatelessWidget {
           context.translate('account_active'),
           Colors.green,
         ),
-        if (user.edverseId != null) ...[
+        if (user.kramid != null) ...[
           const SizedBox(height: 8),
           _buildStatusRow(
             context,
             Icons.badge,
-            '${context.translate('edverse_id')}: ${user.edverseId}',
+            '${context.translate('kram_id')}: ${user.kramid}',
             AppTheme.blue500,
           ),
         ],

@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
-import { generateInstitutionCode } from '../utils/edverse-id.util'
+import { generateInstitutionCode } from '../utils/kramid.util'
 import { CreateInstitutionDto } from './dto/institution.dto'
 
 @Injectable()

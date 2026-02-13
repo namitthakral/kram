@@ -100,7 +100,7 @@ class LoginProvider extends ChangeNotifier {
       _setError('Please enter both login credentials and password');
       return;
     } else if (identifier.isEmpty) {
-      _setError('Please enter your EdVerse ID, email, or phone number');
+      _setError('Please enter your Kram ID, email, or phone number');
       return;
     } else if (password.isEmpty) {
       _setError('Please enter your password');
@@ -128,12 +128,12 @@ class LoginProvider extends ChangeNotifier {
             phone: loginIdentifier.value,
           );
           log('Logging in with phone: ${loginIdentifier.value}');
-        case LoginIdentifierType.edverseId:
+        case LoginIdentifierType.kramid:
           loginRequest = LoginRequest(
             password: password,
-            edverseId: loginIdentifier.value,
+            kramid: loginIdentifier.value,
           );
-          log('Logging in with EdVerse ID: ${loginIdentifier.value}');
+          log('Logging in with Kram ID: ${loginIdentifier.value}');
       }
 
       final response = await _authService.login(loginRequest);

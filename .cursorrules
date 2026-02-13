@@ -1,4 +1,33 @@
-# Ed-Verse Project Rules
+# Kram Project Rules
+
+## AI Agent Behavior (CRITICAL)
+
+### Ask Before Making Changes
+**IMPORTANT: Always ask for user permission before making any changes!**
+
+1. **Show First, Change Later:**
+   - Analyze the problem/request
+   - Show what needs to be changed (file paths, code snippets)
+   - Explain why the changes are needed
+   - **Wait for explicit user approval** ("yes", "go ahead", "make the changes", etc.)
+   - Only then proceed with the actual changes
+
+2. **Exceptions - Can proceed directly:**
+   - User explicitly says "make the changes" or "implement it" in their request
+   - Emergency fixes for broken code that prevents the app from running
+   - Simple read-only operations (searching, reading files, answering questions)
+
+3. **Always ask for:**
+   - Database migrations/resets
+   - File creation or deletion
+   - Code refactoring
+   - Configuration changes
+   - Package installations
+   - Any destructive operations
+
+**Remember: It's better to ask twice than to make unwanted changes once!**
+
+---
 
 ## Performance Optimization (MANDATORY)
 

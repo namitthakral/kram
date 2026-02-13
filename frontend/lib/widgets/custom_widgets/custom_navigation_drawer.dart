@@ -149,8 +149,8 @@ class CustomNavigationDrawer extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
 
-            // EdVerse ID Badge (if available)
-            if (user?.edverseId != null) ...[
+            // Kram ID Badge (if available)
+            if (user?.kramid != null) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -171,7 +171,7 @@ class CustomNavigationDrawer extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      user!.edverseId!,
+                      user!.kramid!,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: CustomAppColors.primary,

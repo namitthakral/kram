@@ -193,7 +193,7 @@ export class CreateStaffDataDto {
 
 export class CreateParentDataDto {
   @IsString()
-  childEdverseId: string // Required - must link to existing student
+  childKramid: string // Required - must link to existing student
 
   @IsOptional()
   @IsString()

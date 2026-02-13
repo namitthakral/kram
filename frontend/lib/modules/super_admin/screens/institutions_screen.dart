@@ -11,7 +11,7 @@ class InstitutionsScreen extends StatelessWidget {
     // Mock super admin data
     const userInitials = 'SA';
     const userName = 'Super Admin';
-    const systemName = 'EdVerse Master';
+    const systemName = 'Kram Master';
 
     return CustomMainScreenWithAppbar(
       title: 'Institutions',

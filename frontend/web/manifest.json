@@ -1,11 +1,11 @@
 {
-  "name": "EdVerse",
-  "short_name": "EdVerse",
+  "name": "Kram",
+  "short_name": "Kram",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#3498db",
-  "description": "EdVerse - Educational Platform",
+  "description": "Kram - Educational Platform",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [

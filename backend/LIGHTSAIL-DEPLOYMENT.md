@@ -94,7 +94,7 @@ See [GitHub Actions Deployment Guide](../../.github/DEPLOYMENT.md) for setup.
 ### Option 2: Local Deployment Script
 
 ```bash
-cd /Users/namitthakral/ed-verse/backend
+cd /Users/namitthakral/kram/backend
 
 # Run the automated deployment script
 ./scripts/lightsail-deploy.sh
@@ -250,7 +250,7 @@ Expected response:
 {
   "status": "OK",
   "timestamp": "2026-02-05T...",
-  "service": "ed-verse-backend",
+  "service": "kram-backend",
   "version": "1.0.0",
   "environment": "production"
 }
@@ -351,7 +351,7 @@ View in browser:
 ### Quick Update (Recommended)
 
 ```bash
-cd /Users/namitthakral/ed-verse/backend
+cd /Users/namitthakral/kram/backend
 
 # Make your code changes (backend OR frontend), then:
 ./scripts/lightsail-deploy.sh
@@ -377,7 +377,7 @@ This will **automatically**:
 If you only changed the Flutter frontend:
 
 ```bash
-cd /Users/namitthakral/ed-verse/backend
+cd /Users/namitthakral/kram/backend
 
 # The script will detect frontend changes and rebuild automatically
 ./scripts/lightsail-deploy.sh
@@ -401,7 +401,7 @@ cd /Users/namitthakral/ed-verse/backend
 If you only changed backend code:
 
 ```bash
-cd /Users/namitthakral/ed-verse/backend
+cd /Users/namitthakral/kram/backend
 
 # The script will skip frontend rebuild
 ./scripts/lightsail-deploy.sh
@@ -536,7 +536,7 @@ aws lightsail get-container-services \
 **Solution:**
 ```bash
 # 1. Redeploy (will auto-rebuild frontend)
-cd /Users/namitthakral/ed-verse/backend
+cd /Users/namitthakral/kram/backend
 ./scripts/lightsail-deploy.sh
 
 # 2. Invalidate CloudFront cache
@@ -551,7 +551,7 @@ aws cloudfront create-invalidation \
 **Manual Flutter rebuild:**
 ```bash
 # If auto-rebuild fails
-cd /Users/namitthakral/ed-verse/frontend
+cd /Users/namitthakral/kram/frontend
 flutter build web --release
 cp -r build/web/* ../backend/public/dashboard/
 

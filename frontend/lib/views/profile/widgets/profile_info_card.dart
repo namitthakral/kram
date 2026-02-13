@@ -48,16 +48,16 @@ class ProfileInfoCard extends StatelessWidget {
 
           if (user.phone != null) const Divider(height: 24),
 
-          // EdVerse ID
-          if (user.edverseId != null)
+          // Kram ID
+          if (user.kramid != null)
             _InfoRow(
               icon: Icons.badge_outlined,
-              label: context.translate('edverse_id'),
-              value: user.edverseId!,
+              label: context.translate('kram_id'),
+              value: user.kramid!,
               canCopy: true,
             ),
 
-          if (user.edverseId != null) const Divider(height: 24),
+          if (user.kramid != null) const Divider(height: 24),
 
           // Status
           _InfoRow(

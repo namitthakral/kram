@@ -1,6 +1,6 @@
-# EdVerse API Routes Reference
+# Kram API Routes Reference
 
-This document provides a comprehensive overview of all available API endpoints in the EdVerse application, organized by module.
+This document provides a comprehensive overview of all available API endpoints in the Kram application, organized by module.
 
 ## Base Configuration
 
@@ -96,7 +96,7 @@ Parents access their children's data through student endpoints. The backend vali
 final parentService = ParentService();
 
 // Map parent to child
-await parentService.mapParentToChild('CHILD_EDVERSE_ID');
+await parentService.mapParentToChild('CHILD_KRAMID');
 
 // Get child's dashboard stats
 final stats = await parentService.getChildDashboardStats(childUserUuid);

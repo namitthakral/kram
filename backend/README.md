@@ -1,4 +1,4 @@
-# Ed-verse Backend API
+# Kram Backend API
 
 A comprehensive NestJS-based backend API for educational institution management, built with TypeScript, Prisma ORM, and PostgreSQL. Designed specifically for Indian schools, colleges, and universities.
 
@@ -15,7 +15,7 @@ A comprehensive NestJS-based backend API for educational institution management,
 - **📖 Library System** - Book cataloging, issue/return, reservations
 - **🗓️ Timetable Management** - Automated scheduling with conflict detection
 - **💬 Communications Hub** - Unified communications (notices, announcements, alerts) with read tracking
-- **🆔 EdVerse ID System** - Unique institution-wide ID generation
+- **🆔 Kram ID System** - Unique institution-wide ID generation
 - **📋 Question Paper Generator** - Automated question paper generation
 - **🚪 Gate Pass Management** - Digital gate pass requests and approvals
 - **📈 Analytics Dashboard** - Built-in analytics for students and teachers
@@ -55,7 +55,7 @@ Configure your environment variables:
 
 ```env
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/edverse"
+DATABASE_URL="postgresql://username:password@localhost:5432/kram"
 
 # Server
 PORT=3000
@@ -79,7 +79,7 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
-SMTP_FROM="Ed-verse <noreply@edverse.edu>"
+SMTP_FROM="Kram <noreply@kram.edu>"
 ```
 
 ### 3. Database Setup
@@ -138,7 +138,7 @@ src/
 │
 ├── timetable/             # Scheduling & timetable management
 ├── question-paper/        # Question paper generation
-├── id-generation/         # EdVerse ID generation system
+├── id-generation/         # Kram ID generation system
 │   ├── id-generation.service.ts
 │   ├── sequence.service.ts
 │   └── id-config-cache.service.ts
@@ -152,7 +152,7 @@ src/
 │   └── types/            # TypeScript type definitions
 │
 ├── utils/                 # Utility functions
-│   ├── edverse-id.util.ts
+│   ├── kram-id.util.ts
 │   └── id-template.util.ts
 │
 └── main.ts                # Application entry point
@@ -306,7 +306,7 @@ This system uses terminology familiar to Indian educational institutions:
 - `applications` - Student application forms
 - `system_alerts` - System-wide alerts and notifications
 - `institution_grading_config` - Institution-specific grading rules
-- `institution_id_config` - EdVerse ID generation configuration
+- `institution_id_config` - Kram ID generation configuration
 
 ## 🔌 API Endpoints
 
@@ -530,7 +530,7 @@ The backend is organized into the following feature modules:
 | `CommunicationsModule` | Unified communications system | `communications.controller.ts` |
 | `TimetableModule` | Timetable & scheduling | `timetable.controller.ts` |
 | `QuestionPaperModule` | Question paper generation | `question-paper.controller.ts` |
-| `IdGenerationModule` | EdVerse ID generation | (Service only) |
+| `IdGenerationModule` | Kram ID generation | (Service only) |
 | `PrismaModule` | Database access layer | (Service only) |
 
 **Note:** Some features mentioned in older documentation (like separate `assignments`, `examinations`, `attendance`, `fees`, `library`, `analytics` modules) are **integrated into the main modules** (Students, Teachers) rather than being separate modules. The database schema supports these features, but they are accessed through the Students and Teachers controllers.
@@ -551,7 +551,7 @@ The API uses JWT (JSON Web Tokens) for authentication:
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@edverse.edu",
+    "email": "admin@kram.edu",
     "password": "admin123!"
   }'
 ```
@@ -566,7 +566,7 @@ curl -X POST http://localhost:3000/api/auth/login \
     "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
     "user": {
       "id": 1,
-      "email": "admin@edverse.edu",
+      "email": "admin@kram.edu",
       "role": "super_admin"
     }
   }
@@ -612,25 +612,25 @@ After running `npm run db:seed`, you get:
 ### Sample Accounts
 
 ```
-Super Admin:  admin@edverse.edu      / admin123!
-Teacher:      john.doe@edverse.edu   / teacher123!
-Students:     student1@edverse.edu   / student123!
-              student2@edverse.edu   / student123!
-              student3@edverse.edu   / student123!
-              student4@edverse.edu   / student123!
-              student5@edverse.edu   / student123!
+Super Admin:  admin@kram.edu      / admin123!
+Teacher:      john.doe@kram.edu   / teacher123!
+Students:     student1@kram.edu   / student123!
+              student2@kram.edu   / student123!
+              student3@kram.edu   / student123!
+              student4@kram.edu   / student123!
+              student5@kram.edu   / student123!
 Parents:      parent1@email.com      / parent123!
               parent2@email.com      / parent123!
               parent3@email.com      / parent123!
               parent4@email.com      / parent123!
               parent5@email.com      / parent123!
-Librarian:    librarian@edverse.edu  / librarian123!
-Staff:        staff@edverse.edu      / staff123!
+Librarian:    librarian@kram.edu  / librarian123!
+Staff:        staff@kram.edu      / staff123!
 ```
 
 ### Sample Data Includes
 
-- 1 Institution (Ed-verse University)
+- 1 Institution (Kram University)
 - 7 Roles (Super Admin, Admin, Teacher, Student, Parent, Librarian, Staff)
 - 1 Course (B.Sc. Computer Science)
 - 3 Subjects (Programming, Data Structures, Web Development)
@@ -864,7 +864,7 @@ All API responses follow a consistent format:
 psql --version
 
 # Test connection
-psql -h localhost -U username -d edverse
+psql -h localhost -U username -d kram
 
 # Regenerate Prisma client
 npm run db:generate
@@ -955,15 +955,15 @@ This project is licensed under the MIT License.
 ### New API Additions
 - ✅ Communications API (8 endpoints)
 - ✅ Question Paper Generation API
-- ✅ EdVerse ID Generation System
+- ✅ Kram ID Generation System
 - ✅ Enhanced Student Progress Tracking
 - ✅ Staff Management APIs
 
 ## 🆘 Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/namitthakral/ed-verse/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/namitthakral/kram/issues)
 - **Documentation**: Check this README and inline code documentation
-- **Email**: support@edverse.edu
+- **Email**: support@kram.edu
 
 ## 🎓 Learn More
 

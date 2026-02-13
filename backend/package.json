@@ -1,7 +1,7 @@
 {
-  "name": "ed-verse-backend",
+  "name": "kram-backend",
   "version": "1.0.0",
-  "description": "Ed-verse Node.js TypeScript backend API",
+  "description": "Kram Node.js TypeScript backend API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nest start --watch",
@@ -42,9 +42,9 @@
     "@nestjs/passport": "^10.0.2",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^6.0.1",
-    "@nestjs/serve-static": "4.0.2",
+    "@nestjs/serve-static": "^5.0.4",
     "@nestjs/throttler": "^5.0.1",
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "^6.19.2",
     "@types/bcrypt": "^6.0.0",
     "axios": "^1.13.4",
     "bcrypt": "^6.0.0",

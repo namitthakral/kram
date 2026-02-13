@@ -15,7 +15,7 @@ class RoleDefinition {
   final bool usesLocalDatabase;
 }
 
-/// Role constants for the EdVerse application
+/// Role constants for the Kram application
 /// ⚠️ CRITICAL: NEVER CHANGE THESE ROLE IDs - They match the database schema
 /// 1 = super_admin, 2 = admin, 3 = student, 4 = parent, 5 = teacher, 6 = librarian, 7 = staff
 class RoleConstants {

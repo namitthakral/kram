@@ -1,7 +1,7 @@
 {
-  "name": "ed-verse",
+  "name": "kram",
   "version": "1.0.0",
-  "description": "Ed-verse monorepo with Node.js TypeScript backend and Flutter frontend",
+  "description": "Kram monorepo with Node.js TypeScript backend and Flutter frontend",
   "private": true,
   "workspaces": [
     "backend",

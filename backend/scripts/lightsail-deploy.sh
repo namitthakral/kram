@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# Ed-Verse Backend - AWS Lightsail Deployment Script
+# Kram Backend - AWS Lightsail Deployment Script
 # ============================================================================
 
 set -e  # Exit on error
@@ -38,7 +38,7 @@ POWER="micro"
 SCALE=1
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}Ed-Verse Lightsail Deployment${NC}"
+echo -e "${BLUE}Kram Lightsail Deployment${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 

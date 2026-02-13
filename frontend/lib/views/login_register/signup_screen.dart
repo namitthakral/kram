@@ -57,7 +57,7 @@ class SignUpScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context, ThemeProvider themeProvider) =>
       Column(
         children: [
-          // Logo with EdVerse text
+          // Logo with Kram text
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -76,7 +76,7 @@ class SignUpScreen extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'EdVerse',
+                'Kram',
                 style: context.textTheme.titleXl.copyWith(
                   fontWeight: FontWeight.bold,
                   color: CustomAppColors.blue500,

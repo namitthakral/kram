@@ -1,6 +1,6 @@
 # Library Management Module
 
-A comprehensive library management module for the EdVerse educational platform. This module provides a complete interface for librarians to manage books, track issues, monitor overdue books, and view analytics.
+A comprehensive library management module for the Kram educational platform. This module provides a complete interface for librarians to manage books, track issues, monitor overdue books, and view analytics.
 
 ## Features
 
@@ -68,7 +68,7 @@ Both providers are registered globally in `main.dart`.
 
 ## Design Pattern
 
-This module follows the same architectural patterns as other modules in the EdVerse app:
+This module follows the same architectural patterns as other modules in the Kram app:
 
 1. **Models** - Define data structures
 2. **Providers** - Manage state and business logic
@@ -173,7 +173,7 @@ No additional packages required - uses existing app dependencies.
 
 ## Support
 
-For issues or questions about the library module, please refer to the main EdVerse documentation or contact the development team.
+For issues or questions about the library module, please refer to the main Kram documentation or contact the development team.
 
 
 

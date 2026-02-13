@@ -77,7 +77,7 @@ async function bootstrap() {
     res.json({
       status: 'OK',
       timestamp: new Date().toISOString(),
-      service: 'ed-verse-backend',
+      service: 'kram-backend',
       version: '1.0.0',
       environment: process.env.NODE_ENV || 'development',
     })
@@ -86,7 +86,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3000
   await app.listen(port, '0.0.0.0')
 
-  console.log(`🚀 Ed-verse NestJS server running on port ${port}`)
+  console.log(`🚀 Kram NestJS server running on port ${port}`)
   console.log(`🔐 Listening on 0.0.0.0:${port}`)
   console.log(`📊 Health check: http://localhost:${port}/health`)
   console.log(`🔌 API endpoints: http://localhost:${port}/auth/login, /students, etc.`)

@@ -1,6 +1,6 @@
-# AI Integration Guide (Ed-Verse)
+# AI Integration Guide (Kram)
 
-This document details the architecture and usage of the AI Assistant module integrated into Ed-Verse.
+This document details the architecture and usage of the AI Assistant module integrated into Kram.
 
 ## 🧠 Architecture Overview
 

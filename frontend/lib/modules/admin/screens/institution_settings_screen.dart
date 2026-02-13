@@ -67,7 +67,7 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('edverse_institution'),
+        institutionName: context.translate('kram_institution'),
         onNotificationIconPressed: () {},
       ),
       child: _isLoading

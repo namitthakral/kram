@@ -35,7 +35,7 @@ class AdminDashboardScreen extends StatelessWidget {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: 'EdVerse Institution', // TODO: Get from user data
+        institutionName: 'Kram Institution', // TODO: Get from user data
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(

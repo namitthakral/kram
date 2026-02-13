@@ -61,6 +61,13 @@ export class UsersController {
     return this.usersService.findOne(user.id)
   }
 
+  @Get('kramid/:kramid')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher', 'staff')
+  findByKramId(@Param('kramid') kramid: string) {
+    return this.usersService.findByKramId(kramid)
+  }
+
   @Get(':user_uuid')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')

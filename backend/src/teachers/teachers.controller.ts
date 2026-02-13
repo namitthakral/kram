@@ -44,7 +44,7 @@ export class TeachersController {
   constructor(private readonly teachersService: TeachersService) { }
 
   // NOTE: POST /teachers has been removed. Use POST /users with roleId=teacher instead.
-  // This unified approach handles EdVerse ID generation and profile creation in one step.
+  // This unified approach handles Kram ID generation and profile creation in one step.
 
   @Get()
   @UseGuards(RolesGuard)

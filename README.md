@@ -1,4 +1,4 @@
-# Ed-verse 🎓
+# Kram 🎓
 
 A comprehensive educational management platform built with modern technologies, designed specifically for Indian schools, colleges, and universities.
 
@@ -15,7 +15,7 @@ A comprehensive educational management platform built with modern technologies, 
 - **Timetable Management** - Automated scheduling with conflict detection
 - **Communications Hub** - Unified communications (notices, announcements, alerts) with read tracking
 - **Analytics Dashboard** - Built-in analytics for students, teachers, and administrators
-- **EdVerse ID System** - Institution-wide unique ID generation
+- **Kram ID System** - Institution-wide unique ID generation
 - **Question Paper Generator** - Automated question paper generation
 - **Gate Pass System** - Digital gate pass requests and approvals
 - **Staff Management** - Attendance, leave, and assignment tracking for staff
@@ -56,7 +56,7 @@ This platform uses terminology familiar to Indian educational institutions:
 ## 📁 Project Structure
 
 ```
-ed-verse/
+kram/
 ├── backend/                    # Node.js + NestJS API
 │   ├── src/
 │   │   ├── auth/              # Authentication & authorization
@@ -69,7 +69,7 @@ ed-verse/
 │   │   ├── communications/    # Unified communications (notices, announcements, alerts)
 │   │   ├── timetable/         # Scheduling & timetable management
 │   │   ├── question-paper/    # Question paper generation
-│   │   ├── id-generation/     # EdVerse ID generation system
+│   │   ├── id-generation/     # Kram ID generation system
 │   │   ├── prisma/            # Database access layer
 │   │   ├── common/            # Shared DTOs and types
 │   │   └── utils/             # Utility functions
@@ -114,8 +114,8 @@ ed-verse/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/namitthakral/ed-verse.git
-cd ed-verse
+git clone https://github.com/namitthakral/kram.git
+cd kram
 ```
 
 ### 2. Backend Setup
@@ -149,28 +149,40 @@ cd frontend
 # Install dependencies
 flutter pub get
 
-# Run on web
-flutter run -d chrome
+# Run with local backend (recommended for development)
+flutter run --dart-define=BASE_URL=http://localhost:3000
+
+# Or use VS Code launch configurations:
+# 1. Open the project in VS Code
+# 2. Press F5 and select "Development (Local API)"
+
+# Run on web with local backend
+flutter run -d chrome --dart-define=BASE_URL=http://localhost:3000
 
 # Run on mobile (with device/simulator connected)
-flutter run
+flutter run --dart-define=BASE_URL=http://localhost:3000
 ```
+
+**⚠️ Important:** By default, the frontend connects to the **production API** (`https://api.kramedu.in`). 
+Always specify the local backend URL during development to avoid calling production.
+
+See [frontend/ENVIRONMENT_SETUP.md](frontend/ENVIRONMENT_SETUP.md) for detailed environment configuration.
 
 ## 📝 Sample Accounts
 
 After running the seed script, you can login with these accounts:
 
 ```
-Super Admin:  admin@edverse.edu      / admin123!
-Teacher:      john.doe@edverse.edu   / teacher123!
-Students:     student1@edverse.edu   / student123!
-              student2@edverse.edu   / student123!
-              ...student5@edverse.edu
+Super Admin:  admin@kram.edu      / admin123!
+Teacher:      john.doe@kram.edu   / teacher123!
+Students:     student1@kram.edu   / student123!
+              student2@kram.edu   / student123!
+              ...student5@kram.edu
 Parents:      parent1@email.com      / parent123!
               parent2@email.com      / parent123!
               ...parent5@email.com
-Librarian:    librarian@edverse.edu  / librarian123!
-Staff:        staff@edverse.edu      / staff123!
+Librarian:    librarian@kram.edu  / librarian123!
+Staff:        staff@kram.edu      / staff123!
 ```
 
 ## 🎯 Key Features Breakdown
@@ -181,7 +193,7 @@ Staff:        staff@edverse.edu      / staff123!
 - ✅ Course and subject setup
 - ✅ Fee structure configuration
 - ✅ Academic year & semester management
-- ✅ EdVerse ID configuration and generation
+- ✅ Kram ID configuration and generation
 - ✅ Comprehensive analytics dashboard
 - ✅ System-wide communications (notices, announcements, alerts)
 - ✅ Staff management and assignments
@@ -378,7 +390,7 @@ flutter build ios --release
 
 Each major feature is documented inline in the codebase:
 - **Authentication** - JWT strategy, guards, decorators (`src/auth/`)
-- **EdVerse ID Generation** - Unique ID system (`src/id-generation/`)
+- **Kram ID Generation** - Unique ID system (`src/id-generation/`)
 - **Student Progress Tracking** - Grading and progress calculation (`src/students/utils/`)
 - **Communications System** - Notices, announcements, alerts (`src/communications/`)
 - **Question Paper Generation** - Automated paper creation (`src/question-paper/`)
@@ -436,6 +448,11 @@ If port 3000 is already in use, change it in `.env`:
 PORT=3001
 ```
 
+### Frontend Calling Wrong API
+The frontend now defaults to local development (`http://localhost:3000`):
+- **Local development**: Just run `flutter run` (no flags needed)
+- **Production testing**: Run `flutter run --dart-define=BASE_URL=https://api.kramedu.in`
+
 ### Flutter Issues
 ```bash
 # Clear Flutter cache
@@ -460,9 +477,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/namitthakral/ed-verse/issues)
+- **Issues**: [GitHub Issues](https://github.com/namitthakral/kram/issues)
 - **Documentation**: Check the `docs/` folder
-- **Email**: support@edverse.edu
+- **Email**: support@kram.edu
 
 ## 📊 Project Statistics
 
@@ -502,7 +519,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### New Features
 - ✅ Communications API with read tracking
-- ✅ EdVerse ID generation system
+- ✅ Kram ID generation system
 - ✅ Question paper generator
 - ✅ Comprehensive student progress tracking
 - ✅ Staff management module

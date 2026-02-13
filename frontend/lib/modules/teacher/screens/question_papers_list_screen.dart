@@ -346,7 +346,7 @@ class _QuestionPapersListScreenState extends State<QuestionPapersListScreen> {
     }
 
     return QuestionPaperTemplate(
-      schoolName: 'EdVerse Academy', // TODO: Fetch from profile
+      schoolName: 'Kram Academy', // TODO: Fetch from profile
       schoolAddress: 'Digital Campus',
       examName: json['title'] ?? json['examName'] ?? 'Examination',
       className: json['courseName'] ?? 'Class',

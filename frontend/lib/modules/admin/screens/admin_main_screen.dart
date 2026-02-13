@@ -25,7 +25,7 @@ class AdminMainScreen extends StatelessWidget {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('edverse_institution'),
+        institutionName: context.translate('kram_institution'),
         onNotificationIconPressed: () {},
       ),
       child: CustomScrollView(

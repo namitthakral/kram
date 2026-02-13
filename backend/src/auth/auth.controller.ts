@@ -58,7 +58,7 @@ export class AuthController {
     @CurrentUser() user: User,
     @Body() mappingDto: ParentChildMappingDto
   ) {
-    return this.authService.mapParentToChild(user.id, mappingDto.childEdverseId)
+    return this.authService.mapParentToChild(user.id, mappingDto.childKramid)
   }
 
   @UseGuards(JwtAuthGuard)

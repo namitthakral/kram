@@ -1,5 +1,5 @@
 # ============================================================================
-# Ed-Verse Backend - Production Dockerfile for AWS Lightsail
+# Kram Backend - Production Dockerfile for AWS Lightsail
 # ============================================================================
 
 # Stage 1: Builder

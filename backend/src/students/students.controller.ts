@@ -44,7 +44,7 @@ export class StudentsController {
   }
 
   // NOTE: POST /students has been removed. Use POST /users with roleId=student instead.
-  // This unified approach handles EdVerse ID generation and profile creation in one step.
+  // This unified approach handles Kram ID generation and profile creation in one step.
 
   @Patch(':user_uuid')
   @UseGuards(RolesGuard)

@@ -205,7 +205,7 @@ export interface ReportCardExamSummary {
 
 export interface ReportCardStudentInfo {
   name: string
-  edverseId: string | null
+  kramid: string | null
   admissionNumber: string
   rollNumber: string | null
   courseName: string | null

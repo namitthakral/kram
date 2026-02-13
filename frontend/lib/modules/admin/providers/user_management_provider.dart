@@ -251,13 +251,13 @@ class UserManagementProvider extends ChangeNotifier {
     }
   }
 
-  /// Get user by EdVerse ID
-  Future<Map<String, dynamic>?> getUserByEdverseId(String edverseId) async {
+  /// Get user by Kram ID
+  Future<Map<String, dynamic>?> getUserByKramid(String kramid) async {
     try {
       setLoading(value: true);
       setError(null);
 
-      final response = await _adminService.getUserByEdverseId(edverseId);
+      final response = await _adminService.getUserByKramid(kramid);
 
       if (response['success'] == true) {
         return response['data'] as Map<String, dynamic>?;

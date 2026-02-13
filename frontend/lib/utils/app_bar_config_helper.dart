@@ -82,7 +82,7 @@ class AppBarConfigHelper {
         return AppBarConfig.superAdmin(
           userInitials: userInitials,
           userName: userName,
-          systemName: 'EdVerse',
+          systemName: 'Kram',
           onNotificationIconPressed: onNotificationIconPressed,
         );
 

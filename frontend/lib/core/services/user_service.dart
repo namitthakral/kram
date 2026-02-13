@@ -7,7 +7,7 @@ import 'api_service.dart';
 ///
 /// Available endpoints (based on backend structure):
 /// - GET /users/profile - Get own profile
-/// - GET /users/edverse-id/:edverseId - Get user by EdVerse ID
+/// - GET /users/kramid/:kramid - Get user by Kram ID
 /// - GET /users/:uuid - Get user by UUID (admin only)
 /// - PATCH /users/:uuid - Update user profile
 /// - GET /users - Get all users (admin only)
@@ -49,15 +49,15 @@ class UserService {
     }
   }
 
-  /// Get user by EdVerse ID
+  /// Get user by Kram ID
   ///
-  /// Endpoint: GET /users/edverse-id/:edverseId
+  /// Endpoint: GET /users/kramid/:kramid
   ///
-  /// [edverseId] - The EdVerse ID to search for
-  Future<User> getUserByEdverseId(String edverseId) async {
+  /// [kramid] - The Kram ID to search for
+  Future<User> getUserByKramid(String kramid) async {
     try {
       final response = await _apiService.dio.get(
-        '/users/edverse-id/$edverseId',
+        '/users/kramid/$kramid',
       );
 
       if (response.statusCode == 200) {
@@ -72,7 +72,7 @@ class UserService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw Exception('User not found with EdVerse ID: $edverseId');
+        throw Exception('User not found with Kram ID: $kramid');
       } else if (e.response?.statusCode == 401) {
         // Use the custom error message from the API service
         final errorMsg = e.error?.toString() ?? 'Unauthorized access';

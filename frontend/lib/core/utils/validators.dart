@@ -1,4 +1,4 @@
-enum LoginIdentifierType { email, phone, edverseId }
+enum LoginIdentifierType { email, phone, kramid }
 
 class LoginIdentifier {
   LoginIdentifier({
@@ -10,7 +10,7 @@ class LoginIdentifier {
 }
 
 class Validators {
-  /// Detects whether the input is an email, phone number, or edverseId
+  /// Detects whether the input is an email, phone number, or kramid
   /// Returns a LoginIdentifier with the detected type and value
   static LoginIdentifier detectLoginIdentifier(String input) {
     final trimmedInput = input.trim();
@@ -36,9 +36,9 @@ class Validators {
       );
     }
 
-    // Default to edverseId for any other format
+    // Default to kramid for any other format
     return LoginIdentifier(
-      type: LoginIdentifierType.edverseId,
+      type: LoginIdentifierType.kramid,
       value: trimmedInput,
     );
   }

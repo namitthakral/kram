@@ -219,7 +219,7 @@ export class TeachersService {
             select: {
               id: true,
               uuid: true,
-              edverseId: true,
+              kramid: true,
               name: true,
               email: true,
               phone: true,
@@ -260,7 +260,7 @@ export class TeachersService {
           select: {
             id: true,
             uuid: true,
-            edverseId: true,
+            kramid: true,
             name: true,
             email: true,
             phone: true,
@@ -316,7 +316,7 @@ export class TeachersService {
           select: {
             id: true,
             uuid: true,
-            edverseId: true,
+            kramid: true,
             name: true,
             email: true,
             phone: true,
@@ -4485,7 +4485,7 @@ export class TeachersService {
           select: {
             id: true,
             uuid: true,
-            edverseId: true,
+            kramid: true,
             name: true,
             email: true,
           },
@@ -4654,7 +4654,7 @@ export class TeachersService {
       user: {
         id: number
         uuid: string
-        edverseId: string | null
+        kramid: string | null
         name: string
         email: string
       }
@@ -4735,7 +4735,7 @@ export class TeachersService {
     // Build student info
     const studentInfo: ReportCardStudentInfo = {
       name: student.user.name,
-      edverseId: student.user.edverseId,
+      kramid: student.user.kramid,
       admissionNumber: student.admissionNumber,
       rollNumber: student.rollNumber,
       courseName: student.course?.name || null,

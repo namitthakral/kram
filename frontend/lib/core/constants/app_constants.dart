@@ -1,16 +1,26 @@
 class AppConstants {
   // App Information
-  static const String appName = 'EdVerse';
+  static const String appName = 'Kram';
   static const String appVersion = '1.0.0';
 
   // API Configuration
   // baseUrl is set via --dart-define at launch time
-  // Defaults to production if not specified
-  // Local: 'http://localhost:3000'
-  // Production: 'https://api.kramedu.in'
+  // 
+  // IMPORTANT: Defaults to LOCAL DEVELOPMENT if not specified!
+  // 
+  // For local development (default):
+  //   Just run: flutter run
+  //   OR use VS Code launch configuration: "Development (Local API)"
+  //   OR run: flutter run --dart-define=BASE_URL=http://localhost:3000
+  // 
+  // For production:
+  //   Use VS Code launch configuration: "Production"
+  //   OR run: flutter run --dart-define=BASE_URL=https://api.kramedu.in
+  // 
+  // See .vscode/launch.json for pre-configured environments
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',
-    defaultValue: 'https://api.kramedu.in',
+    defaultValue: 'http://localhost:3000', // Default to local for development
   );
   static const String apiVersion = ''; // No prefix needed - routes are at root
   static const Duration apiTimeout = Duration(seconds: 30);

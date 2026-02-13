@@ -1,5 +1,5 @@
-import 'package:ed_verse/provider/theme_provider.dart';
-import 'package:ed_verse/widgets/custom_widgets/custom_date_picker_field.dart';
+import 'package:kram/provider/theme_provider.dart';
+import 'package:kram/widgets/custom_widgets/custom_date_picker_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';

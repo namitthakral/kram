@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# Ed-Verse - Complete Production Deployment Script
+# Kram - Complete Production Deployment Script
 # ============================================================================
 # This script:
 # 1. Starts AWS services (RDS database)
@@ -35,7 +35,7 @@ AWS_PROFILE="kram"
 
 echo ""
 echo -e "${BOLD}${CYAN}========================================${NC}"
-echo -e "${BOLD}${CYAN}🚀 Ed-Verse Production Deployment${NC}"
+echo -e "${BOLD}${CYAN}🚀 Kram Production Deployment${NC}"
 echo -e "${BOLD}${CYAN}========================================${NC}"
 echo ""
 
@@ -250,7 +250,7 @@ echo -e "  🗄️  Database: ${BLUE}kram-db (AWS RDS)${NC}"
 echo -e "  📦 Container: ${BLUE}kram (AWS Lightsail)${NC}"
 echo ""
 echo -e "${BOLD}Local Development:${NC}"
-echo -e "  💻 Database: ${GREEN}localhost:5432/edverse${NC}"
+echo -e "  💻 Database: ${GREEN}localhost:5432/kram${NC}"
 echo -e "  📁 Config: ${GREEN}.env (unchanged)${NC}"
 echo -e "  ✅ Your local dev environment is still working!${NC}"
 echo ""

@@ -65,7 +65,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('edverse_institution'),
+        institutionName: context.translate('kram_institution'),
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(

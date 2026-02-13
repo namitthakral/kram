@@ -35,7 +35,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
       appBarConfig: AppBarConfig.superAdmin(
         userInitials: userInitials,
         userName: userName,
-        systemName: 'EdVerse Platform',
+        systemName: 'Kram Platform',
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(

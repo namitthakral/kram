@@ -14,7 +14,7 @@ The splash screen now includes debug code that clears stored data on every launc
 
 1. Open Android simulator
 2. Go to Settings > Apps
-3. Find "EdVerse" app
+3. Find "Kram" app
 4. Tap "Storage"
 5. Tap "Clear Data" or "Clear Storage"
 
@@ -30,7 +30,7 @@ flutter run -d android
 ### Option 4: Use ADB Command
 
 ```bash
-adb shell pm clear com.example.ed_verse
+adb shell pm clear com.example.kram
 ```
 
 ## For Production

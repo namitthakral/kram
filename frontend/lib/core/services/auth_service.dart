@@ -413,11 +413,11 @@ class AuthService {
   ///
   /// Endpoint: POST /auth/activate-account
   ///
-  /// [edverseId] - EdVerse ID of the user
+  /// [kramid] - Kram ID of the user
   /// [tempPassword] - Temporary password received
   /// [newPassword] - New password to set
   Future<void> activateAccount({
-    required String edverseId,
+    required String kramid,
     required String tempPassword,
     required String newPassword,
   }) async {
@@ -425,7 +425,7 @@ class AuthService {
       final response = await _apiService.dio.post(
         '/auth/activate-account',
         data: {
-          'edverseId': edverseId,
+          'kramid': kramid,
           'tempPassword': tempPassword,
           'newPassword': newPassword,
         },

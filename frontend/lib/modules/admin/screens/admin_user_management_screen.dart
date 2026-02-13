@@ -45,7 +45,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('edverse_institution'),
+        institutionName: context.translate('kram_institution'),
         onNotificationIconPressed: () {},
       ),
       floatingActionButton: FloatingActionButton(
@@ -160,7 +160,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
         userData['name'] ?? '${userData['firstName']} ${userData['lastName']}';
     final email = userData['email'] ?? '';
     final role = userData['role']?['roleName'] ?? 'No Role';
-    final edverseId = userData['edverseId'] ?? '';
+    final kramid = userData['kramid'] ?? '';
     final status = userData['status'] ?? 'UNKNOWN';
 
     return Card(
@@ -179,7 +179,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                   style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
                 ),
                 const SizedBox(width: 8),
-                Text(edverseId, style: const TextStyle(fontSize: 12)),
+                Text(kramid, style: const TextStyle(fontSize: 12)),
               ],
             ),
           ],

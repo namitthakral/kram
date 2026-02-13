@@ -184,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHeader(BuildContext context, ThemeProvider themeProvider) =>
       Column(
         children: [
-          // Logo with EdVerse text
+          // Logo with Kram text
           Image.asset(CustomImages.appLogo, width: 150, height: 150),
           const SizedBox(height: 24),
 
@@ -262,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-              // Login Identifier field (EdVerse ID, Email, or Phone)
+              // Login Identifier field (Kram ID, Email, or Phone)
               Text(
                 context.translate('login_identifier'),
                 style: context.textTheme.labelBase.copyWith(

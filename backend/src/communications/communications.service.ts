@@ -611,7 +611,7 @@ export class CommunicationsService {
                 id: true,
                 name: true,
                 email: true,
-                edverseId: true,
+                kramid: true,
               },
             },
           },

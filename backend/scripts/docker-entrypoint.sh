@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================================================
-# Ed-Verse Backend - Docker Entrypoint Script
+# Kram Backend - Docker Entrypoint Script
 # ============================================================================
 # NOTE: This script does NOT run migrations!
 # Migrations should be run BEFORE deployment using deploy-to-production.sh
@@ -9,7 +9,7 @@
 set -e  # Exit immediately if any command fails
 
 echo "=================================================="
-echo "🚀 Ed-Verse Backend Starting..."
+echo "🚀 Kram Backend Starting..."
 echo "=================================================="
 echo ""
 

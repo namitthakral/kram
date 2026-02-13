@@ -279,8 +279,8 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
 
             if (_isExtended) ...[
               const SizedBox(height: 16),
-              // EdVerse ID with modern styling
-              if (user?.edverseId != null) ...[
+              // Kram ID with modern styling
+              if (user?.kramid != null) ...[
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
@@ -297,7 +297,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                   child: Column(
                     children: [
                       Text(
-                        'EdVerse ID',
+                        'Kram ID',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: CustomAppColors.primary.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
@@ -308,7 +308,7 @@ class CustomNavigationRailState extends State<CustomNavigationRail> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        user!.edverseId!,
+                        user!.kramid!,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: CustomAppColors.primary,
                           fontWeight: FontWeight.w700,

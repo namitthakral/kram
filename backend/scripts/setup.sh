@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Ed-verse Backend Setup Script
-echo "🚀 Setting up Ed-verse Backend..."
+# Kram Backend Setup Script
+echo "🚀 Setting up Kram Backend..."
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
@@ -62,9 +62,9 @@ echo "4. Run 'npm run db:seed' to populate with sample data"
 echo "5. Run 'npm run dev' to start the development server"
 echo ""
 echo "Sample accounts will be created:"
-echo "- Super Admin: admin@edverse.edu / admin123!"
-echo "- Teacher: john.doe@edverse.edu / teacher123!"
-echo "- Student: jane.smith@edverse.edu / student123!"
+echo "- Super Admin: admin@kram.edu / admin123!"
+echo "- Teacher: john.doe@kram.edu / teacher123!"
+echo "- Student: jane.smith@kram.edu / student123!"
 echo "- Parent: robert.smith@email.com / parent123!"
 echo ""
 echo "API will be available at: http://localhost:3000"

@@ -10,7 +10,7 @@
  */
 
 import { PrismaClient } from '@prisma/client'
-import { generateInstitutionCode } from '../utils/edverse-id.util'
+import { generateInstitutionCode } from '../utils/kramid.util'
 
 const prisma = new PrismaClient()
 

@@ -102,8 +102,8 @@ class ProfileHeader extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-              // EdVerse ID
-              if (user!.edverseId != null)
+              // Kram ID
+              if (user!.kramid != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -123,7 +123,7 @@ class ProfileHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        user!.edverseId!,
+                        user!.kramid!,
                         style: context.textTheme.labelBase.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,

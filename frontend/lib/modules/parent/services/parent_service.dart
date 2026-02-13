@@ -17,16 +17,16 @@ class ParentService {
 
   final ApiService _apiService = ApiService();
 
-  /// Map parent to child using EdVerse ID
+  /// Map parent to child using Kram ID
   ///
   /// Endpoint: POST /auth/map-parent-child
   ///
-  /// [childEdverseId] - The EdVerse ID of the child to map
-  Future<Map<String, dynamic>> mapParentToChild(String childEdverseId) async {
+  /// [childKramid] - The Kram ID of the child to map
+  Future<Map<String, dynamic>> mapParentToChild(String childKramid) async {
     try {
       final response = await _apiService.dio.post(
         '/auth/map-parent-child',
-        data: {'childEdverseId': childEdverseId},
+        data: {'childKramid': childKramid},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -41,9 +41,9 @@ class ParentService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw Exception('Child not found with the provided EdVerse ID');
+        throw Exception('Child not found with the provided Kram ID');
       } else if (e.response?.statusCode == 400) {
-        throw Exception('Invalid child EdVerse ID or mapping already exists');
+        throw Exception('Invalid child Kram ID or mapping already exists');
       } else if (e.response?.statusCode == 401) {
         throw Exception('Unauthorized access');
       } else {

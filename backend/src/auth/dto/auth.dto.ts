@@ -19,7 +19,7 @@ export class LoginDto {
 
   @IsOptional()
   @IsString()
-  edverseId?: string
+  kramid?: string
 
   @IsString()
   @MinLength(1)
@@ -56,7 +56,7 @@ export class SelfRegistrationDto {
 
   @IsOptional()
   @IsString()
-  childEdverseId?: string // For parents mapping to existing students
+  childKramid?: string // For parents mapping to existing students
 
   @IsOptional()
   @IsDateString()
@@ -74,12 +74,12 @@ export class ChangePasswordDto {
 
 export class ParentChildMappingDto {
   @IsString()
-  childEdverseId: string
+  childKramid: string
 }
 
 export class ActivateAccountDto {
   @IsString()
-  edverseId: string
+  kramid: string
 
   @IsString()
   temporaryPassword: string

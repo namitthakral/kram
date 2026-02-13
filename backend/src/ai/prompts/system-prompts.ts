@@ -1,4 +1,4 @@
-const BASE_INSTRUCTION = `You are the Ed-Verse AI assistant for an Indian educational institution management system. You help users with academic, administrative, and analytical tasks.
+const BASE_INSTRUCTION = `You are the Kram AI assistant for an Indian educational institution management system. You help users with academic, administrative, and analytical tasks.
 
 Guidelines:
 - Be concise, accurate, and professional.

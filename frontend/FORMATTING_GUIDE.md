@@ -1,4 +1,4 @@
-# Dart Formatting Guide for EdVerse Frontend
+# Dart Formatting Guide for Kram Frontend
 
 ## Important Note
 

@@ -558,13 +558,13 @@ class AdminService {
     }
   }
 
-  /// Get user by EdVerse ID
+  /// Get user by Kram ID
   ///
-  /// Endpoint: GET /admin/users/edverse-id/:edverseId
-  Future<Map<String, dynamic>> getUserByEdverseId(String edverseId) async {
+  /// Endpoint: GET /admin/users/kramid/:kramid
+  Future<Map<String, dynamic>> getUserByKramid(String kramid) async {
     try {
       final response = await _apiService.dio.get(
-        '/admin/users/edverse-id/$edverseId',
+        '/admin/users/kramid/$kramid',
       );
 
       if (response.statusCode == 200) {
@@ -579,7 +579,7 @@ class AdminService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        throw Exception('User not found with EdVerse ID: $edverseId');
+        throw Exception('User not found with Kram ID: $kramid');
       }
       throw Exception('Failed to load user: ${e.message}');
     } on Exception catch (e) {

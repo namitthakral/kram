@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "6b340974-2f46-44c0-8072-8ba912b8757b",
-    "name": "Ed-Verse API",
-    "description": "Complete API collection for Ed-Verse Education Management System",
+    "name": "Kram API",
+    "description": "Complete API collection for Kram Education Management System",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "46066551"
   },
@@ -53,7 +53,7 @@
               },
               "status": "Created",
               "code": 201,
-              "body": "{\n    \"success\": true,\n    \"message\": \"User registered successfully\",\n    \"data\": {\n        \"id\": 42,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"edverseId\": \"EDV-P-2025-000001\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"phoneNumber\": \"1234567890\",\n        \"role\": {\n            \"id\": 3,\n            \"roleName\": \"parent\",\n            \"description\": \"Parent/Guardian\",\n            \"permissions\": [\"canViewOwnData\", \"canViewChildData\"]\n        },\n        \"status\": \"ACTIVE\",\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
+              "body": "{\n    \"success\": true,\n    \"message\": \"User registered successfully\",\n    \"data\": {\n        \"id\": 42,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"kramid\": \"EDU-P-2025-000001\",\n        \"firstName\": \"John\",\n        \"lastName\": \"Doe\",\n        \"name\": \"John Doe\",\n        \"email\": \"john.doe@example.com\",\n        \"phoneNumber\": \"1234567890\",\n        \"role\": {\n            \"id\": 3,\n            \"roleName\": \"parent\",\n            \"description\": \"Parent/Guardian\",\n            \"permissions\": [\"canViewOwnData\", \"canViewChildData\"]\n        },\n        \"status\": \"ACTIVE\",\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
             }
           ]
         },
@@ -88,7 +88,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@edverse.edu\",\n  \"password\": \"admin123!\"\n}"
+              "raw": "{\n  \"email\": \"admin@kram.edu\",\n  \"password\": \"admin123!\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/auth/login",
@@ -112,7 +112,7 @@
           "response": []
         },
         {
-          "name": "Login with EdVerse ID",
+          "name": "Login with Kram ID",
           "request": {
             "method": "POST",
             "header": [
@@ -123,7 +123,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"edverseId\": \"EDV-S-2024-000001\",\n  \"password\": \"NAMI2025\"\n}"
+              "raw": "{\n  \"kramid\": \"EDU-S-2024-000001\",\n  \"password\": \"NAMI2025\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/auth/login",
@@ -208,7 +208,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"edverseId\": \"DPS-S25-K8M2\",\n    \"temporaryPassword\": \"Doe@John123\",\n    \"newPassword\": \"MyNewSecurePass123!\"\n}"
+              "raw": "{\n    \"kramid\": \"DPS-S25-K8M2\",\n    \"temporaryPassword\": \"Doe@John123\",\n    \"newPassword\": \"MyNewSecurePass123!\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/auth/activate-account",
@@ -262,14 +262,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"childEdverseId\": \"DPS-S25-K8M2\"\n}"
+              "raw": "{\n    \"childKramid\": \"DPS-S25-K8M2\"\n}"
             },
             "url": {
               "raw": "{{api_url}}/auth/map-parent-child",
               "host": ["{{api_url}}"],
               "path": ["auth", "map-parent-child"]
             },
-            "description": "Map a parent to their child using the child's EdVerse ID. For parent users only."
+            "description": "Map a parent to their child using the child's Kram ID. For parent users only."
           },
           "response": []
         },
@@ -603,7 +603,7 @@
               },
               "status": "Created",
               "code": 201,
-              "body": "{\n    \"success\": true,\n    \"message\": \"Institutional user created successfully\",\n    \"data\": {\n        \"id\": 43,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n        \"edverseId\": \"EDV-S-2025-000032\",\n        \"firstName\": \"Jane\",\n        \"lastName\": \"Smith\",\n        \"name\": \"Jane Smith\",\n        \"email\": \"jane.smith@school.edu\",\n        \"phoneNumber\": \"9876543210\",\n        \"role\": {\n            \"id\": 1,\n            \"roleName\": \"student\",\n            \"description\": \"Student\",\n            \"permissions\": [\"canViewOwnData\", \"canSubmitAssignments\"]\n        },\n        \"status\": \"INACTIVE\",\n        \"temporaryPassword\": \"JANE2025\",\n        \"mustChangePassword\": true,\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
+              "body": "{\n    \"success\": true,\n    \"message\": \"Institutional user created successfully\",\n    \"data\": {\n        \"id\": 43,\n        \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n        \"kramid\": \"EDU-S-2025-000032\",\n        \"firstName\": \"Jane\",\n        \"lastName\": \"Smith\",\n        \"name\": \"Jane Smith\",\n        \"email\": \"jane.smith@school.edu\",\n        \"phoneNumber\": \"9876543210\",\n        \"role\": {\n            \"id\": 1,\n            \"roleName\": \"student\",\n            \"description\": \"Student\",\n            \"permissions\": [\"canViewOwnData\", \"canSubmitAssignments\"]\n        },\n        \"status\": \"INACTIVE\",\n        \"temporaryPassword\": \"JANE2025\",\n        \"mustChangePassword\": true,\n        \"createdAt\": \"2025-10-30T10:00:00.000Z\"\n    }\n}"
             }
           ]
         },
@@ -1127,7 +1127,7 @@
               "host": ["{{api_url}}"],
               "path": ["users"]
             },
-            "description": "**Unified User Creation API** - Creates any user type with role-specific profile in one step.\n\n**Role IDs:**\n- 1: Student (studentData optional)\n- 2: Teacher (teacherData optional)\n- 3: Parent (requires parentData with childEdverseId)\n- 4: Staff (requires staffData with staffType + designation)\n- 5: Admin\n- 6: Super Admin\n\n**Auto-Generated Fields:**\n- EdVerse ID (always)\n- Temporary password (if not provided)\n- Admission Number (for students)\n- Roll Number (for students with section)\n- Employee ID (for teachers/staff)\n\n**Example payloads:**\n\n**Student (roleId: 1) - Minimal:**\n```json\n{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"roleId\": 1,\n  \"institutionId\": 1,\n  \"studentData\": {\n    \"courseId\": 1,\n    \"section\": \"A\"\n  }\n}\n```\n\n**Teacher (roleId: 2) - Minimal:**\n```json\n{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane@example.com\",\n  \"roleId\": 2,\n  \"institutionId\": 1,\n  \"teacherData\": {\n    \"designation\": \"Professor\"\n  }\n}\n```\n\n**Parent (roleId: 3):**\n```json\n{\n  \"parentData\": {\n    \"childEdverseId\": \"EDV-S-2024-000001\",\n    \"relation\": \"FATHER\"\n  }\n}\n```\n\n**Staff (roleId: 4):**\n```json\n{\n  \"staffData\": {\n    \"staffType\": \"ADMINISTRATIVE\",\n    \"designation\": \"Office Manager\"\n  }\n}\n```"
+            "description": "**Unified User Creation API** - Creates any user type with role-specific profile in one step.\n\n**Role IDs:**\n- 1: Student (studentData optional)\n- 2: Teacher (teacherData optional)\n- 3: Parent (requires parentData with childKramid)\n- 4: Staff (requires staffData with staffType + designation)\n- 5: Admin\n- 6: Super Admin\n\n**Auto-Generated Fields:**\n- Kram ID (always)\n- Temporary password (if not provided)\n- Admission Number (for students)\n- Roll Number (for students with section)\n- Employee ID (for teachers/staff)\n\n**Example payloads:**\n\n**Student (roleId: 1) - Minimal:**\n```json\n{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"roleId\": 1,\n  \"institutionId\": 1,\n  \"studentData\": {\n    \"courseId\": 1,\n    \"section\": \"A\"\n  }\n}\n```\n\n**Teacher (roleId: 2) - Minimal:**\n```json\n{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"email\": \"jane@example.com\",\n  \"roleId\": 2,\n  \"institutionId\": 1,\n  \"teacherData\": {\n    \"designation\": \"Professor\"\n  }\n}\n```\n\n**Parent (roleId: 3):**\n```json\n{\n  \"parentData\": {\n    \"childKramid\": \"EDU-S-2024-000001\",\n    \"relation\": \"FATHER\"\n  }\n}\n```\n\n**Staff (roleId: 4):**\n```json\n{\n  \"staffData\": {\n    \"staffType\": \"ADMINISTRATIVE\",\n    \"designation\": \"Office Manager\"\n  }\n}\n```"
           },
           "response": [
             {
@@ -1153,7 +1153,7 @@
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 42,\n    \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"edverseId\": \"DPS-S25-K8M2\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"role\": {\n      \"id\": 1,\n      \"roleName\": \"student\"\n    },\n    \"student\": {\n      \"id\": 10,\n      \"admissionNumber\": \"2025/CS/00042\",\n      \"rollNumber\": \"CS-A-001\",\n      \"currentSemester\": 1,\n      \"section\": \"A\",\n      \"institution\": {\n        \"id\": 1,\n        \"name\": \"Example University\"\n      },\n      \"course\": {\n        \"id\": 1,\n        \"name\": \"B.Sc. Computer Science\"\n      }\n    },\n    \"status\": \"INACTIVE\"\n  },\n  \"temporaryPassword\": \"JOHN2025\",\n  \"note\": \"User must change password on first login\"\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 42,\n    \"uuid\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"kramid\": \"DPS-S25-K8M2\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"role\": {\n      \"id\": 1,\n      \"roleName\": \"student\"\n    },\n    \"student\": {\n      \"id\": 10,\n      \"admissionNumber\": \"2025/CS/00042\",\n      \"rollNumber\": \"CS-A-001\",\n      \"currentSemester\": 1,\n      \"section\": \"A\",\n      \"institution\": {\n        \"id\": 1,\n        \"name\": \"Example University\"\n      },\n      \"course\": {\n        \"id\": 1,\n        \"name\": \"B.Sc. Computer Science\"\n      }\n    },\n    \"status\": \"INACTIVE\"\n  },\n  \"temporaryPassword\": \"JOHN2025\",\n  \"note\": \"User must change password on first login\"\n}"
             },
             {
               "name": "Create Teacher Success",
@@ -1178,7 +1178,7 @@
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 43,\n    \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"edverseId\": \"DPS-T25-P9X7\",\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"role\": {\n      \"id\": 2,\n      \"roleName\": \"teacher\"\n    },\n    \"teacher\": {\n      \"id\": 5,\n      \"employeeId\": \"EMP-2025-00015\",\n      \"designation\": \"Professor\",\n      \"specialization\": \"Computer Science\",\n      \"institution\": {\n        \"id\": 1,\n        \"name\": \"Example University\"\n      }\n    },\n    \"status\": \"INACTIVE\"\n  },\n  \"temporaryPassword\": \"JANE2025\",\n  \"note\": \"User must change password on first login\"\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": {\n    \"id\": 43,\n    \"uuid\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"kramid\": \"DPS-T25-P9X7\",\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Smith\",\n    \"name\": \"Jane Smith\",\n    \"email\": \"jane.smith@example.com\",\n    \"role\": {\n      \"id\": 2,\n      \"roleName\": \"teacher\"\n    },\n    \"teacher\": {\n      \"id\": 5,\n      \"employeeId\": \"EMP-2025-00015\",\n      \"designation\": \"Professor\",\n      \"specialization\": \"Computer Science\",\n      \"institution\": {\n        \"id\": 1,\n        \"name\": \"Example University\"\n      }\n    },\n    \"status\": \"INACTIVE\"\n  },\n  \"temporaryPassword\": \"JANE2025\",\n  \"note\": \"User must change password on first login\"\n}"
             }
           ]
         },
@@ -3051,7 +3051,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"reportCards\": [\n      {\n        \"studentInfo\": {\n          \"name\": \"John Doe\",\n          \"edverseId\": \"EDV-S-2024-000001\",\n          \"admissionNumber\": \"2024/001\",\n          \"rollNumber\": \"CS101\"\n        },\n        \"performanceSummary\": {\n          \"sgpa\": 8.5,\n          \"cgpa\": 8.2,\n          \"overallGrade\": \"A\",\n          \"overallStatus\": \"PASSED\"\n        }\n      }\n    ],\n    \"summary\": {\n      \"totalStudents\": 30,\n      \"generated\": 30,\n      \"failed\": 0,\n      \"averageSgpa\": 7.8,\n      \"averageAttendance\": 85.5,\n      \"passCount\": 28,\n      \"failCount\": 2,\n      \"gradeDistribution\": [\n        { \"grade\": \"A+\", \"count\": 3, \"percentage\": 10 },\n        { \"grade\": \"A\", \"count\": 8, \"percentage\": 26.67 },\n        { \"grade\": \"B+\", \"count\": 10, \"percentage\": 33.33 },\n        { \"grade\": \"B\", \"count\": 5, \"percentage\": 16.67 },\n        { \"grade\": \"C\", \"count\": 2, \"percentage\": 6.67 },\n        { \"grade\": \"F\", \"count\": 2, \"percentage\": 6.67 }\n      ]\n    },\n    \"studentSummaries\": [\n      {\n        \"studentId\": 1,\n        \"studentName\": \"John Doe\",\n        \"admissionNumber\": \"2024/001\",\n        \"rollNumber\": \"CS101\",\n        \"sgpa\": 8.5,\n        \"cgpa\": 8.2,\n        \"attendancePercentage\": 90,\n        \"overallGrade\": \"A\",\n        \"overallStatus\": \"PASSED\",\n        \"classRank\": 5,\n        \"reportCardNumber\": \"RC-1-1-3-M5K2L9\"\n      }\n    ],\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"batchId\": \"BATCH-1-3-M5K2L9ABC\"\n  }\n}"
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"reportCards\": [\n      {\n        \"studentInfo\": {\n          \"name\": \"John Doe\",\n          \"kramid\": \"EDU-S-2024-000001\",\n          \"admissionNumber\": \"2024/001\",\n          \"rollNumber\": \"CS101\"\n        },\n        \"performanceSummary\": {\n          \"sgpa\": 8.5,\n          \"cgpa\": 8.2,\n          \"overallGrade\": \"A\",\n          \"overallStatus\": \"PASSED\"\n        }\n      }\n    ],\n    \"summary\": {\n      \"totalStudents\": 30,\n      \"generated\": 30,\n      \"failed\": 0,\n      \"averageSgpa\": 7.8,\n      \"averageAttendance\": 85.5,\n      \"passCount\": 28,\n      \"failCount\": 2,\n      \"gradeDistribution\": [\n        { \"grade\": \"A+\", \"count\": 3, \"percentage\": 10 },\n        { \"grade\": \"A\", \"count\": 8, \"percentage\": 26.67 },\n        { \"grade\": \"B+\", \"count\": 10, \"percentage\": 33.33 },\n        { \"grade\": \"B\", \"count\": 5, \"percentage\": 16.67 },\n        { \"grade\": \"C\", \"count\": 2, \"percentage\": 6.67 },\n        { \"grade\": \"F\", \"count\": 2, \"percentage\": 6.67 }\n      ]\n    },\n    \"studentSummaries\": [\n      {\n        \"studentId\": 1,\n        \"studentName\": \"John Doe\",\n        \"admissionNumber\": \"2024/001\",\n        \"rollNumber\": \"CS101\",\n        \"sgpa\": 8.5,\n        \"cgpa\": 8.2,\n        \"attendancePercentage\": 90,\n        \"overallGrade\": \"A\",\n        \"overallStatus\": \"PASSED\",\n        \"classRank\": 5,\n        \"reportCardNumber\": \"RC-1-1-3-M5K2L9\"\n      }\n    ],\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"batchId\": \"BATCH-1-3-M5K2L9ABC\"\n  }\n}"
             }
           ]
         },
@@ -3661,7 +3661,7 @@
                 }
               ]
             },
-            "description": "Generate a comprehensive report card for a student.\n\n**Response includes:**\n- **Student Info**: Name, EdVerse ID, admission number, roll number, course, section\n- **Semester Info**: Semester name, number, academic year, dates\n- **Subject Records**: Subject-wise marks, grades, grade points, teacher remarks\n- **Exam Summaries**: Exam-wise marks, percentages, grades, ranks\n- **Attendance Summary**: Total/attended/absent classes, percentage, status\n- **Performance Summary**: SGPA, CGPA, class rank, percentile, overall status\n- **Remarks**: Teacher comments, strengths, areas for improvement\n\n**Access Control:**\n- Students can only view their own report cards\n- Parents can view their children's report cards\n- Teachers/Admins can view any student's report card"
+            "description": "Generate a comprehensive report card for a student.\n\n**Response includes:**\n- **Student Info**: Name, Kram ID, admission number, roll number, course, section\n- **Semester Info**: Semester name, number, academic year, dates\n- **Subject Records**: Subject-wise marks, grades, grade points, teacher remarks\n- **Exam Summaries**: Exam-wise marks, percentages, grades, ranks\n- **Attendance Summary**: Total/attended/absent classes, percentage, status\n- **Performance Summary**: SGPA, CGPA, class rank, percentile, overall status\n- **Remarks**: Teacher comments, strengths, areas for improvement\n\n**Access Control:**\n- Students can only view their own report cards\n- Parents can view their children's report cards\n- Teachers/Admins can view any student's report card"
           },
           "response": [
             {
@@ -3702,7 +3702,7 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"studentInfo\": {\n      \"name\": \"John Doe\",\n      \"edverseId\": \"EDV-S-2024-000001\",\n      \"admissionNumber\": \"2024/001\",\n      \"rollNumber\": \"CS101\",\n      \"courseName\": \"B.Sc. Computer Science\",\n      \"courseCode\": \"BSCS\",\n      \"currentSemester\": 3,\n      \"currentYear\": 2,\n      \"section\": \"A\",\n      \"institutionName\": \"Example University\"\n    },\n    \"semesterInfo\": {\n      \"semesterId\": 3,\n      \"semesterName\": \"Semester 3\",\n      \"semesterNumber\": 3,\n      \"academicYear\": \"2024-25\",\n      \"startDate\": \"2024-07-01\",\n      \"endDate\": \"2024-12-31\"\n    },\n    \"subjectRecords\": [\n      {\n        \"subjectName\": \"Data Structures\",\n        \"subjectCode\": \"CS201\",\n        \"credits\": 4,\n        \"marksObtained\": 85,\n        \"maxMarks\": 100,\n        \"percentage\": 85,\n        \"grade\": \"A\",\n        \"gradePoints\": 3.7,\n        \"status\": \"PASSED\",\n        \"teacherRemarks\": \"Good performance\"\n      },\n      {\n        \"subjectName\": \"Database Management\",\n        \"subjectCode\": \"CS202\",\n        \"credits\": 3,\n        \"marksObtained\": 78,\n        \"maxMarks\": 100,\n        \"percentage\": 78,\n        \"grade\": \"B+\",\n        \"gradePoints\": 3.3,\n        \"status\": \"PASSED\"\n      }\n    ],\n    \"examSummaries\": [\n      {\n        \"examType\": \"MID_TERM\",\n        \"examName\": \"Mid-Term Examination\",\n        \"totalMarks\": 50,\n        \"marksObtained\": 42,\n        \"percentage\": 84,\n        \"grade\": \"A\",\n        \"rank\": 5\n      },\n      {\n        \"examType\": \"FINAL\",\n        \"examName\": \"Final Examination\",\n        \"totalMarks\": 100,\n        \"marksObtained\": 85,\n        \"percentage\": 85,\n        \"grade\": \"A\"\n      }\n    ],\n    \"attendanceSummary\": {\n      \"totalClasses\": 120,\n      \"classesAttended\": 108,\n      \"classesAbsent\": 12,\n      \"percentage\": 90,\n      \"status\": \"excellent\"\n    },\n    \"performanceSummary\": {\n      \"sgpa\": 8.5,\n      \"cgpa\": 8.2,\n      \"totalCreditsEarned\": 20,\n      \"totalCreditsAttempted\": 20,\n      \"classRank\": 5,\n      \"totalStudents\": 60,\n      \"percentile\": 91.67,\n      \"overallGrade\": \"A\",\n      \"overallStatus\": \"PASSED\"\n    },\n    \"remarks\": {\n      \"classTeacherRemarks\": \"Excellent student with consistent performance\",\n      \"strengths\": [\"Problem solving\", \"Teamwork\", \"Communication\"],\n      \"areasForImprovement\": [\"Time management\"]\n    },\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"reportCardNumber\": \"RC-1-123-3-M5K2L9\"\n  }\n}"
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"studentInfo\": {\n      \"name\": \"John Doe\",\n      \"kramid\": \"EDU-S-2024-000001\",\n      \"admissionNumber\": \"2024/001\",\n      \"rollNumber\": \"CS101\",\n      \"courseName\": \"B.Sc. Computer Science\",\n      \"courseCode\": \"BSCS\",\n      \"currentSemester\": 3,\n      \"currentYear\": 2,\n      \"section\": \"A\",\n      \"institutionName\": \"Example University\"\n    },\n    \"semesterInfo\": {\n      \"semesterId\": 3,\n      \"semesterName\": \"Semester 3\",\n      \"semesterNumber\": 3,\n      \"academicYear\": \"2024-25\",\n      \"startDate\": \"2024-07-01\",\n      \"endDate\": \"2024-12-31\"\n    },\n    \"subjectRecords\": [\n      {\n        \"subjectName\": \"Data Structures\",\n        \"subjectCode\": \"CS201\",\n        \"credits\": 4,\n        \"marksObtained\": 85,\n        \"maxMarks\": 100,\n        \"percentage\": 85,\n        \"grade\": \"A\",\n        \"gradePoints\": 3.7,\n        \"status\": \"PASSED\",\n        \"teacherRemarks\": \"Good performance\"\n      },\n      {\n        \"subjectName\": \"Database Management\",\n        \"subjectCode\": \"CS202\",\n        \"credits\": 3,\n        \"marksObtained\": 78,\n        \"maxMarks\": 100,\n        \"percentage\": 78,\n        \"grade\": \"B+\",\n        \"gradePoints\": 3.3,\n        \"status\": \"PASSED\"\n      }\n    ],\n    \"examSummaries\": [\n      {\n        \"examType\": \"MID_TERM\",\n        \"examName\": \"Mid-Term Examination\",\n        \"totalMarks\": 50,\n        \"marksObtained\": 42,\n        \"percentage\": 84,\n        \"grade\": \"A\",\n        \"rank\": 5\n      },\n      {\n        \"examType\": \"FINAL\",\n        \"examName\": \"Final Examination\",\n        \"totalMarks\": 100,\n        \"marksObtained\": 85,\n        \"percentage\": 85,\n        \"grade\": \"A\"\n      }\n    ],\n    \"attendanceSummary\": {\n      \"totalClasses\": 120,\n      \"classesAttended\": 108,\n      \"classesAbsent\": 12,\n      \"percentage\": 90,\n      \"status\": \"excellent\"\n    },\n    \"performanceSummary\": {\n      \"sgpa\": 8.5,\n      \"cgpa\": 8.2,\n      \"totalCreditsEarned\": 20,\n      \"totalCreditsAttempted\": 20,\n      \"classRank\": 5,\n      \"totalStudents\": 60,\n      \"percentile\": 91.67,\n      \"overallGrade\": \"A\",\n      \"overallStatus\": \"PASSED\"\n    },\n    \"remarks\": {\n      \"classTeacherRemarks\": \"Excellent student with consistent performance\",\n      \"strengths\": [\"Problem solving\", \"Teamwork\", \"Communication\"],\n      \"areasForImprovement\": [\"Time management\"]\n    },\n    \"generatedAt\": \"2024-12-05T10:30:00.000Z\",\n    \"reportCardNumber\": \"RC-1-123-3-M5K2L9\"\n  }\n}"
             }
           ]
         },

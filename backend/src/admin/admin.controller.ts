@@ -52,6 +52,11 @@ export class AdminController {
     return this.adminService.getUsersByRole(parseInt(roleId), query)
   }
 
+  @Get('users/kramid/:kramid')
+  getUserByKramId(@Param('kramid') kramid: string) {
+    return this.adminService.getUserByKramId(kramid)
+  }
+
   @Get('users/:user_uuid')
   getUser(@Param('user_uuid') userUuid: string) {
     return this.adminService.getUserByUuid(userUuid)

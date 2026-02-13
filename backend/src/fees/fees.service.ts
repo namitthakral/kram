@@ -31,7 +31,7 @@ export interface StudentFeeStatusView {
   roll_number: string;
   student_name: string;
   student_email: string;
-  edverse_id: string;
+  kramid: string;
   fee_structure_id: number;
   fee_name: string;
   fee_type: string;
@@ -79,7 +79,7 @@ export interface OverdueFeeView {
   student_name: string;
   student_email: string;
   student_phone: string | null;
-  edverse_id: string;
+  kramid: string;
   institution_id: number;
   institution_name: string;
   fee_name: string;
@@ -636,7 +636,7 @@ export class FeesService {
                   id: true,
                   name: true, 
                   email: true, 
-                  edverseId: true 
+                  kramid: true 
                 },
               },
             },
@@ -691,7 +691,7 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true, edverseId: true },
+              select: { name: true, email: true, kramid: true },
             },
           },
         },
@@ -875,7 +875,7 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true, edverseId: true },
+              select: { name: true, email: true, kramid: true },
             },
           },
         },
@@ -989,7 +989,7 @@ export class FeesService {
                   id: true,
                   name: true, 
                   email: true, 
-                  edverseId: true 
+                  kramid: true 
                 },
               },
             },
@@ -1040,7 +1040,7 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true, edverseId: true },
+              select: { name: true, email: true, kramid: true },
             },
           },
         },
