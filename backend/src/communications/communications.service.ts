@@ -1,20 +1,20 @@
 import {
-    BadRequestException,
-    ForbiddenException,
-    Injectable,
-    NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CommunicationQueryDto } from './dto/communication-query.dto';
 import {
-    CreateCommunicationDto
+  CreateCommunicationDto
 } from './dto/create-communication.dto';
 import { UpdateCommunicationDto } from './dto/update-communication.dto';
 
 @Injectable()
 export class CommunicationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // ==================== OPTIMIZED HELPER METHODS ====================
 
@@ -118,7 +118,7 @@ export class CommunicationsService {
   /**
    * Get all communications with filtering and pagination
    */
-  async findAll(query: CommunicationQueryDto) {
+  async findAll(query: CommunicationQueryDto, userId?: number) {
     const {
       type,
       priority,
@@ -133,6 +133,42 @@ export class CommunicationsService {
       startDate,
       endDate,
     } = query;
+
+    // Get user details if userId is provided
+    let userRole = '';
+    let userInstitutionId: number | null = null;
+
+    if (userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          role: { select: { roleName: true } },
+          student: { select: { institutionId: true } },
+          teacher: { select: { institutionId: true } },
+          staff: { select: { institutionId: true } },
+          parent: {
+            select: {
+              student: {
+                select: {
+                  institutionId: true,
+                },
+              },
+            },
+          },
+          roleId: true, // For checking admin status potentially
+        },
+      });
+
+      if (user) {
+        userRole = user.role.roleName;
+        userInstitutionId =
+          user.student?.institutionId ||
+          user.teacher?.institutionId ||
+          user.staff?.institutionId ||
+          user.parent?.student?.institutionId;
+      }
+      console.log(`[Communications] User ID: ${userId}, Role: ${userRole}, InstID: ${userInstitutionId}`);
+    }
 
     const skip = (page - 1) * limit;
 
@@ -168,7 +204,39 @@ export class CommunicationsService {
       where.isActive = true;
     }
 
-    if (institutionId) {
+    // Role-based filtering
+    const isAdmin = ['super_admin', 'admin'].includes(userRole);
+
+    // If user is not admin, force institution filter and audience filter
+    if (!isAdmin && userInstitutionId) {
+      // Force institution match
+      where.institutionId = userInstitutionId;
+
+      // Filter by target audience if no specific filter requested or strictly enforce
+      // If the user requests a specific type/audience, we can trust that or intersect it
+      // Logic: Show public/general OR targeted to their role
+      if (!targetAudience) {
+        where.OR = [
+          // Safest is: targetAudience has userRole
+          { targetAudience: { hasSome: [userRole, userRole.toLowerCase(), userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase()] } },
+        ];
+        // If we want to allow "All" audience, we need to know what string represents that, e.g. "ALL"
+        // For now, let's stick to matching role.
+      } else {
+        // So we overwrite or AND it.
+         // Fix: Handle case sensitivity. Role names from DB might be capitalized (e.g. 'Student'),
+         // but targetAudience might be lowercase (e.g. 'student').
+         // Postgres array 'has' is case-sensitive.
+         // We should check for both or normalize.
+         const roleLower = userRole.toLowerCase();
+         const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase();
+
+         where.targetAudience = {
+           hasSome: [userRole, roleLower, roleCapitalized],
+         };
+         console.log(`[Communications] Filtering by targetAudience: ${JSON.stringify(where.targetAudience)}`);
+      }
+    } else if (institutionId) {
       where.institutionId = institutionId;
     }
 
@@ -294,19 +362,19 @@ export class CommunicationsService {
         },
         readReceipts: userId
           ? {
-              where: { userId },
-              select: {
-                id: true,
-                readAt: true,
-                user: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
+            where: { userId },
+            select: {
+              id: true,
+              readAt: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
                 },
               },
-              take: 1,
-            }
+            },
+            take: 1,
+          }
           : false,
         _count: {
           select: {

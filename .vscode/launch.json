@@ -11,7 +11,7 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                "--dart-define=BASE_URL=http://localhost:3000",
+                "--dart-define=BASE_URL=http://192.168.1.11:3001",
                 "-d",
                 "chrome",
                 "--web-port",
@@ -26,7 +26,7 @@
             "request": "launch",
             "type": "dart",
             "args": [
-                "--dart-define=BASE_URL=http://localhost:3000"
+                "--dart-define=BASE_URL=http://192.168.1.11:3001"
             ]
         },
         {

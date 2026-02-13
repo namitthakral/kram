@@ -79,9 +79,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             childName: childName,
             grade: grade,
             rollNumber: rollNumber,
-            onNotificationIconPressed: () {
-              // Notification handler to be implemented
-            },
           ),
           child:
               dashboardProvider.isLoading && childInfo == null

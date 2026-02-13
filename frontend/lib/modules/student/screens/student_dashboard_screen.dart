@@ -96,9 +96,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         grade: grade,
         rollNumber: rollNumber,
         gpa: gpaString,
-        onNotificationIconPressed: () {
-          // Notification handler to be implemented
-        },
       ),
       child:
           dashboardProvider.isLoading

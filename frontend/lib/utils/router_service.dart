@@ -57,7 +57,9 @@ import '../modules/teacher/screens/timetable_view_screen.dart';
 import '../provider/login_signup/login_provider.dart';
 import '../views/dashboard/staff_dashboard_screen.dart';
 import '../views/dashboard/super_admin_dashboard_screen.dart';
+
 import '../views/home_screen.dart';
+import '../views/notifications/notifications_screen.dart';
 import '../views/login_register/login_register_main.dart';
 import '../views/onboarding/onboarding_main.dart';
 import '../views/profile/profile_screen.dart';
@@ -161,6 +163,18 @@ class RouterService {
             child: const LoginRegisterMain(),
           ),
     ),
+
+    // Notifications route (common to all roles)
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      pageBuilder:
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const NotificationsScreen(),
+          ),
+    ),
+
     // Legacy /home route - redirects to dashboard
     GoRoute(
       path: '/home',
@@ -194,6 +208,7 @@ class RouterService {
                 child: const ProfileScreen(),
               ),
         ),
+
 
         // Teacher-specific routes
         GoRoute(

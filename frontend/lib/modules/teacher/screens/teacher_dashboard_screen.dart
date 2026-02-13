@@ -19,7 +19,6 @@ import '../widgets/student_activity_card.dart';
 import 'assignments_list_screen.dart';
 import 'examinations_list_screen.dart';
 
-
 enum PerformanceTab { attendance, subject, grade }
 
 class TeacherDashboardScreen extends StatefulWidget {
@@ -81,9 +80,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         userName: userName,
         designation: designation,
         employeeId: employeeId,
-        onNotificationIconPressed: () {
-          // Notification handler to be implemented
-        },
       ),
       child: SingleChildScrollView(
         child: Consumer<TeacherDashboardProvider>(

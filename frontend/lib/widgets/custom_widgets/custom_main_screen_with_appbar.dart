@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/constants/route_constants.dart';
+import '../../provider/communications_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/enum.dart';
 import '../../utils/extensions.dart';
@@ -423,15 +427,46 @@ class _CustomAppBar extends StatelessWidget {
               ),
       // Actions
       actions:
-          isProfileType && config.onNotificationIconPressed != null
+          isProfileType
               ? [
-                IconButton(
-                  onPressed: config.onNotificationIconPressed,
-                  icon: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.black,
-                    size: 28,
-                  ),
+                // Notification Icon with Badge
+                Consumer<CommunicationsProvider>(
+                  builder:
+                      (context, provider, child) => Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (config.onNotificationIconPressed != null) {
+                                config.onNotificationIconPressed!();
+                              } else {
+                                context.push(RouteConstants.notifications);
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.notifications_outlined,
+                              color: Colors.black,
+                              size: 28,
+                            ),
+                          ),
+                          if (provider.unreadCount > 0)
+                            Positioned(
+                              top: 10,
+                              right: 10,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: CustomAppColors.danger,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 8,
+                                  minHeight: 8,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                 ),
               ]
               : config.actions,

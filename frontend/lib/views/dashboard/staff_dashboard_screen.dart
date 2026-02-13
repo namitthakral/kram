@@ -36,7 +36,6 @@ class StaffDashboardScreen extends StatelessWidget {
         userInitials: userInitials,
         userName: userName,
         department: 'Administration', // TODO: Get from user data
-        onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(
         child: Column(

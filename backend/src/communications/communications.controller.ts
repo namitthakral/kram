@@ -42,8 +42,8 @@ export class CommunicationsController {
    * GET /communications
    */
   @Get()
-  findAll(@Query() query: CommunicationQueryDto) {
-    return this.communicationsService.findAll(query);
+  findAll(@Query() query: CommunicationQueryDto, @Request() req) {
+    return this.communicationsService.findAll(query, req.user.id);
   }
 
   /**

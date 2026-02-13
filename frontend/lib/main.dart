@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'core/constants/app_constants.dart';
 import 'core/services/api_service.dart';
 import 'core/services/app_lifecycle_service.dart';
+import 'core/services/local_notification_service.dart';
 import 'modules/admin/providers/admin_analytics_tab_provider.dart';
 import 'modules/admin/providers/admin_dashboard_provider.dart';
 import 'modules/admin/providers/grading_config_provider.dart';
@@ -33,6 +34,7 @@ import 'modules/teacher/providers/teacher_dashboard_provider.dart';
 import 'modules/teacher/providers/timetable_provider.dart';
 import 'modules/teacher/screens/teacher_dashboard_screen.dart';
 import 'provider/bottom_nav_provider.dart';
+import 'provider/communications_provider.dart';
 import 'provider/courses_provider.dart';
 import 'provider/dashboard/favourite_provider.dart';
 import 'provider/language_provider.dart';
@@ -71,6 +73,7 @@ void main() async {
   ApiService().init();
   RouterService().init(loginProvider);
   await loginProvider.init();
+  await LocalNotificationService().init();
 
   // Log API endpoint for developer awareness
   if (kDebugMode) {
@@ -165,6 +168,9 @@ void main() async {
         ),
         ChangeNotifierProvider<TeacherClassesProvider>(
           create: (_) => TeacherClassesProvider(),
+        ),
+        ChangeNotifierProvider<CommunicationsProvider>(
+          create: (_) => CommunicationsProvider(),
         ),
       ],
       child: const KramApp(),

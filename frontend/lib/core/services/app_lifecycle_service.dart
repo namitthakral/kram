@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/login_signup/login_provider.dart';
+import '../../provider/communications_provider.dart';
 import 'auth_service.dart';
 
 /// Service to handle app lifecycle events
@@ -23,11 +24,17 @@ class AppLifecycleService extends WidgetsBindingObserver {
     _context = context;
     WidgetsBinding.instance.addObserver(this);
     log('AppLifecycleService initialized');
+
+    // Start polling if user is logged in
+    _startPollingIfLoggedIn();
   }
 
   /// Dispose the lifecycle service
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    if (_context != null && _context!.mounted) {
+       _context!.read<CommunicationsProvider>().stopPolling();
+    }
     _context = null;
     log('AppLifecycleService disposed');
   }
@@ -47,6 +54,11 @@ class AppLifecycleService extends WidgetsBindingObserver {
     // When app resumes from background, check and refresh token
     if (state == AppLifecycleState.resumed) {
       _handleAppResume();
+      _startPollingIfLoggedIn();
+    } else if (state == AppLifecycleState.paused) {
+      if (_context != null && _context!.mounted) {
+         _context!.read<CommunicationsProvider>().stopPolling();
+      }
     }
   }
 
@@ -102,5 +114,14 @@ class AppLifecycleService extends WidgetsBindingObserver {
   /// Manually trigger token refresh check (useful for testing)
   Future<void> checkAndRefreshToken() async {
     await _handleAppResume();
+  }
+
+  void _startPollingIfLoggedIn() async {
+    if (_context != null && _context!.mounted) {
+      final isLoggedIn = await _authService.isLoggedIn();
+      if (isLoggedIn && _context!.mounted) {
+        _context!.read<CommunicationsProvider>().startPolling();
+      }
+    }
   }
 }
