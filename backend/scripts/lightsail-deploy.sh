@@ -105,13 +105,13 @@ if [ -d "$FRONTEND_DIR" ]; then
             echo -e "${RED}❌ Flutter not found!${NC}"
             echo -e "${YELLOW}Please install Flutter or build manually:${NC}"
             echo "  cd $FRONTEND_DIR"
-            echo "  flutter build web --release"
+            echo "  flutter build web --release --dart-define=BASE_URL=https://api.kramedu.in"
             echo "  cp -r build/web/* ../backend/public/dashboard/"
             exit 1
         fi
         
         # Build Flutter web
-        if flutter build web --release; then
+        if flutter build web --release --dart-define=BASE_URL=https://api.kramedu.in; then
             echo -e "${GREEN}✅ Flutter build successful${NC}"
             
             # Copy to backend
