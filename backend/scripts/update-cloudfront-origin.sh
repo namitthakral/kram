@@ -1,7 +1,16 @@
 #!/bin/bash
 
-# Script to update CloudFront origin after Lightsail redeploy
-# Run this after redeploying Lightsail if the URL changed
+# ============================================================================
+# Update CloudFront Origin Script
+# ============================================================================
+# WHEN TO USE THIS:
+#   - Only when Lightsail service URL changes (rare)
+#   - This happens if you delete and recreate the Lightsail container service
+#
+# FOR REGULAR DEPLOYMENTS:
+#   - Use deploy-to-production.sh (handles everything automatically)
+#   - Or use invalidate-cloudfront-cache.sh (just clears cache)
+# ============================================================================
 
 set -e
 

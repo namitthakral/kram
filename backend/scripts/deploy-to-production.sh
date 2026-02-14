@@ -237,6 +237,27 @@ fi
 echo ""
 
 # ============================================================================
+# PHASE 7: INVALIDATE CLOUDFRONT CACHE
+# ============================================================================
+echo -e "${BOLD}${BLUE}Phase 7: CloudFront Cache Invalidation${NC}"
+echo -e "${BLUE}────────────────────────────────────────${NC}"
+echo ""
+
+echo -e "${YELLOW}🔄 Invalidating CloudFront cache...${NC}"
+echo -e "${BLUE}   This ensures users get the latest frontend build${NC}"
+echo ""
+
+# Call dedicated cache invalidation script
+if ./scripts/invalidate-cloudfront-cache.sh; then
+    echo -e "${GREEN}✅ CloudFront cache invalidation completed${NC}"
+else
+    echo -e "${YELLOW}⚠️  CloudFront cache invalidation failed${NC}"
+    echo -e "${YELLOW}   You may need to invalidate manually:${NC}"
+    echo -e "${CYAN}   ./scripts/invalidate-cloudfront-cache.sh${NC}"
+fi
+echo ""
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 echo ""
@@ -255,16 +276,19 @@ echo -e "  📁 Config: ${GREEN}.env (unchanged)${NC}"
 echo -e "  ✅ Your local dev environment is still working!${NC}"
 echo ""
 echo -e "${BOLD}Next Steps:${NC}"
-echo -e "  1. Test production API:"
-echo -e "     ${CYAN}curl ${SERVICE_URL}/health${NC}"
+echo -e "  1. ⏳ Wait 3-5 minutes for CloudFront cache to clear"
 echo ""
-echo -e "  2. Check Lightsail logs:"
+echo -e "  2. Test production:"
+echo -e "     API: ${CYAN}curl https://api.kramedu.in/health${NC}"
+echo -e "     Dashboard: ${CYAN}https://dashboard.kramedu.in${NC}"
+echo ""
+echo -e "  3. Check Lightsail logs:"
 echo -e "     ${CYAN}aws lightsail get-container-log --service-name kram --profile kram${NC}"
 echo ""
-echo -e "  3. View in AWS Console:"
+echo -e "  4. View in AWS Console:"
 echo -e "     ${CYAN}https://lightsail.aws.amazon.com/ls/webapp/ap-south-1/container-services/kram${NC}"
 echo ""
-echo -e "  4. To save costs when not using production:"
+echo -e "  5. To save costs when not using production:"
 echo -e "     ${CYAN}./scripts/aws-stop.sh${NC}"
 echo ""
 echo -e "${BOLD}${GREEN}🎉 Deployment successful!${NC}"
