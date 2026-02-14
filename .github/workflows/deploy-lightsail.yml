@@ -69,7 +69,7 @@ jobs:
                   echo "📱 Building Flutter web app..."
                   cd frontend
                   flutter pub get
-                  flutter build web --release
+                  flutter build web --release --dart-define=BASE_URL=https://api.kramedu.in
                   echo "✅ Flutter build complete"
 
             - name: 📦 Copy Flutter build to backend
