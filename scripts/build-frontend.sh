@@ -22,8 +22,10 @@ cd "$FRONTEND_DIR"
 echo "📦 Getting Flutter dependencies..."
 flutter pub get
 
-# Build Flutter web with base-href for /dashboard
-echo "🌐 Building Flutter for web..."
+# Build Flutter web for production deployment
+# IMPORTANT: --dart-define bakes the API URL into the compiled JavaScript at build time
+# This ensures production builds connect to production API, not localhost
+echo "🌐 Building Flutter for web (production)..."
 flutter build web --release --base-href "/" --dart-define=BASE_URL=https://api.kramedu.in
 
 # Create output directory if it doesn't exist

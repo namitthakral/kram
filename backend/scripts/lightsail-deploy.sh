@@ -69,31 +69,18 @@ echo ""
 
 FRONTEND_DIR="../frontend"
 DASHBOARD_DIR="./public/dashboard"
-REBUILD_FRONTEND=false
+
+# IMPORTANT: Always force rebuild for production deployments
+# This ensures --dart-define flags and build-time configs are always applied correctly
+# (e.g., production API URL instead of localhost)
+echo -e "${YELLOW}🔄 Forcing frontend rebuild for production deployment...${NC}"
+if [ -d "$DASHBOARD_DIR" ]; then
+    echo -e "${YELLOW}   Removing old dashboard build...${NC}"
+    rm -rf "$DASHBOARD_DIR"/*
+fi
+REBUILD_FRONTEND=true
 
 if [ -d "$FRONTEND_DIR" ]; then
-    # Check if dashboard build exists
-    if [ ! -d "$DASHBOARD_DIR" ] || [ ! -f "$DASHBOARD_DIR/main.dart.js" ]; then
-        echo -e "${YELLOW}⚠️  Dashboard build not found${NC}"
-        REBUILD_FRONTEND=true
-    else
-        # Compare modification times
-        FRONTEND_LAST_MODIFIED=$(find "$FRONTEND_DIR/lib" -type f -name "*.dart" -exec stat -f "%m %N" {} \; 2>/dev/null | sort -rn | head -1 | cut -d' ' -f1)
-        DASHBOARD_LAST_BUILT=$(stat -f "%m" "$DASHBOARD_DIR/main.dart.js" 2>/dev/null)
-        
-        if [ -n "$FRONTEND_LAST_MODIFIED" ] && [ -n "$DASHBOARD_LAST_BUILT" ]; then
-            if [ "$FRONTEND_LAST_MODIFIED" -gt "$DASHBOARD_LAST_BUILT" ]; then
-                echo -e "${YELLOW}⚠️  Frontend code changed since last build${NC}"
-                FRONTEND_LAST_MODIFIED_DATE=$(date -r "$FRONTEND_LAST_MODIFIED" "+%Y-%m-%d %H:%M:%S")
-                DASHBOARD_LAST_BUILT_DATE=$(date -r "$DASHBOARD_LAST_BUILT" "+%Y-%m-%d %H:%M:%S")
-                echo -e "${YELLOW}   Frontend modified: $FRONTEND_LAST_MODIFIED_DATE${NC}"
-                echo -e "${YELLOW}   Dashboard built: $DASHBOARD_LAST_BUILT_DATE${NC}"
-                REBUILD_FRONTEND=true
-            else
-                echo -e "${GREEN}✅ Dashboard is up to date${NC}"
-            fi
-        fi
-    fi
     
     if [ "$REBUILD_FRONTEND" = true ]; then
         echo ""
