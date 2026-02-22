@@ -87,15 +87,13 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: '20'
-                  cache: 'npm'
-                  cache-dependency-path: backend/package-lock.json
+                  cache: false
 
             - name: 📦 Install backend dependencies
               if: inputs.has_schema_changes == true
               run: |
                   echo "📦 Installing backend dependencies..."
-                  cd backend
-                  npm ci
+                  npm install
                   echo "✅ Dependencies installed"
 
             - name: 🔑 Configure AWS credentials
