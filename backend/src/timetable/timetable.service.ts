@@ -614,7 +614,6 @@ export class TimetableService {
       academicYearId: true,
       semesterId: true,
       courseId: true,
-      classLevel: true,
       section: true,
       subjectId: true,
       teacherId: true,
@@ -622,7 +621,6 @@ export class TimetableService {
       timeSlotId: true,
       dayOfWeek: true,
       isActive: true,
-      notes: true,
       createdAt: true,
       updatedAt: true,
       institution: { 
@@ -635,7 +633,7 @@ export class TimetableService {
         select: { id: true, semesterName: true, semesterNumber: true },
       },
       course: { 
-        select: { id: true, courseName: true, courseCode: true } 
+        select: { id: true, name: true, code: true } 
       },
       subject: { 
         select: { id: true, subjectName: true, subjectCode: true } 
