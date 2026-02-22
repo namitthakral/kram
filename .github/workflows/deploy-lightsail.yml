@@ -82,6 +82,30 @@ jobs:
                   echo "✅ Dashboard files copied"
                   ls -lh backend/public/dashboard/main.dart.js
 
+            - name: 💾 Cache dashboard (for future skip-frontend runs)
+              if: inputs.skip_frontend == false
+              uses: actions/cache/save@v4
+              with:
+                  path: backend/public
+                  key: dashboard-${{ github.ref }}
+
+            - name: 📂 Restore dashboard from cache (skip frontend)
+              if: inputs.skip_frontend == true
+              id: restore-dashboard
+              uses: actions/cache/restore@v4
+              with:
+                  path: backend/public
+                  key: dashboard-${{ github.ref }}
+
+            - name: ⚠️ Require dashboard when skipping frontend
+              if: inputs.skip_frontend == true
+              run: |
+                  if [ "${{ steps.restore-dashboard.outputs.cache-hit }}" != "true" ] || [ ! -f backend/public/dashboard/index.html ]; then
+                    echo "::error::No cached dashboard found. Run a deployment **without** 'Skip frontend' at least once on this branch, then you can use 'Skip frontend' for backend-only deploys."
+                    exit 1
+                  fi
+                  echo "✅ Using cached dashboard from previous build"
+
             - name: 🔧 Setup Node.js
               if: inputs.has_schema_changes == true
               uses: actions/setup-node@v4
