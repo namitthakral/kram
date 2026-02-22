@@ -32,10 +32,11 @@
  * 
  * DEFAULT CREDENTIALS:
  * -------------------
- * Admin:   admin@kram.edu / admin123!
- * Teacher: john.doe@kram.edu / teacher123!
- * Student: student1@kram.edu / student123!
- * Parent:  parent1@kram.edu / parent123!
+ * Super Admin:        admin@kram.edu / admin123!
+ * Institution Admin:  institutionadmin@kram.edu / institutionadmin123!
+ * Teacher:            john.doe@kram.edu / teacher123!
+ * Student:            student1@kram.edu / student123!
+ * Parent:             parent1@kram.edu / parent123!
  */
 
 import { PrismaClient } from '@prisma/client'
@@ -78,6 +79,16 @@ async function main() {
     `✅ Created course: ${course.name} with ${subjects.length} subjects`
   )
 
+  // Create users (admin, teacher, students, parents, staff) - BEFORE sentinel check
+  // This ensures users are always created/updated even when transactional data exists
+  console.log('Creating/updating users...')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { superAdmin, institutionAdmin, teacher, students, parents, librarian, librarianUser } =
+    await createUsers(roles, institution.id, course.id)
+  console.log(
+    `✅ Created/updated users: 1 super admin, 1 institution admin, 1 teacher, ${students.length} students, ${parents.length} parents, 3 staff (librarian, accountant, support)`
+  )
+
   // ============================================================================
   // SENTINEL CHECK: Skip transactional data if already seeded
   // ============================================================================
@@ -92,7 +103,7 @@ async function main() {
     console.log(`   Found ${existingStudentFees} student fee records`)
     console.log('   Skipping transactional data to prevent duplicates')
     console.log('')
-    console.log('✅ Reference data (roles, institution) will be updated if needed')
+    console.log('✅ Reference data (roles, institution, users) will be updated if needed')
     console.log('❌ Transactional data (fees, payments, attendance) will be skipped')
     console.log('')
     console.log('   If you want to re-seed from scratch:')
@@ -106,11 +117,6 @@ async function main() {
 
   console.log('✅ No existing transactional data found - proceeding with full seed')
   console.log('')
-
-  // Create users (admin, teacher, students, parents, staff)
-  console.log('Creating users...')
-  const { superAdmin, teacher, students, parents, librarian, librarianUser } =
-    await createUsers(roles, institution.id, course.id)
   console.log(
     `✅ Created users: 1 admin, 1 teacher, ${students.length} students, ${parents.length} parents, 3 staff (librarian, accountant, support)`
   )
@@ -662,6 +668,25 @@ async function createUsers(
     },
   })
 
+  // Create institution admin
+  const institutionAdminPassword = await bcrypt.hash('institutionadmin123!', 12)
+  const institutionAdminRole = roles.find(r => r.roleName === 'admin')!
+  const institutionAdmin = await prisma.user.upsert({
+    where: { email: 'institutionadmin@kram.edu' },
+    update: {},
+    create: {
+      firstName: 'Institution',
+      lastName: 'Administrator',
+      name: 'Institution Administrator',
+      email: 'institutionadmin@kram.edu',
+      phone: '+1-555-0099',
+      passwordHash: institutionAdminPassword,
+      roleId: institutionAdminRole.id,
+      emailVerified: true,
+      phoneVerified: true,
+    },
+  })
+
   // Create teacher
   const teacherPassword = await bcrypt.hash('teacher123!', 12)
   const teacherRole = roles.find(r => r.roleName === 'teacher')!
@@ -905,7 +930,7 @@ async function createUsers(
     },
   })
 
-  return { superAdmin, teacher, students, parents, librarian, librarianUser, accountant }
+  return { superAdmin, institutionAdmin, teacher, students, parents, librarian, librarianUser, accountant }
 }
 
 async function createClassSections(
@@ -1502,6 +1527,7 @@ async function createTimetableData(
 function printSummary(studentCount: number, parentCount: number) {
   console.log('\n📋 Sample Accounts Created:')
   console.log('Super Admin: admin@kram.edu / admin123!')
+  console.log('Institution Admin: institutionadmin@kram.edu / institutionadmin123!')
   console.log('Teacher: john.doe@kram.edu / teacher123!')
   console.log(
     `Students: student1@kram.edu / student123! (student1-${studentCount})`
