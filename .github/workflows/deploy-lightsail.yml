@@ -87,7 +87,6 @@ jobs:
               uses: actions/setup-node@v4
               with:
                   node-version: '20'
-                  cache: false
 
             - name: 📦 Install backend dependencies
               if: inputs.has_schema_changes == true
