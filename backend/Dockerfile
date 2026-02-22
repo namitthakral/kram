@@ -16,6 +16,9 @@ RUN npm install
 # Copy all source code (needed for build)
 COPY . .
 
+# Ensure public dir exists (Flutter dashboard; may be empty if skip_frontend in CI)
+RUN mkdir -p public/dashboard
+
 # Build the NestJS application (includes schema generation)
 RUN npm run build && \
     echo "✅ Build completed" && \
