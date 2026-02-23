@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/role_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../models/auth_models.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../provider/teachers_provider.dart';
 import '../../../utils/custom_colors.dart';
@@ -305,6 +307,13 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     return normalized[0].toUpperCase() + normalized.substring(1);
   }
 
+  /// Timetable editing (create/update/delete) is allowed only for admins.
+  static bool _canEditTimetable(User? user) {
+    final roleId = user?.role?.id;
+    return roleId == RoleConstants.superAdmin.id ||
+        roleId == RoleConstants.admin.id;
+  }
+
   @override
   Widget build(BuildContext context) {
     final attendanceProvider = context.watch<AttendanceProvider>();
@@ -312,6 +321,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     final loginProvider = context.watch<LoginProvider>();
     final user = loginProvider.currentUser;
     final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
+    final canEditTimetable = _canEditTimetable(user);
 
     final isLoadingClasses =
         attendanceProvider.isLoading &&
@@ -405,19 +415,20 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
             ),
           ),
 
-          // Custom Tab Bar
+          // Custom Tab Bar (Time Slots tab only for admins - teachers view-only)
           CustomTabBar<TimetableTab>(
-            tabs: const [
-              TabItem(
+            tabs: [
+              const TabItem(
                 value: TimetableTab.weeklySchedule,
                 label: 'Weekly Schedule',
                 icon: Icons.calendar_view_week,
               ),
-              TabItem(
-                value: TimetableTab.timeSlots,
-                label: 'Time Slots',
-                icon: Icons.schedule,
-              ),
+              if (canEditTimetable)
+                const TabItem(
+                  value: TimetableTab.timeSlots,
+                  label: 'Time Slots',
+                  icon: Icons.schedule,
+                ),
             ],
             selectedValue: _selectedTab,
             onTabSelected: (tab) {
@@ -427,19 +438,22 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
             },
           ),
 
-          // Tab Content
+          // Tab Content (teachers only see Weekly Schedule)
           Expanded(
             child:
-                _selectedTab == TimetableTab.weeklySchedule
-                    ? _buildWeeklyScheduleTab(timetableProvider)
-                    : _buildTimeSlotsTab(timetableProvider),
+                (_selectedTab == TimetableTab.weeklySchedule || !canEditTimetable)
+                    ? _buildWeeklyScheduleTab(timetableProvider, canEditTimetable)
+                    : _buildTimeSlotsTab(timetableProvider, canEditTimetable),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWeeklyScheduleTab(TimetableProvider provider) {
+  Widget _buildWeeklyScheduleTab(
+    TimetableProvider provider,
+    bool canEditTimetable,
+  ) {
     if (_selectedClassName == null || _selectedSectionName == null) {
       return _buildEmptyState('Select Class and Section to view schedule');
     }
@@ -457,11 +471,13 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(child: _buildTimetableGrid()),
+      child: SingleChildScrollView(
+        child: _buildTimetableGrid(canEditTimetable: canEditTimetable),
+      ),
     );
   }
 
-  Widget _buildTimetableGrid() => Table(
+  Widget _buildTimetableGrid({required bool canEditTimetable}) => Table(
     border: TableBorder.all(color: Colors.grey.shade300),
     defaultColumnWidth: const FixedColumnWidth(140),
     children: [
@@ -495,7 +511,13 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         return TableRow(
           children: [
             _buildTimeCell(_formatTimeSlot(timeSlots[slotIndex])),
-            ...days.map((day) => _buildPeriodCell(slotIndex, day)),
+            ...days.map(
+              (day) => _buildPeriodCell(
+                slotIndex,
+                day,
+                canEditTimetable: canEditTimetable,
+              ),
+            ),
           ],
         );
       }),
@@ -556,11 +578,15 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     ),
   );
 
-  Widget _buildPeriodCell(int slotIndex, String day) {
+  Widget _buildPeriodCell(
+    int slotIndex,
+    String day, {
+    required bool canEditTimetable,
+  }) {
     final period = timetableData[slotIndex]![day];
 
     return InkWell(
-      onTap: () => _editPeriod(slotIndex, day),
+      onTap: canEditTimetable ? () => _editPeriod(slotIndex, day) : null,
       child: Container(
         padding: const EdgeInsets.all(8),
         height: 80,
@@ -604,7 +630,10 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     return '$startTime - $endTime';
   }
 
-  Widget _buildTimeSlotsTab(TimetableProvider provider) {
+  Widget _buildTimeSlotsTab(
+    TimetableProvider provider,
+    bool canEditTimetable,
+  ) {
     if (provider.isLoadingTimeSlots) {
       return const UnifiedLoader();
     }
@@ -614,7 +643,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     if (slots.isEmpty) {
       return _buildEmptyState(
         'No time slots found',
-        action: _buildAddTimeSlotButton(),
+        action: canEditTimetable ? _buildAddTimeSlotButton() : null,
       );
     }
 
@@ -626,15 +655,19 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final slot = slots[index];
-            return _buildTimeSlotCard(slot);
+            return _buildTimeSlotCard(slot, canEditTimetable: canEditTimetable);
           },
         ),
-        Positioned(bottom: 16, right: 16, child: _buildAddTimeSlotButton()),
+        if (canEditTimetable)
+          Positioned(bottom: 16, right: 16, child: _buildAddTimeSlotButton()),
       ],
     );
   }
 
-  Widget _buildTimeSlotCard(Map<String, dynamic> slot) {
+  Widget _buildTimeSlotCard(
+    Map<String, dynamic> slot, {
+    required bool canEditTimetable,
+  }) {
     final startTime = _formatTime(slot['startTime']);
     final endTime = _formatTime(slot['endTime']);
     final isMerged = slot['slotType'] == 'BREAK' || slot['slotType'] == 'LUNCH';
@@ -660,19 +693,21 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         subtitle: Text(
           '$startTime - $endTime • ${isMerged ? 'Merged (${slot['slotType']})' : 'Lecture'}',
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-              onPressed: () => _showEditTimeSlotDialog(slot),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-              onPressed: () => _confirmDeleteTimeSlot(slot),
-            ),
-          ],
-        ),
+        trailing: canEditTimetable
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                    onPressed: () => _showEditTimeSlotDialog(slot),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                    onPressed: () => _confirmDeleteTimeSlot(slot),
+                  ),
+                ],
+              )
+            : null,
       ),
     );
   }

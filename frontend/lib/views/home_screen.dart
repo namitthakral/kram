@@ -1,18 +1,36 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:universal_html/html.dart' as web;
 
+import '../core/theme/app_theme.dart';
 import '../modules/ai_assistant/views/ai_chat_screen.dart';
 import '../provider/bottom_nav_provider.dart';
 import '../provider/login_signup/login_provider.dart';
+import '../utils/custom_snackbar.dart';
+import '../utils/extensions.dart';
 import '../utils/platform_helper.dart';
 import '../utils/router_service.dart';
 import '../widgets/custom_widgets/custom_bottom_nav_bar.dart';
+import '../widgets/custom_widgets/custom_dialog.dart';
 import '../widgets/custom_widgets/custom_navigation_rail.dart';
 import '../widgets/custom_widgets/draggable_floating_overlay.dart';
+
+/// Holds the callback to show logout dialog when browser back is pressed on web.
+class _WebBackButtonCallbackHolder {
+  static void Function()? _callback;
+
+  static void set(void Function()? cb) {
+    _callback = cb;
+  }
+
+  static void invoke() {
+    _callback?.call();
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({required this.child, super.key});
@@ -78,6 +96,42 @@ class _HomeScreenContent extends StatefulWidget {
 class _HomeScreenContentState extends State<_HomeScreenContent> {
   bool _isEndDrawerOpen = false;
 
+  static bool _webBackListenerRegistered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb && !_HomeScreenContentState._webBackListenerRegistered) {
+      _HomeScreenContentState._webBackListenerRegistered = true;
+      _registerWebBackButtonListener();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (kIsWeb) {
+      _WebBackButtonCallbackHolder.set(null);
+    }
+    super.dispose();
+  }
+
+  void _registerWebBackButtonListener() {
+    web.window.onPopState.listen((web.PopStateEvent event) {
+      final path = web.window.location.pathname ?? '';
+      final isLeavingDashboard = path == '/' ||
+          path == '/login' ||
+          path == '/splash' ||
+          path == '/onboarding' ||
+          path.isEmpty;
+      if (!isLeavingDashboard) return;
+      web.window.history.pushState(null, '', '/dashboard');
+      RouterService().router.go('/dashboard');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _WebBackButtonCallbackHolder.invoke();
+      });
+    });
+  }
+
   /// Check if should use bottom bar (mobile platforms or mobile screen sizes)
   bool _shouldUseBottomBar(BuildContext context) {
     // On native platforms, always use bottom bar for iOS/Android
@@ -96,27 +150,38 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
   }
 
   @override
-  Widget build(BuildContext context) => Consumer<BottomNavProvider>(
-    builder: (context, navProvider, _) {
-      // Check if navigation is initialized
-      if (navProvider.navigationItems.isEmpty) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
-      }
+  Widget build(BuildContext context) {
+    if (kIsWeb) {
+      _WebBackButtonCallbackHolder.set(() {
+        if (mounted) _showLogoutDialog(context);
+      });
+    }
+    return Consumer<BottomNavProvider>(
+      builder: (context, navProvider, _) {
+        // Check if navigation is initialized
+        if (navProvider.navigationItems.isEmpty) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
 
-      // Handle back button to navigate to first tab instead of exiting App
-      return PopScope(
+        // Handle back button: when on dashboard, show logout confirmation instead of going back
+        return PopScope(
         canPop: false,
         onPopInvokedWithResult: (bool didPop, result) {
           if (didPop) {
             return;
           }
-          // Navigate to dashboard instead of exiting
-          context.go('/dashboard');
+          // Defer to next frame so back handling is complete before showing dialog
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              _showLogoutDialog(context);
+            }
+          });
         },
         child: _buildScaffold(context, navProvider),
       );
     },
   );
+  }
 
   Widget _buildScaffold(BuildContext context, BottomNavProvider navProvider) {
     // Mobile (native iOS/Android or mobile screen size on web) → Use Bottom Bar
@@ -161,6 +226,57 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
         drawerEnableOpenDragGesture: false,
       ),
     );
+  }
+
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    // Use root navigator so dialog appears above shell (dashboard) and is not lost
+    final result = await CustomDialog.showConfirmation(
+      context: context,
+      title: context.translate('logout_title'),
+      message: context.translate('logout_message'),
+      confirmText: context.translate('logout'),
+      cancelText: context.translate('cancel'),
+      confirmColor: AppTheme.danger,
+      icon: Icons.logout_rounded,
+      iconColor: AppTheme.danger,
+      useRootNavigator: true,
+    );
+
+    if (result != true || !context.mounted) {
+      return;
+    }
+
+    // Same full logout flow as drawer/rail logout button
+    final loginProvider = context.read<LoginProvider>();
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        useRootNavigator: true,
+        builder:
+            (BuildContext loadingContext) =>
+                const Center(child: CircularProgressIndicator()),
+      ),
+    );
+
+    await loginProvider.logout();
+
+    if (!context.mounted) {
+      return;
+    }
+    navigator.pop(); // Close loading dialog
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        context.router.goToLogin();
+        showCustomSnackbar(
+          message: context.translate('logout_success'),
+          type: SnackbarType.success,
+        );
+      }
+    });
   }
 }
 

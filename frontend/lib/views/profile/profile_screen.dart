@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/role_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../modules/student/providers/student_provider.dart';
 import '../../provider/login_signup/login_provider.dart';
@@ -34,9 +35,11 @@ class ProfileScreen extends StatelessWidget {
       return const SizedBox();
     }
 
-    // For students, use a detailed config consistent with other screens
+    // Use the same app bar config as role-specific screens (student, teacher, etc.)
     AppBarConfig appBarConfig;
-    if (user.role?.id == 3) {
+    final roleId = user.role?.id;
+
+    if (roleId == RoleConstants.student.id) {
       final studentProvider = context.watch<StudentProvider>();
       final userInitials = UserUtils.getInitials(user.name);
       final userName = user.name;
@@ -60,6 +63,16 @@ class ProfileScreen extends StatelessWidget {
         gpa: gpa,
         onNotificationIconPressed: () {},
       );
+    } else if (roleId == RoleConstants.teacher.id) {
+      // Same teacher app bar as My Classes and other teacher screens
+      final teacher = user.teacher;
+      appBarConfig = AppBarConfig.teacher(
+        userInitials: UserUtils.getInitials(user.name),
+        userName: user.name,
+        designation: teacher?.designation ?? 'Faculty',
+        employeeId: teacher?.employeeId ?? 'N/A',
+        onNotificationIconPressed: () {},
+      );
     } else {
       appBarConfig = AppBarConfigHelper.getConfigForUser(
         user,
@@ -70,7 +83,7 @@ class ProfileScreen extends StatelessWidget {
 
     // Use CustomMainScreenWithAppbar for consistent header
     return CustomMainScreenWithAppbar(
-      title: 'Profile',
+      title: context.translate('profile'),
       appBarConfig: appBarConfig,
       child: SingleChildScrollView(
         child: ResponsivePadding(

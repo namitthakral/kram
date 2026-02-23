@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'extensions.dart';
+
 import '../modules/admin/screens/admin_dashboard_screen.dart';
 import '../modules/admin/screens/admin_main_screen.dart';
 import '../modules/admin/screens/admin_reports_screen.dart';
@@ -45,7 +47,10 @@ import '../modules/teacher/screens/class_detail_screen.dart';
 import '../modules/teacher/screens/create_assignment_screen.dart';
 import '../modules/teacher/screens/examination_form_screen.dart';
 import '../modules/teacher/screens/examinations_list_screen.dart';
+import '../modules/teacher/models/report_card_models.dart';
+import '../modules/teacher/screens/generate_report_cards_screen.dart';
 import '../modules/teacher/screens/marks_list_screen.dart';
+import '../modules/teacher/screens/report_card_view_screen.dart';
 import '../modules/teacher/screens/my_classes_screen.dart';
 import '../modules/teacher/screens/question_paper_template_screen.dart';
 import '../modules/teacher/screens/question_papers_list_screen.dart';
@@ -165,13 +170,21 @@ class RouterService {
     ),
 
     // Notifications route (common to all roles)
+    // Wrapped in PopScope so back from this top-level route goes to dashboard
+    // instead of emptying the stack (avoids go_router "popped the last page" assertion).
     GoRoute(
       path: '/notifications',
       name: 'notifications',
       pageBuilder:
           (context, state) => _buildPageWithTransition(
             key: state.pageKey,
-            child: const NotificationsScreen(),
+            child: PopScope(
+              canPop: false,
+              onPopInvokedWithResult: (bool didPop, _) {
+                if (!didPop) context.go('/dashboard');
+              },
+              child: const NotificationsScreen(),
+            ),
           ),
     ),
 
@@ -309,6 +322,40 @@ class RouterService {
                     key: state.pageKey,
                     child: const MarksListScreen(),
                   ),
+            ),
+            GoRoute(
+              path: 'report-cards',
+              name: 'report_cards',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const GenerateReportCardsScreen(),
+                  ),
+              routes: [
+                GoRoute(
+                  path: 'view',
+                  name: 'report_card_view',
+                  pageBuilder: (context, state) {
+                    final card = state.extra as ReportCardData?;
+                    if (card == null) {
+                      return _buildPageWithTransition(
+                        key: state.pageKey,
+                        child: Scaffold(
+                          body: Center(
+                            child: Text(
+                              context.translate('report_card_data_not_available'),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return _buildPageWithTransition(
+                      key: state.pageKey,
+                      child: ReportCardViewScreen(reportCard: card),
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: 'assignments',
@@ -723,7 +770,9 @@ class RouterService {
       5 => const TeacherDashboardScreen(), // Teacher
       6 => const LibraryDashboardScreen(), // Librarian
       7 => const StaffDashboardScreen(), // Staff
-      _ => const Center(child: Text('Dashboard not configured for this role')),
+      _ => Center(
+          child: Text(context.translate('dashboard_not_configured_for_role')),
+        ),
     };
   }
 
@@ -762,7 +811,15 @@ class RouterService {
     pathParameters: {'productId': productId},
   );
 
-  void goBack() => router.pop();
+  /// Pops the current route if possible; otherwise navigates to dashboard
+  /// to avoid "popped the last page" assertion.
+  void goBack() {
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/dashboard');
+    }
+  }
 
   // Method to navigate by string path (useful for deep links)
   void navigateToPath(String path) => router.go(path);

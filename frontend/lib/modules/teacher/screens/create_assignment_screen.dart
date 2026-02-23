@@ -5,7 +5,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
 import '../../../utils/custom_snackbar.dart';
-import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_date_picker_field.dart';
 import '../../../widgets/custom_widgets/custom_dropdown_field.dart';
@@ -233,39 +232,6 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           children: [
-            // Back Navigation
-            InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF155dfc).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        size: 16,
-                        color: Color(0xFF155dfc),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Back to Assignments',
-                      style: context.textTheme.bodySm.copyWith(
-                        fontWeight: AppTheme.fontWeightMedium,
-                        color: const Color(0xFF155dfc),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             // Assignment Details Section
             CustomFormSection(
               title: 'Assignment Details',

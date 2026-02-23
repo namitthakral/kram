@@ -1028,32 +1028,6 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back Navigation
-              InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.arrow_back,
-                        size: 18,
-                        color: AppTheme.blue500,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Back to Academic Management',
-                        style: context.textTheme.bodySm.copyWith(
-                          fontWeight: AppTheme.fontWeightMedium,
-                          color: AppTheme.blue500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
               // Header
               Text(
                 'Create Timetable',

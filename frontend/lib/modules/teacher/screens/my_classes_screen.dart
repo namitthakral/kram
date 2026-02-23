@@ -69,52 +69,52 @@ class _MyClassesScreenState extends State<MyClassesScreen> {
         children: [
           // Create Actions
           // Create Actions
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context
-                          .pushNamed('create_assignment')
-                          .then((_) => _loadData());
-                    },
-                    icon: const Icon(Icons.assignment_add, size: 20),
-                    label: const Text('Create Assignment'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: CustomAppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.pushNamed('create_exam').then((_) => _loadData());
-                    },
-                    icon: const Icon(Icons.quiz, size: 20),
-                    label: const Text('Create Exam'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFf59e0b),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          //   child: Row(
+          //     children: [
+          //       Expanded(
+          //         child: ElevatedButton.icon(
+          //           onPressed: () {
+          //             context
+          //                 .pushNamed('create_assignment')
+          //                 .then((_) => _loadData());
+          //           },
+          //           icon: const Icon(Icons.assignment_add, size: 20),
+          //           label: const Text('Create Assignment'),
+          //           style: ElevatedButton.styleFrom(
+          //             backgroundColor: CustomAppColors.primary,
+          //             foregroundColor: Colors.white,
+          //             padding: const EdgeInsets.symmetric(vertical: 12),
+          //             shape: RoundedRectangleBorder(
+          //               borderRadius: BorderRadius.circular(8),
+          //             ),
+          //             elevation: 0,
+          //           ),
+          //         ),
+          //       ),
+          //       const SizedBox(width: 12),
+          //       Expanded(
+          //         child: ElevatedButton.icon(
+          //           onPressed: () {
+          //             context.pushNamed('create_exam').then((_) => _loadData());
+          //           },
+          //           icon: const Icon(Icons.quiz, size: 20),
+          //           label: const Text('Create Exam'),
+          //           style: ElevatedButton.styleFrom(
+          //             backgroundColor: const Color(0xFFf59e0b),
+          //             foregroundColor: Colors.white,
+          //             padding: const EdgeInsets.symmetric(vertical: 12),
+          //             shape: RoundedRectangleBorder(
+          //               borderRadius: BorderRadius.circular(8),
+          //             ),
+          //             elevation: 0,
+          //           ),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // Search, Filter, and View Options
           Padding(
@@ -297,147 +297,148 @@ class _MyClassesScreenState extends State<MyClassesScreen> {
     List classes,
     bool isGridView,
   ) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: CustomAppColors.primary,
-                  borderRadius: BorderRadius.circular(2),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 16,
+              decoration: BoxDecoration(
+                color: CustomAppColors.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1e293b),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                classes.length.toString(),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1e293b),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  classes.length.toString(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        if (isGridView) _buildGridView(classes) else _buildListView(classes),
-        const SizedBox(height: 12),
-      ],
-    );
+      ),
+      if (isGridView) _buildGridView(classes) else _buildListView(classes),
+      const SizedBox(height: 12),
+    ],
+  );
 
   Widget _buildListView(List classes) => ListView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      itemCount: classes.length,
-      itemBuilder: (context, index) {
-        final classData = classes[index];
-        return ClassCardWidget(
-          classSection: classData,
-          onTap: () => _navigateToClassDetails(classData),
-          onCreateExam: () => _navigateToCreateExam(classData),
-          onCreateAssignment: () => _navigateToCreateAssignment(classData),
-          onMarkAttendance: () => _navigateToMarkAttendance(classData),
-        );
-      },
-    );
+    physics: const NeverScrollableScrollPhysics(),
+    shrinkWrap: true,
+    padding: EdgeInsets.zero,
+    itemCount: classes.length,
+    itemBuilder: (context, index) {
+      final classData = classes[index];
+      return ClassCardWidget(
+        classSection: classData,
+        onTap: () => _navigateToClassDetails(classData),
+        onCreateExam: () => _navigateToCreateExam(classData),
+        onCreateAssignment: () => _navigateToCreateAssignment(classData),
+        onMarkAttendance: () => _navigateToMarkAttendance(classData),
+      );
+    },
+  );
 
   Widget _buildGridView(List classes) => GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: context.isMobile ? 2 : 3,
-        childAspectRatio: 0.85,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: classes.length,
-      itemBuilder: (context, index) {
-        final classData = classes[index];
-        return ClassCardWidget(
-          classSection: classData,
-          onTap: () => _navigateToClassDetails(classData),
-          onCreateExam: () => _navigateToCreateExam(classData),
-          onCreateAssignment: () => _navigateToCreateAssignment(classData),
-          onMarkAttendance: () => _navigateToMarkAttendance(classData),
-          viewMode: ClassCardViewMode.grid,
-        );
-      },
-    );
+    physics: const NeverScrollableScrollPhysics(),
+    shrinkWrap: true,
+    padding: EdgeInsets.zero,
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: context.isMobile ? 2 : 3,
+      childAspectRatio: 0.85,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+    ),
+    itemCount: classes.length,
+    itemBuilder: (context, index) {
+      final classData = classes[index];
+      return ClassCardWidget(
+        classSection: classData,
+        onTap: () => _navigateToClassDetails(classData),
+        onCreateExam: () => _navigateToCreateExam(classData),
+        onCreateAssignment: () => _navigateToCreateAssignment(classData),
+        onMarkAttendance: () => _navigateToMarkAttendance(classData),
+        viewMode: ClassCardViewMode.grid,
+      );
+    },
+  );
 
   Widget _buildFilterChip(
     BuildContext context,
     String label,
     VoidCallback onRemove,
   ) => Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Chip(
-        label: Text(label),
-        onDeleted: onRemove,
-        deleteIcon: const Icon(Icons.close, size: 16),
-        backgroundColor: CustomAppColors.primary.withValues(alpha: 0.1),
-        labelStyle: const TextStyle(
-          color: CustomAppColors.primary,
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-        ),
+    padding: const EdgeInsets.only(right: 8),
+    child: Chip(
+      label: Text(label),
+      onDeleted: onRemove,
+      deleteIcon: const Icon(Icons.close, size: 16),
+      backgroundColor: CustomAppColors.primary.withValues(alpha: 0.1),
+      labelStyle: const TextStyle(
+        color: CustomAppColors.primary,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
       ),
-    );
+    ),
+  );
 
   Widget _buildErrorState(String error) => Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 48),
-          const SizedBox(height: 16),
-          Text('Error: $error'),
-          const SizedBox(height: 16),
-          ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
-        ],
-      ),
-    );
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+        const SizedBox(height: 16),
+        Text('Error: $error'),
+        const SizedBox(height: 16),
+        ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+      ],
+    ),
+  );
 
   Widget _buildEmptyState(String message) => Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.class_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 24),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1e293b),
-            ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.class_outlined, size: 80, color: Colors.grey[300]),
+        const SizedBox(height: 24),
+        Text(
+          message,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1e293b),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 
-  bool _hasActiveFilters(TeacherClassesProvider provider) => provider.selectedSubjectFilter != null ||
-        provider.selectedSectionFilter != null ||
-        provider.showOnlyClassTeacher;
+  bool _hasActiveFilters(TeacherClassesProvider provider) =>
+      provider.selectedSubjectFilter != null ||
+      provider.selectedSectionFilter != null ||
+      provider.showOnlyClassTeacher;
 
   void _navigateToClassDetails(classData) {
     context.pushNamed(
@@ -485,6 +486,4 @@ class _MyClassesScreenState extends State<MyClassesScreen> {
       extra: {'sectionId': classData.id, 'className': classData.displayName},
     );
   }
-
-
 }

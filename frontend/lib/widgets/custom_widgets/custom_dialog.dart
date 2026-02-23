@@ -19,8 +19,10 @@ class CustomDialog {
     Color? confirmColor,
     IconData? icon,
     Color? iconColor,
+    bool useRootNavigator = true,
   }) async => showDialog<bool>(
     context: context,
+    useRootNavigator: useRootNavigator,
     builder:
         (context) => _ConfirmationDialog(
           title: title,

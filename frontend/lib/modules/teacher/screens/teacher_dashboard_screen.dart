@@ -302,7 +302,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         ),
         const SizedBox(height: 20),
         QuickActionButton(
-          title: 'Manage Assignments',
+          title: context.translate('manage_assignments'),
           icon: Icons.assignment,
           backgroundColor: const Color(0xFF4F7CFF),
           onTap: () {
@@ -316,7 +316,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         ),
         const SizedBox(height: 12),
         QuickActionButton(
-          title: 'Manage Examinations',
+          title: context.translate('manage_examinations'),
           icon: Icons.quiz,
           backgroundColor: const Color(0xFF8b5cf6),
           onTap: () {
@@ -342,14 +342,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           title: context.translate('enter_marks'),
           icon: Icons.grade,
           backgroundColor: const Color(0xFFf59e0b),
-          onTap: () {},
+          onTap: () {
+            context.push('/academic/marks');
+          },
         ),
         const SizedBox(height: 12),
         QuickActionButton(
           title: context.translate('generate_report_cards'),
           icon: Icons.description,
           backgroundColor: const Color(0xFFef4444),
-          onTap: () {},
+          onTap: () {
+            context.push('/academic/report-cards');
+          },
         ),
       ],
     ),

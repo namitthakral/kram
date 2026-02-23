@@ -8,7 +8,7 @@ import '../../utils/extensions.dart';
 import '../../utils/images/base_image.dart';
 import '../../utils/images/image_asset.dart';
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   const CustomTextField({
     super.key,
     this.label,
@@ -44,6 +44,31 @@ class CustomTextField extends StatelessWidget {
   final Widget? prefixIcon;
 
   @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
@@ -51,12 +76,17 @@ class CustomTextField extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
     final textColor = theme.colorScheme.onSurface;
 
+    final isFocused = _focusNode.hasFocus;
+    final fillColor = widget.filled
+        ? (isFocused ? Colors.white : CustomAppColors.slate50)
+        : null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label != null) ...[
+        if (widget.label != null) ...[
           Text(
-            label ?? '',
+            widget.label ?? '',
             style: TextStyle(
               fontWeight: AppTheme.fontWeightBold,
               fontSize: AppTheme.fontSizeSm,
@@ -66,68 +96,69 @@ class CustomTextField extends StatelessWidget {
           const SizedBox(height: 6),
         ],
         TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
+          focusNode: _focusNode,
+          controller: widget.controller,
+          obscureText: widget.obscureText,
+          keyboardType: widget.keyboardType,
           style:
-              textStyle ?? context.textTheme.bodySm.copyWith(color: textColor),
-          readOnly: !isEnabled,
-          onTap: onTap,
-          onChanged: onChanged,
-          validator: validator,
-          maxLines: maxLines,
+              widget.textStyle ?? context.textTheme.bodySm.copyWith(color: textColor),
+          readOnly: !widget.isEnabled,
+          onTap: widget.onTap,
+          onChanged: widget.onChanged,
+          validator: widget.validator,
+          maxLines: widget.maxLines,
           decoration: InputDecoration(
-            filled: filled,
-            fillColor: filled ? CustomAppColors.slate50 : null,
+            filled: widget.filled,
+            fillColor: fillColor,
             prefixIcon:
-                prefixIcon ??
-                (prefixButtonIcon?.icon != null
+                widget.prefixIcon ??
+                (widget.prefixButtonIcon?.icon != null
                     ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       child: InkWell(
-                        onTap: prefixButtonIcon?.onIconTapped,
+                        onTap: widget.prefixButtonIcon?.onIconTapped,
                         child: BaseImage(
-                          asset: LocalAsset(url: prefixButtonIcon!.icon),
+                          asset: LocalAsset(url: widget.prefixButtonIcon!.icon),
                           fit: BoxFit.contain,
                           height: 25,
                           width: 25,
-                          color: prefixButtonIcon?.color,
+                          color: widget.prefixButtonIcon?.color,
                         ),
                       ),
                     )
                     : null),
             suffixIcon:
-                suffixButtonIcon?.icon != null
+                widget.suffixButtonIcon?.icon != null
                     ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       child: InkWell(
-                        onTap: suffixButtonIcon?.onIconTapped,
+                        onTap: widget.suffixButtonIcon?.onIconTapped,
                         child: BaseImage(
-                          asset: LocalAsset(url: suffixButtonIcon!.icon),
+                          asset: LocalAsset(url: widget.suffixButtonIcon!.icon),
                           height: 25,
                           width: 25,
                           fit: BoxFit.contain,
-                          color: suffixButtonIcon?.color,
+                          color: widget.suffixButtonIcon?.color,
                         ),
                       ),
                     )
                     : null,
-            hintText: hintText,
+            hintText: widget.hintText,
             hintStyle: const TextStyle(color: CustomAppColors.grey01),
             border:
-                border ??
+                widget.border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: const BorderSide(color: CustomAppColors.lightGrey01),
                 ),
             enabledBorder:
-                border ??
+                widget.border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: const BorderSide(color: CustomAppColors.lightGrey01),
                 ),
             focusedBorder:
-                border ??
+                widget.border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide(color: primaryColor, width: 2),

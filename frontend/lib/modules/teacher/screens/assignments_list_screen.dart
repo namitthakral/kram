@@ -56,7 +56,9 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     final teacher = user?.teacher;
 
     if (user?.uuid == null) {
-      return const Scaffold(body: Center(child: Text('User not found')));
+      return Scaffold(
+        body: Center(child: Text(context.translate('user_not_found'))),
+      );
     }
 
     // Get teacher info for app bar
@@ -127,20 +129,18 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                       return _buildEmptyState();
                     }
 
-                    // Filter assignments based on search query
+                    // Apply provider filters (course, status), then search query
+                    final filteredByProvider = provider.getFilteredAssignments();
                     final filteredAssignments =
-                        provider.assignments.where((assignment) {
+                        filteredByProvider.where((assignment) {
                           if (_searchQuery.isEmpty) {
                             return true;
                           }
                           final query = _searchQuery.toLowerCase();
-                          return assignment.title.toLowerCase().contains(
-                                query,
-                              ) ||
-                              (assignment.courseName.toLowerCase().contains(
-                                    query,
-                                  ) ??
-                                  false);
+                          return assignment.title.toLowerCase().contains(query) ||
+                              assignment.courseName
+                                  .toLowerCase()
+                                  .contains(query);
                         }).toList();
 
                     return RefreshIndicator(
@@ -259,13 +259,109 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
 
   void _showFilterDialog(BuildContext context) {
     final provider = context.read<AssignmentProvider>();
+    if (ResponsiveUtils.isMobile(context)) {
+      _showAssignmentFilterBottomSheet(context, provider);
+    } else {
+      _showAssignmentFilterDialog(context, provider);
+    }
+  }
+
+  void _showAssignmentFilterBottomSheet(
+    BuildContext context,
+    AssignmentProvider provider,
+  ) {
+    String? pendingCourse = provider.selectedCourseFilter;
+    String? pendingStatus = provider.selectedStatusFilter;
+
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
       config: const BottomSheetConfig(canDismiss: true),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return _assignmentFilterContent(
+            context: ctx,
+            provider: provider,
+            pendingCourse: pendingCourse,
+            pendingStatus: pendingStatus,
+            onPendingCourseChanged: (v) => setModalState(() => pendingCourse = v),
+            onPendingStatusChanged: (v) => setModalState(() => pendingStatus = v),
+            onClear: () {
+              provider.clearFilters();
+              Navigator.pop(context);
+            },
+            onApply: (course, status) {
+              provider.setCourseFilter(course);
+              provider.setStatusFilter(status);
+              Navigator.pop(context);
+            },
+            showTitle: true,
+          );
+        },
+      ),
+    );
+  }
+
+  void _showAssignmentFilterDialog(
+    BuildContext context,
+    AssignmentProvider provider,
+  ) {
+    String? pendingCourse = provider.selectedCourseFilter;
+    String? pendingStatus = provider.selectedStatusFilter;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setModalState) {
+          return AlertDialog(
+            title: Text(dialogContext.translate('filter_assignments')),
+            content: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: _assignmentFilterContent(
+                  context: dialogContext,
+                  provider: provider,
+                  pendingCourse: pendingCourse,
+                  pendingStatus: pendingStatus,
+                  onPendingCourseChanged: (v) =>
+                      setModalState(() => pendingCourse = v),
+                  onPendingStatusChanged: (v) =>
+                      setModalState(() => pendingStatus = v),
+                  onClear: () {
+                    provider.clearFilters();
+                    Navigator.of(dialogContext).pop();
+                  },
+                  onApply: (course, status) {
+                    provider.setCourseFilter(course);
+                    provider.setStatusFilter(status);
+                    Navigator.of(dialogContext).pop();
+                  },
+                  showTitle: false,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _assignmentFilterContent({
+    required BuildContext context,
+    required AssignmentProvider provider,
+    required String? pendingCourse,
+    required String? pendingStatus,
+    required void Function(String?) onPendingCourseChanged,
+    required void Function(String?) onPendingStatusChanged,
+    required VoidCallback onClear,
+    required void Function(String?, String?) onApply,
+    required bool showTitle,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showTitle) ...[
           Text(
             context.translate('filter_assignments'),
             style: context.textTheme.titleXl.copyWith(
@@ -274,86 +370,91 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          DropdownButtonFormField<String>(
-            initialValue: provider.selectedCourseFilter,
-            decoration: InputDecoration(
-              labelText: context.translate('course'),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              prefixIcon: const Icon(Icons.book_outlined),
-            ),
-            items: [
-              DropdownMenuItem(child: Text(context.translate('all_courses'))),
-              ...provider.courses.map(
-                (course) => DropdownMenuItem(
-                  value: course.id.toString(),
-                  child: Text(course.courseName),
-                ),
-              ),
-            ],
-            onChanged: provider.setCourseFilter,
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: provider.selectedStatusFilter,
-            decoration: InputDecoration(
-              labelText: context.translate('status'),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              prefixIcon: const Icon(Icons.info_outline),
-            ),
-            items: [
-              DropdownMenuItem(child: Text(context.translate('all_statuses'))),
-              const DropdownMenuItem(value: 'DRAFT', child: Text('Draft')),
-              const DropdownMenuItem(
-                value: 'PUBLISHED',
-                child: Text('Published'),
-              ),
-              const DropdownMenuItem(value: 'CLOSED', child: Text('Closed')),
-            ],
-            onChanged: provider.setStatusFilter,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    provider.clearFilters();
-                    Navigator.pop(context);
-                    // No need to reload - filtering is local
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(context.translate('clear')),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // No need to reload - filtering is local
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(context.translate('apply')),
-                ),
-              ),
-            ],
-          ),
         ],
-      ),
+        DropdownButtonFormField<String?>(
+          initialValue: pendingCourse,
+          decoration: InputDecoration(
+            labelText: context.translate('course'),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            prefixIcon: const Icon(Icons.book_outlined),
+          ),
+          items: [
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Text(context.translate('all_courses')),
+            ),
+            ...provider.courses.map(
+              (course) => DropdownMenuItem<String?>(
+                value: course.id.toString(),
+                child: Text(course.courseName),
+              ),
+            ),
+          ],
+          onChanged: (value) => onPendingCourseChanged(value),
+        ),
+        const SizedBox(height: 16),
+        DropdownButtonFormField<String?>(
+          initialValue: pendingStatus,
+          decoration: InputDecoration(
+            labelText: context.translate('status'),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            prefixIcon: const Icon(Icons.info_outline),
+          ),
+          items: [
+            DropdownMenuItem<String?>(
+              value: null,
+              child: Text(context.translate('all_statuses')),
+            ),
+            DropdownMenuItem(
+              value: 'DRAFT',
+              child: Text(context.translate('draft')),
+            ),
+            DropdownMenuItem(
+              value: 'PUBLISHED',
+              child: Text(context.translate('published')),
+            ),
+            DropdownMenuItem(
+              value: 'CLOSED',
+              child: Text(context.translate('closed')),
+            ),
+          ],
+          onChanged: (value) => onPendingStatusChanged(value),
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onClear,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(context.translate('clear')),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => onApply(pendingCourse, pendingStatus),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(context.translate('apply')),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

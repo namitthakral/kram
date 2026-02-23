@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
+import '../../utils/extensions.dart';
 import '../../utils/app_bar_config_helper.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
@@ -29,7 +30,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = loginProvider.currentUser;
 
     if (user == null) {
-      return const Scaffold(body: Center(child: Text('User not found')));
+      return Scaffold(
+        body: Center(child: Text(context.translate('user_not_found'))),
+      );
     }
 
     // Determine which tabs to show based on role

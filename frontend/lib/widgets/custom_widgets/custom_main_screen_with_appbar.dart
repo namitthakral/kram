@@ -305,6 +305,19 @@ class CustomMainScreenWithAppbar extends StatelessWidget {
   }
 }
 
+bool _shouldShowBackButton(
+  BuildContext context,
+  AppBarConfig config,
+  bool isProfileType,
+) {
+  final isDashboard =
+      GoRouterState.of(context).matchedLocation == '/dashboard';
+  if (isDashboard) return false;
+  return config.showBackButton ||
+      (isProfileType && context.canPop()) ||
+      context.canPop();
+}
+
 class _CustomAppBar extends StatelessWidget {
   const _CustomAppBar({required this.title, required this.config});
 
@@ -331,24 +344,25 @@ class _CustomAppBar extends StatelessWidget {
                 child: Container(height: 1, color: const Color(0xFFE5E7EB)),
               )
               : null,
-      // Leading (back button)
-      leading:
-          !isProfileType && config.showBackButton
+      // Leading (back button): never on dashboard; elsewhere show if config wants it, or when user can pop (e.g. from report cards back to dashboard)
+      leading: _shouldShowBackButton(context, config, isProfileType)
               ? IconButton(
                 icon: SvgPicture.asset(
                   'assets/images/icons/ic_back_arrow.svg',
                   width: 20,
                   alignment: Alignment.centerLeft,
-                  colorFilter: const ColorFilter.mode(
-                    CustomAppColors.white,
+                  colorFilter: ColorFilter.mode(
+                    isProfileType ? Colors.black87 : CustomAppColors.white,
                     BlendMode.srcIn,
                   ),
                 ),
                 onPressed: () {
                   if (config.onBackButtonTapped != null) {
                     config.onBackButtonTapped?.call();
+                  } else if (context.canPop()) {
+                    context.pop();
                   } else {
-                    Navigator.of(context).pop();
+                    context.go('/dashboard');
                   }
                 },
               )

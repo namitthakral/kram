@@ -4,6 +4,7 @@ import '../../../core/services/api_service.dart';
 import '../models/assignment_models.dart';
 import '../models/dashboard_stats.dart';
 import '../models/examination_models.dart';
+import '../models/report_card_models.dart';
 
 /// Service class for handling teacher-related API calls
 ///
@@ -1142,6 +1143,70 @@ class TeacherService {
       }
     } on Exception catch (e) {
       throw Exception('Failed to get at-risk students: $e');
+    }
+  }
+
+  /// Generate batch report cards for students.
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/report-cards/generate
+  ///
+  /// [teacherUuid] - Teacher's user UUID
+  /// [sectionId] - Optional; limit to section
+  /// [courseId] - Optional; limit to course
+  /// [semesterId] - Optional; semester for report
+  /// [studentIds] - Optional; specific student IDs
+  /// [includeExamDetails] - Include exam details in report (default true)
+  Future<BatchReportCardResponse> generateBatchReportCards(
+    String teacherUuid, {
+    int? sectionId,
+    int? courseId,
+    int? semesterId,
+    List<int>? studentIds,
+    bool? includeExamDetails,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (sectionId != null) body['sectionId'] = sectionId;
+      if (courseId != null) body['courseId'] = courseId;
+      if (semesterId != null) body['semesterId'] = semesterId;
+      if (studentIds != null && studentIds.isNotEmpty) {
+        body['studentIds'] = studentIds;
+      }
+      if (includeExamDetails != null) {
+        body['includeExamDetails'] = includeExamDetails;
+      }
+
+      final response = await _apiService.dio.post(
+        '/teachers/$teacherUuid/report-cards/generate',
+        data: body,
+      );
+
+      // Accept both 200 OK and 201 Created (NestJS POST often returns 201)
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return BatchReportCardResponse.fromJson(
+          response.data as Map<String, dynamic>,
+        );
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to generate report cards',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Teacher not found');
+      } else if (e.response?.statusCode == 403) {
+        throw Exception(
+          'Not allowed to generate report cards for this section',
+        );
+      }
+      throw Exception(
+        'Failed to generate report cards: ${e.message ?? e.response?.data}',
+      );
+    } on Exception catch (e) {
+      throw Exception('Failed to generate report cards: $e');
     }
   }
 }

@@ -11,7 +11,7 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                "--dart-define=BASE_URL=http://192.168.1.11:3001",
+                "--dart-define=BASE_URL=http://192.168.0.175:3001",
                 "-d",
                 "chrome",
                 "--web-port",

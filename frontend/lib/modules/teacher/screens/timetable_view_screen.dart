@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/role_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
@@ -78,6 +79,11 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
     final loginProvider = context.watch<LoginProvider>();
     final user = loginProvider.currentUser;
 
+    // Timetable editing is admin-only; teachers get view-only
+    final roleId = user?.role?.id;
+    final canEditTimetable = roleId == RoleConstants.superAdmin.id ||
+        roleId == RoleConstants.admin.id;
+
     return CustomMainScreenWithAppbar(
       title: className,
       appBarConfig: AppBarConfig.teacher(
@@ -87,34 +93,35 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
         employeeId: user?.teacher?.employeeId ?? 'EMP',
         onNotificationIconPressed: () {},
       ),
-      bottomWidget: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // Navigation to Edit/Template screen
-              context.pushNamed('create_timetable');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: CustomAppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      bottomWidget: canEditTimetable
+          ? Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    context.pushNamed('create_timetable');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: CustomAppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.edit_calendar_rounded, color: Colors.white),
+                  label: const Text(
+                    'Manage Timetable',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: AppTheme.fontWeightBold,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            icon: const Icon(Icons.edit_calendar_rounded, color: Colors.white),
-            label: const Text(
-              'Manage Timetable',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: AppTheme.fontWeightBold,
-              ),
-            ),
-          ),
-        ),
-      ),
+            )
+          : null,
       child:
           _isLoading
               ? const Center(child: CircularProgressIndicator())

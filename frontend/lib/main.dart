@@ -209,7 +209,7 @@ class _KramAppState extends State<KramApp> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return GestureDetector(
+    final app = GestureDetector(
       onTap: () {
         final currentFocus = FocusScope.of(context);
         if (!currentFocus.hasPrimaryFocus) {
@@ -238,5 +238,13 @@ class _KramAppState extends State<KramApp> {
             ),
       ),
     );
+
+    // On web, disable the widget inspector scope to avoid
+    // "LegacyJavaScriptObject is not a subtype of DiagnosticsNode" when the
+    // inspector serializes the tree and hits JS interop objects.
+    if (kIsWeb) {
+      return DisableWidgetInspectorScope(child: app);
+    }
+    return app;
   }
 }

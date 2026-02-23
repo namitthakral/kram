@@ -238,40 +238,6 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
         child: ListView(
           padding: EdgeInsets.fromLTRB(16, 16, 16, isMobile ? 80 : 100),
           children: [
-            // Back Navigation Link
-            InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF155dfc).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        size: 16,
-                        color: Color(0xFF155dfc),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      context.translate('back_to_examinations'),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF155dfc),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             // Basic Information Section
             CustomFormSection(
               title: context.translate('basic_information'),
@@ -305,7 +271,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
             // Marks, Duration & Schedule Section
             CustomFormSection(
               title: context.translate('exam_details'),
-              subtitle: context.translate('set_marks_duration_schedule'),
+              subtitle: context.translate('set_marks_duration'),
               icon: Icons.assignment_outlined,
               children: [
                 _buildMarksFields(),

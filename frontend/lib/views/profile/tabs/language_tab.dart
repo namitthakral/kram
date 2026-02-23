@@ -17,7 +17,7 @@ class LanguageTab extends StatelessWidget {
       children: [
         _buildInfoCard(
           context,
-          title: 'Select Language',
+          title: context.translate('select_language'),
           children: [
             Consumer<LanguageProvider>(
               builder:

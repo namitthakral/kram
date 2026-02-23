@@ -21,7 +21,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
     final user = loginProvider.currentUser;
 
     if (user == null) {
-      return const Scaffold(body: Center(child: Text('User not found')));
+      return Scaffold(
+        body: Center(child: Text(context.translate('user_not_found'))),
+      );
     }
 
     return CustomMainScreenWithAppbar(
