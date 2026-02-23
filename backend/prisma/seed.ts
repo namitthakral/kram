@@ -209,6 +209,11 @@ async function main() {
   )
   console.log('✅ Created comprehensive data for Student 1')
 
+  // Create report card seed data (attendance + academic records within semester dates)
+  console.log('Creating report card seed data...')
+  await createReportCardSeedData(students, subjects, semesters, teacher)
+  console.log('✅ Created report card seed data (attendance & academic records)')
+
   console.log('')
   console.log('═══════════════════════════════════════════════════════════')
   console.log('🎉 Database Seeding Completed Successfully!')
@@ -2515,6 +2520,235 @@ async function createPhase1TestData() {
   console.log('  🎯 Test the APIs:')
   console.log(`     • GET /teachers/${teacher.user.uuid}/submissions/pending`)
   console.log(`     • GET /teachers/${teacher.user.uuid}/students/at-risk`)
+}
+
+/**
+ * Creates seed data so teacher report cards show proper attendance, subject records,
+ * and performance (SGPA, overall grade). Ensures:
+ * - Enrollments and class sections for Spring 2025 (in addition to Fall 2024)
+ * - Academic records for both semesters for all report-card students
+ * - Attendance records within each semester's date range
+ */
+async function createReportCardSeedData(
+  students: { id: number }[],
+  subjects: { id: number }[],
+  semesters: { id: number; semesterName: string; startDate: Date; endDate: Date }[],
+  teacher: { id: number }
+) {
+  if (semesters.length < 2) {
+    console.log('  ⚠️ Need at least 2 semesters for report card seed, skipping')
+    return
+  }
+
+  const fallSemester = semesters[0]
+  const springSemester = semesters[1]
+  const reportCardStudents = students.slice(0, 5)
+  const reportCardSubjects = subjects.slice(0, 2)
+
+  console.log('  📋 Creating Spring 2025 enrollments and class sections...')
+  for (const student of reportCardStudents) {
+    for (const subject of reportCardSubjects) {
+      try {
+        await prisma.enrollment.upsert({
+          where: {
+            unique_enrollment: {
+              studentId: student.id,
+              subjectId: subject.id,
+              semesterId: springSemester.id,
+            },
+          },
+          update: {},
+          create: {
+            studentId: student.id,
+            subjectId: subject.id,
+            semesterId: springSemester.id,
+            enrollmentDate: new Date('2025-01-10'),
+            enrollmentStatus: 'ENROLLED',
+            creditsEarned: 3,
+            attendancePercentage: 85.0,
+          },
+        })
+      } catch {
+        // Skip if exists
+      }
+    }
+  }
+
+  const existingSpringSections = await prisma.classSection.findMany({
+    where: { teacherId: teacher.id, semesterId: springSemester.id },
+  })
+  if (existingSpringSections.length === 0 && reportCardSubjects.length >= 2) {
+    await prisma.classSection.create({
+      data: {
+        subjectId: reportCardSubjects[0].id,
+        semesterId: springSemester.id,
+        teacherId: teacher.id,
+        sectionName: 'A',
+        maxCapacity: 30,
+        currentEnrollment: reportCardStudents.length,
+        roomNumber: 'CS-101',
+        schedule: JSON.stringify({
+          Monday: '09:00-10:30',
+          Wednesday: '09:00-10:30',
+          Friday: '09:00-10:30',
+        }),
+        status: 'ACTIVE',
+      },
+    })
+    await prisma.classSection.create({
+      data: {
+        subjectId: reportCardSubjects[1].id,
+        semesterId: springSemester.id,
+        teacherId: teacher.id,
+        sectionName: 'A',
+        maxCapacity: 25,
+        currentEnrollment: reportCardStudents.length,
+        roomNumber: 'CS-102',
+        schedule: JSON.stringify({
+          Tuesday: '10:00-11:30',
+          Thursday: '10:00-11:30',
+        }),
+        status: 'ACTIVE',
+      },
+    })
+  }
+
+  const fallSections = await prisma.classSection.findMany({
+    where: { teacherId: teacher.id, semesterId: fallSemester.id },
+  })
+  const springSections = await prisma.classSection.findMany({
+    where: { teacherId: teacher.id, semesterId: springSemester.id },
+  })
+
+  console.log('  📊 Creating academic records for both semesters...')
+  let academicCount = 0
+  for (const semester of [fallSemester, springSemester]) {
+    for (const student of reportCardStudents) {
+      for (const subject of reportCardSubjects) {
+        const gradePoints = 3.0 + Math.random() * 1.0
+        const credits = 3 + Math.floor(Math.random() * 2)
+        try {
+          await prisma.academicRecord.upsert({
+            where: {
+              unique_record: {
+                studentId: student.id,
+                semesterId: semester.id,
+                subjectId: subject.id,
+              },
+            },
+            update: {
+              marksObtained: gradePoints * 25,
+              maxMarks: 100,
+              grade:
+                gradePoints >= 4.0
+                  ? 'A+'
+                  : gradePoints >= 3.7
+                    ? 'A'
+                    : gradePoints >= 3.3
+                      ? 'B+'
+                      : gradePoints >= 3.0
+                        ? 'B'
+                        : gradePoints >= 2.0
+                          ? 'C'
+                          : 'D',
+              gradePoints,
+              creditsEarned: credits,
+              status: 'PASSED',
+            },
+            create: {
+              studentId: student.id,
+              semesterId: semester.id,
+              subjectId: subject.id,
+              marksObtained: gradePoints * 25,
+              maxMarks: 100,
+              grade:
+                gradePoints >= 4.0
+                  ? 'A+'
+                  : gradePoints >= 3.7
+                    ? 'A'
+                    : gradePoints >= 3.3
+                      ? 'B+'
+                      : gradePoints >= 3.0
+                        ? 'B'
+                        : gradePoints >= 2.0
+                          ? 'C'
+                          : 'D',
+              gradePoints,
+              creditsEarned: credits,
+              status: 'PASSED',
+            },
+          })
+          academicCount++
+        } catch {
+          // Skip if exists
+        }
+      }
+    }
+  }
+
+  function isWeekday(d: Date): boolean {
+    const day = d.getDay()
+    return day !== 0 && day !== 6
+  }
+
+  async function generateAttendanceInRange(
+    start: Date,
+    end: Date,
+    studentIds: { id: number }[],
+    sectionIds: { id: number }[],
+    teacherId: number
+  ): Promise<number> {
+    let count = 0
+    const startDate = new Date(start)
+    startDate.setHours(0, 0, 0, 0)
+    const endDate = new Date(end)
+    endDate.setHours(23, 59, 59, 999)
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      if (!isWeekday(d)) continue
+      const dateOnly = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+      for (const student of studentIds) {
+        for (const section of sectionIds) {
+          const rand = Math.random()
+          const status = rand < 0.08 ? 'ABSENT' : rand < 0.12 ? 'LATE' : 'PRESENT'
+          try {
+            await prisma.attendance.create({
+              data: {
+                studentId: student.id,
+                sectionId: section.id,
+                date: dateOnly,
+                status: status as 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED',
+                markedBy: teacherId,
+              },
+            })
+            count++
+          } catch {
+            // Skip duplicate (studentId, sectionId, date)
+          }
+        }
+      }
+    }
+    return count
+  }
+
+  console.log('  📅 Creating attendance within semester date ranges...')
+  const fallAttendance = await generateAttendanceInRange(
+    fallSemester.startDate,
+    fallSemester.endDate,
+    reportCardStudents,
+    fallSections,
+    teacher.id
+  )
+  const springAttendance = await generateAttendanceInRange(
+    springSemester.startDate,
+    springSemester.endDate,
+    reportCardStudents,
+    springSections,
+    teacher.id
+  )
+
+  console.log(
+    `     ✅ Academic records: ${academicCount}, Fall attendance: ${fallAttendance}, Spring attendance: ${springAttendance}`
+  )
 }
 
 /**
