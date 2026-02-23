@@ -38,6 +38,8 @@ class ReportCardsProvider with ChangeNotifier {
   final Map<int, ReportCardData> _reportCardByStudentId = {};
   /// Student IDs for which generate is in progress.
   final Set<int> _generatingStudentIds = {};
+  /// True when generating report cards for all students in one go.
+  bool _isGeneratingAll = false;
 
   bool _includeExamDetails = true;
 
@@ -56,6 +58,7 @@ class ReportCardsProvider with ChangeNotifier {
       _reportCardByStudentId[studentId];
   bool isGeneratingForStudent(int studentId) =>
       _generatingStudentIds.contains(studentId);
+  bool get isGeneratingAll => _isGeneratingAll;
 
   Future<void> loadInitialData({int? teacherId}) async {
     _isLoading = true;
@@ -205,5 +208,56 @@ class ReportCardsProvider with ChangeNotifier {
   void clearReportCardForStudent(int studentId) {
     _reportCardByStudentId.remove(studentId);
     notifyListeners();
+  }
+
+  /// Generate report cards for all students in the selected section in one go.
+  /// Returns (successCount, failCount). Report cards are stored for each student.
+  Future<({int successCount, int failCount})> generateForAll() async {
+    final user = await _authService.getCurrentUser();
+    final uuid = user?.uuid;
+    if (uuid == null) {
+      _error = 'User not found';
+      notifyListeners();
+      return (successCount: 0, failCount: 0);
+    }
+    final sectionId = _selectedClass?.sectionId;
+    if (sectionId == null) {
+      _error = 'Please select Class and Section';
+      notifyListeners();
+      return (successCount: 0, failCount: 0);
+    }
+    final studentIds = _sectionStudents.map((s) => s.id).toList();
+    if (studentIds.isEmpty) {
+      return (successCount: 0, failCount: 0);
+    }
+
+    _isGeneratingAll = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await _teacherService.generateBatchReportCards(
+        uuid,
+        sectionId: sectionId,
+        semesterId: _selectedClass?.semesterId,
+        studentIds: studentIds,
+        includeExamDetails: _includeExamDetails,
+      );
+      if (response.success && response.reportCards.isNotEmpty) {
+        // API returns report cards in same order as studentIds
+        for (var i = 0; i < response.reportCards.length && i < studentIds.length; i++) {
+          _reportCardByStudentId[studentIds[i]] = response.reportCards[i];
+        }
+        final successCount = response.reportCards.length;
+        final failCount = studentIds.length - successCount;
+        return (successCount: successCount, failCount: failCount);
+      }
+      return (successCount: 0, failCount: studentIds.length);
+    } on Exception catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return (successCount: 0, failCount: studentIds.length);
+    } finally {
+      _isGeneratingAll = false;
+      notifyListeners();
+    }
   }
 }

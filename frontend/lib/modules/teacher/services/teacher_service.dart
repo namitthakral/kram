@@ -1166,9 +1166,15 @@ class TeacherService {
   }) async {
     try {
       final body = <String, dynamic>{};
-      if (sectionId != null) body['sectionId'] = sectionId;
-      if (courseId != null) body['courseId'] = courseId;
-      if (semesterId != null) body['semesterId'] = semesterId;
+      if (sectionId != null) {
+        body['sectionId'] = sectionId;
+      }
+      if (courseId != null) {
+        body['courseId'] = courseId;
+      }
+      if (semesterId != null) {
+        body['semesterId'] = semesterId;
+      }
       if (studentIds != null && studentIds.isNotEmpty) {
         body['studentIds'] = studentIds;
       }
