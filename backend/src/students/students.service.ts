@@ -34,7 +34,7 @@ import {
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   /**
    * Helper: Get attendance summary from database view
@@ -829,8 +829,8 @@ export class StudentsService {
         gpa:
           record._sum.creditsEarned && record._avg.gradePoints
             ? (parseFloat(record._avg.gradePoints.toString()) *
-              record._sum.creditsEarned) /
-            record._sum.creditsEarned
+                record._sum.creditsEarned) /
+              record._sum.creditsEarned
             : 0,
       }))
       .sort((a, b) => b.gpa - a.gpa)
@@ -1043,7 +1043,7 @@ export class StudentsService {
 
     const examinationData = examinations.map(exam => {
       const result = exam.results[0]
-      let examStatus = exam.status
+      const examStatus = exam.status
       let grade: string | undefined
       let score: string | undefined
 
@@ -1184,10 +1184,7 @@ export class StudentsService {
         questions: section.questions.map(question => ({
           questionText: question.text,
           customMarks: question.marks,
-          type:
-            question.questionType === 'MCQ'
-              ? 'mcq'
-              : 'written', // Map to QuestionType enum string
+          type: question.questionType === 'MCQ' ? 'mcq' : 'written', // Map to QuestionType enum string
           hasImage: false, // Not yet supported in backend
           imagePlaceholder: null,
           mcqOptions: question.options.map(o => o.text),
@@ -1390,8 +1387,8 @@ export class StudentsService {
         monthData.percentage =
           monthData.totalClasses > 0
             ? Math.round(
-              (monthData.attendedClasses / monthData.totalClasses) * 100
-            )
+                (monthData.attendedClasses / monthData.totalClasses) * 100
+              )
             : 0
       }
     })
@@ -1515,9 +1512,9 @@ export class StudentsService {
       )
       const nextTest = nextExam
         ? nextExam.examDate.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        })
+            month: 'short',
+            day: 'numeric',
+          })
         : 'TBD'
 
       // Calculate percentage and grade
@@ -1620,7 +1617,9 @@ export class StudentsService {
     // Get upcoming exams for enrolled courses
     const upcomingExams = await this.prisma.examination.findMany({
       where: {
-        examDate: endDate ? { gte: startDate, lte: endDate } : { gte: startDate },
+        examDate: endDate
+          ? { gte: startDate, lte: endDate }
+          : { gte: startDate },
         status: { in: ['SCHEDULED', 'ONGOING'] },
         subjectId: { in: enrolledCourseIds },
       },
@@ -1648,7 +1647,9 @@ export class StudentsService {
     // Get upcoming assignments for enrolled courses
     const upcomingAssignments = await this.prisma.assignment.findMany({
       where: {
-        dueDate: endDate ? { gte: startDate, lte: endDate } : { gte: startDate },
+        dueDate: endDate
+          ? { gte: startDate, lte: endDate }
+          : { gte: startDate },
         status: 'PUBLISHED',
         subjectId: { in: enrolledCourseIds },
         submissions: {
@@ -1810,22 +1811,22 @@ export class StudentsService {
       // Get exam results if requested
       queryParams.includeExamDetails !== false
         ? this.prisma.examResult.findMany({
-          where: {
-            studentId: student.id,
-            exam: {
-              semesterId: semester.id,
-            },
-          },
-          include: {
-            exam: {
-              select: {
-                examName: true,
-                examType: true,
-                totalMarks: true,
+            where: {
+              studentId: student.id,
+              exam: {
+                semesterId: semester.id,
               },
             },
-          },
-        })
+            include: {
+              exam: {
+                select: {
+                  examName: true,
+                  examType: true,
+                  totalMarks: true,
+                },
+              },
+            },
+          })
         : Promise.resolve([]),
 
       // Get student progress for remarks
@@ -1950,7 +1951,8 @@ export class StudentsService {
       0
     )
     const classesAttended = attendanceSummaryData.reduce(
-      (sum, record) => sum + Number(record.classes_present) + Number(record.classes_late),
+      (sum, record) =>
+        sum + Number(record.classes_present) + Number(record.classes_late),
       0
     )
     const classesAbsent = attendanceSummaryData.reduce(
@@ -1986,10 +1988,12 @@ export class StudentsService {
         totalCredits += record.creditsEarned
       }
     }
-    const sgpa =
+    const sgpa4 =
       totalCredits > 0
         ? Math.round((totalGradePoints / totalCredits) * 100) / 100
         : 0
+    // Convert to 10-point scale (4 * 2.5 = 10)
+    const sgpa = Math.round(Math.min(10, (sgpa4 / 4) * 10) * 100) / 100
 
     // Calculate CGPA (Cumulative Grade Point Average)
     let cumulativeGradePoints = 0
@@ -2001,10 +2005,11 @@ export class StudentsService {
         cumulativeCredits += record.creditsEarned
       }
     }
-    const cgpa =
+    const cgpa4 =
       cumulativeCredits > 0
         ? Math.round((cumulativeGradePoints / cumulativeCredits) * 100) / 100
         : 0
+    const cgpa = Math.round(Math.min(10, (cgpa4 / 4) * 10) * 100) / 100
 
     // Calculate class rank
     const studentGpas = classRankData
@@ -2025,13 +2030,13 @@ export class StudentsService {
     const percentile =
       classRank !== null && totalStudentsInClass > 0
         ? Math.round(
-          ((totalStudentsInClass - classRank) / totalStudentsInClass) *
-          100 *
-          100
-        ) / 100
+            ((totalStudentsInClass - classRank) / totalStudentsInClass) *
+              100 *
+              100
+          ) / 100
         : null
 
-    // Determine overall grade based on SGPA
+    // Determine overall grade (SGPA on 10-point scale)
     let overallGrade = 'F'
     if (sgpa >= 9.0) overallGrade = 'A+'
     else if (sgpa >= 8.0) overallGrade = 'A'

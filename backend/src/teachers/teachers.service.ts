@@ -4854,10 +4854,13 @@ export class TeachersService {
         totalCredits += record.creditsEarned
       }
     }
-    const sgpa =
+    const sgpa4 =
       totalCredits > 0
         ? Math.round((totalGradePoints / totalCredits) * 100) / 100
         : 0
+    // Convert to 10-point scale for display and grade (4 * 2.5 = 10)
+    const sgpa =
+      Math.round(Math.min(10, (sgpa4 / 4) * 10) * 100) / 100
 
     // Calculate CGPA
     let cumulativeGradePoints = 0
@@ -4869,10 +4872,12 @@ export class TeachersService {
         cumulativeCredits += record.creditsEarned
       }
     }
-    const cgpa =
+    const cgpa4 =
       cumulativeCredits > 0
         ? Math.round((cumulativeGradePoints / cumulativeCredits) * 100) / 100
         : 0
+    const cgpa =
+      Math.round(Math.min(10, (cgpa4 / 4) * 10) * 100) / 100
 
     // Calculate class rank
     const studentRankIndex = studentGpas.findIndex(
@@ -4889,7 +4894,7 @@ export class TeachersService {
           ) / 100
         : null
 
-    // Determine overall grade
+    // Determine overall grade (SGPA on 10-point scale)
     let overallGrade = 'F'
     if (sgpa >= 9.0) overallGrade = 'A+'
     else if (sgpa >= 8.0) overallGrade = 'A'
