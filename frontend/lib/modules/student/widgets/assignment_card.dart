@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../utils/responsive_utils.dart';
 import '../models/student_dashboard_models.dart';
 
 /// Assignment Card Widget
@@ -51,8 +50,6 @@ class AssignmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = context.isMobile;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
@@ -60,227 +57,128 @@ class AssignmentCard extends StatelessWidget {
           bottom: BorderSide(color: Color(0xFFe2e8f0)),
         ),
       ),
-      child: isMobile
-          ? _buildMobileRow()
-          : _buildDesktopRow(),
+      child: _buildRow(),
     );
   }
 
-  // Mobile row with fixed widths for horizontal scrolling
-  Widget _buildMobileRow() => Row(
+  /// Single row layout aligned with dashboard table header (flex 3, 2, 2, Status, Grade, Score).
+  /// Text uses ellipsis to avoid wrapping (e.g. "Pending Review" stays on one line).
+  Widget _buildRow() => Row(
         children: [
-          // Assignment Info
-          SizedBox(
-            width: 200,
-            child: Text(
-              assignment.title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1e293b),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Subject
-          SizedBox(
-            width: 150,
-            child: Text(
-              assignment.subject,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748b),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Due Date
-          SizedBox(
-            width: 120,
-            child: Text(
-              assignment.dueDate,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748b),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Status Badge
-          SizedBox(
-            width: 100,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: _getStatusColor(assignment.status).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                _getStatusLabel(assignment.status),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _getStatusColor(assignment.status),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Grade Badge
-          SizedBox(
-            width: 60,
-            child: assignment.grade != null
-                ? Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getGradeColor(assignment.grade),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      assignment.grade!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  )
-                : const Text(
-                    '-',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFF64748b),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 12),
-
-          // Score
-          SizedBox(
-            width: 100,
-            child: Text(
-              assignment.score ?? 'Pending Review',
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1e293b),
-              ),
-            ),
-          ),
-        ],
-      );
-
-  // Desktop row with flexible widths
-  Widget _buildDesktopRow() => Row(
-        children: [
-          // Assignment Info
+          // Assignment
           Expanded(
             flex: 3,
             child: Text(
               assignment.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF1e293b),
               ),
             ),
           ),
-
           // Subject
           Expanded(
             flex: 2,
             child: Text(
               assignment.subject,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 color: Color(0xFF64748b),
               ),
             ),
           ),
-
-          // Due Date
+          // Due Date (center-aligned)
           Expanded(
             flex: 2,
             child: Text(
               assignment.dueDate,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 color: Color(0xFF64748b),
               ),
             ),
           ),
-
-          // Status Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: _getStatusColor(assignment.status).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              _getStatusLabel(assignment.status),
-              style: TextStyle(
-                color: _getStatusColor(assignment.status),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+          // Status
+          SizedBox(
+            width: 80,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(assignment.status).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  _getStatusLabel(assignment.status),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _getStatusColor(assignment.status),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ),
-
           const SizedBox(width: 12),
-
-          // Grade Badge
-          if (assignment.grade != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: _getGradeColor(assignment.grade),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                assignment.grade!,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: const Text(
-                '-',
-                style: TextStyle(
-                  color: Color(0xFF64748b),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+          // Grade (center-aligned)
+          SizedBox(
+            width: 50,
+            child: Center(
+              child: assignment.grade != null
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getGradeColor(assignment.grade),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        assignment.grade!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  : const Text(
+                      '-',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFF64748b),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
-
+          ),
           const SizedBox(width: 12),
-
-          // Score
+          // Score (center-aligned, single line)
           SizedBox(
             width: 100,
             child: Text(
               assignment.score ?? 'Pending Review',
-              textAlign: TextAlign.right,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1e293b),
               ),

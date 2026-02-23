@@ -472,16 +472,21 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         FadeTransition(opacity: animation, child: child),
                 child: KeyedSubtree(
                   key: ValueKey<DashboardTab>(provider.selectedTab),
-                  child: SingleChildScrollView(
-                    child: switch (provider.selectedTab) {
-                      DashboardTab.recentAssignments =>
-                        _buildRecentAssignmentsTab(dashboardProvider),
-                      DashboardTab.performanceTrends =>
-                        _buildPerformanceTrendsTab(dashboardProvider),
-                      DashboardTab.attendanceHistory =>
-                        _buildAttendanceHistoryTab(dashboardProvider),
-                    },
-                  ),
+                  child: switch (provider.selectedTab) {
+                    DashboardTab.recentAssignments =>
+                      _buildRecentAssignmentsTab(
+                        dashboardProvider,
+                        containerHeight,
+                      ),
+                    DashboardTab.performanceTrends =>
+                      SingleChildScrollView(
+                        child: _buildPerformanceTrendsTab(dashboardProvider),
+                      ),
+                    DashboardTab.attendanceHistory =>
+                      SingleChildScrollView(
+                        child: _buildAttendanceHistoryTab(dashboardProvider),
+                      ),
+                  },
                 ),
               ),
             );
@@ -493,6 +498,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   Widget _buildRecentAssignmentsTab(
     StudentDashboardProvider dashboardProvider,
+    double containerHeight,
   ) {
     if (dashboardProvider.isLoadingAssignments) {
       return const Center(child: CircularProgressIndicator());
@@ -500,276 +506,142 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     final assignments = dashboardProvider.getAssignmentsList();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = context.isMobile;
+    // Fixed section header (title + subtitle)
+    final sectionHeader = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.translate('recent_assignments_tests'),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          context.translate('latest_submissions_grades'),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+        ),
+      ],
+    );
 
-        if (isMobile) {
-          // Mobile: Scrollable horizontal table
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Recent Assignments & Exams',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1e293b),
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Your latest submissions and grades',
-                    style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              if (assignments.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('No assignments available'),
-                  ),
-                )
-              else
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: 900, // Fixed width for horizontal scrolling
-                    child: Column(
-                      children: [
-                        // Table Header
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF8FAFC),
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Color(0xFFe2e8f0),
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          child: const Row(
-                            children: [
-                              SizedBox(
-                                width: 200,
-                                child: Text(
-                                  'Assignment',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              SizedBox(
-                                width: 150,
-                                child: Text(
-                                  'Subject',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              SizedBox(
-                                width: 120,
-                                child: Text(
-                                  'Due Date',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  'Status',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              SizedBox(
-                                width: 60,
-                                child: Text(
-                                  'Grade',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              SizedBox(
-                                width: 100,
-                                child: Text(
-                                  'Score',
-                                  textAlign: TextAlign.right,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF475569),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Table Rows
-                        ...assignments.map(
-                          (assignment) =>
-                              AssignmentCard(assignment: assignment),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          );
-        }
-
-        // Desktop: Normal table layout
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Recent Assignments & Exams',
+    // Fixed table header row (aligned with AssignmentCard columns)
+    final tableHeader = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF8FAFC),
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFe2e8f0), width: 2),
+        ),
+      ),
+      child: const Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              'Assignment',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
               ),
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Your latest submissions and grades',
-              style: TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-            ),
-            const SizedBox(height: 20),
-            if (assignments.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Text('No assignments available'),
-                ),
-              )
-            else
-              Column(
-                children: [
-                  // Table Header
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF8FAFC),
-                      border: Border(
-                        bottom: BorderSide(color: Color(0xFFe2e8f0), width: 2),
-                      ),
-                    ),
-                    child: const Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Assignment',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Subject',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Due Date',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            'Status',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        SizedBox(
-                          width: 50,
-                          child: Text(
-                            'Grade',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        SizedBox(
-                          width: 100,
-                          child: Text(
-                            'Score',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Table Rows
-                  ...assignments.map(
-                    (assignment) => AssignmentCard(assignment: assignment),
-                  ),
-                ],
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Subject',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Due Date',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              'Status',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          SizedBox(
+            width: 50,
+            child: Text(
+              'Grade',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+              ),
+            ),
+          ),
+          SizedBox(width: 12),
+          SizedBox(
+            width: 100,
+            child: Text(
+              'Score',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        sectionHeader,
+        const SizedBox(height: 20),
+        if (assignments.isEmpty)
+          Expanded(
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('No assignments available'),
+              ),
+            ),
+          )
+        else ...[
+          tableHeader,
+          Expanded(
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: assignments.length,
+              itemBuilder: (context, index) =>
+                  AssignmentCard(assignment: assignments[index]),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

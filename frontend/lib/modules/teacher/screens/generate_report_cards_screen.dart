@@ -244,18 +244,73 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
         ),
       );
     }
+    final isGeneratingAll = provider.isGeneratingAll;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: Text(
-            'Report Cards',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
-            ),
+          child: Row(
+            children: [
+              Text(
+                'Report Cards',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const Spacer(),
+              FilledButton.icon(
+                onPressed: isGeneratingAll
+                    ? null
+                    : () async {
+                        final result =
+                            await provider.generateForAll();
+                        if (!mounted) return;
+                        if (result.successCount > 0 || result.failCount > 0) {
+                          final total = result.successCount + result.failCount;
+                          if (result.failCount == 0) {
+                            showCustomSnackbar(
+                              message:
+                                  'Report cards generated for all $total students',
+                              type: SnackbarType.success,
+                            );
+                          } else {
+                            showCustomSnackbar(
+                              message:
+                                  'Generated ${result.successCount} of $total report cards. ${result.failCount} failed.',
+                              type: result.successCount > 0
+                                  ? SnackbarType.success
+                                  : SnackbarType.error,
+                            );
+                          }
+                        }
+                        if (provider.error != null && mounted) {
+                          showCustomSnackbar(
+                            message: provider.error!,
+                            type: SnackbarType.error,
+                          );
+                        }
+                      },
+                icon: isGeneratingAll
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.batch_prediction, size: 20),
+                label: Text(
+                  isGeneratingAll ? 'Generating all...' : 'Generate All',
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -266,8 +321,8 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
             itemBuilder: (context, index) {
               final student = students[index];
               final card = provider.reportCardForStudent(student.id);
-              final isGenerating =
-                  provider.isGeneratingForStudent(student.id);
+              final isGenerating = provider.isGeneratingForStudent(student.id) ||
+                  provider.isGeneratingAll;
               return _StudentReportCardRow(
                 student: student,
                 reportCard: card,

@@ -257,6 +257,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           context.translate('recent_student_activity'),
@@ -272,8 +273,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
         ),
         const SizedBox(height: 20),
-        ..._getMockStudents().map(
-          (student) => StudentActivityCard(student: student, onTap: () {}),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 400),
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: _getMockStudents().length,
+            itemBuilder: (context, index) {
+              final student = _getMockStudents()[index];
+              return StudentActivityCard(student: student, onTap: () {});
+            },
+          ),
         ),
       ],
     ),
@@ -396,7 +406,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
         const SizedBox(height: 24),
 
-        // Content based on selected segment from Provider
+        // Content based on selected segment from Provider (fixed section header, scrollable body)
         Consumer<PerformanceTabProvider>(
           builder:
               (context, provider, child) => SizedBox(
@@ -408,14 +418,13 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                           FadeTransition(opacity: animation, child: child),
                   child: KeyedSubtree(
                     key: ValueKey<PerformanceTab>(provider.selectedValue),
-                    child: SingleChildScrollView(
-                      child: switch (provider.selectedValue) {
-                        PerformanceTab.attendance =>
-                          _buildAttendanceTrendsTab(),
-                        PerformanceTab.subject => _buildSubjectPerformanceTab(),
-                        PerformanceTab.grade => _buildGradeDistributionTab(),
-                      },
-                    ),
+                    child: switch (provider.selectedValue) {
+                      PerformanceTab.attendance =>
+                        _buildAttendanceTrendsTab(400),
+                      PerformanceTab.subject =>
+                        _buildSubjectPerformanceTab(400),
+                      PerformanceTab.grade => _buildGradeDistributionTab(400),
+                    },
                   ),
                 ),
               ),
@@ -424,125 +433,159 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
     ),
   );
 
-  Widget _buildAttendanceTrendsTab() => Consumer<TeacherDashboardProvider>(
-    builder:
-        (context, dashboardProvider, child) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.translate('weekly_attendance_overview'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              context.translate('daily_attendance_this_week'),
-              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-            ),
-            const SizedBox(height: 20),
-            AttendanceTrendsChart(
-              trendsData: dashboardProvider.attendanceTrends,
-            ),
-
-            // Legend
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildAttendanceTrendsTab(double containerHeight) =>
+      Consumer<TeacherDashboardProvider>(
+        builder:
+            (context, dashboardProvider, child) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
               children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10b981),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Text(
-                  context.translate('present'),
+                  context.translate('weekly_attendance_overview'),
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                     color: Color(0xFF1e293b),
                   ),
                 ),
-                const SizedBox(width: 24),
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFef4444),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 4),
                 Text(
-                  context.translate('absent'),
+                  context.translate('daily_attendance_this_week'),
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF1e293b),
+                    color: Color(0xFF64748b),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AttendanceTrendsChart(
+                          trendsData: dashboardProvider.attendanceTrends,
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF10b981),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.translate('present'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1e293b),
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFef4444),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.translate('absent'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF1e293b),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-  );
+      );
 
-  Widget _buildSubjectPerformanceTab() => Consumer<TeacherDashboardProvider>(
-    builder:
-        (context, dashboardProvider, child) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.translate('subject_performance_overview'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b),
-              ),
+  Widget _buildSubjectPerformanceTab(double containerHeight) =>
+      Consumer<TeacherDashboardProvider>(
+        builder:
+            (context, dashboardProvider, child) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Text(
+                  context.translate('subject_performance_overview'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1e293b),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.translate('average_scores_across_subjects'),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748b),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SubjectPerformanceChart(
+                      performanceData: dashboardProvider.subjectPerformance,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              context.translate('average_scores_across_subjects'),
-              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-            ),
-            const SizedBox(height: 20),
-            SubjectPerformanceChart(
-              performanceData: dashboardProvider.subjectPerformance,
-            ),
-          ],
-        ),
-  );
+      );
 
-  Widget _buildGradeDistributionTab() => Consumer<TeacherDashboardProvider>(
-    builder:
-        (context, dashboardProvider, child) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.translate('grade_distribution'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1e293b),
-              ),
+  Widget _buildGradeDistributionTab(double containerHeight) =>
+      Consumer<TeacherDashboardProvider>(
+        builder:
+            (context, dashboardProvider, child) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Text(
+                  context.translate('grade_distribution'),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1e293b),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.translate('current_grade_distribution'),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748b),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: GradeDistributionChart(
+                      distributionData: dashboardProvider.gradeDistribution,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              context.translate('current_grade_distribution'),
-              style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-            ),
-            const SizedBox(height: 20),
-            GradeDistributionChart(
-              distributionData: dashboardProvider.gradeDistribution,
-            ),
-          ],
-        ),
-  );
+      );
 
   List<StudentActivity> _getMockStudents() => const [
     StudentActivity(
