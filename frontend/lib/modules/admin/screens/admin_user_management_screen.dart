@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../utils/extensions.dart';
-import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-import '../providers/user_management_provider.dart';
+
+import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
+import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/custom_text_field.dart';
+import '../providers/user_management_provider.dart';
 import '../widgets/create_user_dialog.dart';
 
 class AdminUserManagementScreen extends StatefulWidget {
@@ -50,31 +53,37 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateUserDialog(context),
-        child: const Icon(Icons.add),
+        backgroundColor: AppTheme.blue500,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: context.translate('search_users'),
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    controller: _searchController,
+                    hintText: context.translate('search_users'),
+                    onChanged: (value) {
+                      context.read<UserManagementProvider>().setSearchQuery(value);
+                    },
+                  ),
                 ),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.clear_rounded),
                   onPressed: () {
                     _searchController.clear();
                     context.read<UserManagementProvider>().setSearchQuery('');
                   },
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppTheme.slate100,
+                  ),
                 ),
-              ),
-              onChanged: (value) {
-                context.read<UserManagementProvider>().setSearchQuery(value);
-              },
+              ],
             ),
           ),
           _buildRoleFilter(context),

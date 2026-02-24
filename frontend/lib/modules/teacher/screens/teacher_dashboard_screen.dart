@@ -16,8 +16,6 @@ import '../providers/teacher_dashboard_provider.dart';
 import '../widgets/chart_widgets.dart';
 import '../widgets/quick_action_button.dart';
 import '../widgets/student_activity_card.dart';
-import 'assignments_list_screen.dart';
-import 'examinations_list_screen.dart';
 
 enum PerformanceTab { attendance, subject, grade }
 
@@ -316,12 +314,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icons.assignment,
           backgroundColor: const Color(0xFF4F7CFF),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AssignmentsListScreen(),
-              ),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.pushNamed('assignments_list');
+              }
+            });
           },
         ),
         const SizedBox(height: 12),
@@ -330,12 +327,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icons.quiz,
           backgroundColor: const Color(0xFF8b5cf6),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ExaminationsListScreen(),
-              ),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.pushNamed('examinations_list');
+              }
+            });
           },
         ),
         const SizedBox(height: 12),
@@ -344,7 +340,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icons.calendar_today,
           backgroundColor: const Color(0xFF10b981),
           onTap: () {
-            context.pushNamed('attendance_view');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.pushNamed('attendance_view');
+              }
+            });
           },
         ),
         const SizedBox(height: 12),
@@ -353,7 +353,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icons.grade,
           backgroundColor: const Color(0xFFf59e0b),
           onTap: () {
-            context.push('/academic/marks');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.push('/academic/marks');
+              }
+            });
           },
         ),
         const SizedBox(height: 12),
@@ -362,7 +366,11 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           icon: Icons.description,
           backgroundColor: const Color(0xFFef4444),
           onTap: () {
-            context.push('/academic/report-cards');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.push('/academic/report-cards');
+              }
+            });
           },
         ),
       ],

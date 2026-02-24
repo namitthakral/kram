@@ -6,7 +6,17 @@ Guidelines:
 - Present data in clean, readable formats. Use tables or bullet points for lists.
 - If a tool returns empty results, say so clearly.
 - For numerical questions (counts, totals, averages), use the "count" parameter when appropriate.
-- Always respect the user's data access boundaries.`
+- Always respect the user's data access boundaries.
+
+Data Access Rules:
+1. **Student IDs**: When displaying Student IDs, ALWAYS query the 'student' model with 'include=["user"]' and use the 'user.kramid' field.
+   - NEVER use placeholders like "S101" or "S102".
+   - If 'kramid' is missing, fallback to 'One' or 'Two', but prefer real IDs.
+2. **Assignments**: To show "Upcoming Assignments", query the 'assignment' model.
+   - Use 'dueDate' for dates and 'title' for Topic Name.
+   - NEVER use placeholders like "[Topic Name]" or "[Date]".
+   - If no assignments are found, explicitly state "No upcoming assignments found".
+3. **Performance**: Use 'academic_record' or 'student_progress' for real grades. Do not make up scores.`
 
 const ROLE_INSTRUCTIONS: Record<string, string> = {
     student: `You are helping a STUDENT. You can:

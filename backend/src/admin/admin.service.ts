@@ -11,15 +11,20 @@ import {
   UpdateUserDto,
   UserQueryDto,
 } from '../common/dto/user.dto'
+import { IdGenerationService } from '../id-generation/id-generation.service'
 import { PrismaService } from '../prisma/prisma.service'
 import {
   generateTemporaryPassword,
 } from '../utils/kramid.util'
 import { UpdateGradingConfigDto } from './dto/grading-config.dto'
+import { UpdateInstitutionDto } from '../institutions/dto/institution.dto'
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGeneration: IdGenerationService,
+  ) {}
 
   async createInstitutionalUser(createUserDto: CreateUserDto) {
     // This method creates institutional users (students, teachers, staff)
@@ -107,6 +112,122 @@ export class AdminService {
         role: true,
       },
     })
+
+    // Create role-specific profile when data is provided
+    const roleName = role.roleName?.toLowerCase() ?? ''
+    if (roleName === 'student' && createUserDto.studentData) {
+      const sd = createUserDto.studentData
+      let courseCode: string | undefined
+      if (sd.courseId) {
+        const course = await this.prisma.course.findUnique({
+          where: { id: sd.courseId },
+          select: { code: true },
+        })
+        courseCode = course?.code ?? undefined
+      }
+      const admissionNumber = await this.idGeneration.generateAdmissionNumber({
+        institutionId: createUserDto.institutionId,
+        courseCode: courseCode ?? 'GEN',
+        section: sd.section ?? undefined,
+      })
+      let rollNumber: string | null = sd.rollNumber ?? null
+      if (!rollNumber && (sd.gradeLevel ?? sd.section)) {
+        rollNumber = await this.idGeneration.generateRollNumber({
+          institutionId: createUserDto.institutionId,
+          courseCode: courseCode ?? 'GEN',
+          section: sd.section ?? 'A',
+        })
+      }
+      const student = await this.prisma.student.create({
+        data: {
+          userId: user.id,
+          institutionId: createUserDto.institutionId,
+          admissionNumber,
+          rollNumber,
+          courseId: sd.courseId ?? undefined,
+          gradeLevel: sd.gradeLevel ?? undefined,
+          section: sd.section ?? undefined,
+          admissionDate: sd.admissionDate
+            ? new Date(sd.admissionDate)
+            : new Date(),
+          emergencyContactName: sd.emergencyContactName ?? undefined,
+          emergencyContactPhone: sd.emergencyContactPhone ?? undefined,
+          emergencyContactEmail: sd.emergencyContactEmail ?? undefined,
+          studentType: sd.studentType ?? 'REGULAR',
+          residentialStatus: sd.residentialStatus ?? 'DAY_SCHOLAR',
+          transportRequired: sd.transportRequired ?? false,
+        },
+      })
+
+      // If guardian email provided, create Parent user and Parent record so guardian info is in both Student and parents (User) table
+      const guardianEmail = sd.emergencyContactEmail?.trim()
+      if (guardianEmail) {
+        const existingGuardianUser = await this.prisma.user.findUnique({
+          where: { email: guardianEmail },
+        })
+        if (!existingGuardianUser) {
+          const parentRole = await this.prisma.role.findFirst({
+            where: { roleName: { equals: 'parent', mode: 'insensitive' } },
+          })
+          if (parentRole) {
+            const guardianName =
+              sd.emergencyContactName?.trim() || 'Guardian'
+            const guardianPhone = sd.emergencyContactPhone?.trim() || undefined
+            const [first = guardianName, ...rest] = guardianName.split(/\s+/)
+            const lastName = rest.length > 0 ? rest.join(' ') : first
+            const parentTempPassword = generateTemporaryPassword(
+              first,
+              lastName,
+            )
+            const parentPasswordHash = await bcrypt.hash(parentTempPassword, 12)
+            const parentUser = await this.prisma.user.create({
+              data: {
+                firstName: first,
+                lastName,
+                name: guardianName,
+                email: guardianEmail,
+                phone: guardianPhone,
+                passwordHash: parentPasswordHash,
+                roleId: parentRole.id,
+                status: 'INACTIVE',
+                isTemporaryPassword: true,
+                mustChangePassword: true,
+              },
+            })
+            await this.prisma.parent.create({
+              data: {
+                userId: parentUser.id,
+                studentId: student.id,
+                relation: 'GUARDIAN',
+                isPrimaryContact: true,
+              },
+            })
+          }
+        }
+      }
+    } else if (roleName === 'teacher' && createUserDto.teacherData) {
+      const td = createUserDto.teacherData
+      const employeeId =
+        td.employeeId ??
+        (await this.idGeneration.generateTeacherEmployeeId({
+          institutionId: createUserDto.institutionId,
+        }))
+      await this.prisma.teacher.create({
+        data: {
+          userId: user.id,
+          institutionId: createUserDto.institutionId,
+          employeeId,
+          designation: td.designation ?? undefined,
+          specialization: td.specialization ?? undefined,
+          qualification: td.qualification ?? undefined,
+          experienceYears: td.experienceYears ?? 0,
+          joinDate: td.joinDate ? new Date(td.joinDate) : new Date(),
+          employmentType: td.employmentType ?? 'FULL_TIME',
+          officeLocation: td.officeLocation ?? undefined,
+          officeHours: td.officeHours ?? undefined,
+        },
+      })
+    }
 
     return {
       success: true,
@@ -483,6 +604,72 @@ export class AdminService {
   }
 
   /**
+   * Get institution profile (school info) for settings
+   */
+  async getInstitutionProfile(institutionId: number) {
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        type: true,
+        address: true,
+        city: true,
+        state: true,
+        country: true,
+        postalCode: true,
+        phone: true,
+        email: true,
+        website: true,
+        establishedYear: true,
+        accreditation: true,
+        status: true,
+      },
+    })
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`
+      )
+    }
+    return { data: institution }
+  }
+
+  /**
+   * Update institution profile (school info)
+   */
+  async updateInstitutionProfile(
+    institutionId: number,
+    dto: UpdateInstitutionDto
+  ) {
+    await this.prisma.institution.findUniqueOrThrow({
+      where: { id: institutionId },
+    })
+    const updated = await this.prisma.institution.update({
+      where: { id: institutionId },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.type !== undefined && { type: dto.type }),
+        ...(dto.address !== undefined && { address: dto.address }),
+        ...(dto.city !== undefined && { city: dto.city }),
+        ...(dto.state !== undefined && { state: dto.state }),
+        ...(dto.country !== undefined && { country: dto.country }),
+        ...(dto.postalCode !== undefined && { postalCode: dto.postalCode }),
+        ...(dto.phone !== undefined && { phone: dto.phone }),
+        ...(dto.email !== undefined && { email: dto.email }),
+        ...(dto.website !== undefined && { website: dto.website }),
+        ...(dto.establishedYear !== undefined && {
+          establishedYear: dto.establishedYear,
+        }),
+        ...(dto.accreditation !== undefined && {
+          accreditation: dto.accreditation,
+        }),
+      },
+    })
+    return { data: updated }
+  }
+
+  /**
    * Get grading configuration for an institution
    */
   async getGradingConfig(institutionId: number) {
@@ -660,12 +847,14 @@ export class AdminService {
     const [
       totalStudents,
       totalTeachers,
+      totalStaff,
       totalClasses,
       attendanceRecords,
       feeStats,
     ] = await Promise.all([
       this.prisma.student.count(),
       this.prisma.teacher.count(),
+      this.prisma.staff.count(),
       this.prisma.classSection.count(),
       this.prisma.attendance.groupBy({
         by: ['status'],
@@ -704,6 +893,7 @@ export class AdminService {
     return {
       total_students: totalStudents,
       total_teachers: totalTeachers,
+      total_staff: totalStaff,
       total_classes: totalClasses,
       attendance_rate: Math.round(attendanceRate * 100) / 100,
       fee_collection: feeStats._sum.amount || 0,

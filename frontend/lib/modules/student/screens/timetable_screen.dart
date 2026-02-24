@@ -16,6 +16,7 @@ class TimetableScreen extends StatefulWidget {
 
 class _TimetableScreenState extends State<TimetableScreen> {
   late String _selectedDay;
+  late final StudentTimetableProvider _timetableProvider;
 
   final Map<String, String> _dayMapping = {
     'Mon': 'MONDAY',
@@ -31,6 +32,14 @@ class _TimetableScreenState extends State<TimetableScreen> {
   void initState() {
     super.initState();
     _selectedDay = _getCurrentDay();
+    _timetableProvider = StudentTimetableProvider();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = context.read<LoginProvider>().currentUser;
+      if (user != null) {
+        _timetableProvider.loadTimetable(user);
+      }
+    });
   }
 
   String _getCurrentDay() {
@@ -77,14 +86,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
     final statsData = studentProvider.dashboardStats;
     final gpa = statsData?['gpa']?.toString();
 
-    return ChangeNotifierProvider(
-      create: (context) {
-        final provider = StudentTimetableProvider();
-        if (user != null) {
-          provider.loadTimetable(user);
-        }
-        return provider;
-      },
+    return ChangeNotifierProvider<StudentTimetableProvider>.value(
+      value: _timetableProvider,
       child: CustomMainScreenWithAppbar(
         title: 'Timetable',
         appBarConfig: AppBarConfig.student(

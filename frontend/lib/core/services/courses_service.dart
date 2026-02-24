@@ -168,7 +168,13 @@ class CoursesService {
         if (data is List) {
           return data;
         } else if (data is Map<String, dynamic>) {
-          return data['data'] as List<dynamic>? ?? [];
+          final inner = data['data'];
+          if (inner is List) return inner;
+          if (inner is Map<String, dynamic>) {
+            final sections = inner['sections'] as List<dynamic>?;
+            return sections ?? [];
+          }
+          return [];
         }
         return [];
       } else {
@@ -190,6 +196,21 @@ class CoursesService {
         defaultMessage: 'Failed to get course sections',
       );
     }
+  }
+
+  /// Returns section names for a course (e.g. ['A', 'B', 'C']).
+  /// Uses GET /courses/:id/sections and extracts sectionName from each section.
+  Future<List<String>> getCourseSectionNames(int courseId) async {
+    final list = await getCourseSections(courseId);
+    final names = <String>[];
+    for (final e in list) {
+      if (e is Map && e['sectionName'] != null) {
+        names.add(e['sectionName'] as String);
+      } else if (e is String) {
+        names.add(e);
+      }
+    }
+    return names;
   }
 
   /// Get all class sections

@@ -94,7 +94,8 @@ Requirements:
 - Include a brief instruction section for students.
 - Include a marking scheme (marks per question, total marks).
 - Format as a clean, ready-to-use assignment document.
-- For ${type === 'quiz' ? 'quiz: include multiple choice options' : type === 'essay' ? 'essay: provide clear prompts and expected word count' : type === 'problem_set' ? 'problem set: include numerical/analytical problems' : type === 'practical' ? 'practical: include lab/hands-on tasks' : 'project: include project scope, deliverables, and evaluation criteria'}.`
+- For ${type === 'quiz' ? 'quiz: include multiple choice options' : type === 'essay' ? 'essay: provide clear prompts and expected word count' : type === 'problem_set' ? 'problem set: include numerical/analytical problems' : type === 'practical' ? 'practical: include lab/hands-on tasks' : 'project: include project scope, deliverables, and evaluation criteria'}.
+- CRITICAL: Use the provided syllabus content ONLY. Do not invent topics not present in the syllabus. If the syllabus is empty or insufficient, state that you cannot generate the assignment based on available data.`
 
             if (!this.aiProvider) {
                 return JSON.stringify({ error: 'AI provider not available for content generation.' })

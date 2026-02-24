@@ -163,22 +163,23 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
-        // Handle back button: when on dashboard, show logout confirmation instead of going back
+        // When we can pop (e.g. assignment detail), allow back. When at root, show logout.
+        final canPop = RouterService().router.canPop();
         return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (bool didPop, result) {
-          if (didPop) {
-            return;
-          }
-          // Defer to next frame so back handling is complete before showing dialog
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              _showLogoutDialog(context);
+          canPop: canPop,
+          onPopInvokedWithResult: (bool didPop, result) {
+            if (didPop) {
+              return;
             }
-          });
-        },
-        child: _buildScaffold(context, navProvider),
-      );
+            // Defer to next frame so back handling is complete before showing dialog
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                _showLogoutDialog(context);
+              }
+            });
+          },
+          child: _buildScaffold(context, navProvider),
+        );
     },
   );
   }

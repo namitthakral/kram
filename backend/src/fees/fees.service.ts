@@ -95,6 +95,59 @@ export interface OverdueFeeView {
   course_name: string | null;
 }
 
+/** Result row from fee_collection_summary database view */
+export interface FeeCollectionSummaryViewRow {
+  institution_id: number;
+  institution_name: string;
+  semester_id: number | null;
+  course_id: number | null;
+  fee_type: string;
+  academic_year_id: number | null;
+  total_amount_due: Decimal;
+  total_amount_paid: Decimal;
+  total_pending: Decimal;
+  collection_percentage: number | null;
+}
+
+/** Aggregated summary for API response (matches frontend FeeCollectionSummary) */
+export interface FeeCollectionSummaryData {
+  total_expected: number;
+  total_collected: number;
+  total_pending: number;
+  collection_rate: number;
+}
+
+/**
+ * Convert raw query result to JSON-serializable object.
+ * PostgreSQL returns COUNT/bigint as BigInt; JSON.stringify cannot serialize BigInt.
+ * Also normalizes Prisma Decimal and other numeric-like values to number.
+ */
+function serializeRow<T extends Record<string, unknown>>(row: T): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (typeof v === 'bigint') {
+      out[k] = Number(v);
+    } else if (v !== null && typeof v === 'object' && typeof (v as { toNumber?: () => number }).toNumber === 'function') {
+      out[k] = (v as { toNumber: () => number }).toNumber();
+    } else if (v !== null && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date) && (v as { constructor?: { name?: string } }).constructor?.name === 'Decimal') {
+      out[k] = Number(v);
+    } else if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        item !== null && typeof item === 'object' && !(item instanceof Date)
+          ? serializeRow(item as Record<string, unknown>)
+          : typeof item === 'bigint'
+            ? Number(item)
+            : item,
+      );
+    } else if (v !== null && typeof v === 'object' && !(v instanceof Date) && Object.getPrototypeOf(v)?.constructor?.name === 'Object') {
+      out[k] = serializeRow(v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 @Injectable()
 export class FeesService {
   constructor(private prisma: PrismaService) {}
@@ -113,9 +166,11 @@ export class FeesService {
       feeType?: string;
       academicYearId?: number;
     },
-  ) {
+  ): Promise<FeeCollectionSummaryViewRow[]> {
     let query = `
-      SELECT * FROM fee_collection_summary
+      SELECT institution_id, institution_name, semester_id, course_id, fee_type, academic_year_id,
+             total_amount_due, total_amount_paid, total_pending, collection_percentage
+      FROM fee_collection_summary
       WHERE institution_id = ${institutionId}
     `;
 
@@ -126,13 +181,54 @@ export class FeesService {
       query += ` AND course_id = ${filters.courseId}`;
     }
     if (filters?.feeType) {
-      query += ` AND fee_type = '${filters.feeType}'`;
+      query += ` AND fee_type = '${filters.feeType.replace(/'/g, "''")}'`;
     }
     if (filters?.academicYearId) {
       query += ` AND academic_year_id = ${filters.academicYearId}`;
     }
 
-    return this.prisma.$queryRawUnsafe(query);
+    return this.prisma.$queryRawUnsafe<FeeCollectionSummaryViewRow[]>(query);
+  }
+
+  /**
+   * Get fee collection summary using Prisma when view is unavailable
+   */
+  private async getFeeCollectionSummaryFromPrisma(
+    institutionId: number,
+    filters?: {
+      semesterId?: number;
+      courseId?: number;
+      feeType?: string;
+      academicYearId?: number;
+    },
+  ): Promise<FeeCollectionSummaryData> {
+    const feeStructureFilter: Prisma.FeeStructureWhereInput = { institutionId };
+    if (filters?.courseId) feeStructureFilter.courseId = filters.courseId;
+    if (filters?.feeType) feeStructureFilter.feeType = filters.feeType as Prisma.EnumFeeTypeFilter;
+    if (filters?.academicYearId) feeStructureFilter.academicYearId = filters.academicYearId;
+
+    const where: Prisma.StudentFeeWhereInput = {
+      feeStructure: feeStructureFilter,
+    };
+    if (filters?.semesterId) where.semesterId = filters.semesterId;
+
+    const agg = await this.prisma.studentFee.aggregate({
+      where,
+      _sum: { amountDue: true, amountPaid: true },
+    });
+
+    const totalExpected = Number(agg._sum.amountDue ?? 0);
+    const totalCollected = Number(agg._sum.amountPaid ?? 0);
+    const totalPending = totalExpected - totalCollected;
+    const collectionRate =
+      totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 10000) / 100 : 0;
+
+    return {
+      total_expected: totalExpected,
+      total_collected: totalCollected,
+      total_pending: totalPending,
+      collection_rate: collectionRate,
+    };
   }
 
   /**
@@ -796,24 +892,34 @@ export class FeesService {
       0,
     );
 
+    const feesByStatus = {
+      pending: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'PENDING').length,
+      partial: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'PARTIAL').length,
+      paid: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'PAID').length,
+      overdue: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'OVERDUE').length,
+      waived: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'WAIVED').length,
+    };
+    const totalPending = totalDue - totalPaid;
+
     return {
-      totalFees: feeStatusData.length,
-      totalDue,
-      totalPaid,
-      totalPending: totalDue - totalPaid,
-      totalLateFees,
-      totalDiscount,
-      feesByStatus: {
-        pending: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'PENDING')
-          .length,
-        partial: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'PARTIAL')
-          .length,
-        paid: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'PAID').length,
-        overdue: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'OVERDUE')
-          .length,
-        waived: feeStatusData.filter((f: StudentFeeStatusView) => f.status === 'WAIVED').length,
+      data: {
+        totalFees: feeStatusData.length,
+        totalDue,
+        totalPaid,
+        totalPending,
+        totalLateFees,
+        totalDiscount,
+        feesByStatus,
+        fees: feeStatusData.map((row) => serializeRow(row as unknown as Record<string, unknown>)),
+        // Frontend StudentFeeSummary shape
+        paidFees: feesByStatus.paid,
+        pendingFees: feesByStatus.pending,
+        overdueFees: feesByStatus.overdue,
+        totalAmount: totalDue,
+        paidAmount: totalPaid,
+        pendingAmount: totalPending,
+        lateFeeAmount: totalLateFees,
       },
-      fees: feeStatusData,
     };
   }
 
@@ -1308,13 +1414,14 @@ export class FeesService {
     return {
       count: overdueFees.length,
       totalOverdue,
-      fees: overdueFees,
+      fees: overdueFees.map((row) => serializeRow(row as unknown as Record<string, unknown>)),
     };
   }
 
   /**
    * Get fee collection summary (OPTIMIZED)
-   * Uses fee_collection_summary view for comprehensive analytics
+   * Uses fee_collection_summary view when available; falls back to Prisma aggregation
+   * Returns shape expected by frontend: { data: { total_expected, total_collected, total_pending, collection_rate } }
    */
   async getFeeCollectionSummary(
     institutionId: number,
@@ -1324,19 +1431,52 @@ export class FeesService {
       feeType?: string;
       academicYearId?: number;
     },
-  ) {
-    const summary = await this.getFeeCollectionSummaryFromView(
-      institutionId,
-      filters,
-    );
-
-    return {
-      summary,
-      metadata: {
+  ): Promise<{
+    data: FeeCollectionSummaryData;
+    meta?: { institutionId: number; filters?: unknown; generatedAt: Date };
+  }> {
+    try {
+      const rows = await this.getFeeCollectionSummaryFromView(
         institutionId,
         filters,
-        generatedAt: new Date(),
-      },
-    };
+      );
+      let totalExpected = 0;
+      let totalCollected = 0;
+      let totalPending = 0;
+      for (const r of rows) {
+        totalExpected += Number(r.total_amount_due);
+        totalCollected += Number(r.total_amount_paid);
+        totalPending += Number(r.total_pending);
+      }
+      const collectionRate =
+        totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 10000) / 100 : 0;
+      return {
+        data: {
+          total_expected: totalExpected,
+          total_collected: totalCollected,
+          total_pending: totalPending,
+          collection_rate: collectionRate,
+        },
+        meta: {
+          institutionId,
+          filters,
+          generatedAt: new Date(),
+        },
+      };
+    } catch (err) {
+      // View may not exist (e.g. migration not run); fall back to Prisma aggregation
+      const data = await this.getFeeCollectionSummaryFromPrisma(
+        institutionId,
+        filters,
+      );
+      return {
+        data,
+        meta: {
+          institutionId,
+          filters,
+          generatedAt: new Date(),
+        },
+      };
+    }
   }
 }

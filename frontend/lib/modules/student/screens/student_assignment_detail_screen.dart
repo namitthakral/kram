@@ -30,7 +30,9 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
 
     for (var line in lines) {
       line = line.trim();
-      if (line.isEmpty) continue;
+      if (line.isEmpty) {
+        continue;
+      }
 
       if (line.startsWith('---') && line.endsWith('---')) {
         // Section Header
@@ -80,37 +82,37 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(String title, IconData icon) => Row(
-      children: [
-        Icon(icon, size: 20, color: CustomAppColors.primary),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+    children: [
+      Icon(icon, size: 20, color: CustomAppColors.primary),
+      const SizedBox(width: 8),
+      Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
         ),
-      ],
-    );
+      ),
+    ],
+  );
 
   Widget _buildInfoCard({required Widget child}) => Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: child,
-    );
+    width: double.infinity,
+    padding: const EdgeInsets.all(20.0),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Colors.grey.shade200),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.02),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: child,
+  );
 
   @override
   Widget build(BuildContext context) {

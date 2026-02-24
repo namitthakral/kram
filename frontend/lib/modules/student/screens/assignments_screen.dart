@@ -20,6 +20,20 @@ class AssignmentsScreen extends StatefulWidget {
 
 class _AssignmentsScreenState extends State<AssignmentsScreen> {
   int _selectedTabIndex = 0;
+  late final StudentAssignmentProvider _assignmentProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _assignmentProvider = StudentAssignmentProvider();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = context.read<LoginProvider>().currentUser;
+      if (user != null) {
+        _assignmentProvider.loadAssignments(user);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +57,8 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
     final statsData = studentProvider.dashboardStats;
     final gpa = statsData?['gpa']?.toString();
 
-    return ChangeNotifierProvider(
-      create: (context) {
-        final provider = StudentAssignmentProvider();
-        if (user != null) {
-          provider.loadAssignments(user);
-        }
-        return provider;
-      },
+    return ChangeNotifierProvider<StudentAssignmentProvider>.value(
+      value: _assignmentProvider,
       child: CustomMainScreenWithAppbar(
         title: 'Assignments',
         appBarConfig: AppBarConfig.student(
@@ -177,11 +185,15 @@ class _AssignmentCard extends StatelessWidget {
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     child: InkWell(
       onTap: () {
-        context.goNamed(
-          'student_assignment_detail',
-          pathParameters: {'id': item.id.toString()},
-          extra: item,
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            context.pushNamed(
+              'student_assignment_detail',
+              pathParameters: {'id': item.id.toString()},
+              extra: item,
+            );
+          }
+        });
       },
       borderRadius: BorderRadius.circular(12),
       child: Padding(
@@ -305,11 +317,15 @@ class _AssignmentCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () {
-                    context.goNamed(
-                      'student_assignment_detail',
-                      pathParameters: {'id': item.id.toString()},
-                      extra: item,
-                    );
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (context.mounted) {
+                        context.pushNamed(
+                          'student_assignment_detail',
+                          pathParameters: {'id': item.id.toString()},
+                          extra: item,
+                        );
+                      }
+                    });
                   },
                   icon: Icon(
                     !isCompleted ? Icons.upload_file : Icons.visibility,

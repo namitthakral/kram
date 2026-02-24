@@ -161,6 +161,7 @@ export class UsersService {
                 transportRequired: studentData.transportRequired || false,
                 emergencyContactName: studentData.emergencyContactName,
                 emergencyContactPhone: studentData.emergencyContactPhone,
+                emergencyContactEmail: studentData.emergencyContactEmail,
                 bloodGroup: studentData.bloodGroup,
                 medicalConditions: studentData.medicalConditions,
               },

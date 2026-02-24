@@ -10,8 +10,28 @@ import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../providers/student_exams_provider.dart';
 import '../providers/student_provider.dart';
 
-class ExamsScreen extends StatelessWidget {
+class ExamsScreen extends StatefulWidget {
   const ExamsScreen({super.key});
+
+  @override
+  State<ExamsScreen> createState() => _ExamsScreenState();
+}
+
+class _ExamsScreenState extends State<ExamsScreen> {
+  late final StudentExamsProvider _examsProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _examsProvider = StudentExamsProvider();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = context.read<LoginProvider>().currentUser;
+      if (user != null) {
+        _examsProvider.loadExaminations(user);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +55,8 @@ class ExamsScreen extends StatelessWidget {
     final statsData = studentProvider.dashboardStats;
     final gpa = statsData?['gpa']?.toString();
 
-    return ChangeNotifierProvider(
-      create: (context) {
-        final provider = StudentExamsProvider();
-        if (user != null) {
-          provider.loadExaminations(user);
-        }
-        return provider;
-      },
+    return ChangeNotifierProvider<StudentExamsProvider>.value(
+      value: _examsProvider,
       child: CustomMainScreenWithAppbar(
         title: 'Exams & Question Papers',
         appBarConfig: AppBarConfig.student(

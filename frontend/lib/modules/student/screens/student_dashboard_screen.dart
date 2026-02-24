@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../provider/login_signup/login_provider.dart';
@@ -16,6 +17,7 @@ import '../widgets/assignment_card.dart';
 import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
 import '../widgets/subject_performance_card.dart';
+import '../../fees/providers/fees_provider.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -44,7 +46,19 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     if (user?.uuid != null) {
       debugPrint('✅ Loading dashboard data for UUID: ${user!.uuid}');
       context.read<StudentDashboardProvider>().loadAllDashboardData(user.uuid!);
-      context.read<StudentProvider>().loadStudentData(user.uuid!);
+
+
+      // Load student data first, then fees
+      context.read<StudentProvider>().loadStudentData(user.uuid!).then((_) {
+        if (mounted) {
+          final profile = context.read<StudentProvider>().studentProfile;
+          // Use user.student if available, otherwise profile
+          final studentId = user.student?.id ?? profile?['id'];
+          if (studentId != null) {
+            context.read<FeesProvider>().loadStudentFeeSummary(studentId);
+          }
+        }
+      });
     } else {
       debugPrint('❌ Cannot load dashboard data - user UUID is null');
     }
@@ -104,6 +118,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 onRefresh: () async {
                   if (user.uuid != null) {
                     await dashboardProvider.refresh(user.uuid!);
+                    // Refresh fees if student data is loaded
+                    if (context.mounted) {
+                      final profile = context.read<StudentProvider>().studentProfile;
+                      final studentId = user.student?.id ?? profile?['id'];
+                      if (studentId != null) {
+                        context.read<FeesProvider>().loadStudentFeeSummary(studentId);
+                      }
+                    }
                   }
                 },
                 child: SingleChildScrollView(
@@ -213,6 +235,11 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     final classRank = data?['classRank'] ?? 'N/A';
     final assignmentsDue = data?['assignmentsDue'] ?? 0;
 
+    // Get fees data
+    final feesProvider = context.watch<FeesProvider>();
+    final feeSummary = feesProvider.studentFeeSummary;
+    final totalDue = feeSummary?.pendingAmount ?? 0.0;
+
     // Debug: Print individual stat values
     debugPrint('Stats Data Object: $data');
     debugPrint(
@@ -281,12 +308,15 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           icon: Icons.trending_up,
         ),
         DashboardStatCard(
-          title: context.translate('assignments_due'),
-          value: assignmentsDue.toString(),
-          subtitle: context.translate('this_week'),
-          backgroundColor: const Color(0xFFfe9a00),
-          iconColor: const Color(0xFFfe9a00),
-          icon: Icons.assignment,
+          title: context.translate('fees_due'),
+          value: '\$${totalDue.toStringAsFixed(0)}',
+          subtitle: totalDue > 0 ? 'Pay Now' : 'All Clear',
+          backgroundColor:
+              totalDue > 0 ? const Color(0xFFef4444) : const Color(0xFF10b981),
+          iconColor:
+              totalDue > 0 ? const Color(0xFFef4444) : const Color(0xFF10b981),
+          icon: Icons.payments,
+          onTap: () => context.go('/my-fees'),
         ),
       ],
     );

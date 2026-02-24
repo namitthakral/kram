@@ -11,6 +11,7 @@ import { OpenAIProvider } from './providers/openai.provider'
 import { ToolRegistry } from './tools/tool-registry'
 
 import { KramProvider } from './providers/kram.provider'
+import { SarvamProvider } from './providers/sarvam.provider'
 
 @Injectable()
 export class AiService implements OnModuleInit {
@@ -26,6 +27,7 @@ export class AiService implements OnModuleInit {
         private readonly openAiProvider: OpenAIProvider,
         private readonly claudeProvider: ClaudeProvider,
         private readonly kramProvider: KramProvider,
+        private readonly sarvamProvider: SarvamProvider,
         private readonly configService: ConfigService,
     ) { }
 
@@ -35,6 +37,7 @@ export class AiService implements OnModuleInit {
             openai: this.openAiProvider,
             claude: this.claudeProvider,
             kram: this.kramProvider,
+            sarvam: this.sarvamProvider,
         }
 
         const defaultProvider = this.configService.get<string>('AI_PROVIDER', 'gemini')

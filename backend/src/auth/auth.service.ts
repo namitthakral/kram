@@ -90,6 +90,57 @@ export class AuthService {
     return user
   }
 
+  /**
+   * Resolve institutionId for a user (from student/teacher/staff, or first institution for admin/super_admin)
+   */
+  private async resolveInstitutionId(user: {
+    student?: { institutionId: number } | null
+    teacher?: { institutionId: number } | null
+    staff?: { institutionId: number } | null
+    role?: { roleName: string } | null
+  }): Promise<number | null> {
+    let id =
+      user.student?.institutionId ??
+      user.teacher?.institutionId ??
+      user.staff?.institutionId ??
+      null
+    if (id != null) return id
+    const roleName = user.role?.roleName?.toLowerCase()
+    if (roleName === 'admin' || roleName === 'super_admin') {
+      const first = await this.prisma.institution.findFirst({
+        where: { status: 'ACTIVE' },
+        select: { id: true },
+        orderBy: { id: 'asc' },
+      })
+      return first?.id ?? null
+    }
+    return null
+  }
+
+  /**
+   * Get profile for API response (includes institutionId and omits passwordHash).
+   * Uses resolveInstitutionId so admin/super_admin get first institution when they have no Staff.
+   */
+  async getProfileForResponse(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: true,
+        student: true,
+        teacher: true,
+        parent: true,
+        staff: true,
+      },
+    })
+    if (!user) throw new UnauthorizedException('User not found')
+    const institutionId = await this.resolveInstitutionId(user)
+    const { passwordHash, ...safeUser } = user
+    return {
+      success: true,
+      data: { ...safeUser, institutionId },
+    }
+  }
+
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto)
 
@@ -136,6 +187,8 @@ export class AuthService {
       },
     })
 
+    const institutionId = await this.resolveInstitutionId(user)
+
     return {
       user: {
         id: user.id,
@@ -148,6 +201,8 @@ export class AuthService {
         student: user.student,
         teacher: user.teacher,
         parent: user.parent,
+        staff: user.staff,
+        institutionId,
         status: user.status,
         mustChangePassword: user.mustChangePassword, // Frontend checks this flag
         isTemporaryPassword: user.isTemporaryPassword, // For context/audit

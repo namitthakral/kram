@@ -5,12 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Ed-Verse (Local - Web)",
+            "name": "Kram (Local - Web)",
             "cwd": "frontend",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
+                // "--dart-define=BASE_URL=http://192.168.1.11:3001",
                 "--dart-define=BASE_URL=http://192.168.0.175:3001",
                 "-d",
                 "chrome",
@@ -21,7 +22,7 @@
             ]
         },
         {
-            "name": "Ed-Verse (Local - App)",
+            "name": "Kram (Local - App)",
             "cwd": "frontend",
             "request": "launch",
             "type": "dart",
@@ -30,7 +31,7 @@
             ]
         },
         {
-            "name": "Ed-Verse (Production - Web)",
+            "name": "Kram (Production - Web)",
             "cwd": "frontend",
             "request": "launch",
             "type": "dart",
@@ -46,7 +47,7 @@
             ]
         },
         {
-            "name": "Ed-Verse (Production - App)",
+            "name": "Kram (Production - App)",
             "cwd": "frontend",
             "request": "launch",
             "type": "dart",
@@ -55,13 +56,13 @@
             ]
         },
         // {
-        //     "name": "Ed-Verse",
+        //     "name": "Kram",
         //     "cwd": "frontend",
         //     "request": "launch",
         //     "type": "dart"
         // },
         // {
-        //     "name": "Ed-Verse(Web)",
+        //     "name": "Kram(Web)",
         //     "request": "launch",
         //     "cwd": "frontend",
         //     "type": "dart",

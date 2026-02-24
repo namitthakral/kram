@@ -445,6 +445,7 @@ model Student {
   transportRequired     Boolean          @default(false) @map("transport_required")
   emergencyContactName  String?          @map("emergency_contact_name") @db.VarChar(100)
   emergencyContactPhone String?          @map("emergency_contact_phone") @db.VarChar(15)
+  emergencyContactEmail String?          @map("emergency_contact_email") @db.VarChar(100)
   bloodGroup            String?          @map("blood_group") @db.VarChar(5)
   medicalConditions     String?          @map("medical_conditions")
   status                StudentStatus    @default(ACTIVE)

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
@@ -11,6 +13,7 @@ import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../providers/admin_analytics_tab_provider.dart';
 import '../providers/admin_dashboard_provider.dart';
+import '../widgets/add_student_dialog.dart';
 import '../widgets/admin_chart_widgets.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -34,11 +37,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final user = loginProvider.currentUser;
 
     if (user != null && mounted) {
-      final provider = context.read<AdminDashboardProvider>();
-      await Future.wait([
-        provider.fetchDashboardStats(),
-        provider.fetchAllChartData(),
-      ]);
+      await context.read<AdminDashboardProvider>().fetchDashboardStats();
     }
   }
 
@@ -76,6 +75,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             _buildStatsSection(isMobile),
             const SizedBox(height: 24),
 
+            // Quick actions (relative admin links)
+            _buildQuickActionsSection(isMobile),
+            const SizedBox(height: 24),
+
             // Main Content
             if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
 
@@ -86,6 +89,55 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildQuickActionsSection(bool isMobile) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossCount = isMobile ? 2 : 4;
+        return GridView.count(
+          crossAxisCount: crossCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: isMobile ? 1.4 : 2.2,
+          children: [
+            FeatureActionCard(
+              title: context.translate('add_student'),
+              icon: Icons.person_add_rounded,
+              color: AppTheme.blue500,
+              onTap: () => _showAddStudent(context),
+            ),
+            FeatureActionCard(
+              title: context.translate('add_teacher'),
+              icon: Icons.school_rounded,
+              color: AppTheme.success,
+              onTap: () => context.router.router.push('/teachers'),
+            ),
+            FeatureActionCard(
+              title: context.translate('generate_report'),
+              icon: Icons.analytics_rounded,
+              color: AppTheme.danger,
+              onTap: () => context.router.router.push('/reports'),
+            ),
+            FeatureActionCard(
+              title: context.translate('send_notice'),
+              icon: Icons.campaign_rounded,
+              color: AppTheme.warning,
+              onTap: () => context.router.router.push('/notifications'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddStudent(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => const AddStudentDialog(),
     );
   }
 
@@ -357,6 +409,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           final stats = provider.stats;
           final feeCollection = stats?.feeCollection ?? 0.0;
           final pendingFees = stats?.pendingFees ?? 0.0;
+          final totalTeachers = stats?.totalTeachers ?? 0;
+          final totalStaff = stats?.totalStaff ?? 0;
+          final totalStudents = stats?.totalStudents ?? 0;
 
           return Column(
             children: [
@@ -367,6 +422,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Icons.warning_amber_rounded,
                 const Color(0xFFfee2e2),
                 const Color(0xFFef4444),
+                onTap: () => context.go('/fees/student-fees'),
               ),
               const SizedBox(height: 16),
               _buildQuickStatCard(
@@ -376,6 +432,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Icons.attach_money,
                 const Color(0xFFdbeafe),
                 const Color(0xFF3b82f6),
+                onTap: () => context.go('/fees'),
+              ),
+              const SizedBox(height: 16),
+              _buildQuickStatCard(
+                context.translate('staff_overview'),
+                '$totalTeachers / $totalStaff',
+                context.translate('teachers_staff'),
+                Icons.badge_rounded,
+                const Color(0xFFe0e7ff),
+                const Color(0xFF6366f1),
+                onTap: () => context.router.router.push('/teachers'),
+              ),
+              const SizedBox(height: 16),
+              _buildQuickStatCard(
+                context.translate('enrollment_trend'),
+                '$totalStudents',
+                context.translate('total_students'),
+                Icons.trending_up_rounded,
+                const Color(0xFFd1fae5),
+                const Color(0xFF10b981),
+                onTap: () => context.router.router.push('/students'),
               ),
             ],
           );
@@ -388,59 +465,63 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     String subtitle,
     IconData icon,
     Color backgroundColor,
-    Color iconColor,
-  ) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 10,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF64748b),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: iconColor,
+    Color iconColor, {
+    VoidCallback? onTap,
+  }) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
-        ),
-      ],
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748b),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: iconColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 14, color: Color(0xFF64748b)),
+          ),
+        ],
+      ),
     ),
   );
 

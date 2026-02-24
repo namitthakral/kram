@@ -592,13 +592,14 @@ export class CommunicationsService {
 
     // Determine institution if not provided
     const userInstitutionId =
-      institutionId ||
-      user.student?.institutionId ||
-      user.teacher?.institutionId ||
+      institutionId ??
+      user.student?.institutionId ??
+      user.teacher?.institutionId ??
       user.staff?.institutionId;
 
+    // When user has no institution (e.g. some admin accounts), return empty list instead of 400
     if (!userInstitutionId) {
-      throw new BadRequestException('Institution ID is required');
+      return { count: 0, data: [] };
     }
 
     const roleName = user.role.roleName;

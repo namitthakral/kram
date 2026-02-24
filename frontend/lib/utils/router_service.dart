@@ -10,8 +10,10 @@ import 'extensions.dart';
 import '../modules/admin/screens/admin_dashboard_screen.dart';
 import '../modules/admin/screens/admin_main_screen.dart';
 import '../modules/admin/screens/admin_reports_screen.dart';
+import '../modules/admin/screens/admin_staff_management_screen.dart';
+import '../modules/admin/screens/admin_student_management_screen.dart';
+import '../modules/admin/screens/admin_teachers_screen.dart';
 import '../modules/admin/screens/admin_user_management_screen.dart';
-import '../modules/admin/screens/fees_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
 import '../modules/admin/screens/institution_settings_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
@@ -62,6 +64,14 @@ import '../modules/teacher/screens/timetable_view_screen.dart';
 import '../provider/login_signup/login_provider.dart';
 import '../views/dashboard/staff_dashboard_screen.dart';
 import '../views/dashboard/super_admin_dashboard_screen.dart';
+import '../modules/fees/screens/admin/fee_dashboard_screen.dart';
+import '../modules/fees/screens/admin/fee_structures_screen.dart';
+import '../modules/fees/screens/admin/create_fee_structure_screen.dart';
+import '../modules/fees/screens/admin/student_fees_list_screen.dart';
+import '../modules/fees/screens/admin/assign_fee_screen.dart';
+import '../modules/fees/screens/admin/record_payment_screen.dart';
+import '../modules/fees/screens/student/student_fees_screen.dart';
+import '../modules/fees/models/student_fee.dart';
 
 import '../views/home_screen.dart';
 import '../views/notifications/notifications_screen.dart';
@@ -101,10 +111,11 @@ class RouterService {
       // errorBuilder: (context, state) => const NotFoundPage(),
       routes: _routes,
       redirect: _globalRedirect,
-      refreshListenable: Listenable.merge([
-        GoRouterRefreshStream(routeStream),
-        loginProvider,
-      ]),
+      // Only listen to route stream (deep links). Do not listen to loginProvider
+      // here to avoid full router refresh on every auth state change, which can
+      // cause UI freezes when navigating. Logout redirect is handled by
+      // explicit goToLogin() / performLogout().
+      refreshListenable: GoRouterRefreshStream(routeStream),
       observers: [RouteObserver()],
     );
   }
@@ -221,7 +232,6 @@ class RouterService {
                 child: const ProfileScreen(),
               ),
         ),
-
 
         // Teacher-specific routes
         GoRoute(
@@ -555,6 +565,17 @@ class RouterService {
               ),
         ),
 
+        // Student Fees
+        GoRoute(
+          path: '/my-fees',
+          name: 'student_fees',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const StudentFeesScreen(),
+              ),
+        ),
+
         // Admin-specific routes
         GoRoute(
           path: '/students',
@@ -562,7 +583,16 @@ class RouterService {
           pageBuilder:
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: const StudentDashboardScreen(),
+                child: const AdminStudentManagementScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/teachers',
+          name: 'admin_teachers',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminTeachersScreen(),
               ),
         ),
         GoRoute(
@@ -571,7 +601,7 @@ class RouterService {
           pageBuilder:
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: const StaffDashboardScreen(),
+                child: const AdminStaffManagementScreen(),
               ),
         ),
         GoRoute(
@@ -580,8 +610,40 @@ class RouterService {
           pageBuilder:
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: const FeesManagementScreen(),
+                child: const FeeDashboardScreen(),
               ),
+          routes: [
+            GoRoute(
+              path: 'structures',
+              name: 'fee_structures',
+              builder: (context, state) => const FeeStructuresScreen(),
+              routes: [
+                GoRoute(
+                  path: 'create',
+                  name: 'create_fee_structure',
+                  builder: (context, state) => const CreateFeeStructureScreen(),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'student-fees',
+              name: 'student_fees_list',
+              builder: (context, state) => const StudentFeesListScreen(),
+            ),
+            GoRoute(
+              path: 'assign',
+              name: 'assign_fee',
+              builder: (context, state) => const AssignFeeScreen(),
+            ),
+            GoRoute(
+              path: 'payments/record',
+              name: 'record_payment',
+              builder: (context, state) {
+                final studentFee = state.extra as StudentFee?;
+                return RecordPaymentScreen(studentFee: studentFee);
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: '/transport',

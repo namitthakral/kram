@@ -120,7 +120,8 @@ class AppLifecycleService extends WidgetsBindingObserver {
     if (_context != null && _context!.mounted) {
       final isLoggedIn = await _authService.isLoggedIn();
       if (isLoggedIn && _context!.mounted) {
-        _context!.read<CommunicationsProvider>().startPolling();
+        final institutionId = _context!.read<LoginProvider>().currentUser?.institutionId;
+        _context!.read<CommunicationsProvider>().startPolling(institutionId: institutionId);
       }
     }
   }

@@ -4,13 +4,21 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
-import '../../../utils/custom_colors.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../providers/student_provider.dart';
+
+/// Defers navigation to the next frame to avoid UI freeze when tapping.
+void _navigateAfterFrame(BuildContext context, void Function() navigate) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (context.mounted) {
+      navigate();
+    }
+  });
+}
 
 class StudentAcademicScreen extends StatelessWidget {
   const StudentAcademicScreen({super.key});
@@ -55,19 +63,19 @@ class StudentAcademicScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Academic Modules',
+              context.translate('academic_modules'),
               style: TextStyle(
                 fontSize: isMobile ? AppTheme.fontSizeXl : AppTheme.fontSize2xl,
                 fontWeight: AppTheme.fontWeightBold,
-                color: CustomAppColors.slate800,
+                color: AppTheme.slate800,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Access all your academic tools and reports',
-              style: TextStyle(
+            Text(
+              context.translate('access_academic_tools_reports'),
+              style: const TextStyle(
                 fontSize: AppTheme.fontSizeSm,
-                color: CustomAppColors.slate500,
+                color: AppTheme.slate500,
               ),
             ),
             const SizedBox(height: 24),
@@ -89,7 +97,7 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.assignment_turned_in,
                   backgroundColor: const Color(0xFF10B981),
                   iconColor: const Color(0xFF10B981),
-                  onTap: () => context.pushNamed('student_grades'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_grades')),
                 ),
                 DashboardStatCard(
                   title: 'Timetable',
@@ -99,7 +107,7 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.calendar_today,
                   backgroundColor: const Color(0xFF4F7CFF),
                   iconColor: const Color(0xFF4F7CFF),
-                  onTap: () => context.pushNamed('student_timetable'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_timetable')),
                 ),
                 DashboardStatCard(
                   title: 'Assignments',
@@ -108,7 +116,7 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.assignment,
                   backgroundColor: const Color(0xFF6366F1),
                   iconColor: const Color(0xFF6366F1),
-                  onTap: () => context.pushNamed('student_assignments'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_assignments')),
                 ),
                 DashboardStatCard(
                   title: 'Exams',
@@ -117,7 +125,7 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.quiz,
                   backgroundColor: const Color(0xFFF59E0B),
                   iconColor: const Color(0xFFF59E0B),
-                  onTap: () => context.pushNamed('student_exams'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_exams')),
                 ),
                 DashboardStatCard(
                   title: 'Events',
@@ -126,16 +134,16 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.event,
                   backgroundColor: const Color(0xFFEC4899),
                   iconColor: const Color(0xFFEC4899),
-                  onTap: () => context.pushNamed('student_events'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_events')),
                 ),
                 DashboardStatCard(
-                  title: 'Attendance',
+                  title: context.translate('attendance'),
                   value: 'View',
                   subtitle: 'Monthly Trends',
-                  icon: Icons.check_circle,
-                  backgroundColor: Colors.teal,
-                  iconColor: Colors.teal,
-                  onTap: () => context.pushNamed('student_attendance'),
+                  icon: Icons.check_circle_rounded,
+                  backgroundColor: AppTheme.info,
+                  iconColor: AppTheme.info,
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_attendance')),
                 ),
               ],
             ),

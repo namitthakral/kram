@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../modules/admin/services/admin_service.dart';
 import '../../provider/login_signup/login_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
@@ -29,27 +30,37 @@ class AdminDashboardScreen extends StatelessWidget {
 
     final userInitials = UserUtils.getInitials(user.name);
     final userName = user.name;
+    final institutionId = user.institutionId;
 
-    return CustomMainScreenWithAppbar(
-      title: context.translate('Admin Dashboard'),
-      appBarConfig: AppBarConfig.admin(
-        userInitials: userInitials,
-        userName: userName,
-        institutionName: 'Kram Institution', // TODO: Get from user data
-        onNotificationIconPressed: () {},
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatsSection(context),
-            const SizedBox(height: 24),
-            _buildQuickActionsSection(context),
-            const SizedBox(height: 24),
-            _buildRecentActivitiesSection(context),
-          ],
-        ),
-      ),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: institutionId != null
+          ? AdminService().getInstitutionProfile(institutionId)
+          : null,
+      builder: (context, snapshot) {
+        final institutionName = snapshot.data?['name'] as String? ??
+            context.translate('kram_institution');
+        return CustomMainScreenWithAppbar(
+          title: context.translate('Admin Dashboard'),
+          appBarConfig: AppBarConfig.admin(
+            userInitials: userInitials,
+            userName: userName,
+            institutionName: institutionName,
+            onNotificationIconPressed: () {},
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatsSection(context),
+                const SizedBox(height: 24),
+                _buildQuickActionsSection(context),
+                const SizedBox(height: 24),
+                _buildRecentActivitiesSection(context),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

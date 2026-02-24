@@ -84,6 +84,11 @@ export class CreateStudentDataDto {
   emergencyContactPhone?: string
 
   @IsOptional()
+  @IsEmail()
+  @MaxLength(100)
+  emergencyContactEmail?: string
+
+  @IsOptional()
   @IsString()
   @MaxLength(5)
   bloodGroup?: string

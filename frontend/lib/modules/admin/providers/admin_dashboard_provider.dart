@@ -40,6 +40,7 @@ class AdminDashboardProvider extends ChangeNotifier {
 
   AdminDashboardStats? get stats => _dashboardData?.stats;
 
+  /// Fetches all dashboard data from single API (stats, alerts, charts).
   Future<void> fetchDashboardStats() async {
     _isLoading = true;
     _error = null;
@@ -47,8 +48,12 @@ class AdminDashboardProvider extends ChangeNotifier {
 
     try {
       _dashboardData = await _adminService.getDashboardStats();
-      _teacherPerformance = _dashboardData?.teacherPerformance;
-      _systemAlerts = _dashboardData?.systemAlerts;
+      _teacherPerformance = _dashboardData?.teacherPerformance ?? [];
+      _systemAlerts = _dashboardData?.systemAlerts ?? [];
+      _attendanceTrends = _dashboardData?.attendanceTrends ?? [];
+      _gradeDistribution = _dashboardData?.gradeDistribution ?? [];
+      _classPerformance = _dashboardData?.classPerformance ?? [];
+      _financialOverview = _dashboardData?.financialOverview ?? [];
       _error = null;
     } on Exception catch (e) {
       _error = e.toString();

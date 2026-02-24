@@ -14,6 +14,14 @@ import '../providers/assignment_provider.dart';
 import '../providers/examination_provider.dart';
 import '../providers/teacher_dashboard_provider.dart';
 
+void _navigateAfterFrame(BuildContext context, void Function() navigate) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (context.mounted) {
+      navigate();
+    }
+  });
+}
+
 class AcademicManagementScreen extends StatefulWidget {
   const AcademicManagementScreen({super.key});
 
@@ -107,7 +115,7 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                         backgroundColor: CustomAppColors.warning,
                         iconColor: CustomAppColors.warning,
                         icon: Icons.assignment_turned_in_rounded,
-                        onTap: () => context.pushNamed('assignments_list'),
+                        onTap: () => _navigateAfterFrame(context, () => context.pushNamed('assignments_list')),
                       ),
                       DashboardStatCard(
                         title: 'Exams',
@@ -116,7 +124,7 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                         backgroundColor: CustomAppColors.purple,
                         iconColor: CustomAppColors.purple,
                         icon: Icons.quiz_rounded,
-                        onTap: () => context.pushNamed('examinations_list'),
+                        onTap: () => _navigateAfterFrame(context, () => context.pushNamed('examinations_list')),
                       ),
                       DashboardStatCard(
                         title: 'Classes Today',
@@ -126,7 +134,7 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                         backgroundColor: CustomAppColors.blue500,
                         iconColor: CustomAppColors.blue500,
                         icon: Icons.schedule_rounded,
-                        onTap: () => context.pushNamed('timetables_list'),
+                        onTap: () => _navigateAfterFrame(context, () => context.pushNamed('timetables_list')),
                       ),
                       DashboardStatCard(
                         title: 'Avg Attendance',
@@ -135,7 +143,7 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                         backgroundColor: CustomAppColors.success,
                         iconColor: CustomAppColors.success,
                         icon: Icons.check_circle_rounded,
-                        onTap: () => context.pushNamed('attendance_view'),
+                        onTap: () => _navigateAfterFrame(context, () => context.pushNamed('attendance_view')),
                       ),
                     ],
                   ),
@@ -180,37 +188,37 @@ class _AcademicManagementScreenState extends State<AcademicManagementScreen> {
                   title: 'Attendance',
                   icon: Icons.calendar_today,
                   color: const Color(0xFF4F7CFF),
-                  onTap: () => context.pushNamed('attendance_view'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('attendance_view')),
                 ),
                 FeatureActionCard(
                   title: 'Marks',
                   icon: Icons.grade,
                   color: const Color(0xFF10B981),
-                  onTap: () => context.pushNamed('marks_list'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('marks_list')),
                 ),
                 FeatureActionCard(
                   title: 'Examinations',
                   icon: Icons.assignment,
                   color: const Color(0xFFF59E0B),
-                  onTap: () => context.pushNamed('examinations_list'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('examinations_list')),
                 ),
                 FeatureActionCard(
                   title: 'Timetables',
                   icon: Icons.schedule,
                   color: const Color(0xFF8B5CF6),
-                  onTap: () => context.pushNamed('timetables_list'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('timetables_list')),
                 ),
                 FeatureActionCard(
                   title: 'Question Papers',
                   icon: Icons.description,
                   color: const Color(0xFFEC4899),
-                  onTap: () => context.pushNamed('question_papers_list'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('question_papers_list')),
                 ),
                 FeatureActionCard(
                   title: 'Assignments',
                   icon: Icons.assignment_ind,
                   color: const Color(0xFF6366F1),
-                  onTap: () => context.pushNamed('assignments_list'),
+                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('assignments_list')),
                 ),
               ]),
             ),

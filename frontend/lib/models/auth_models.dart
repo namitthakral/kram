@@ -160,6 +160,22 @@ class AuthTokens {
   };
 }
 
+int? _institutionIdFromRelations(Map<String, dynamic> json) {
+  final student = json['student'];
+  final teacher = json['teacher'];
+  final staff = json['staff'];
+  if (student is Map && student['institutionId'] != null) {
+    return int.tryParse(student['institutionId'].toString());
+  }
+  if (teacher is Map && teacher['institutionId'] != null) {
+    return int.tryParse(teacher['institutionId'].toString());
+  }
+  if (staff is Map && staff['institutionId'] != null) {
+    return int.tryParse(staff['institutionId'].toString());
+  }
+  return null;
+}
+
 class User {
   User({
     required this.id,
@@ -193,7 +209,8 @@ class User {
     teacher: json['teacher'] != null ? Teacher.fromJson(json['teacher']) : null,
     parent: json['parent'] != null ? Parent.fromJson(json['parent']) : null,
     staff: json['staff'] != null ? Staff.fromJson(json['staff']) : null,
-    institutionId: json['institutionId'],
+    institutionId: json['institutionId'] ??
+        _institutionIdFromRelations(json),
     status: json['status'],
     mustChangePassword: json['mustChangePassword'] ?? false,
     isTemporaryPassword: json['isTemporaryPassword'] ?? false,

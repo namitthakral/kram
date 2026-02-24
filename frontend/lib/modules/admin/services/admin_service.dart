@@ -296,6 +296,40 @@ class AdminService {
 
   // ==================== INSTITUTION SETTINGS ====================
 
+  /// Get institution profile (school info)
+  /// Endpoint: GET /admin/institutions/:institutionId
+  Future<Map<String, dynamic>?> getInstitutionProfile(int institutionId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/admin/institutions/$institutionId',
+      );
+      if (response.statusCode == 200) {
+        final data = response.data;
+        return data['data'] as Map<String, dynamic>?;
+      }
+      return null;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
+  /// Update institution profile (school info)
+  /// Endpoint: PUT /admin/institutions/:institutionId
+  Future<bool> updateInstitutionProfile(
+    int institutionId,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final response = await _apiService.dio.put(
+        '/admin/institutions/$institutionId',
+        data: body,
+      );
+      return response.statusCode == 200;
+    } on Exception catch (_) {
+      rethrow;
+    }
+  }
+
   /// Get ID configuration for an institution
   ///
   /// Endpoint: GET /institutions/:institutionId/id-config
@@ -373,6 +407,62 @@ class AdminService {
       }
     } on Exception catch (e) {
       throw Exception('Failed to preview ID format: $e');
+    }
+  }
+
+  // ==================== STUDENTS (ADMIN LISTING) ====================
+
+  /// Get paginated list of students
+  ///
+  /// Endpoint: GET /students
+  Future<Map<String, dynamic>> getStudents({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    int? courseId,
+    String? gradeLevel,
+    String? section,
+    String sortBy = 'createdAt',
+    String sortOrder = 'desc',
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'sortBy': sortBy,
+        'sortOrder': sortOrder,
+      };
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (courseId != null) queryParams['courseId'] = courseId.toString();
+      if (gradeLevel != null && gradeLevel.isNotEmpty) {
+        queryParams['gradeLevel'] = gradeLevel;
+      }
+      if (section != null && section.isNotEmpty) {
+        queryParams['section'] = section;
+      }
+
+      final response = await _apiService.dio.get(
+        '/students',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load students',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized');
+      }
+      throw Exception('Failed to load students: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to load students: $e');
     }
   }
 

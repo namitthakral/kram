@@ -20,6 +20,7 @@ import {
   UpdateUserDto,
   UserQueryDto,
 } from '../common/dto/user.dto'
+import { UpdateInstitutionDto } from '../institutions/dto/institution.dto'
 import { AdminService } from './admin.service'
 import { UpdateGradingConfigDto } from './dto/grading-config.dto'
 
@@ -92,6 +93,20 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   unlockAccount(@Param('user_uuid') userUuid: string) {
     return this.adminService.unlockAccount(userUuid)
+  }
+
+  // Institution profile (school info) for settings
+  @Get('institutions/:institutionId')
+  getInstitutionProfile(@Param('institutionId') institutionId: string) {
+    return this.adminService.getInstitutionProfile(+institutionId)
+  }
+
+  @Put('institutions/:institutionId')
+  updateInstitutionProfile(
+    @Param('institutionId') institutionId: string,
+    @Body() updateDto: UpdateInstitutionDto
+  ) {
+    return this.adminService.updateInstitutionProfile(+institutionId, updateDto)
   }
 
   // Grading Configuration Endpoints

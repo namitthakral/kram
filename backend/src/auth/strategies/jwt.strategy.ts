@@ -26,6 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         student: true,
         teacher: true,
         parent: true,
+        staff: true,
       },
     })
 

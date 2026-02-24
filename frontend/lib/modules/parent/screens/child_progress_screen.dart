@@ -70,9 +70,9 @@ class ChildProgressScreen extends StatelessWidget {
                   title: context.translate('attendance'),
                   value: '${childInfo?.attendance ?? 0}%',
                   subtitle: context.translate('monthly_trends'),
-                  icon: Icons.check_circle,
-                  backgroundColor: Colors.teal,
-                  iconColor: Colors.teal,
+                  icon: Icons.check_circle_rounded,
+                  backgroundColor: AppTheme.success,
+                  iconColor: AppTheme.success,
                   onTap: () => context.pushNamed('student_attendance'),
                 ),
                 DashboardStatCard(

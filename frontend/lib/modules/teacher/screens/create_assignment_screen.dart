@@ -50,6 +50,10 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   @override
   void initState() {
     super.initState();
+    // In edit mode show loading immediately so first build is cheap and push doesn't block.
+    if (widget.assignmentId != null) {
+      _isLoading = true;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
@@ -79,6 +83,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
     try {
       setState(() => _isLoading = true);
+      await Future<void>.delayed(Duration.zero); // Yield so loading UI paints
       final assignment = await provider.getAssignment(
         uuid,
         widget.assignmentId!,
@@ -122,6 +127,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
         );
 
         for (final course in provider.courses) {
+          await Future<void>.delayed(Duration.zero); // Yield to UI
           await provider.loadDetailsForCourse(course.id);
 
           // Check if this course has the subject we're looking for
@@ -207,6 +213,14 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // In edit mode, show minimal loading UI until data is loaded so first frame is cheap.
+    if (widget.assignmentId != null && _isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Edit Assignment')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final loginProvider = context.watch<LoginProvider>();
     final user = loginProvider.currentUser;
     final teacher = user?.teacher;

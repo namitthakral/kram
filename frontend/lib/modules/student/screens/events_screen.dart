@@ -10,8 +10,28 @@ import '../../../core/theme/app_theme.dart';
 import '../providers/student_events_provider.dart';
 import '../providers/student_provider.dart';
 
-class EventsScreen extends StatelessWidget {
+class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
+
+  @override
+  State<EventsScreen> createState() => _EventsScreenState();
+}
+
+class _EventsScreenState extends State<EventsScreen> {
+  late final StudentEventsProvider _eventsProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventsProvider = StudentEventsProvider();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = context.read<LoginProvider>().currentUser;
+      if (user != null) {
+        _eventsProvider.loadEvents(user);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +55,8 @@ class EventsScreen extends StatelessWidget {
     final statsData = studentProvider.dashboardStats;
     final gpa = statsData?['gpa']?.toString();
 
-    return ChangeNotifierProvider(
-      create: (context) {
-        final provider = StudentEventsProvider();
-        if (user != null) {
-          provider.loadEvents(user);
-        }
-        return provider;
-      },
+    return ChangeNotifierProvider<StudentEventsProvider>.value(
+      value: _eventsProvider,
       child: _EventsScreenContent(
         userInitials: userInitials,
         userName: userName,

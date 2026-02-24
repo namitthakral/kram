@@ -53,6 +53,12 @@ class AdminMainScreen extends StatelessWidget {
                   onTap: () => context.router.router.push('/admin-users'),
                 ),
                 FeatureActionCard(
+                  title: context.translate('students'),
+                  icon: Icons.school_rounded,
+                  color: const Color(0xFF0ea5e9),
+                  onTap: () => context.router.router.push('/students'),
+                ),
+                FeatureActionCard(
                   title: context.translate('staff_management'),
                   icon: Icons.badge_rounded,
                   color: const Color(0xFF6366f1),
@@ -63,6 +69,12 @@ class AdminMainScreen extends StatelessWidget {
                   icon: Icons.local_library_rounded,
                   color: const Color(0xFF8b5cf6),
                   onTap: () => context.router.router.push('/books'),
+                ),
+                FeatureActionCard(
+                  title: context.translate('teachers'),
+                  icon: Icons.person_rounded,
+                  color: const Color(0xFF8b5cf6),
+                  onTap: () => context.router.router.push('/teachers'),
                 ),
                 FeatureActionCard(
                   title: context.translate('academic_management'),

@@ -5,18 +5,18 @@ class AppConstants {
 
   // API Configuration
   // baseUrl is set via --dart-define at launch time
-  // 
+  //
   // IMPORTANT: Defaults to LOCAL DEVELOPMENT if not specified!
-  // 
+  //
   // For local development (default):
   //   Just run: flutter run
   //   OR use VS Code launch configuration: "Development (Local API)"
   //   OR run: flutter run --dart-define=BASE_URL=http://localhost:3000
-  // 
+  //
   // For production:
   //   Use VS Code launch configuration: "Production"
   //   OR run: flutter run --dart-define=BASE_URL=https://api.kramedu.in
-  // 
+  //
   // See .vscode/launch.json for pre-configured environments
   static const String baseUrl = String.fromEnvironment(
     'BASE_URL',

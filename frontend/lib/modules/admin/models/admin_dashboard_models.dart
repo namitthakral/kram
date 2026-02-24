@@ -2,6 +2,7 @@ class AdminDashboardStats {
   AdminDashboardStats({
     required this.totalStudents,
     required this.totalTeachers,
+    required this.totalStaff,
     required this.totalClasses,
     required this.attendanceRate,
     required this.feeCollection,
@@ -12,6 +13,7 @@ class AdminDashboardStats {
       AdminDashboardStats(
         totalStudents: json['total_students'] as int? ?? 0,
         totalTeachers: json['total_teachers'] as int? ?? 0,
+        totalStaff: json['total_staff'] as int? ?? 0,
         totalClasses: json['total_classes'] as int? ?? 0,
         attendanceRate: _parseDouble(json['attendance_rate']),
         feeCollection: _parseDouble(json['fee_collection']),
@@ -26,6 +28,7 @@ class AdminDashboardStats {
   }
   final int totalStudents;
   final int totalTeachers;
+  final int totalStaff;
   final int totalClasses;
   final double attendanceRate;
   final double feeCollection;

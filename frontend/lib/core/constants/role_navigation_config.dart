@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../models/navigation_item_model.dart';
 import '../../modules/admin/screens/admin_dashboard_screen.dart';
-import '../../modules/admin/screens/admin_main_screen.dart';
+import '../../modules/admin/screens/admin_student_management_screen.dart';
+import '../../modules/admin/screens/admin_teachers_screen.dart';
 import '../../modules/library/screens/books_management_screen.dart';
 import '../../modules/library/screens/issued_books_screen.dart';
 import '../../modules/library/screens/library_dashboard_screen.dart';
@@ -69,6 +70,11 @@ class RoleNavigationConfig {
       labelKey: 'academic',
     ),
     NavigationItemModel(
+      iconUrl: CustomImages.iconProfile, // Placeholder for Fees
+      iconFilledUrl: CustomImages.iconProfileFilled,
+      labelKey: 'fees',
+    ),
+    NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
       iconFilledUrl: CustomImages.iconProfileFilled,
       labelKey: 'profile',
@@ -78,6 +84,9 @@ class RoleNavigationConfig {
   static final List<Widget> _studentPages = [
     const StudentDashboardScreen(),
     const StudentAcademicScreen(),
+    const Center(
+      child: Text('Fees Screen Placeholder'),
+    ), // Will be replaced by router
     const ProfileScreen(),
   ];
 
@@ -176,9 +185,19 @@ class RoleNavigationConfig {
       labelKey: 'home',
     ),
     NavigationItemModel(
-      iconUrl: CustomImages.iconMenuBoard,
-      iconFilledUrl: CustomImages.iconMenuBoard,
-      labelKey: 'main',
+      iconUrl: CustomImages.iconUser,
+      iconFilledUrl: CustomImages.iconUser,
+      labelKey: 'students',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconAcademic,
+      iconFilledUrl: CustomImages.iconAcademicFilled,
+      labelKey: 'teachers',
+    ),
+    NavigationItemModel(
+      iconUrl: CustomImages.iconProfile,
+      iconFilledUrl: CustomImages.iconProfileFilled,
+      labelKey: 'fees',
     ),
     NavigationItemModel(
       iconUrl: CustomImages.iconProfile,
@@ -189,7 +208,10 @@ class RoleNavigationConfig {
 
   static final List<Widget> _adminPages = [
     const AdminDashboardScreen(),
-    const AdminMainScreen(),
+    const AdminStudentManagementScreen(),
+    const AdminTeachersScreen(),
+    const Center(
+      child: Text('Fees Screen Placeholder'), ), // Will be replaced by router
     const ProfileScreen(),
   ];
 
@@ -406,20 +428,12 @@ class RoleNavigationConfig {
       '/security',
       '/profile',
     ],
-    // Admin routes
-    2 => [
-      '/admin-dashboard',
-      '/admin-main',
-      '/profile',
-    ],
+    // Admin routes (index 0 = dashboard so /dashboard highlights first tab)
+    2 => ['/dashboard', '/students', '/teachers', '/fees', '/profile'],
     // Student routes
-    3 => ['/dashboard', '/student-academic', '/profile'],
+    3 => ['/dashboard', '/student-academic', '/my-fees', '/profile'],
     // Parent routes
-    4 => [
-      '/dashboard',
-      '/child-progress',
-      '/profile',
-    ],
+    4 => ['/dashboard', '/child-progress', '/profile'],
     // Teacher routes
     5 => ['/dashboard', '/classes', '/academic', '/profile'],
     // Librarian routes

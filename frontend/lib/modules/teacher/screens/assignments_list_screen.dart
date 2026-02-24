@@ -14,7 +14,6 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../../../widgets/custom_widgets/unified_loader.dart';
 import '../providers/assignment_provider.dart';
-
 import 'create_assignment_screen.dart';
 
 /// Screen to display and manage all assignments for a teacher
@@ -130,17 +129,20 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                     }
 
                     // Apply provider filters (course, status), then search query
-                    final filteredByProvider = provider.getFilteredAssignments();
+                    final filteredByProvider =
+                        provider.getFilteredAssignments();
                     final filteredAssignments =
                         filteredByProvider.where((assignment) {
                           if (_searchQuery.isEmpty) {
                             return true;
                           }
                           final query = _searchQuery.toLowerCase();
-                          return assignment.title.toLowerCase().contains(query) ||
-                              assignment.courseName
-                                  .toLowerCase()
-                                  .contains(query);
+                          return assignment.title.toLowerCase().contains(
+                                query,
+                              ) ||
+                              assignment.courseName.toLowerCase().contains(
+                                query,
+                              );
                         }).toList();
 
                     return RefreshIndicator(
@@ -163,11 +165,23 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
                                 itemCount: filteredAssignments.length,
                                 itemBuilder: (context, index) {
                                   final assignment = filteredAssignments[index];
+                                  final assignmentId = assignment.id;
                                   return _AssignmentCard(
                                     assignment: assignment,
-                                    onTap: () => _navigateToEdit(assignment.id),
+                                    onTap:
+                                        () => WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              if (mounted) {
+                                                _navigateToEdit(assignmentId);
+                                              }
+                                            }),
                                     onDelete:
-                                        () => _confirmDelete(assignment.id),
+                                        () => WidgetsBinding.instance
+                                            .addPostFrameCallback((_) {
+                                              if (mounted) {
+                                                _confirmDelete(assignmentId);
+                                              }
+                                            }),
                                   );
                                 },
                               ),
@@ -191,11 +205,18 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     );
   }
 
-  Widget? _buildFloatingActionButton(BuildContext context) => FloatingActionButton.extended(
-      onPressed: _navigateToCreate,
-      icon: const Icon(Icons.add),
-      label: Text(context.translate('new_assignment')),
-    );
+  Widget? _buildFloatingActionButton(BuildContext context) =>
+      FloatingActionButton.extended(
+        onPressed: () {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _navigateToCreate();
+            }
+          });
+        },
+        icon: const Icon(Icons.add),
+        label: Text(context.translate('new_assignment')),
+      );
 
   Widget _buildErrorState(String error) => Center(
     child: Padding(
@@ -270,33 +291,34 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     BuildContext context,
     AssignmentProvider provider,
   ) {
-    String? pendingCourse = provider.selectedCourseFilter;
-    String? pendingStatus = provider.selectedStatusFilter;
+    var pendingCourse = provider.selectedCourseFilter;
+    var pendingStatus = provider.selectedStatusFilter;
 
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
       config: const BottomSheetConfig(canDismiss: true),
       child: StatefulBuilder(
-        builder: (ctx, setModalState) {
-          return _assignmentFilterContent(
-            context: ctx,
-            provider: provider,
-            pendingCourse: pendingCourse,
-            pendingStatus: pendingStatus,
-            onPendingCourseChanged: (v) => setModalState(() => pendingCourse = v),
-            onPendingStatusChanged: (v) => setModalState(() => pendingStatus = v),
-            onClear: () {
-              provider.clearFilters();
-              Navigator.pop(context);
-            },
-            onApply: (course, status) {
-              provider.setCourseFilter(course);
-              provider.setStatusFilter(status);
-              Navigator.pop(context);
-            },
-            showTitle: true,
-          );
-        },
+        builder:
+            (ctx, setModalState) => _assignmentFilterContent(
+              context: ctx,
+              provider: provider,
+              pendingCourse: pendingCourse,
+              pendingStatus: pendingStatus,
+              onPendingCourseChanged:
+                  (v) => setModalState(() => pendingCourse = v),
+              onPendingStatusChanged:
+                  (v) => setModalState(() => pendingStatus = v),
+              onClear: () {
+                provider.clearFilters();
+                Navigator.pop(context);
+              },
+              onApply: (course, status) {
+                provider.setCourseFilter(course);
+                provider.setStatusFilter(status);
+                Navigator.pop(context);
+              },
+              showTitle: true,
+            ),
       ),
     );
   }
@@ -305,44 +327,45 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     BuildContext context,
     AssignmentProvider provider,
   ) {
-    String? pendingCourse = provider.selectedCourseFilter;
-    String? pendingStatus = provider.selectedStatusFilter;
+    var pendingCourse = provider.selectedCourseFilter;
+    var pendingStatus = provider.selectedStatusFilter;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (_, setModalState) {
-          return AlertDialog(
-            title: Text(dialogContext.translate('filter_assignments')),
-            content: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: _assignmentFilterContent(
-                  context: dialogContext,
-                  provider: provider,
-                  pendingCourse: pendingCourse,
-                  pendingStatus: pendingStatus,
-                  onPendingCourseChanged: (v) =>
-                      setModalState(() => pendingCourse = v),
-                  onPendingStatusChanged: (v) =>
-                      setModalState(() => pendingStatus = v),
-                  onClear: () {
-                    provider.clearFilters();
-                    Navigator.of(dialogContext).pop();
-                  },
-                  onApply: (course, status) {
-                    provider.setCourseFilter(course);
-                    provider.setStatusFilter(status);
-                    Navigator.of(dialogContext).pop();
-                  },
-                  showTitle: false,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (_, setModalState) => AlertDialog(
+                  title: Text(dialogContext.translate('filter_assignments')),
+                  content: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: _assignmentFilterContent(
+                        context: dialogContext,
+                        provider: provider,
+                        pendingCourse: pendingCourse,
+                        pendingStatus: pendingStatus,
+                        onPendingCourseChanged:
+                            (v) => setModalState(() => pendingCourse = v),
+                        onPendingStatusChanged:
+                            (v) => setModalState(() => pendingStatus = v),
+                        onClear: () {
+                          provider.clearFilters();
+                          Navigator.of(dialogContext).pop();
+                        },
+                        onApply: (course, status) {
+                          provider
+                            ..setCourseFilter(course)
+                            ..setStatusFilter(status);
+                          Navigator.of(dialogContext).pop();
+                        },
+                        showTitle: false,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+          ),
     );
   }
 
@@ -356,127 +379,121 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
     required VoidCallback onClear,
     required void Function(String?, String?) onApply,
     required bool showTitle,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (showTitle) ...[
-          Text(
-            context.translate('filter_assignments'),
-            style: context.textTheme.titleXl.copyWith(
-              color: AppTheme.slate800,
-              fontWeight: AppTheme.fontWeightSemibold,
-            ),
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (showTitle) ...[
+        Text(
+          context.translate('filter_assignments'),
+          style: context.textTheme.titleXl.copyWith(
+            color: AppTheme.slate800,
+            fontWeight: AppTheme.fontWeightSemibold,
           ),
-          const SizedBox(height: 24),
-        ],
-        DropdownButtonFormField<String?>(
-          initialValue: pendingCourse,
-          decoration: InputDecoration(
-            labelText: context.translate('course'),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: const Icon(Icons.book_outlined),
-          ),
-          items: [
-            DropdownMenuItem<String?>(
-              value: null,
-              child: Text(context.translate('all_courses')),
-            ),
-            ...provider.courses.map(
-              (course) => DropdownMenuItem<String?>(
-                value: course.id.toString(),
-                child: Text(course.courseName),
-              ),
-            ),
-          ],
-          onChanged: (value) => onPendingCourseChanged(value),
-        ),
-        const SizedBox(height: 16),
-        DropdownButtonFormField<String?>(
-          initialValue: pendingStatus,
-          decoration: InputDecoration(
-            labelText: context.translate('status'),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: const Icon(Icons.info_outline),
-          ),
-          items: [
-            DropdownMenuItem<String?>(
-              value: null,
-              child: Text(context.translate('all_statuses')),
-            ),
-            DropdownMenuItem(
-              value: 'DRAFT',
-              child: Text(context.translate('draft')),
-            ),
-            DropdownMenuItem(
-              value: 'PUBLISHED',
-              child: Text(context.translate('published')),
-            ),
-            DropdownMenuItem(
-              value: 'CLOSED',
-              child: Text(context.translate('closed')),
-            ),
-          ],
-          onChanged: (value) => onPendingStatusChanged(value),
         ),
         const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: onClear,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(context.translate('clear')),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => onApply(pendingCourse, pendingStatus),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(context.translate('apply')),
-              ),
-            ),
-          ],
-        ),
       ],
-    );
-  }
+      DropdownButtonFormField<String?>(
+        initialValue: pendingCourse,
+        decoration: InputDecoration(
+          labelText: context.translate('course'),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: const Icon(Icons.book_outlined),
+        ),
+        items: [
+          DropdownMenuItem<String?>(
+            value: null,
+            child: Text(context.translate('all_courses')),
+          ),
+          ...provider.courses.map(
+            (course) => DropdownMenuItem<String?>(
+              value: course.id.toString(),
+              child: Text(course.courseName),
+            ),
+          ),
+        ],
+        onChanged: (value) => onPendingCourseChanged(value),
+      ),
+      const SizedBox(height: 16),
+      DropdownButtonFormField<String?>(
+        initialValue: pendingStatus,
+        decoration: InputDecoration(
+          labelText: context.translate('status'),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: const Icon(Icons.info_outline),
+        ),
+        items: [
+          DropdownMenuItem<String?>(
+            value: null,
+            child: Text(context.translate('all_statuses')),
+          ),
+          DropdownMenuItem(
+            value: 'DRAFT',
+            child: Text(context.translate('draft')),
+          ),
+          DropdownMenuItem(
+            value: 'PUBLISHED',
+            child: Text(context.translate('published')),
+          ),
+          DropdownMenuItem(
+            value: 'CLOSED',
+            child: Text(context.translate('closed')),
+          ),
+        ],
+        onChanged: (value) => onPendingStatusChanged(value),
+      ),
+      const SizedBox(height: 24),
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: onClear,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(context.translate('clear')),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => onApply(pendingCourse, pendingStatus),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(context.translate('apply')),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
 
   Future<void> _navigateToCreate() async {
-    final result = await Navigator.push<bool>(
-      context,
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final result = await navigator.push<bool>(
       MaterialPageRoute(builder: (context) => const CreateAssignmentScreen()),
     );
-    if (result == true) {
+    if (result == true && mounted) {
       await _loadData();
     }
   }
 
   Future<void> _navigateToEdit(int assignmentId) async {
-    final result = await Navigator.push<bool>(
-      context,
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final result = await navigator.push<bool>(
       MaterialPageRoute(
         builder:
             (context) => CreateAssignmentScreen(assignmentId: assignmentId),
       ),
     );
-    if (result == true) {
+    if (result == true && mounted) {
       await _loadData();
     }
   }

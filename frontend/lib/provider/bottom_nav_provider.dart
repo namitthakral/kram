@@ -64,10 +64,15 @@ class BottomNavProvider extends ChangeNotifier {
     return RoleNavigationConfig.getRoutePath(_currentRoleId!, index);
   }
 
-  /// Navigate to a specific index using go_router
+  /// Navigate to a specific index using go_router.
+  /// Defers to next frame to avoid UI freeze when tapping nav items.
   void navigateToIndex(BuildContext context, int index) {
     final route = getRoutePath(index);
-    context.go(route);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        context.go(route);
+      }
+    });
   }
 
   /// Reset navigation state (useful for logout)

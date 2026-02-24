@@ -12,7 +12,9 @@ import 'core/services/app_lifecycle_service.dart';
 import 'core/services/local_notification_service.dart';
 import 'modules/admin/providers/admin_analytics_tab_provider.dart';
 import 'modules/admin/providers/admin_dashboard_provider.dart';
+import 'modules/admin/providers/admin_students_provider.dart';
 import 'modules/admin/providers/grading_config_provider.dart';
+import 'modules/admin/providers/user_management_provider.dart';
 import 'modules/library/providers/library_dashboard_provider.dart';
 import 'modules/library/providers/library_filter_provider.dart';
 import 'modules/library/providers/library_tab_provider.dart';
@@ -45,6 +47,7 @@ import 'provider/profile/change_password_provider.dart';
 import 'provider/profile/edit_profile_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
+import 'modules/fees/providers/fees_provider.dart';
 import 'provider/teachers_provider.dart';
 import 'provider/theme_provider.dart';
 import 'utils/global_constants.dart';
@@ -171,6 +174,13 @@ void main() async {
         ),
         ChangeNotifierProvider<CommunicationsProvider>(
           create: (_) => CommunicationsProvider(),
+        ),
+        ChangeNotifierProvider<FeesProvider>(create: (_) => FeesProvider()),
+        ChangeNotifierProvider<UserManagementProvider>(
+          create: (_) => UserManagementProvider(),
+        ),
+        ChangeNotifierProvider<AdminStudentsProvider>(
+          create: (_) => AdminStudentsProvider(),
         ),
       ],
       child: const KramApp(),
