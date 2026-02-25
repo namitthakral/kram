@@ -84,7 +84,7 @@ class ReportCardsProvider with ChangeNotifier {
           sectionName: data['sectionName'] as String? ?? 'A',
           subjectName: subject?['name'] as String?,
           className: course?['name']?.toString() ?? 'Class',
-          semesterId: data['semesterId'] as int?,
+          semesterId: (data['semester'] as Map<String, dynamic>?)?['id'] as int?,
         );
       }).toList();
       _error = null;

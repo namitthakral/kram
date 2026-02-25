@@ -1201,15 +1201,20 @@ class TeacherService {
         );
       }
     } on DioException catch (e) {
+      final data = e.response?.data;
+      final serverMessage = data is Map<String, dynamic>
+          ? (data['message'] as String?)
+          : null;
+
       if (e.response?.statusCode == 404) {
-        throw Exception('Teacher not found');
+        throw Exception(serverMessage ?? 'Resource not found');
       } else if (e.response?.statusCode == 403) {
         throw Exception(
-          'Not allowed to generate report cards for this section',
+          serverMessage ?? 'Not allowed to generate report cards for this section',
         );
       }
       throw Exception(
-        'Failed to generate report cards: ${e.message ?? e.response?.data}',
+        serverMessage ?? 'Failed to generate report cards: ${e.message}',
       );
     } on Exception catch (e) {
       throw Exception('Failed to generate report cards: $e');
