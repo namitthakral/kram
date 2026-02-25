@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../utils/custom_snackbar.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../models/report_card_models.dart';
 import '../services/pdf_template_service.dart';
@@ -29,7 +30,20 @@ class ReportCardViewScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.download),
             tooltip: 'Download PDF',
-            onPressed: () => PdfTemplateService.generateReportCardPdf(reportCard),
+            onPressed: () async {
+              try {
+                await PdfTemplateService.generateReportCardPdf(reportCard);
+                showCustomSnackbar(
+                  message: 'Report card PDF downloaded',
+                  type: SnackbarType.success,
+                );
+              } on Exception catch (e) {
+                showCustomSnackbar(
+                  message: 'Failed to download PDF: $e',
+                  type: SnackbarType.error,
+                );
+              }
+            },
           ),
         ],
       ),
