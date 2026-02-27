@@ -48,6 +48,7 @@ import 'provider/profile/edit_profile_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
 import 'modules/fees/providers/fees_provider.dart';
+import 'modules/super_admin/providers/institutions_provider.dart';
 import 'provider/teachers_provider.dart';
 import 'provider/theme_provider.dart';
 import 'utils/global_constants.dart';
@@ -181,6 +182,9 @@ void main() async {
         ),
         ChangeNotifierProvider<AdminStudentsProvider>(
           create: (_) => AdminStudentsProvider(),
+        ),
+        ChangeNotifierProvider<InstitutionsProvider>(
+          create: (_) => InstitutionsProvider(),
         ),
       ],
       child: const KramApp(),

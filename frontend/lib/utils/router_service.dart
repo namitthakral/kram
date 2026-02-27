@@ -38,6 +38,7 @@ import '../modules/student/screens/student_dashboard_screen.dart';
 import '../modules/student/screens/student_question_paper_screen.dart';
 import '../modules/student/screens/timetable_screen.dart';
 import '../modules/super_admin/screens/analytics_screen.dart';
+import '../modules/super_admin/screens/create_institution_screen.dart';
 import '../modules/super_admin/screens/institutions_screen.dart';
 import '../modules/super_admin/screens/security_screen.dart';
 import '../modules/super_admin/screens/system_settings_screen.dart';
@@ -787,6 +788,17 @@ class RouterService {
                 key: state.pageKey,
                 child: const InstitutionsScreen(),
               ),
+          routes: [
+            GoRoute(
+              path: 'create',
+              name: 'create_institution',
+              pageBuilder:
+                  (context, state) => _buildPageWithTransition(
+                    key: state.pageKey,
+                    child: const CreateInstitutionScreen(),
+                  ),
+            ),
+          ],
         ),
         GoRoute(
           path: '/analytics',

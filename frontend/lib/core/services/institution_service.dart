@@ -6,12 +6,47 @@ import 'api_service.dart';
 ///
 /// Available endpoints (based on backend structure):
 /// - GET /institutions/public - Get all public institutions (no auth required)
+/// - POST /institutions - Create a new institution (super_admin only)
 class InstitutionService {
   factory InstitutionService() => _instance;
   InstitutionService._internal();
   static final InstitutionService _instance = InstitutionService._internal();
 
   final ApiService _apiService = ApiService();
+
+  /// Create a new institution (super_admin only)
+  ///
+  /// Endpoint: POST /institutions
+  Future<Map<String, dynamic>> createInstitution(
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await _apiService.dio.post('/institutions', data: data);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final body = response.data;
+        if (body is Map<String, dynamic>) {
+          return body;
+        }
+        return {'success': true, 'data': body};
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create institution',
+        );
+      }
+    } on DioException catch (e) {
+      final msg =
+          e.response?.data is Map
+              ? (e.response!.data as Map)['message'] ?? e.message
+              : e.message;
+      throw Exception('Failed to create institution: $msg');
+    } on Exception catch (e) {
+      throw Exception('Unexpected error: $e');
+    }
+  }
 
   /// Get all public institutions
   ///
@@ -48,7 +83,6 @@ class InstitutionService {
         if (data is List) {
           return data;
         } else if (data is Map<String, dynamic>) {
-          // Handle paginated response
           return data['data'] as List<dynamic>? ?? [];
         }
         return [];
@@ -77,10 +111,8 @@ class InstitutionService {
     String institutionCode,
   ) async {
     try {
-      // Get all public institutions and filter by code
       final institutions = await getPublicInstitutions(limit: 100);
 
-      // Find institution matching the code
       for (final inst in institutions) {
         if (inst is Map<String, dynamic>) {
           final code = inst['code'] as String?;

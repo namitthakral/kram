@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/login_signup/login_provider.dart';
@@ -134,7 +135,7 @@ class SuperAdminDashboardScreen extends StatelessWidget {
               _buildActionButton(
                 'Manage Institutions',
                 Icons.business_center,
-                () {},
+                () => context.go('/institutions'),
               ),
               _buildActionButton('View Analytics', Icons.analytics, () {}),
               _buildActionButton('System Settings', Icons.settings, () {}),
