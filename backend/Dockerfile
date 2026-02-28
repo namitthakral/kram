@@ -23,11 +23,8 @@ COPY . .
 # Ensure public dir exists (Flutter dashboard; may be empty if skip_frontend in CI)
 RUN mkdir -p public/dashboard
 
-# Build the NestJS application
-# Generate Prisma client without database connection (uses schema only)
-RUN npm run build:schema && \
-    npx prisma generate && \
-    npx nest build && \
+# Build the NestJS application (includes schema generation)
+RUN npm run build && \
     echo "✅ Build completed" && \
     ls -la dist/main.js || (echo "❌ main.js not found!" && exit 1)
 

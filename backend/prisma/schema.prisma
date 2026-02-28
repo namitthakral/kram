@@ -43,7 +43,7 @@ model User {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   // Relations
-  role              Role         @relation(fields: [roleId], references: [id])
+  role              Role     @relation(fields: [roleId], references: [id])
   institution       Institution? @relation(fields: [institutionId], references: [id])
   student           Student?
   teacher           Teacher?

@@ -1,413 +1,411 @@
 name: Deploy to AWS Lightsail
 
 on:
-    workflow_dispatch:
-        inputs:
-            skip_frontend:
-                description: "Skip frontend rebuild (backend changes only)"
-                required: false
-                type: boolean
-                default: false
-            has_schema_changes:
-                description: "Has database schema changes (runs migrations)"
-                required: false
-                type: boolean
-                default: false
-            invalidate_cache:
-                description: "Invalidate CloudFront cache after deployment"
-                required: false
-                type: boolean
-                default: true
-            deployment_reason:
-                description: "Deployment reason/notes"
-                required: false
-                type: string
-                default: "Manual deployment"
+  workflow_dispatch:
+    inputs:
+      skip_frontend:
+        description: "Skip frontend rebuild (backend changes only)"
+        required: false
+        type: boolean
+        default: false
+      has_schema_changes:
+        description: "Has database schema changes (runs migrations)"
+        required: false
+        type: boolean
+        default: false
+      invalidate_cache:
+        description: "Invalidate CloudFront cache after deployment"
+        required: false
+        type: boolean
+        default: true
+      deployment_reason:
+        description: "Deployment reason/notes"
+        required: false
+        type: string
+        default: "Manual deployment"
 
 env:
-    AWS_REGION: ap-south-1
-    SERVICE_NAME: kram
-    CLOUDFRONT_DISTRIBUTION_ID: E36FPX6Q6TAGJV
+  AWS_REGION: ap-south-1
+  SERVICE_NAME: kram
+  CLOUDFRONT_DISTRIBUTION_ID: E36FPX6Q6TAGJV
 
 jobs:
-    deploy:
-        name: Deploy to Lightsail
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
+  deploy:
+    name: Deploy to Lightsail
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-        steps:
-            - name: 📥 Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 2 # Need history for change detection
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Need history for change detection
 
-            - name: 📋 Display deployment info
-              run: |
-                  echo "🚀 Deploying to AWS Lightsail"
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                  echo "Service: ${{ env.SERVICE_NAME }}"
-                  echo "Region: ${{ env.AWS_REGION }}"
-                  echo "Triggered by: ${{ github.actor }}"
-                  echo "Commit: ${{ github.sha }}"
-                  echo "Branch: ${{ github.ref_name }}"
-                  echo "Reason: ${{ inputs.deployment_reason }}"
-                  echo "Skip Frontend: ${{ inputs.skip_frontend }}"
-                  echo "Has Schema Changes: ${{ inputs.has_schema_changes }}"
-                  echo "Invalidate Cache: ${{ inputs.invalidate_cache }}"
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - name: 📋 Display deployment info
+        run: |
+          echo "🚀 Deploying to AWS Lightsail"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Service: ${{ env.SERVICE_NAME }}"
+          echo "Region: ${{ env.AWS_REGION }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Reason: ${{ inputs.deployment_reason }}"
+          echo "Skip Frontend: ${{ inputs.skip_frontend }}"
+          echo "Has Schema Changes: ${{ inputs.has_schema_changes }}"
+          echo "Invalidate Cache: ${{ inputs.invalidate_cache }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            - name: 🎨 Setup Flutter
-              if: inputs.skip_frontend == false
-              uses: subosito/flutter-action@v2
-              with:
-                  channel: "stable"
-                  cache: true
+      - name: 🎨 Setup Flutter
+        if: inputs.skip_frontend == false
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
 
-            - name: 🔨 Build Flutter Web
-              if: inputs.skip_frontend == false
-              run: |
-                  echo "📱 Building Flutter web app..."
-                  cd frontend
-                  flutter pub get
-                  flutter build web --release --dart-define=BASE_URL=https://api.kramedu.in
-                  echo "✅ Flutter build complete"
+      - name: 🔨 Build Flutter Web
+        if: inputs.skip_frontend == false
+        run: |
+          echo "📱 Building Flutter web app..."
+          cd frontend
+          flutter pub get
+          flutter build web --release --dart-define=BASE_URL=https://api.kramedu.in
+          echo "✅ Flutter build complete"
 
-            - name: 📦 Copy Flutter build to backend
-              if: inputs.skip_frontend == false
-              run: |
-                  echo "📦 Copying Flutter build to backend..."
-                  mkdir -p backend/public/dashboard
-                  rm -rf backend/public/dashboard/*
-                  cp -r frontend/build/web/* backend/public/dashboard/
-                  echo "✅ Dashboard files copied"
-                  ls -lh backend/public/dashboard/main.dart.js
+      - name: 📦 Copy Flutter build to backend
+        if: inputs.skip_frontend == false
+        run: |
+          echo "📦 Copying Flutter build to backend..."
+          mkdir -p backend/public/dashboard
+          rm -rf backend/public/dashboard/*
+          cp -r frontend/build/web/* backend/public/dashboard/
+          echo "✅ Dashboard files copied"
+          ls -lh backend/public/dashboard/main.dart.js
 
-            - name: 💾 Cache dashboard (for future skip-frontend runs)
-              if: inputs.skip_frontend == false
-              uses: actions/cache/save@v4
-              with:
-                  path: backend/public
-                  key: dashboard-${{ github.ref }}
+      - name: 💾 Cache dashboard (for future skip-frontend runs)
+        if: inputs.skip_frontend == false
+        uses: actions/cache/save@v4
+        with:
+          path: backend/public
+          key: dashboard-${{ github.ref }}
 
-            - name: 📂 Restore dashboard from cache (skip frontend)
-              if: inputs.skip_frontend == true
-              id: restore-dashboard
-              uses: actions/cache/restore@v4
-              with:
-                  path: backend/public
-                  key: dashboard-${{ github.ref }}
+      - name: 📂 Restore dashboard from cache (skip frontend)
+        if: inputs.skip_frontend == true
+        id: restore-dashboard
+        uses: actions/cache/restore@v4
+        with:
+          path: backend/public
+          key: dashboard-${{ github.ref }}
 
-            - name: ⚠️ Require dashboard when skipping frontend
-              if: inputs.skip_frontend == true
-              run: |
-                  if [ "${{ steps.restore-dashboard.outputs.cache-hit }}" != "true" ] || [ ! -f backend/public/dashboard/index.html ]; then
-                    echo "::error::No cached dashboard found. Run a deployment **without** 'Skip frontend' at least once on this branch, then you can use 'Skip frontend' for backend-only deploys."
-                    exit 1
-                  fi
-                  echo "✅ Using cached dashboard from previous build"
+      - name: ⚠️ Require dashboard when skipping frontend
+        if: inputs.skip_frontend == true
+        run: |
+          if [ "${{ steps.restore-dashboard.outputs.cache-hit }}" != "true" ] || [ ! -f backend/public/dashboard/index.html ]; then
+            echo "::error::No cached dashboard found. Run a deployment **without** 'Skip frontend' at least once on this branch, then you can use 'Skip frontend' for backend-only deploys."
+            exit 1
+          fi
+          echo "✅ Using cached dashboard from previous build"
 
-            - name: 🔧 Setup Node.js
-              if: inputs.has_schema_changes == true
-              uses: actions/setup-node@v4
-              with:
-                  node-version: '20'
+      - name: 🔧 Setup Node.js
+        if: inputs.has_schema_changes == true
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-            - name: 📦 Install backend dependencies
-              if: inputs.has_schema_changes == true
-              run: |
-                  echo "📦 Installing backend dependencies..."
-                  npm install
-                  echo "✅ Dependencies installed"
+      - name: 📦 Install backend dependencies
+        if: inputs.has_schema_changes == true
+        run: |
+          echo "📦 Installing backend dependencies..."
+          npm install
+          echo "✅ Dependencies installed"
 
-            - name: 🔑 Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  aws-region: ${{ env.AWS_REGION }}
+      - name: 🔑 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-            - name: 🗄️ Run database migrations
-              if: inputs.has_schema_changes == true
-              run: |
-                  echo "📊 Running database migrations on production..."
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                  cd backend
+      - name: 🗄️ Run database migrations
+        if: inputs.has_schema_changes == true
+        run: |
+          echo "📊 Running database migrations on production..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          cd backend
 
-                  # Generate Prisma client
-                  echo "🔧 Generating Prisma client..."
-                  DATABASE_URL="${{ secrets.DATABASE_URL }}" npm run db:generate
-                  echo "✅ Prisma client generated"
-                  echo ""
+          # Generate Prisma client
+          echo "🔧 Generating Prisma client..."
+          DATABASE_URL="${{ secrets.DATABASE_URL }}" npm run db:generate
+          echo "✅ Prisma client generated"
+          echo ""
 
-                  # Deploy migrations
-                  echo "🚀 Deploying migrations..."
-                  DATABASE_URL="${{ secrets.DATABASE_URL }}" npx prisma migrate deploy
-                  echo "✅ Migrations deployed successfully"
-                  echo ""
+          # Deploy migrations
+          echo "🚀 Deploying migrations..."
+          DATABASE_URL="${{ secrets.DATABASE_URL }}" npx prisma migrate deploy
+          echo "✅ Migrations deployed successfully"
+          echo ""
 
-                  # Check migration status
-                  echo "🔍 Verifying migration status..."
-                  DATABASE_URL="${{ secrets.DATABASE_URL }}" npx prisma migrate status
-                  echo ""
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          # Check migration status
+          echo "🔍 Verifying migration status..."
+          DATABASE_URL="${{ secrets.DATABASE_URL }}" npx prisma migrate status
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            - name: ⏭️ Skipping database migrations
-              if: inputs.has_schema_changes == false
-              run: |
-                  echo "⏭️ Skipping database migrations (no schema changes)"
-                  echo "ℹ️  If you have schema changes, re-run with 'Has database schema changes' checked"
+      - name: ⏭️ Skipping database migrations
+        if: inputs.has_schema_changes == false
+        run: |
+          echo "⏭️ Skipping database migrations (no schema changes)"
+          echo "ℹ️  If you have schema changes, re-run with 'Has database schema changes' checked"
 
-            - name: 📥 Install Lightsail plugin
-              run: |
-                  echo "Installing lightsailctl..."
-                  curl -s "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o lightsailctl
-                  sudo mv lightsailctl /usr/local/bin/
-                  sudo chmod +x /usr/local/bin/lightsailctl
-                  echo "✅ lightsailctl installed (will be invoked by AWS CLI)"
+      - name: 📥 Install Lightsail plugin
+        run: |
+          echo "Installing lightsailctl..."
+          curl -s "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o lightsailctl
+          sudo mv lightsailctl /usr/local/bin/
+          sudo chmod +x /usr/local/bin/lightsailctl
+          echo "✅ lightsailctl installed (will be invoked by AWS CLI)"
 
-            - name: 🐳 Build Docker image
-              run: |
-                  echo "🔨 Building Docker image for linux/amd64..."
-                  cd backend
-                  docker build --platform linux/amd64 \
-                    --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-                    -t ${{ env.SERVICE_NAME }}:latest .
-                  echo "✅ Docker image built successfully"
+      - name: 🐳 Build Docker image
+        run: |
+          echo "🔨 Building Docker image for linux/amd64..."
+          cd backend
+          docker build --platform linux/amd64 -t ${{ env.SERVICE_NAME }}:latest .
+          echo "✅ Docker image built successfully"
 
-            - name: 📤 Push image to Lightsail
-              run: |
-                  echo "📤 Pushing image to Lightsail..."
-                  cd backend
-                  aws lightsail push-container-image \
-                    --service-name ${{ env.SERVICE_NAME }} \
-                    --label ${{ env.SERVICE_NAME }} \
-                    --image ${{ env.SERVICE_NAME }}:latest \
-                    --region ${{ env.AWS_REGION }}
-                  echo "✅ Image pushed to Lightsail"
+      - name: 📤 Push image to Lightsail
+        run: |
+          echo "📤 Pushing image to Lightsail..."
+          cd backend
+          aws lightsail push-container-image \
+            --service-name ${{ env.SERVICE_NAME }} \
+            --label ${{ env.SERVICE_NAME }} \
+            --image ${{ env.SERVICE_NAME }}:latest \
+            --region ${{ env.AWS_REGION }}
+          echo "✅ Image pushed to Lightsail"
 
-            - name: 🚀 Deploy to Lightsail
-              run: |
-                  echo "🚀 Deploying to Lightsail..."
-                  cd backend
+      - name: 🚀 Deploy to Lightsail
+        run: |
+          echo "🚀 Deploying to Lightsail..."
+          cd backend
 
-                  # Get the pushed image name
-                  IMAGE_NAME=$(aws lightsail get-container-images \
-                    --service-name ${{ env.SERVICE_NAME }} \
-                    --region ${{ env.AWS_REGION }} \
-                    --query 'containerImages[0].image' \
-                    --output text)
+          # Get the pushed image name
+          IMAGE_NAME=$(aws lightsail get-container-images \
+            --service-name ${{ env.SERVICE_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'containerImages[0].image' \
+            --output text)
 
-                  echo "Using image: $IMAGE_NAME"
+          echo "Using image: $IMAGE_NAME"
 
-                  # Create deployment configuration
-                  cat > deployment.json <<EOF
-                  {
-                    "serviceName": "${{ env.SERVICE_NAME }}",
-                    "containers": {
-                      "app": {
-                        "image": "$IMAGE_NAME",
-                        "environment": {
-                          "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
-                          "JWT_SECRET": "${{ secrets.JWT_SECRET }}",
-                          "JWT_REFRESH_SECRET": "${{ secrets.JWT_REFRESH_SECRET }}",
-                          "NODE_ENV": "production",
-                          "PORT": "3000"
-                        },
-                        "ports": {
-                          "3000": "HTTP"
-                        }
-                      }
-                    },
-                    "publicEndpoint": {
-                      "containerName": "app",
-                      "containerPort": 3000,
-                      "healthCheck": {
-                        "path": "/health",
-                        "intervalSeconds": 30,
-                        "timeoutSeconds": 10,
-                        "healthyThreshold": 2,
-                        "unhealthyThreshold": 3
-                      }
-                    }
-                  }
-                  EOF
+          # Create deployment configuration
+          cat > deployment.json <<EOF
+          {
+            "serviceName": "${{ env.SERVICE_NAME }}",
+            "containers": {
+              "app": {
+                "image": "$IMAGE_NAME",
+                "environment": {
+                  "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
+                  "JWT_SECRET": "${{ secrets.JWT_SECRET }}",
+                  "JWT_REFRESH_SECRET": "${{ secrets.JWT_REFRESH_SECRET }}",
+                  "NODE_ENV": "production",
+                  "PORT": "3000"
+                },
+                "ports": {
+                  "3000": "HTTP"
+                }
+              }
+            },
+            "publicEndpoint": {
+              "containerName": "app",
+              "containerPort": 3000,
+              "healthCheck": {
+                "path": "/health",
+                "intervalSeconds": 30,
+                "timeoutSeconds": 10,
+                "healthyThreshold": 2,
+                "unhealthyThreshold": 3
+              }
+            }
+          }
+          EOF
 
-                  # Deploy
-                  aws lightsail create-container-service-deployment \
-                    --region ${{ env.AWS_REGION }} \
-                    --cli-input-json file://deployment.json
+          # Deploy
+          aws lightsail create-container-service-deployment \
+            --region ${{ env.AWS_REGION }} \
+            --cli-input-json file://deployment.json
 
-                  rm deployment.json
-                  echo "✅ Deployment initiated"
+          rm deployment.json
+          echo "✅ Deployment initiated"
 
-            - name: ⏳ Wait for deployment
-              run: |
-                  echo "⏳ Waiting for deployment to complete..."
+      - name: ⏳ Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
 
-                  # Get the version we just deployed
-                  DEPLOYED_VERSION=$(aws lightsail get-container-service-deployments \
-                    --service-name ${{ env.SERVICE_NAME }} \
-                    --region ${{ env.AWS_REGION }} \
-                    --query 'deployments[0].version' \
-                    --output text)
+          # Get the version we just deployed
+          DEPLOYED_VERSION=$(aws lightsail get-container-service-deployments \
+            --service-name ${{ env.SERVICE_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'deployments[0].version' \
+            --output text)
 
-                  echo "Tracking deployment version: $DEPLOYED_VERSION"
+          echo "Tracking deployment version: $DEPLOYED_VERSION"
 
-                  for i in {1..40}; do
-                    # Check both current and next deployment
-                    CURRENT_STATE=$(aws lightsail get-container-services \
-                      --service-name ${{ env.SERVICE_NAME }} \
-                      --region ${{ env.AWS_REGION }} \
-                      --query 'containerServices[0].currentDeployment.state' \
-                      --output text 2>/dev/null || echo "UNKNOWN")
+          for i in {1..40}; do
+            # Check both current and next deployment
+            CURRENT_STATE=$(aws lightsail get-container-services \
+              --service-name ${{ env.SERVICE_NAME }} \
+              --region ${{ env.AWS_REGION }} \
+              --query 'containerServices[0].currentDeployment.state' \
+              --output text 2>/dev/null || echo "UNKNOWN")
 
-                    CURRENT_VERSION=$(aws lightsail get-container-services \
-                      --service-name ${{ env.SERVICE_NAME }} \
-                      --region ${{ env.AWS_REGION }} \
-                      --query 'containerServices[0].currentDeployment.version' \
-                      --output text 2>/dev/null || echo "0")
+            CURRENT_VERSION=$(aws lightsail get-container-services \
+              --service-name ${{ env.SERVICE_NAME }} \
+              --region ${{ env.AWS_REGION }} \
+              --query 'containerServices[0].currentDeployment.version' \
+              --output text 2>/dev/null || echo "0")
 
-                    NEXT_STATE=$(aws lightsail get-container-services \
-                      --service-name ${{ env.SERVICE_NAME }} \
-                      --region ${{ env.AWS_REGION }} \
-                      --query 'containerServices[0].nextDeployment.state' \
-                      --output text 2>/dev/null || echo "None")
+            NEXT_STATE=$(aws lightsail get-container-services \
+              --service-name ${{ env.SERVICE_NAME }} \
+              --region ${{ env.AWS_REGION }} \
+              --query 'containerServices[0].nextDeployment.state' \
+              --output text 2>/dev/null || echo "None")
 
-                    echo "[$i/40] Current: v$CURRENT_VERSION ($CURRENT_STATE) | Next: $NEXT_STATE"
+            echo "[$i/40] Current: v$CURRENT_VERSION ($CURRENT_STATE) | Next: $NEXT_STATE"
 
-                    # Check if our deployment is now current and active
-                    if [ "$CURRENT_VERSION" = "$DEPLOYED_VERSION" ] && [ "$CURRENT_STATE" = "ACTIVE" ]; then
-                      echo "✅ Deployment v$DEPLOYED_VERSION completed successfully!"
-                      break
-                    fi
+            # Check if our deployment is now current and active
+            if [ "$CURRENT_VERSION" = "$DEPLOYED_VERSION" ] && [ "$CURRENT_STATE" = "ACTIVE" ]; then
+              echo "✅ Deployment v$DEPLOYED_VERSION completed successfully!"
+              break
+            fi
 
-                    # Check if next deployment failed
-                    if [ "$NEXT_STATE" = "FAILED" ]; then
-                      echo "❌ Deployment v$DEPLOYED_VERSION failed!"
-                      echo "Fetching container logs..."
-                      aws lightsail get-container-log \
-                        --service-name ${{ env.SERVICE_NAME }} \
-                        --container-name app \
-                        --region ${{ env.AWS_REGION }} \
-                        --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S 2>/dev/null || date -u -v-5M +%Y-%m-%dT%H:%M:%S) \
-                        | tail -20 || true
-                      exit 1
-                    fi
+            # Check if next deployment failed
+            if [ "$NEXT_STATE" = "FAILED" ]; then
+              echo "❌ Deployment v$DEPLOYED_VERSION failed!"
+              echo "Fetching container logs..."
+              aws lightsail get-container-log \
+                --service-name ${{ env.SERVICE_NAME }} \
+                --container-name app \
+                --region ${{ env.AWS_REGION }} \
+                --start-time $(date -u -d '5 minutes ago' +%Y-%m-%dT%H:%M:%S 2>/dev/null || date -u -v-5M +%Y-%m-%dT%H:%M:%S) \
+                | tail -20 || true
+              exit 1
+            fi
 
-                    sleep 15
-                  done
+            sleep 15
+          done
 
-                  # Final check
-                  FINAL_VERSION=$(aws lightsail get-container-services \
-                    --service-name ${{ env.SERVICE_NAME }} \
-                    --region ${{ env.AWS_REGION }} \
-                    --query 'containerServices[0].currentDeployment.version' \
-                    --output text)
+          # Final check
+          FINAL_VERSION=$(aws lightsail get-container-services \
+            --service-name ${{ env.SERVICE_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'containerServices[0].currentDeployment.version' \
+            --output text)
 
-                  FINAL_STATE=$(aws lightsail get-container-services \
-                    --service-name ${{ env.SERVICE_NAME }} \
-                    --region ${{ env.AWS_REGION }} \
-                    --query 'containerServices[0].currentDeployment.state' \
-                    --output text)
+          FINAL_STATE=$(aws lightsail get-container-services \
+            --service-name ${{ env.SERVICE_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'containerServices[0].currentDeployment.state' \
+            --output text)
 
-                  if [ "$FINAL_VERSION" != "$DEPLOYED_VERSION" ] || [ "$FINAL_STATE" != "ACTIVE" ]; then
-                    echo "⚠️ Deployment did not complete. Expected v$DEPLOYED_VERSION to be ACTIVE"
-                    echo "Current: v$FINAL_VERSION ($FINAL_STATE)"
-                    exit 1
-                  fi
+          if [ "$FINAL_VERSION" != "$DEPLOYED_VERSION" ] || [ "$FINAL_STATE" != "ACTIVE" ]; then
+            echo "⚠️ Deployment did not complete. Expected v$DEPLOYED_VERSION to be ACTIVE"
+            echo "Current: v$FINAL_VERSION ($FINAL_STATE)"
+            exit 1
+          fi
 
-            - name: 🧪 Test health endpoint
-              run: |
-                  echo "🧪 Testing API health..."
+      - name: 🧪 Test health endpoint
+        run: |
+          echo "🧪 Testing API health..."
 
-                  # Test via custom domain
-                  HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.kramedu.in/health || echo "000")
+          # Test via custom domain
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.kramedu.in/health || echo "000")
 
-                  if [ "$HEALTH_STATUS" = "200" ]; then
-                    echo "✅ API health check passed (Status: $HEALTH_STATUS)"
-                  else
-                    echo "⚠️ API health check returned status: $HEALTH_STATUS"
-                    echo "This might be due to CloudFront cache, checking Lightsail origin..."
+          if [ "$HEALTH_STATUS" = "200" ]; then
+            echo "✅ API health check passed (Status: $HEALTH_STATUS)"
+          else
+            echo "⚠️ API health check returned status: $HEALTH_STATUS"
+            echo "This might be due to CloudFront cache, checking Lightsail origin..."
 
-                    # Get Lightsail URL
-                    LIGHTSAIL_URL=$(aws lightsail get-container-services \
-                      --service-name ${{ env.SERVICE_NAME }} \
-                      --region ${{ env.AWS_REGION }} \
-                      --query 'containerServices[0].url' \
-                      --output text)
+            # Get Lightsail URL
+            LIGHTSAIL_URL=$(aws lightsail get-container-services \
+              --service-name ${{ env.SERVICE_NAME }} \
+              --region ${{ env.AWS_REGION }} \
+              --query 'containerServices[0].url' \
+              --output text)
 
-                    ORIGIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${LIGHTSAIL_URL}health" || echo "000")
+            ORIGIN_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${LIGHTSAIL_URL}health" || echo "000")
 
-                    if [ "$ORIGIN_STATUS" = "200" ]; then
-                      echo "✅ Lightsail origin health check passed (Status: $ORIGIN_STATUS)"
-                    else
-                      echo "❌ Health check failed on Lightsail origin (Status: $ORIGIN_STATUS)"
-                      exit 1
-                    fi
-                  fi
+            if [ "$ORIGIN_STATUS" = "200" ]; then
+              echo "✅ Lightsail origin health check passed (Status: $ORIGIN_STATUS)"
+            else
+              echo "❌ Health check failed on Lightsail origin (Status: $ORIGIN_STATUS)"
+              exit 1
+            fi
+          fi
 
-            - name: 🔄 Invalidate CloudFront cache
-              if: inputs.invalidate_cache == true
-              run: |
-                  echo "🔄 Invalidating CloudFront cache..."
+      - name: 🔄 Invalidate CloudFront cache
+        if: inputs.invalidate_cache == true
+        run: |
+          echo "🔄 Invalidating CloudFront cache..."
 
-                  INVALIDATION_ID=$(aws cloudfront create-invalidation \
-                    --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
-                    --paths "/*" \
-                    --query 'Invalidation.Id' \
-                    --output text)
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
 
-                  echo "Invalidation ID: $INVALIDATION_ID"
-                  echo "✅ CloudFront cache invalidation initiated"
-                  echo "⏳ Cache will be cleared in 3-5 minutes"
+          echo "Invalidation ID: $INVALIDATION_ID"
+          echo "✅ CloudFront cache invalidation initiated"
+          echo "⏳ Cache will be cleared in 3-5 minutes"
 
-            - name: 📊 Deployment summary
-              if: success()
-              run: |
-                  echo ""
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                  echo "🎉 Deployment Successful!"
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                  echo ""
-                  echo "🌐 Your application is live at:"
-                  echo "   API: https://api.kramedu.in"
-                  echo "   Dashboard: https://dashboard.kramedu.in"
-                  echo ""
+      - name: 📊 Deployment summary
+        if: success()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🎉 Deployment Successful!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "🌐 Your application is live at:"
+          echo "   API: https://api.kramedu.in"
+          echo "   Dashboard: https://dashboard.kramedu.in"
+          echo ""
 
-                  # Get service info
-                  VERSION=$(aws lightsail get-container-services \
-                    --service-name ${{ env.SERVICE_NAME }} \
-                    --region ${{ env.AWS_REGION }} \
-                    --query 'containerServices[0].currentDeployment.version' \
-                    --output text)
+          # Get service info
+          VERSION=$(aws lightsail get-container-services \
+            --service-name ${{ env.SERVICE_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'containerServices[0].currentDeployment.version' \
+            --output text)
 
-                  echo "📦 Deployment Version: $VERSION"
-                  echo "🔗 Commit: ${{ github.sha }}"
-                  echo "👤 Deployed by: ${{ github.actor }}"
-                  echo "📝 Reason: ${{ inputs.deployment_reason }}"
-                  echo ""
-                  echo "⏳ If you invalidated CloudFront cache, wait 3-5 minutes for changes to appear"
-                  echo ""
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📦 Deployment Version: $VERSION"
+          echo "🔗 Commit: ${{ github.sha }}"
+          echo "👤 Deployed by: ${{ github.actor }}"
+          echo "📝 Reason: ${{ inputs.deployment_reason }}"
+          echo ""
+          echo "⏳ If you invalidated CloudFront cache, wait 3-5 minutes for changes to appear"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            - name: 🚨 Deployment failed
-              if: failure()
-              run: |
-                  echo ""
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                  echo "❌ Deployment Failed"
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                  echo ""
-                  echo "Check the logs above for errors"
-                  echo ""
-                  echo "Common issues:"
-                  echo "  1. AWS credentials not configured"
-                  echo "  2. Docker build failed"
-                  echo "  3. Database migrations failed (if schema changes checked)"
-                  echo "  4. Health check failed"
-                  echo "  5. Schema changes made but migrations not checked"
-                  echo ""
-                  echo "View detailed logs:"
-                  echo "  aws lightsail get-container-log --service-name ${{ env.SERVICE_NAME }} --container-name app --region ${{ env.AWS_REGION }}"
-                  echo ""
-                  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - name: 🚨 Deployment failed
+        if: failure()
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "❌ Deployment Failed"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Check the logs above for errors"
+          echo ""
+          echo "Common issues:"
+          echo "  1. AWS credentials not configured"
+          echo "  2. Docker build failed"
+          echo "  3. Database migrations failed (if schema changes checked)"
+          echo "  4. Health check failed"
+          echo "  5. Schema changes made but migrations not checked"
+          echo ""
+          echo "View detailed logs:"
+          echo "  aws lightsail get-container-log --service-name ${{ env.SERVICE_NAME }} --container-name app --region ${{ env.AWS_REGION }}"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
