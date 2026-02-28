@@ -138,7 +138,19 @@ echo -e "${BLUE}🐳 Building Docker Image${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 echo -e "${YELLOW}🔨 Building Docker image for linux/amd64...${NC}"
-docker build --platform linux/amd64 -t "$SERVICE_NAME:latest" .
+
+# Load DATABASE_URL from .env.production for Docker build
+PROD_DATABASE_URL=$(grep "^DATABASE_URL=" .env.production | cut -d '=' -f2 | tr -d '"' | tr -d "'")
+
+if [ -z "$PROD_DATABASE_URL" ]; then
+    echo -e "${RED}❌ DATABASE_URL not found in .env.production${NC}"
+    exit 1
+fi
+
+echo -e "${BLUE}   Using DATABASE_URL for Prisma client generation...${NC}"
+docker build --platform linux/amd64 \
+    --build-arg DATABASE_URL="$PROD_DATABASE_URL" \
+    -t "$SERVICE_NAME:latest" .
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Docker image built successfully (kram:latest)${NC}"

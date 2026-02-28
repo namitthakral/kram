@@ -169,7 +169,9 @@ jobs:
               run: |
                   echo "🔨 Building Docker image for linux/amd64..."
                   cd backend
-                  docker build --platform linux/amd64 -t ${{ env.SERVICE_NAME }}:latest .
+                  docker build --platform linux/amd64 \
+                    --build-arg DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+                    -t ${{ env.SERVICE_NAME }}:latest .
                   echo "✅ Docker image built successfully"
 
             - name: 📤 Push image to Lightsail
