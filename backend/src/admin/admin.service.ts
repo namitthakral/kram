@@ -104,7 +104,9 @@ export class AdminService {
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       customPasswordProvided: !!createUserDto.password?.trim(),
-      generatedPassword: !createUserDto.password?.trim() ? temporaryPassword : '[CUSTOM]'
+      generatedPassword: !createUserDto.password?.trim()
+        ? temporaryPassword
+        : '[CUSTOM]',
     })
 
     const hashedPassword = await bcrypt.hash(temporaryPassword, 12)
@@ -284,7 +286,9 @@ export class AdminService {
         role: user.role,
         status: user.status,
         isTemporaryPassword: !createUserDto.password?.trim(),
-        temporaryPassword: !createUserDto.password?.trim() ? temporaryPassword : undefined,
+        temporaryPassword: !createUserDto.password?.trim()
+          ? temporaryPassword
+          : undefined,
         mustChangePassword: user.mustChangePassword,
         createdAt: user.createdAt,
       },
@@ -743,10 +747,7 @@ export class AdminService {
         `Institution with ID ${institutionId} not found`
       )
     }
-    if (
-      adminInstitutionId !== null &&
-      institutionId !== adminInstitutionId
-    ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
     }
     return { data: institution }
@@ -763,10 +764,7 @@ export class AdminService {
     await this.prisma.institution.findUniqueOrThrow({
       where: { id: institutionId },
     })
-    if (
-      adminInstitutionId !== null &&
-      institutionId !== adminInstitutionId
-    ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
     }
     const updated = await this.prisma.institution.update({
@@ -810,10 +808,7 @@ export class AdminService {
         `Institution with ID ${institutionId} not found`
       )
     }
-    if (
-      adminInstitutionId !== null &&
-      institutionId !== adminInstitutionId
-    ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
     }
 
@@ -856,10 +851,7 @@ export class AdminService {
         `Institution with ID ${institutionId} not found`
       )
     }
-    if (
-      adminInstitutionId !== null &&
-      institutionId !== adminInstitutionId
-    ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
     }
 
@@ -938,10 +930,7 @@ export class AdminService {
         `Institution with ID ${institutionId} not found`
       )
     }
-    if (
-      adminInstitutionId !== null &&
-      institutionId !== adminInstitutionId
-    ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
     }
 
@@ -1059,11 +1048,17 @@ export class AdminService {
   /**
    * Get teacher performance data
    */
-  async getTeacherPerformance(limit: number = 10, institutionId: number | null = null) {
+  async getTeacherPerformance(
+    limit: number = 10,
+    institutionId: number | null = null
+  ) {
     return this.getTeacherPerformanceData(limit, institutionId)
   }
 
-  private async getTeacherPerformanceData(limit: number = 10, institutionId: number | null = null) {
+  private async getTeacherPerformanceData(
+    limit: number = 10,
+    institutionId: number | null = null
+  ) {
     // Optimized: Use raw SQL with JOINs and GROUP BY to eliminate N+1 queries
     const performanceData = await this.prisma.$queryRaw<
       Array<{
@@ -1117,7 +1112,10 @@ export class AdminService {
   /**
    * Get attendance trends
    */
-  async getAttendanceTrends(_period?: string, institutionId: number | null = null) {
+  async getAttendanceTrends(
+    _period?: string,
+    institutionId: number | null = null
+  ) {
     return this.getAttendanceTrendsData(institutionId)
   }
 
@@ -1268,7 +1266,10 @@ export class AdminService {
   /**
    * Get financial overview
    */
-  async getFinancialOverview(_period?: string, institutionId: number | null = null) {
+  async getFinancialOverview(
+    _period?: string,
+    institutionId: number | null = null
+  ) {
     return this.getFinancialOverviewData(institutionId)
   }
 
@@ -1319,11 +1320,19 @@ export class AdminService {
   /**
    * Get system alerts
    */
-  async getSystemAlerts(severity?: string, limit: number = 20, institutionId: number | null = null) {
+  async getSystemAlerts(
+    severity?: string,
+    limit: number = 20,
+    institutionId: number | null = null
+  ) {
     return this.getSystemAlertsData(severity, limit, institutionId)
   }
 
-  private async getSystemAlertsData(severity?: string, limit: number = 20, institutionId: number | null = null) {
+  private async getSystemAlertsData(
+    severity?: string,
+    limit: number = 20,
+    institutionId: number | null = null
+  ) {
     const alerts: Array<{
       category: string
       message: string

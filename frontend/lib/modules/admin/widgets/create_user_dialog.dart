@@ -302,21 +302,22 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
           return;
         }
 
-        // Backend requires password for DTO validation but auto-generates
-        // a temporary one (NAME+YEAR). Send a valid placeholder if not set.
+        // Only send password if user explicitly provided one
+        // Otherwise, let backend auto-generate temporary password (NAME+YEAR)
         final customPassword = _passwordController.text.trim();
-        final password = customPassword.isNotEmpty
-            ? customPassword
-            : 'TempPass1!';
 
         final userData = <String, dynamic>{
           'firstName': _firstNameController.text.trim(),
           'lastName': _lastNameController.text.trim(),
           'email': _emailController.text.trim(),
-          'password': password,
           'roleId': _selectedRoleId,
           'institutionId': institutionId,
         };
+
+        // Only include password if user provided one
+        if (customPassword.isNotEmpty) {
+          userData['password'] = customPassword;
+        }
 
         final phone = _phoneController.text.trim();
         if (phone.isNotEmpty) userData['phoneNumber'] = phone;

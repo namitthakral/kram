@@ -122,7 +122,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
             : _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
         'phoneNumber': _phoneController.text.trim(),
-        'password': 'TempPass1!',
+        // Don't send password - let backend auto-generate temporary password
         'roleId': 3,
         'institutionId': institutionId,
         'studentData': <String, dynamic>{

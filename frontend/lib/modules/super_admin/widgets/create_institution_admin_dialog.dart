@@ -51,20 +51,25 @@ class _CreateInstitutionAdminDialogState
     setState(() => _isSubmitting = true);
 
     final customPassword = _passwordController.text.trim();
-    final password = customPassword.isNotEmpty ? customPassword : 'TempPass1!';
 
     try {
       final adminService = AdminService();
-      await adminService.createInstitutionalUser({
+      final userData = <String, dynamic>{
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
-        'password': password,
         'roleId': 2, // admin
         'institutionId': widget.institutionId,
         if (_phoneController.text.trim().isNotEmpty)
           'phoneNumber': _phoneController.text.trim(),
-      });
+      };
+
+      // Only include password if user provided one
+      if (customPassword.isNotEmpty) {
+        userData['password'] = customPassword;
+      }
+
+      await adminService.createInstitutionalUser(userData);
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
