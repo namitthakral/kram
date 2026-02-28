@@ -10,9 +10,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import { UserWithRelations } from '../types/auth.types'
 import {
   BulkCreateTimetableDto,
   CreateRoomDto,
@@ -33,6 +35,16 @@ import { TimetableService } from './timetable.service'
 export class TimetableController {
   constructor(private readonly timetableService: TimetableService) {}
 
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    )
+  }
+
   // ============ Time Slot Endpoints ============
 
   /**
@@ -50,8 +62,12 @@ export class TimetableController {
    */
   @Get('time-slots')
   @Roles('super_admin', 'admin', 'teacher')
-  async findAllTimeSlots(@Query() query: TimeSlotQueryDto) {
-    return this.timetableService.findAllTimeSlots(query)
+  async findAllTimeSlots(
+    @Query() query: TimeSlotQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.findAllTimeSlots(query, institutionId)
   }
 
   /**
@@ -59,8 +75,12 @@ export class TimetableController {
    */
   @Get('time-slots/:id')
   @Roles('super_admin', 'admin', 'teacher')
-  async findOneTimeSlot(@Param('id', ParseIntPipe) id: number) {
-    return this.timetableService.findOneTimeSlot(id)
+  async findOneTimeSlot(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.findOneTimeSlot(id, institutionId)
   }
 
   /**
@@ -70,9 +90,11 @@ export class TimetableController {
   @Roles('super_admin', 'admin')
   async updateTimeSlot(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateTimeSlotDto
+    @Body() dto: UpdateTimeSlotDto,
+    @CurrentUser() user: UserWithRelations
   ) {
-    return this.timetableService.updateTimeSlot(id, dto)
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.updateTimeSlot(id, dto, institutionId)
   }
 
   /**
@@ -80,8 +102,12 @@ export class TimetableController {
    */
   @Delete('time-slots/:id')
   @Roles('super_admin', 'admin')
-  async deleteTimeSlot(@Param('id', ParseIntPipe) id: number) {
-    return this.timetableService.deleteTimeSlot(id)
+  async deleteTimeSlot(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.deleteTimeSlot(id, institutionId)
   }
 
   // ============ Room Endpoints ============
@@ -101,8 +127,12 @@ export class TimetableController {
    */
   @Get('rooms')
   @Roles('super_admin', 'admin', 'teacher')
-  async findAllRooms(@Query() query: RoomQueryDto) {
-    return this.timetableService.findAllRooms(query)
+  async findAllRooms(
+    @Query() query: RoomQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.findAllRooms(query, institutionId)
   }
 
   /**
@@ -110,8 +140,12 @@ export class TimetableController {
    */
   @Get('rooms/:id')
   @Roles('super_admin', 'admin', 'teacher')
-  async findOneRoom(@Param('id', ParseIntPipe) id: number) {
-    return this.timetableService.findOneRoom(id)
+  async findOneRoom(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.findOneRoom(id, institutionId)
   }
 
   /**
@@ -121,9 +155,11 @@ export class TimetableController {
   @Roles('super_admin', 'admin')
   async updateRoom(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateRoomDto
+    @Body() dto: UpdateRoomDto,
+    @CurrentUser() user: UserWithRelations
   ) {
-    return this.timetableService.updateRoom(id, dto)
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.updateRoom(id, dto, institutionId)
   }
 
   /**
@@ -131,8 +167,12 @@ export class TimetableController {
    */
   @Delete('rooms/:id')
   @Roles('super_admin', 'admin')
-  async deleteRoom(@Param('id', ParseIntPipe) id: number) {
-    return this.timetableService.deleteRoom(id)
+  async deleteRoom(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.deleteRoom(id, institutionId)
   }
 
   // ============ Timetable Entry Endpoints ============
@@ -162,8 +202,12 @@ export class TimetableController {
    */
   @Get('entries')
   @Roles('super_admin', 'admin', 'teacher', 'student', 'parent')
-  async findAllTimetableEntries(@Query() query: TimetableQueryDto) {
-    return this.timetableService.findAllTimetableEntries(query)
+  async findAllTimetableEntries(
+    @Query() query: TimetableQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.findAllTimetableEntries(query, institutionId)
   }
 
   /**
@@ -218,8 +262,12 @@ export class TimetableController {
    */
   @Get('entries/:id')
   @Roles('super_admin', 'admin', 'teacher')
-  async findOneTimetableEntry(@Param('id', ParseIntPipe) id: number) {
-    return this.timetableService.findOneTimetableEntry(id)
+  async findOneTimetableEntry(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.findOneTimetableEntry(id, institutionId)
   }
 
   /**
@@ -229,9 +277,11 @@ export class TimetableController {
   @Roles('super_admin', 'admin')
   async updateTimetableEntry(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateTimetableEntryDto
+    @Body() dto: UpdateTimetableEntryDto,
+    @CurrentUser() user: UserWithRelations
   ) {
-    return this.timetableService.updateTimetableEntry(id, dto)
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.updateTimetableEntry(id, dto, institutionId)
   }
 
   /**
@@ -239,7 +289,11 @@ export class TimetableController {
    */
   @Delete('entries/:id')
   @Roles('super_admin', 'admin')
-  async deleteTimetableEntry(@Param('id', ParseIntPipe) id: number) {
-    return this.timetableService.deleteTimetableEntry(id)
+  async deleteTimetableEntry(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.timetableService.deleteTimetableEntry(id, institutionId)
   }
 }

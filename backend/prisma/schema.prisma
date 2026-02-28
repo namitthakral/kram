@@ -29,6 +29,7 @@ model User {
   phone             String?  @db.VarChar(15)
   passwordHash      String   @map("password_hash") @db.VarChar(255)
   roleId            Int      @map("role_id")
+  institutionId     Int?     @map("institution_id")
   emailVerified     Boolean  @default(false) @map("email_verified")
   phoneVerified     Boolean  @default(false) @map("phone_verified")
   twoFactorEnabled  Boolean  @default(false) @map("two_factor_enabled")
@@ -42,7 +43,8 @@ model User {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   // Relations
-  role              Role     @relation(fields: [roleId], references: [id])
+  role              Role         @relation(fields: [roleId], references: [id])
+  institution       Institution? @relation(fields: [institutionId], references: [id])
   student           Student?
   teacher           Teacher?
   parent            Parent?
@@ -106,6 +108,7 @@ model Institution {
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
   // Relations
+  users           User[]
   students        Student[]
   courses         Course[] // Courses (degree programs/streams)
   teachers        Teacher[]

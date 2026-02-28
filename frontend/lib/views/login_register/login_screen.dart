@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/bottom_nav_provider.dart';
@@ -353,15 +354,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () async {
                           await provider.loginAccount();
                           if (provider.currentUser != null && context.mounted) {
-                            // Initialize navigation provider before navigating to home
-                            final navProvider = context.read<BottomNavProvider>();
-                            final user = provider.currentUser;
+                            final user = provider.currentUser!;
 
-                            if (user?.role?.id != null) {
-                              navProvider.initializeForRole(user!.role!.id);
+                            // Force password change for temp-password users
+                            if (user.mustChangePassword == true) {
+                              if (context.mounted) {
+                                context.go('/force-change-password');
+                              }
+                              return;
                             }
 
-                            // Navigate to home - user data and navigation already set up
+                            final navProvider = context.read<BottomNavProvider>();
+                            if (user.role?.id != null) {
+                              navProvider.initializeForRole(user.role!.id);
+                            }
+
                             if (context.mounted) {
                               context.router.goToHome();
                             }

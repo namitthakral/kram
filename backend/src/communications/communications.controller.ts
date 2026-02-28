@@ -11,9 +11,11 @@ import {
     Request,
     UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { UserWithRelations } from '../types/auth.types';
 import { CommunicationsService } from './communications.service';
 import { CommunicationQueryDto } from './dto/communication-query.dto';
 import { CreateCommunicationDto } from './dto/create-communication.dto';
@@ -23,6 +25,16 @@ import { UpdateCommunicationDto } from './dto/update-communication.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CommunicationsController {
   constructor(private readonly communicationsService: CommunicationsService) {}
+
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    );
+  }
 
   /**
    * Create a new communication
@@ -42,8 +54,16 @@ export class CommunicationsController {
    * GET /communications
    */
   @Get()
-  findAll(@Query() query: CommunicationQueryDto, @Request() req) {
-    return this.communicationsService.findAll(query, req.user.id);
+  findAll(
+    @Query() query: CommunicationQueryDto,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.communicationsService.findAll(
+      query,
+      user.id,
+      institutionId,
+    );
   }
 
   /**
@@ -60,8 +80,12 @@ export class CommunicationsController {
    * GET /communications/:id
    */
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.communicationsService.findOne(id, req.user.id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.communicationsService.findOne(id, user.id, institutionId);
   }
 
   /**
@@ -106,8 +130,12 @@ export class CommunicationsController {
    */
   @Get(':id/stats')
   @Roles('super_admin', 'admin', 'teacher')
-  getReadStats(@Param('id', ParseIntPipe) id: number) {
-    return this.communicationsService.getReadStats(id);
+  getReadStats(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.communicationsService.getReadStats(id, institutionId);
   }
 
   /**

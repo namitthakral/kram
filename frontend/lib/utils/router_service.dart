@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import 'extensions.dart';
-
 import '../modules/admin/screens/admin_dashboard_screen.dart';
 import '../modules/admin/screens/admin_main_screen.dart';
 import '../modules/admin/screens/admin_reports_screen.dart';
@@ -17,6 +15,14 @@ import '../modules/admin/screens/admin_user_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
 import '../modules/admin/screens/institution_settings_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
+import '../modules/fees/models/student_fee.dart';
+import '../modules/fees/screens/admin/assign_fee_screen.dart';
+import '../modules/fees/screens/admin/create_fee_structure_screen.dart';
+import '../modules/fees/screens/admin/fee_dashboard_screen.dart';
+import '../modules/fees/screens/admin/fee_structures_screen.dart';
+import '../modules/fees/screens/admin/record_payment_screen.dart';
+import '../modules/fees/screens/admin/student_fees_list_screen.dart';
+import '../modules/fees/screens/student/student_fees_screen.dart';
 import '../modules/library/screens/books_management_screen.dart';
 import '../modules/library/screens/issued_books_screen.dart';
 import '../modules/library/screens/library_dashboard_screen.dart';
@@ -42,6 +48,7 @@ import '../modules/super_admin/screens/create_institution_screen.dart';
 import '../modules/super_admin/screens/institutions_screen.dart';
 import '../modules/super_admin/screens/security_screen.dart';
 import '../modules/super_admin/screens/system_settings_screen.dart';
+import '../modules/teacher/models/report_card_models.dart';
 import '../modules/teacher/screens/academic_management_screen.dart';
 import '../modules/teacher/screens/assignments_list_screen.dart';
 import '../modules/teacher/screens/attendance_screen.dart';
@@ -50,13 +57,12 @@ import '../modules/teacher/screens/class_detail_screen.dart';
 import '../modules/teacher/screens/create_assignment_screen.dart';
 import '../modules/teacher/screens/examination_form_screen.dart';
 import '../modules/teacher/screens/examinations_list_screen.dart';
-import '../modules/teacher/models/report_card_models.dart';
 import '../modules/teacher/screens/generate_report_cards_screen.dart';
 import '../modules/teacher/screens/marks_list_screen.dart';
-import '../modules/teacher/screens/report_card_view_screen.dart';
 import '../modules/teacher/screens/my_classes_screen.dart';
 import '../modules/teacher/screens/question_paper_template_screen.dart';
 import '../modules/teacher/screens/question_papers_list_screen.dart';
+import '../modules/teacher/screens/report_card_view_screen.dart';
 import '../modules/teacher/screens/student_detail_screen.dart';
 import '../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../modules/teacher/screens/timetable_management_screen.dart';
@@ -65,21 +71,14 @@ import '../modules/teacher/screens/timetable_view_screen.dart';
 import '../provider/login_signup/login_provider.dart';
 import '../views/dashboard/staff_dashboard_screen.dart';
 import '../views/dashboard/super_admin_dashboard_screen.dart';
-import '../modules/fees/screens/admin/fee_dashboard_screen.dart';
-import '../modules/fees/screens/admin/fee_structures_screen.dart';
-import '../modules/fees/screens/admin/create_fee_structure_screen.dart';
-import '../modules/fees/screens/admin/student_fees_list_screen.dart';
-import '../modules/fees/screens/admin/assign_fee_screen.dart';
-import '../modules/fees/screens/admin/record_payment_screen.dart';
-import '../modules/fees/screens/student/student_fees_screen.dart';
-import '../modules/fees/models/student_fee.dart';
-
 import '../views/home_screen.dart';
-import '../views/notifications/notifications_screen.dart';
 import '../views/login_register/login_register_main.dart';
+import '../views/notifications/notifications_screen.dart';
 import '../views/onboarding/onboarding_main.dart';
+import '../views/profile/change_password_screen.dart';
 import '../views/profile/profile_screen.dart';
 import '../views/splash_screen.dart';
+import 'extensions.dart';
 
 /// A singleton service to handle routing with go_router
 class RouterService {
@@ -127,9 +126,10 @@ class RouterService {
     final isGoingToLogin = state.matchedLocation == '/login';
     final isSplash = state.matchedLocation == '/splash';
     final isOnboarding = state.matchedLocation == '/onboarding';
+    final isForceChangePassword =
+        state.matchedLocation == '/force-change-password';
 
-    // Specify public routes that don't require authentication
-    if (isSplash || isGoingToLogin || isOnboarding) {
+    if (isSplash || isGoingToLogin || isOnboarding || isForceChangePassword) {
       return null;
     }
 
@@ -178,6 +178,15 @@ class RouterService {
           (context, state) => _buildPageWithTransition(
             key: state.pageKey,
             child: const LoginRegisterMain(),
+          ),
+    ),
+    GoRoute(
+      path: '/force-change-password',
+      name: 'force_change_password',
+      pageBuilder:
+          (context, state) => _buildPageWithTransition(
+            key: state.pageKey,
+            child: const ChangePasswordScreen(forced: true),
           ),
     ),
 
@@ -354,7 +363,9 @@ class RouterService {
                         child: Scaffold(
                           body: Center(
                             child: Text(
-                              context.translate('report_card_data_not_available'),
+                              context.translate(
+                                'report_card_data_not_available',
+                              ),
                             ),
                           ),
                         ),
@@ -845,8 +856,8 @@ class RouterService {
       6 => const LibraryDashboardScreen(), // Librarian
       7 => const StaffDashboardScreen(), // Staff
       _ => Center(
-          child: Text(context.translate('dashboard_not_configured_for_role')),
-        ),
+        child: Text(context.translate('dashboard_not_configured_for_role')),
+      ),
     };
   }
 

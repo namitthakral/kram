@@ -172,12 +172,11 @@ export class TeachersService {
     return password
   }
 
-  async findAll(query: TeacherQueryDto) {
+  async findAll(query: TeacherQueryDto, institutionId: number | null) {
     const {
       page,
       limit,
       search,
-      institutionId,
       employmentType,
       status,
       sortBy,
@@ -186,6 +185,7 @@ export class TeachersService {
     const skip = (page - 1) * limit
 
     // Build where clause with proper Prisma typing
+    // institutionId from current user (required): admins see only their institution; super_admins see all (null)
     const where: Prisma.TeacherWhereInput = {
       status: { not: 'RESIGNED' }, // Exclude resigned teachers by default
       ...(search && {
@@ -197,7 +197,7 @@ export class TeachersService {
           { user: { email: { contains: search, mode: 'insensitive' } } },
         ],
       }),
-      ...(institutionId && { institutionId }),
+      ...(institutionId !== null && { institutionId }),
       ...(employmentType && { employmentType }),
       ...(status && { status }), // This will override the default filter if provided
     }
@@ -562,11 +562,15 @@ export class TeachersService {
     return subjects
   }
 
-  async getActiveSemesters() {
+  async getActiveSemesters(institutionId: number | null) {
+    const where: Prisma.SemesterWhereInput = {
+      status: 'ACTIVE',
+      ...(institutionId !== null && {
+        academicYear: { institutionId },
+      }),
+    }
     const semesters = await this.prisma.semester.findMany({
-      where: {
-        status: 'ACTIVE',
-      },
+      where,
       orderBy: {
         startDate: 'desc', // Most recent first
       },

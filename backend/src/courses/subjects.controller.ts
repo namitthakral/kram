@@ -12,9 +12,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import { UserWithRelations } from '../types/auth.types'
 import { SubjectQueryDto, SubjectStatsQueryDto } from './dto/subject-query.dto'
 import { CreateSubjectDto, UpdateSubjectDto } from './dto/subject.dto'
 import { SubjectsService } from './subjects.service'
@@ -34,18 +36,36 @@ import { SubjectsService } from './subjects.service'
 export class SubjectsController {
   constructor(private readonly subjectsService: SubjectsService) {}
 
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    )
+  }
+
   /**
    * Get all subjects
    * Query params: courseId (optional), institutionId (optional), status (optional)
    */
   @Get()
   @Roles('super_admin', 'admin', 'teacher')
-  async findAll(@Query() query: SubjectQueryDto) {
-    return this.subjectsService.findAll({
-      courseId: query.courseId,
-      institutionId: query.institutionId,
-      status: query.status,
-    })
+  async findAll(
+    @Query() query: SubjectQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId =
+      this.resolveInstitutionId(user) ?? query.institutionId ?? null
+    return this.subjectsService.findAll(
+      {
+        courseId: query.courseId,
+        institutionId: query.institutionId,
+        status: query.status,
+      },
+      institutionId
+    )
   }
 
   /**
@@ -108,7 +128,12 @@ export class SubjectsController {
    */
   @Get('stats/overview')
   @Roles('super_admin', 'admin')
-  async getStats(@Query() query: SubjectStatsQueryDto) {
-    return this.subjectsService.getStats(query.institutionId)
+  async getStats(
+    @Query() query: SubjectStatsQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId =
+      this.resolveInstitutionId(user) ?? query.institutionId ?? null
+    return this.subjectsService.getStats(institutionId)
   }
 }

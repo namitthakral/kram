@@ -347,7 +347,7 @@ class AuthService {
     try {
       final response = await _apiService.dio.post(
         '/auth/change-password',
-        data: {'oldPassword': oldPassword, 'newPassword': newPassword},
+        data: {'currentPassword': oldPassword, 'newPassword': newPassword},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -384,7 +384,8 @@ class AuthService {
       final response = await _apiService.dio.get('/auth/profile');
 
       if (response.statusCode == 200) {
-        final userData = response.data as Map<String, dynamic>;
+        final body = response.data as Map<String, dynamic>;
+        final userData = (body['data'] ?? body) as Map<String, dynamic>;
         final user = User.fromJson(userData);
 
         // Update stored user data

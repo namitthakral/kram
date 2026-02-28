@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
@@ -36,6 +37,7 @@ import {
   TeacherQueryDto,
   UpdateTeacherDto,
 } from './dto/teacher.dto'
+import { UserWithRelations } from '../types/auth.types'
 import { TeachersService } from './teachers.service'
 
 @Controller('teachers')
@@ -49,8 +51,9 @@ export class TeachersController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
-  findAll(@Query() query: TeacherQueryDto) {
-    return this.teachersService.findAll(query)
+  findAll(@Query() query: TeacherQueryDto, @CurrentUser() user: UserWithRelations) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.teachersService.findAll(query, institutionId)
   }
 
   @Get(':user_uuid')
@@ -93,10 +96,12 @@ export class TeachersController {
   @Get(':user_uuid/semesters/active')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin', 'teacher')
-  getActiveSemesters(@Param('user_uuid') userUuid: string) {
-    // Note: userUuid is present for authorization/logging context,
-    // but sememsters are institution-wide.
-    return this.teachersService.getActiveSemesters()
+  getActiveSemesters(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.teachersService.getActiveSemesters(institutionId)
   }
 
   @Get(':user_uuid/dashboard-stats')
@@ -491,7 +496,7 @@ export class TeachersController {
   @Roles('teacher', 'super_admin', 'admin')
   generateBatchReportCards(
     @Param('user_uuid') userUuid: string,
-    @Body() batchReportCardDto: BatchReportCardDto
+    @Body() batchReportCardDto: BatchReportCardDto,
   ) {
     return this.teachersService.generateBatchReportCards(userUuid, {
       sectionId: batchReportCardDto.sectionId,
@@ -500,5 +505,15 @@ export class TeachersController {
       studentIds: batchReportCardDto.studentIds,
       includeExamDetails: batchReportCardDto.includeExamDetails,
     })
+  }
+
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    )
   }
 }

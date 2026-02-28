@@ -11,9 +11,10 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { FeesService } from './fees.service';
 import {
   CreateFeeStructureDto,
@@ -31,6 +32,7 @@ import {
   PaymentQueryDto,
   UpdatePaymentDto,
 } from './dto/payment.dto';
+import { UserWithRelations } from '../types/auth.types';
 
 @Controller('fees')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -56,8 +58,12 @@ export class FeesController {
    * All authenticated users can view fee structures
    */
   @Get('structures')
-  findAllFeeStructures(@Query() query: FeeStructureQueryDto) {
-    return this.feesService.findAllFeeStructures(query);
+  findAllFeeStructures(
+    @Query() query: FeeStructureQueryDto,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.findAllFeeStructures(query, institutionId);
   }
 
   /**
@@ -65,8 +71,12 @@ export class FeesController {
    * GET /fees/structures/:id
    */
   @Get('structures/:id')
-  findOneFeeStructure(@Param('id', ParseIntPipe) id: number) {
-    return this.feesService.findOneFeeStructure(id);
+  findOneFeeStructure(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.findOneFeeStructure(id, institutionId);
   }
 
   /**
@@ -79,8 +89,10 @@ export class FeesController {
   updateFeeStructure(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateFeeStructureDto,
+    @CurrentUser() user: UserWithRelations,
   ) {
-    return this.feesService.updateFeeStructure(id, dto);
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.updateFeeStructure(id, dto, institutionId);
   }
 
   /**
@@ -90,8 +102,12 @@ export class FeesController {
    */
   @Delete('structures/:id')
   @Roles('super_admin')
-  deleteFeeStructure(@Param('id', ParseIntPipe) id: number) {
-    return this.feesService.deleteFeeStructure(id);
+  deleteFeeStructure(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.deleteFeeStructure(id, institutionId);
   }
 
   // ==================== STUDENT FEE ENDPOINTS ====================
@@ -125,15 +141,19 @@ export class FeesController {
    */
   @Get('student-fees')
   @Roles('super_admin', 'admin', 'teacher', 'student', 'parent')
-  findAllStudentFees(@Query() query: StudentFeeQueryDto, @Request() req) {
+  findAllStudentFees(
+    @Query() query: StudentFeeQueryDto,
+    @CurrentUser() user: UserWithRelations,
+  ) {
     // If user is a student, filter by their studentId
-    if (req.user.role.roleName === 'student' && req.user.student) {
-      query.studentId = req.user.student.id;
+    if (user.role.roleName === 'student' && user.student) {
+      query.studentId = user.student.id;
     }
     // If user is a parent, filter by their children
     // TODO: Implement parent-student relationship filtering
 
-    return this.feesService.findAllStudentFees(query);
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.findAllStudentFees(query, institutionId);
   }
 
   /**
@@ -142,8 +162,12 @@ export class FeesController {
    */
   @Get('student-fees/:id')
   @Roles('super_admin', 'admin', 'teacher', 'student', 'parent')
-  findOneStudentFee(@Param('id', ParseIntPipe) id: number) {
-    return this.feesService.findOneStudentFee(id);
+  findOneStudentFee(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.findOneStudentFee(id, institutionId);
   }
 
   /**
@@ -156,8 +180,10 @@ export class FeesController {
   updateStudentFee(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateStudentFeeDto,
+    @CurrentUser() user: UserWithRelations,
   ) {
-    return this.feesService.updateStudentFee(id, dto);
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.updateStudentFee(id, dto, institutionId);
   }
 
   /**
@@ -167,8 +193,12 @@ export class FeesController {
    */
   @Delete('student-fees/:id')
   @Roles('super_admin')
-  deleteStudentFee(@Param('id', ParseIntPipe) id: number) {
-    return this.feesService.deleteStudentFee(id);
+  deleteStudentFee(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.deleteStudentFee(id, institutionId);
   }
 
   /**
@@ -205,15 +235,19 @@ export class FeesController {
    */
   @Get('payments')
   @Roles('super_admin', 'admin', 'staff', 'teacher', 'student', 'parent')
-  findAllPayments(@Query() query: PaymentQueryDto, @Request() req) {
+  findAllPayments(
+    @Query() query: PaymentQueryDto,
+    @CurrentUser() user: UserWithRelations,
+  ) {
     // If user is a student, filter by their studentId
-    if (req.user.role.roleName === 'student' && req.user.student) {
-      query.studentId = req.user.student.id;
+    if (user.role.roleName === 'student' && user.student) {
+      query.studentId = user.student.id;
     }
     // If user is a parent, filter by their children
     // TODO: Implement parent-student relationship filtering
 
-    return this.feesService.findAllPayments(query);
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.findAllPayments(query, institutionId);
   }
 
   /**
@@ -222,8 +256,11 @@ export class FeesController {
    */
   @Get('payments/:id')
   @Roles('super_admin', 'admin', 'staff', 'teacher', 'student', 'parent')
-  findOnePayment(@Param('id', ParseIntPipe) id: number) {
-    return this.feesService.findOnePayment(id);
+  findOnePayment(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    return this.feesService.findOnePayment(id, this.resolveInstitutionId(user));
   }
 
   /**
@@ -236,8 +273,13 @@ export class FeesController {
   updatePayment(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePaymentDto,
+    @CurrentUser() user: UserWithRelations,
   ) {
-    return this.feesService.updatePayment(id, dto);
+    return this.feesService.updatePayment(
+      id,
+      dto,
+      this.resolveInstitutionId(user),
+    );
   }
 
   /**
@@ -247,8 +289,12 @@ export class FeesController {
    */
   @Post('payments/:id/cancel')
   @Roles('super_admin', 'admin')
-  cancelPayment(@Param('id', ParseIntPipe) id: number) {
-    return this.feesService.cancelPayment(id);
+  cancelPayment(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.cancelPayment(id, institutionId);
   }
 
   /**
@@ -275,8 +321,9 @@ export class FeesController {
    */
   @Post('calculate-late-fees')
   @Roles('super_admin', 'admin')
-  calculateLateFees() {
-    return this.feesService.calculateLateFees();
+  calculateLateFees(@CurrentUser() user: UserWithRelations) {
+    const institutionId = this.resolveInstitutionId(user);
+    return this.feesService.calculateLateFees(institutionId);
   }
 
   /**
@@ -286,10 +333,16 @@ export class FeesController {
    */
   @Get('overdue')
   @Roles('super_admin', 'admin')
-  getOverdueFees(@Query('institutionId') institutionId?: number) {
-    return this.feesService.getOverdueFees(
-      institutionId ? Number(institutionId) : undefined,
-    );
+  getOverdueFees(
+    @Query('institutionId') institutionIdParam?: string,
+    @CurrentUser() user?: UserWithRelations,
+  ) {
+    const institutionId = institutionIdParam
+      ? Number(institutionIdParam)
+      : user
+        ? this.resolveInstitutionId(user)
+        : null;
+    return this.feesService.getOverdueFees(institutionId);
   }
 
   /**
@@ -312,5 +365,15 @@ export class FeesController {
       feeType,
       academicYearId: academicYearId ? Number(academicYearId) : undefined,
     });
+  }
+
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    );
   }
 }

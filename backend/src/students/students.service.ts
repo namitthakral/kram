@@ -90,7 +90,7 @@ export class StudentsService {
     return results.length > 0 ? results[0] : null
   }
 
-  async findAll(paginationDto: PaginationDto, _currentUser: UserWithRelations) {
+  async findAll(paginationDto: PaginationDto, currentUser: UserWithRelations) {
     const {
       page = 1,
       limit = 10,
@@ -143,6 +143,15 @@ export class StudentsService {
     }
     if (courseId) {
       where.courseId = courseId
+    }
+
+    const resolvedInstitutionId =
+      currentUser.institutionId ??
+      currentUser.staff?.institutionId ??
+      currentUser.teacher?.institutionId ??
+      null
+    if (resolvedInstitutionId) {
+      where.institutionId = resolvedInstitutionId
     }
 
     // Get students with pagination
@@ -256,6 +265,19 @@ export class StudentsService {
       throw new ForbiddenException('Access denied')
     }
 
+    const resolvedInstitutionId =
+      currentUser.institutionId ??
+      currentUser.staff?.institutionId ??
+      currentUser.teacher?.institutionId ??
+      null
+    if (
+      currentUser.role.roleName === 'admin' &&
+      resolvedInstitutionId !== null &&
+      student.institutionId !== resolvedInstitutionId
+    ) {
+      throw new ForbiddenException('Access denied to this student')
+    }
+
     return {
       success: true,
       data: student,
@@ -312,6 +334,19 @@ export class StudentsService {
       currentUser.student?.userId !== student.userId
     ) {
       throw new ForbiddenException('Access denied')
+    }
+
+    const resolvedInstitutionId =
+      currentUser.institutionId ??
+      currentUser.staff?.institutionId ??
+      currentUser.teacher?.institutionId ??
+      null
+    if (
+      currentUser.role.roleName === 'admin' &&
+      resolvedInstitutionId !== null &&
+      student.institutionId !== resolvedInstitutionId
+    ) {
+      throw new ForbiddenException('Access denied to this student')
     }
 
     return {

@@ -35,15 +35,18 @@ export class UsersController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
-  findAll(@Query() query: UserQueryDto) {
-    return this.usersService.findAll(query)
+  findAll(
+    @Query() query: UserQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.usersService.findAll(query, this.resolveInstitutionId(user))
   }
 
   @Get('stats')
   @UseGuards(RolesGuard)
   @Roles('super_admin', 'admin')
-  getStats() {
-    return this.usersService.getUsersStats()
+  getStats(@CurrentUser() user: UserWithRelations) {
+    return this.usersService.getUsersStats(this.resolveInstitutionId(user))
   }
 
   @Get('role/:roleId')
@@ -51,9 +54,14 @@ export class UsersController {
   @Roles('super_admin', 'admin')
   getUsersByRole(
     @Param('roleId', ParseIntPipe) roleId: number,
-    @Query() query: UserQueryDto
+    @Query() query: UserQueryDto,
+    @CurrentUser() user: UserWithRelations
   ) {
-    return this.usersService.getUsersByRole(roleId, query)
+    return this.usersService.getUsersByRole(
+      roleId,
+      query,
+      this.resolveInstitutionId(user)
+    )
   }
 
   @Get('profile')
@@ -107,5 +115,16 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   hardDelete(@Param('user_uuid') userUuid: string) {
     return this.usersService.hardDeleteByUuid(userUuid)
+  }
+
+  /** Resolve institutionId from the logged-in user across all possible relations */
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    )
   }
 }

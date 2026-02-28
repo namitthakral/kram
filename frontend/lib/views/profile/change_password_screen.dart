@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -12,7 +13,12 @@ import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_text_field.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
-  const ChangePasswordScreen({super.key});
+  const ChangePasswordScreen({super.key, this.forced = false});
+
+  /// When true, the user was redirected here after login because they
+  /// have a temporary password. Back navigation is disabled and on
+  /// success we navigate to the dashboard instead of popping.
+  final bool forced;
 
   @override
   State<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
@@ -85,14 +91,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         message: 'Password changed successfully',
         type: SnackbarType.success,
       );
-      // Clear the form
       _currentPasswordController.clear();
       _newPasswordController.clear();
       _confirmPasswordController.clear();
-      // Go back after a short delay
+
+      // Refresh user data in background — navigation does not depend on this
+      context.read<LoginProvider>().refreshProfile();
+
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
-          Navigator.of(context).pop();
+          if (widget.forced) {
+            context.go('/dashboard');
+          } else {
+            Navigator.of(context).pop();
+          }
         }
       });
     } else if (provider.error != null) {
@@ -115,7 +127,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
     }
 
-    return Scaffold(
+    return PopScope(
+      canPop: !widget.forced,
+      child: Scaffold(
       body: CustomMainScreenWithAppbar(
         title: context.translate('Change Password'),
         appBarConfig: AppBarConfigHelper.getConfigForUser(
@@ -130,6 +144,34 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.forced) ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          color: Color(0xFFD97706), size: 22),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'You are using a temporary password. '
+                          'Please set a new password to continue.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.slate800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
               CustomTextField(
                 label: context.translate('Current Password'),
                 hintText: context.translate('Enter current password'),
@@ -209,6 +251,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         foregroundColor: Colors.white,
         elevation: 4,
       ),
+    ),
     );
   }
 }

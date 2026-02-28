@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 
 export interface CourseQueryParams {
@@ -29,20 +30,23 @@ export class CoursesService {
   /**
    * Get all courses/programs
    * Optionally filter by institution, status, or degree type
+   * @param institutionId - When provided (admin), scope to this institution. When null (super_admin), no scope.
    */
-  async findAll(query: CourseQueryParams) {
-    const where: any = {}
+  async findAll(query: CourseQueryParams, institutionId: number | null) {
+    const where: Prisma.CourseWhereInput = {}
 
-    if (query.institutionId) {
+    if (institutionId) {
+      where.institutionId = institutionId
+    } else if (query.institutionId) {
       where.institutionId = query.institutionId
     }
 
     if (query.status) {
-      where.status = query.status
+      where.status = query.status as Prisma.CourseWhereInput['status']
     }
 
     if (query.degreeType) {
-      where.degreeType = query.degreeType
+      where.degreeType = query.degreeType as Prisma.CourseWhereInput['degreeType']
     }
 
     const courses = await this.prisma.course.findMany({
@@ -86,8 +90,9 @@ export class CoursesService {
 
   /**
    * Get a single course by ID
+   * @param adminInstitutionId - When provided (admin), verify ownership. When null (super_admin), allow any.
    */
-  async findOne(id: number) {
+  async findOne(id: number, adminInstitutionId: number | null) {
     const course = await this.prisma.course.findUnique({
       where: { id },
       include: {
@@ -116,6 +121,10 @@ export class CoursesService {
       throw new NotFoundException(`Course with ID ${id} not found`)
     }
 
+    if (adminInstitutionId != null && course.institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('You do not have access to this course')
+    }
+
     // Get student count separately
     const studentCount = await this.prisma.student.count({
       where: { courseId: id },
@@ -135,9 +144,9 @@ export class CoursesService {
    * Groups students by course and section
    */
   async getCoursesWithSections(
-    institutionId?: number
+    institutionId: number | null
   ): Promise<{ success: boolean; data: CourseWithSections[] }> {
-    const where: any = { status: 'ACTIVE' }
+    const where: Prisma.CourseWhereInput = { status: 'ACTIVE' }
 
     if (institutionId) {
       where.institutionId = institutionId
@@ -333,22 +342,26 @@ export class CoursesService {
   /**
    * Get all class sections (subject-based sections)
    * These are sections for specific subjects in a semester
+   * @param institutionId - When provided (admin), scope to teacher's institution. When null (super_admin), no scope.
    */
-  async getClassSections(query: {
-    institutionId?: number
-    semesterId?: number
-    courseId?: number
-    teacherId?: number
-    status?: string
-  }) {
-    const where: any = {}
+  async getClassSections(
+    query: {
+      institutionId?: number
+      semesterId?: number
+      courseId?: number
+      teacherId?: number
+      status?: string
+    },
+    institutionId: number | null
+  ) {
+    const where: Prisma.ClassSectionWhereInput = {}
 
     if (query.semesterId) {
       where.semesterId = query.semesterId
     }
 
     if (query.status) {
-      where.status = query.status
+      where.status = query.status as Prisma.ClassSectionWhereInput['status']
     }
 
     if (query.teacherId) {
@@ -356,20 +369,20 @@ export class CoursesService {
     }
 
     // Filter by course through subject
+    const subjectFilter: Prisma.SubjectWhereInput = {}
     if (query.courseId) {
-      where.subject = {
-        courseId: query.courseId,
-      }
+      subjectFilter.courseId = query.courseId
+    }
+    if (!institutionId && query.institutionId) {
+      subjectFilter.course = { institutionId: query.institutionId }
+    }
+    if (Object.keys(subjectFilter).length > 0) {
+      where.subject = subjectFilter
     }
 
-    // Filter by institution through subject -> course
-    if (query.institutionId) {
-      where.subject = {
-        ...where.subject,
-        course: {
-          institutionId: query.institutionId,
-        },
-      }
+    // Filter by institution: via teacher (ClassSection has no direct institutionId)
+    if (institutionId) {
+      where.teacher = { institutionId }
     }
 
     const classSections = await this.prisma.classSection.findMany({

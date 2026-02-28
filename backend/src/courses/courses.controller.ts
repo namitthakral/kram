@@ -6,9 +6,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import { UserWithRelations } from '../types/auth.types'
 import { CoursesService } from './courses.service'
 import {
   CourseQueryDto,
@@ -20,18 +22,35 @@ import {
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    )
+  }
+
   /**
    * Get all courses/programs
    * Query params: institutionId, status, degreeType
    */
   @Get()
   @Roles('super_admin', 'admin', 'teacher')
-  async findAll(@Query() query: CourseQueryDto) {
-    return this.coursesService.findAll({
-      institutionId: query.institutionId,
-      status: query.status,
-      degreeType: query.degreeType,
-    })
+  async findAll(
+    @Query() query: CourseQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.findAll(
+      {
+        institutionId: query.institutionId,
+        status: query.status,
+        degreeType: query.degreeType,
+      },
+      institutionId
+    )
   }
 
   /**
@@ -50,8 +69,13 @@ export class CoursesController {
    */
   @Get('with-sections')
   @Roles('super_admin', 'admin', 'teacher')
-  async getCoursesWithSections(@Query() query: CoursesWithSectionsQueryDto) {
-    return this.coursesService.getCoursesWithSections(query.institutionId)
+  async getCoursesWithSections(
+    @Query() query: CoursesWithSectionsQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId =
+      this.resolveInstitutionId(user) ?? query.institutionId ?? null
+    return this.coursesService.getCoursesWithSections(institutionId)
   }
 
   /**
@@ -59,8 +83,12 @@ export class CoursesController {
    */
   @Get(':id')
   @Roles('super_admin', 'admin', 'teacher', 'student')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.coursesService.findOne(id)
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.findOne(id, institutionId)
   }
 
   /**
@@ -69,7 +97,12 @@ export class CoursesController {
    */
   @Get(':id/sections')
   @Roles('super_admin', 'admin', 'teacher')
-  async getCourseSections(@Param('id', ParseIntPipe) id: number) {
+  async getCourseSections(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    await this.coursesService.findOne(id, institutionId)
     return this.coursesService.getCourseSections(id)
   }
 }

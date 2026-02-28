@@ -8,6 +8,7 @@ import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../providers/institutions_provider.dart';
+import '../widgets/create_institution_admin_dialog.dart';
 
 class InstitutionsScreen extends StatefulWidget {
   const InstitutionsScreen({super.key});
@@ -121,6 +122,20 @@ class _InstitutionCard extends StatelessWidget {
 
   final Map<String, dynamic> institution;
 
+  void _showAddAdminDialog(BuildContext context) {
+    final id = institution['id'] as int?;
+    final name = institution['name'] as String? ?? 'Unknown';
+    if (id == null) return;
+
+    showDialog<bool>(
+      context: context,
+      builder: (_) => CreateInstitutionAdminDialog(
+        institutionId: id,
+        institutionName: name,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final name = institution['name'] as String? ?? 'Unknown';
@@ -206,23 +221,22 @@ class _InstitutionCard extends StatelessWidget {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: CustomAppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: CustomAppColors.success.withValues(alpha: 0.3),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'add_admin') _showAddAdminDialog(context);
+              },
+              itemBuilder: (ctx) => const [
+                PopupMenuItem(
+                  value: 'add_admin',
+                  child: Row(
+                    children: [
+                      Icon(Icons.admin_panel_settings, size: 18),
+                      SizedBox(width: 8),
+                      Text('Add Admin'),
+                    ],
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Active',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: CustomAppColors.success,
-                ),
-              ),
+              ],
             ),
           ],
         ),

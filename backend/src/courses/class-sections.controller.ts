@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
+import { UserWithRelations } from '../types/auth.types'
 import { CoursesService } from './courses.service'
 import { ClassSectionQueryDto } from './dto/class-section.dto'
 
@@ -18,6 +20,16 @@ import { ClassSectionQueryDto } from './dto/class-section.dto'
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClassSectionsController {
   constructor(private readonly coursesService: CoursesService) {}
+
+  private resolveInstitutionId(user: UserWithRelations): number | null {
+    return (
+      user.institutionId ??
+      user.staff?.institutionId ??
+      user.teacher?.institutionId ??
+      user.student?.institutionId ??
+      null
+    )
+  }
 
   /**
    * Get all class sections
@@ -43,14 +55,21 @@ export class ClassSectionsController {
    */
   @Get()
   @Roles('super_admin', 'admin', 'teacher')
-  async findAll(@Query() query: ClassSectionQueryDto) {
-    return this.coursesService.getClassSections({
-      institutionId: query.institutionId,
-      semesterId: query.semesterId,
-      courseId: query.courseId,
-      teacherId: query.teacherId,
-      status: query.status,
-    })
+  async findAll(
+    @Query() query: ClassSectionQueryDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.getClassSections(
+      {
+        institutionId: query.institutionId,
+        semesterId: query.semesterId,
+        courseId: query.courseId,
+        teacherId: query.teacherId,
+        status: query.status,
+      },
+      institutionId
+    )
   }
 
   /**

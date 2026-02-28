@@ -91,30 +91,41 @@ export class AuthService {
   }
 
   /**
-   * Resolve institutionId for a user (from student/teacher/staff, or first institution for admin/super_admin)
+   * Resolve institutionId for a user.
+   * Checks user.institutionId first (set directly for admins and all new users),
+   * then falls back to sub-model records for backward compatibility.
    */
-  private async resolveInstitutionId(user: {
+  private resolveInstitutionId(user: {
+    institutionId?: number | null
     student?: { institutionId: number } | null
     teacher?: { institutionId: number } | null
     staff?: { institutionId: number } | null
-    role?: { roleName: string } | null
-  }): Promise<number | null> {
-    let id =
+  }): number | null {
+    return (
+      user.institutionId ??
       user.student?.institutionId ??
       user.teacher?.institutionId ??
       user.staff?.institutionId ??
       null
-    if (id != null) return id
-    const roleName = user.role?.roleName?.toLowerCase()
-    if (roleName === 'admin' || roleName === 'super_admin') {
-      const first = await this.prisma.institution.findFirst({
-        where: { status: 'ACTIVE' },
-        select: { id: true },
-        orderBy: { id: 'asc' },
-      })
-      return first?.id ?? null
-    }
-    return null
+    )
+  }
+
+  /**
+   * Resolve institution (id + name) for a user.
+   */
+  private async resolveInstitution(user: {
+    institutionId?: number | null
+    student?: { institutionId: number } | null
+    teacher?: { institutionId: number } | null
+    staff?: { institutionId: number } | null
+  }): Promise<{ id: number; name: string } | null> {
+    const id = this.resolveInstitutionId(user)
+    if (id == null) return null
+    const institution = await this.prisma.institution.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    })
+    return institution ?? null
   }
 
   /**
@@ -133,11 +144,11 @@ export class AuthService {
       },
     })
     if (!user) throw new UnauthorizedException('User not found')
-    const institutionId = await this.resolveInstitutionId(user)
+    const institution = await this.resolveInstitution(user)
     const { passwordHash, ...safeUser } = user
     return {
       success: true,
-      data: { ...safeUser, institutionId },
+      data: { ...safeUser, institutionId: institution?.id ?? null, institution },
     }
   }
 
@@ -187,7 +198,7 @@ export class AuthService {
       },
     })
 
-    const institutionId = await this.resolveInstitutionId(user)
+    const institution = await this.resolveInstitution(user)
 
     return {
       user: {
@@ -202,7 +213,8 @@ export class AuthService {
         teacher: user.teacher,
         parent: user.parent,
         staff: user.staff,
-        institutionId,
+        institutionId: institution?.id ?? null,
+        institution,
         status: user.status,
         mustChangePassword: user.mustChangePassword, // Frontend checks this flag
         isTemporaryPassword: user.isTemporaryPassword, // For context/audit

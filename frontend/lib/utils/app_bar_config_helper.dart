@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../utils/enum.dart';
 import '../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 
 /// Helper class to get AppBarConfig based on user role
@@ -31,7 +32,23 @@ class AppBarConfigHelper {
     }
 
     switch (roleId) {
-      case 2: // Student
+      case 1: // Super Admin
+        return AppBarConfig.superAdmin(
+          userInitials: userInitials,
+          userName: userName,
+          systemName: 'Kram',
+          onNotificationIconPressed: onNotificationIconPressed,
+        );
+
+      case 2: // Admin
+        return AppBarConfig.admin(
+          userInitials: userInitials,
+          userName: userName,
+          institutionName: 'Institution',
+          onNotificationIconPressed: onNotificationIconPressed,
+        );
+
+      case 3: // Student
         final student = user.student;
         return AppBarConfig.student(
           userInitials: userInitials,
@@ -41,7 +58,16 @@ class AppBarConfigHelper {
           onNotificationIconPressed: onNotificationIconPressed,
         );
 
-      case 4: // Teacher
+      case 4: // Parent
+        return AppBarConfig.parent(
+          childInitials: userInitials,
+          childName: 'Child',
+          grade: 'N/A',
+          rollNumber: 'N/A',
+          onNotificationIconPressed: onNotificationIconPressed,
+        );
+
+      case 5: // Teacher
         final teacher = user.teacher;
         return AppBarConfig.teacher(
           userInitials: userInitials,
@@ -51,8 +77,7 @@ class AppBarConfigHelper {
           onNotificationIconPressed: onNotificationIconPressed,
         );
 
-      case 3: // Librarian
-        // Librarian may use staff model with staffType
+      case 6: // Librarian
         final staff = user.staff;
         return AppBarConfig.librarian(
           userInitials: userInitials,
@@ -61,15 +86,7 @@ class AppBarConfigHelper {
           onNotificationIconPressed: onNotificationIconPressed,
         );
 
-      case 5: // Admin
-        return AppBarConfig.admin(
-          userInitials: userInitials,
-          userName: userName,
-          institutionName: 'Institution',
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 6: // Staff
+      case 7: // Staff
         final staff = user.staff;
         return AppBarConfig.staff(
           userInitials: userInitials,
@@ -78,21 +95,11 @@ class AppBarConfigHelper {
           onNotificationIconPressed: onNotificationIconPressed,
         );
 
-      case 7: // Super Admin
-        return AppBarConfig.superAdmin(
+      case 8: // Accountant
+        return AppBarConfig.staff(
           userInitials: userInitials,
           userName: userName,
-          systemName: 'Kram',
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 1: // Parent
-        // Parent model doesn't include children data, use fallback
-        return AppBarConfig.parent(
-          childInitials: userInitials,
-          childName: 'Child',
-          grade: 'N/A',
-          rollNumber: 'N/A',
+          department: 'Accountant',
           onNotificationIconPressed: onNotificationIconPressed,
         );
 
@@ -101,7 +108,7 @@ class AppBarConfigHelper {
     }
   }
 
-  /// Get simplified AppBarConfig for profile screens (without employee ID, etc.)
+  /// Get simplified AppBarConfig for profile screens showing role + institution name.
   static AppBarConfig _getProfileScreenConfig(
     // ignore: type_annotate_public_apis
     user,
@@ -110,71 +117,51 @@ class AppBarConfigHelper {
     String userName,
     VoidCallback? onNotificationIconPressed,
   ) {
+    final institutionName = user.institution?.name as String?;
+
+    String roleLabel;
     switch (roleId) {
-      case 2: // Student
-        return AppBarConfig.student(
-          userInitials: userInitials,
-          userName: userName,
-          grade: user.student?.gradeLevel ?? '',
-          rollNumber: '',
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 4: // Teacher
-        final teacher = user.teacher;
-        return AppBarConfig.teacher(
-          userInitials: userInitials,
-          userName: userName,
-          designation: teacher?.designation ?? 'Teacher',
-          employeeId: '', // Hide employee ID in profile
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 3: // Librarian
-        return AppBarConfig.librarian(
-          userInitials: userInitials,
-          userName: userName,
-          libraryName: '', // Hide library name in profile
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 5: // Admin
-        return AppBarConfig.admin(
-          userInitials: userInitials,
-          userName: userName,
-          institutionName: '', // Hide institution in profile
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 6: // Staff
-        final staff = user.staff;
-        return AppBarConfig.staff(
-          userInitials: userInitials,
-          userName: userName,
-          department: staff?.designation ?? 'Staff',
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 7: // Super Admin
-        return AppBarConfig.superAdmin(
-          userInitials: userInitials,
-          userName: userName,
-          systemName: '', // Hide system name in profile
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
-      case 1: // Parent
-        return AppBarConfig.parent(
-          childInitials: userInitials,
-          childName: '',
-          grade: '',
-          rollNumber: '',
-          onNotificationIconPressed: onNotificationIconPressed,
-        );
-
+      case 1:
+        roleLabel = 'Super Administrator';
+      case 2:
+        roleLabel = 'Administrator';
+      case 3:
+        roleLabel = 'Student';
+      case 4:
+        roleLabel = 'Parent';
+      case 5:
+        roleLabel = (user.teacher?.designation as String?) ?? 'Teacher';
+      case 6:
+        roleLabel = 'Librarian';
+      case 7:
+        roleLabel = (user.staff?.staffType as String?) ??
+            (user.staff?.designation as String?) ??
+            'Staff';
+      case 8:
+        roleLabel = 'Accountant';
       default:
         return const AppBarConfig.standard();
     }
+
+    return AppBarConfig(
+      type: AppBarType.profile,
+      showBackButton: false,
+      userInitials: userInitials,
+      userName: userName,
+      userDetails: _buildProfileDetails(roleLabel, institutionName),
+      onNotificationIconPressed: onNotificationIconPressed,
+    );
+  }
+
+  /// Builds "Role • Institution Name" or just "Role" when institution is absent.
+  static String _buildProfileDetails(
+    String roleLabel,
+    String? institutionName,
+  ) {
+    if (institutionName != null && institutionName.isNotEmpty) {
+      return '$roleLabel • $institutionName';
+    }
+    return roleLabel;
   }
 
   /// Extract initials from a full name

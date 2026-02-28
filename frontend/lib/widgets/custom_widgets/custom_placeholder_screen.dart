@@ -134,7 +134,7 @@ class CustomPlaceholderScreen extends StatelessWidget {
         return AppBarConfig.admin(
           userInitials: userInitials,
           userName: userName,
-          institutionName: 'Kram Institution',
+          institutionName: user.institution?.name ?? '',
           onNotificationIconPressed: () {},
         );
       case 7: // Staff

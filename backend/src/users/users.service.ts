@@ -2,6 +2,7 @@ import { Prisma } from '.prisma/client'
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
@@ -385,7 +386,7 @@ export class UsersService {
     }
   }
 
-  async findAll(query: UserQueryDto) {
+  async findAll(query: UserQueryDto, institutionId: number | null = null) {
     const { page, limit, search, roleId, status, sortBy, sortOrder } = query
     const skip = (page - 1) * limit
 
@@ -402,6 +403,21 @@ export class UsersService {
       }),
       ...(roleId && { roleId }),
       ...(status && { status }),
+    }
+
+    if (institutionId) {
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : []),
+        {
+          OR: [
+            { institutionId },
+            { student: { institutionId } },
+            { teacher: { institutionId } },
+            { staff: { institutionId } },
+            { parent: { student: { institutionId } } },
+          ],
+        },
+      ]
     }
 
     // Build orderBy clause with proper typing
@@ -643,7 +659,11 @@ export class UsersService {
     return { message: 'User deleted successfully' }
   }
 
-  async getUsersByRole(roleId: number, query: UserQueryDto) {
+  async getUsersByRole(
+    roleId: number,
+    query: UserQueryDto,
+    institutionId: number | null = null
+  ) {
     const { page, limit, search, status, sortBy, sortOrder } = query
     const skip = (page - 1) * limit
 
@@ -658,6 +678,21 @@ export class UsersService {
         ],
       }),
       ...(status && { status }),
+    }
+
+    if (institutionId) {
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : []),
+        {
+          OR: [
+            { institutionId },
+            { student: { institutionId } },
+            { teacher: { institutionId } },
+            { staff: { institutionId } },
+            { parent: { student: { institutionId } } },
+          ],
+        },
+      ]
     }
 
     // Build orderBy clause with proper typing
@@ -700,15 +735,33 @@ export class UsersService {
     }
   }
 
-  async getUsersStats() {
+  async getUsersStats(institutionId: number | null = null) {
+    const instWhere: Prisma.UserWhereInput | undefined = institutionId
+      ? {
+          OR: [
+            { institutionId },
+            { student: { institutionId } },
+            { teacher: { institutionId } },
+            { staff: { institutionId } },
+            { parent: { student: { institutionId } } },
+          ],
+        }
+      : undefined
+
+    const baseWhere = instWhere ?? {}
     const [totalUsers, activeUsers, inactiveUsers, usersByRole] =
       await Promise.all([
-        this.prisma.user.count(),
-        this.prisma.user.count({ where: { status: 'ACTIVE' } }),
-        this.prisma.user.count({ where: { status: 'INACTIVE' } }),
+        this.prisma.user.count({ where: baseWhere }),
+        this.prisma.user.count({
+          where: { ...baseWhere, status: 'ACTIVE' },
+        }),
+        this.prisma.user.count({
+          where: { ...baseWhere, status: 'INACTIVE' },
+        }),
         this.prisma.user.groupBy({
           by: ['roleId'],
           _count: { id: true },
+          ...(instWhere && { where: instWhere }),
         }),
       ])
 
@@ -735,7 +788,7 @@ export class UsersService {
   }
 
   // UUID-based methods
-  async findByUuid(uuid: string) {
+  async findByUuid(uuid: string, adminInstitutionId: number | null = null) {
     const user = await this.prisma.user.findUnique({
       where: { uuid },
       include: {
@@ -777,6 +830,21 @@ export class UsersService {
 
     if (!user) {
       throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    const userInstitutionId =
+      user.institutionId ??
+      user.student?.institutionId ??
+      user.teacher?.institutionId ??
+      user.staff?.institutionId ??
+      user.parent?.student?.institutionId ??
+      null
+    if (
+      adminInstitutionId !== null &&
+      userInstitutionId !== null &&
+      userInstitutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException('Access denied to this user')
     }
 
     // Remove passwordHash from response
@@ -833,14 +901,39 @@ export class UsersService {
     return user
   }
 
-  async updateByUuid(uuid: string, updateUserDto: UpdateUserDto) {
-    // Check if user exists
+  async updateByUuid(
+    uuid: string,
+    updateUserDto: UpdateUserDto,
+    adminInstitutionId: number | null = null
+  ) {
+    // Check if user exists and access
     const existingUser = await this.prisma.user.findUnique({
       where: { uuid },
+      include: {
+        student: true,
+        teacher: true,
+        staff: true,
+        parent: { include: { student: true } },
+      },
     })
 
     if (!existingUser) {
       throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    const userInstitutionId =
+      existingUser.institutionId ??
+      existingUser.student?.institutionId ??
+      existingUser.teacher?.institutionId ??
+      existingUser.staff?.institutionId ??
+      existingUser.parent?.student?.institutionId ??
+      null
+    if (
+      adminInstitutionId !== null &&
+      userInstitutionId !== null &&
+      userInstitutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException('Access denied to this user')
     }
 
     // Check if email already exists (if being updated)
@@ -922,14 +1015,35 @@ export class UsersService {
     return user
   }
 
-  async removeByUuid(uuid: string) {
-    // Check if user exists
+  async removeByUuid(uuid: string, adminInstitutionId: number | null = null) {
+    // Check if user exists and access
     const existingUser = await this.prisma.user.findUnique({
       where: { uuid },
+      include: {
+        student: true,
+        teacher: true,
+        staff: true,
+        parent: { include: { student: true } },
+      },
     })
 
     if (!existingUser) {
       throw new NotFoundException(`User with UUID ${uuid} not found`)
+    }
+
+    const userInstitutionId =
+      existingUser.institutionId ??
+      existingUser.student?.institutionId ??
+      existingUser.teacher?.institutionId ??
+      existingUser.staff?.institutionId ??
+      existingUser.parent?.student?.institutionId ??
+      null
+    if (
+      adminInstitutionId !== null &&
+      userInstitutionId !== null &&
+      userInstitutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException('Access denied to this user')
     }
 
     // Soft delete by updating status

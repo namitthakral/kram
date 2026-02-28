@@ -20,7 +20,7 @@ class AdminReportsScreen extends StatelessWidget {
     final user = loginProvider.currentUser;
     final userInitials = UserUtils.getInitials(user?.name ?? 'AD');
     final userName = user?.name ?? 'Admin';
-    final institutionName = context.translate('kram_institution');
+    final institutionName = user?.institution?.name ?? '';
 
     return CustomMainScreenWithAppbar(
       title: context.translate('admin_reports'),

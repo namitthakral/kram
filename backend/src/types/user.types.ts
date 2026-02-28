@@ -26,6 +26,7 @@ export interface User {
   loginAttempts: number
   accountLocked: boolean
   status: UserStatus
+  institutionId?: number | null
   createdAt: Date
   updatedAt: Date
   // Relations

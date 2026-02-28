@@ -300,6 +300,17 @@ class LoginProvider extends ChangeNotifier {
   }
 
   /// Initialize auth state from storage
+  /// Re-fetches the user profile from the server and updates local state.
+  Future<void> refreshProfile() async {
+    try {
+      final user = await _authService.getProfile();
+      _currentUser = user;
+      notifyListeners();
+    } catch (e) {
+      log('Error refreshing profile: $e');
+    }
+  }
+
   Future<void> init() async {
     try {
       final isLoggedIn = await _authService.isLoggedIn();

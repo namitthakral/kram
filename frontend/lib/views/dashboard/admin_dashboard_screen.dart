@@ -38,7 +38,8 @@ class AdminDashboardScreen extends StatelessWidget {
           : null,
       builder: (context, snapshot) {
         final institutionName = snapshot.data?['name'] as String? ??
-            context.translate('kram_institution');
+            user.institution?.name ??
+            '';
         return CustomMainScreenWithAppbar(
           title: context.translate('Admin Dashboard'),
           appBarConfig: AppBarConfig.admin(

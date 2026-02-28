@@ -160,6 +160,20 @@ class AuthTokens {
   };
 }
 
+class Institution {
+  Institution({required this.id, required this.name});
+
+  factory Institution.fromJson(Map<String, dynamic> json) => Institution(
+    id: json['id'],
+    name: json['name'],
+  );
+
+  final int id;
+  final String name;
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+}
+
 int? _institutionIdFromRelations(Map<String, dynamic> json) {
   final student = json['student'];
   final teacher = json['teacher'];
@@ -193,6 +207,7 @@ class User {
     this.parent,
     this.staff,
     this.institutionId,
+    this.institution,
     this.mustChangePassword,
     this.isTemporaryPassword,
   });
@@ -211,6 +226,9 @@ class User {
     staff: json['staff'] != null ? Staff.fromJson(json['staff']) : null,
     institutionId: json['institutionId'] ??
         _institutionIdFromRelations(json),
+    institution: json['institution'] != null
+        ? Institution.fromJson(json['institution'])
+        : null,
     status: json['status'],
     mustChangePassword: json['mustChangePassword'] ?? false,
     isTemporaryPassword: json['isTemporaryPassword'] ?? false,
@@ -235,6 +253,7 @@ class User {
   final Parent? parent;
   final Staff? staff;
   final int? institutionId;
+  final Institution? institution;
   final String status;
   final bool? mustChangePassword;
   final bool? isTemporaryPassword;
@@ -254,6 +273,7 @@ class User {
     'parent': parent?.toJson(),
     'staff': staff?.toJson(),
     'institutionId': institutionId,
+    'institution': institution?.toJson(),
     'status': status,
     'mustChangePassword': mustChangePassword,
     'isTemporaryPassword': isTemporaryPassword,

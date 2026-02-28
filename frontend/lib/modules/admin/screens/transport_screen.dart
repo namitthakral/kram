@@ -153,7 +153,7 @@ class _TransportScreenState extends State<TransportScreen> {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('kram_institution'),
+        institutionName: user?.institution?.name ?? '',
         onNotificationIconPressed: () {},
       ),
       floatingActionButton: FloatingActionButton(

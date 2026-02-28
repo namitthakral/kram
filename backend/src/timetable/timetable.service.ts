@@ -1,9 +1,11 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
 import {
   BulkCreateTimetableDto,
@@ -53,10 +55,15 @@ export class TimetableService {
     }
   }
 
-  async findAllTimeSlots(query: TimeSlotQueryDto) {
-    const where: any = {}
+  async findAllTimeSlots(
+    query: TimeSlotQueryDto,
+    institutionId: number | null
+  ) {
+    const where: Prisma.TimeSlotWhereInput = {}
 
-    if (query.institutionId) {
+    if (institutionId) {
+      where.institutionId = institutionId
+    } else if (query.institutionId) {
       where.institutionId = query.institutionId
     }
     if (query.slotType) {
@@ -83,7 +90,7 @@ export class TimetableService {
     }
   }
 
-  async findOneTimeSlot(id: number) {
+  async findOneTimeSlot(id: number, adminInstitutionId: number | null) {
     const timeSlot = await this.prisma.timeSlot.findUnique({
       where: { id },
       select: {
@@ -107,14 +114,27 @@ export class TimetableService {
       throw new NotFoundException(`Time slot with ID ${id} not found`)
     }
 
+    if (
+      adminInstitutionId != null &&
+      timeSlot.institutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException(
+        'You do not have access to this time slot'
+      )
+    }
+
     return {
       success: true,
       data: this.formatTimeSlot(timeSlot),
     }
   }
 
-  async updateTimeSlot(id: number, dto: UpdateTimeSlotDto) {
-    await this.findOneTimeSlot(id)
+  async updateTimeSlot(
+    id: number,
+    dto: UpdateTimeSlotDto,
+    adminInstitutionId: number | null
+  ) {
+    await this.findOneTimeSlot(id, adminInstitutionId)
 
     const updateData: any = { ...dto }
 
@@ -137,8 +157,8 @@ export class TimetableService {
     }
   }
 
-  async deleteTimeSlot(id: number) {
-    await this.findOneTimeSlot(id)
+  async deleteTimeSlot(id: number, adminInstitutionId: number | null) {
+    await this.findOneTimeSlot(id, adminInstitutionId)
 
     // Check if time slot is used in any timetable
     const usedInTimetable = await this.prisma.timeTable.findFirst({
@@ -197,10 +217,12 @@ export class TimetableService {
     }
   }
 
-  async findAllRooms(query: RoomQueryDto) {
-    const where: any = {}
+  async findAllRooms(query: RoomQueryDto, institutionId: number | null) {
+    const where: Prisma.RoomWhereInput = {}
 
-    if (query.institutionId) {
+    if (institutionId) {
+      where.institutionId = institutionId
+    } else if (query.institutionId) {
       where.institutionId = query.institutionId
     }
     if (query.roomType) {
@@ -230,7 +252,7 @@ export class TimetableService {
     }
   }
 
-  async findOneRoom(id: number) {
+  async findOneRoom(id: number, adminInstitutionId: number | null) {
     const room = await this.prisma.room.findUnique({
       where: { id },
       select: {
@@ -255,14 +277,25 @@ export class TimetableService {
       throw new NotFoundException(`Room with ID ${id} not found`)
     }
 
+    if (
+      adminInstitutionId != null &&
+      room.institutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException('You do not have access to this room')
+    }
+
     return {
       success: true,
       data: room,
     }
   }
 
-  async updateRoom(id: number, dto: UpdateRoomDto) {
-    const room = await this.findOneRoom(id)
+  async updateRoom(
+    id: number,
+    dto: UpdateRoomDto,
+    adminInstitutionId: number | null
+  ) {
+    const room = await this.findOneRoom(id, adminInstitutionId)
 
     // Check for duplicate room number if changing
     if (dto.roomNumber && dto.roomNumber !== room.data.roomNumber) {
@@ -293,8 +326,8 @@ export class TimetableService {
     }
   }
 
-  async deleteRoom(id: number) {
-    await this.findOneRoom(id)
+  async deleteRoom(id: number, adminInstitutionId: number | null) {
+    await this.findOneRoom(id, adminInstitutionId)
 
     // Check if room is used in any timetable
     const usedInTimetable = await this.prisma.timeTable.findFirst({
@@ -379,10 +412,17 @@ export class TimetableService {
     }
   }
 
-  async findAllTimetableEntries(query: TimetableQueryDto) {
-    const where: any = { isActive: true }
+  async findAllTimetableEntries(
+    query: TimetableQueryDto,
+    institutionId: number | null
+  ) {
+    const where: Prisma.TimeTableWhereInput = { isActive: true }
 
-    if (query.institutionId) where.institutionId = query.institutionId
+    if (institutionId) {
+      where.institutionId = institutionId
+    } else if (query.institutionId) {
+      where.institutionId = query.institutionId
+    }
     if (query.academicYearId) where.academicYearId = query.academicYearId
     if (query.semesterId) where.semesterId = query.semesterId
     if (query.courseId) where.courseId = query.courseId
@@ -521,7 +561,10 @@ export class TimetableService {
     }
   }
 
-  async findOneTimetableEntry(id: number) {
+  async findOneTimetableEntry(
+    id: number,
+    adminInstitutionId: number | null
+  ) {
     const entry = await this.prisma.timeTable.findUnique({
       where: { id },
       select: this.getTimetableSelect(),
@@ -531,14 +574,27 @@ export class TimetableService {
       throw new NotFoundException(`Timetable entry with ID ${id} not found`)
     }
 
+    if (
+      adminInstitutionId != null &&
+      entry.institutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException(
+        'You do not have access to this timetable entry'
+      )
+    }
+
     return {
       success: true,
       data: this.formatTimetableEntry(entry),
     }
   }
 
-  async updateTimetableEntry(id: number, dto: UpdateTimetableEntryDto) {
-    const existing = await this.findOneTimetableEntry(id)
+  async updateTimetableEntry(
+    id: number,
+    dto: UpdateTimetableEntryDto,
+    adminInstitutionId: number | null
+  ) {
+    const existing = await this.findOneTimetableEntry(id, adminInstitutionId)
 
     // If changing slot/room/teacher, check for conflicts
     if (dto.dayOfWeek || dto.timeSlotId || dto.teacherId || dto.roomId) {
@@ -570,8 +626,8 @@ export class TimetableService {
     }
   }
 
-  async deleteTimetableEntry(id: number) {
-    await this.findOneTimetableEntry(id)
+  async deleteTimetableEntry(id: number, adminInstitutionId: number | null) {
+    await this.findOneTimetableEntry(id, adminInstitutionId)
 
     await this.prisma.timeTable.delete({ where: { id } })
 

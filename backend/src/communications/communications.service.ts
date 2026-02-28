@@ -117,8 +117,13 @@ export class CommunicationsService {
 
   /**
    * Get all communications with filtering and pagination
+   * @param institutionId - When provided (admin), scope to this institution. When null (super_admin), no scope.
    */
-  async findAll(query: CommunicationQueryDto, userId?: number) {
+  async findAll(
+    query: CommunicationQueryDto,
+    userId?: number,
+    institutionId?: number | null
+  ) {
     const {
       type,
       priority,
@@ -126,7 +131,7 @@ export class CommunicationsService {
       isEmergency,
       isPinned,
       isActive,
-      institutionId,
+      institutionId: queryInstitutionId,
       search,
       page = 1,
       limit = 10,
@@ -134,7 +139,7 @@ export class CommunicationsService {
       endDate,
     } = query;
 
-    // Get user details if userId is provided
+    // Get user details if userId is provided (for non-admin role filtering)
     let userRole = '';
     let userInstitutionId: number | null = null;
 
@@ -155,19 +160,19 @@ export class CommunicationsService {
               },
             },
           },
-          roleId: true, // For checking admin status potentially
+          roleId: true,
         },
       });
 
       if (user) {
         userRole = user.role.roleName;
         userInstitutionId =
-          user.student?.institutionId ||
-          user.teacher?.institutionId ||
-          user.staff?.institutionId ||
-          user.parent?.student?.institutionId;
+          user.student?.institutionId ??
+          user.teacher?.institutionId ??
+          user.staff?.institutionId ??
+          user.parent?.student?.institutionId ??
+          null;
       }
-      console.log(`[Communications] User ID: ${userId}, Role: ${userRole}, InstID: ${userInstitutionId}`);
     }
 
     const skip = (page - 1) * limit;
@@ -200,44 +205,43 @@ export class CommunicationsService {
     if (isActive !== undefined) {
       where.isActive = isActive;
     } else {
-      // Default to active only
       where.isActive = true;
     }
 
-    // Role-based filtering
+    // Institution scoping: admin's institutionId takes precedence
+    if (institutionId) {
+      where.institutionId = institutionId;
+    } else if (queryInstitutionId) {
+      where.institutionId = queryInstitutionId;
+    }
+
+    // Role-based filtering for non-admins (students, teachers, etc.)
     const isAdmin = ['super_admin', 'admin'].includes(userRole);
 
-    // If user is not admin, force institution filter and audience filter
     if (!isAdmin && userInstitutionId) {
-      // Force institution match
       where.institutionId = userInstitutionId;
 
-      // Filter by target audience if no specific filter requested or strictly enforce
-      // If the user requests a specific type/audience, we can trust that or intersect it
-      // Logic: Show public/general OR targeted to their role
       if (!targetAudience) {
         where.OR = [
-          // Safest is: targetAudience has userRole
-          { targetAudience: { hasSome: [userRole, userRole.toLowerCase(), userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase()] } },
+          {
+            targetAudience: {
+              hasSome: [
+                userRole,
+                userRole.toLowerCase(),
+                userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase(),
+              ],
+            },
+          },
         ];
-        // If we want to allow "All" audience, we need to know what string represents that, e.g. "ALL"
-        // For now, let's stick to matching role.
-      } else {
-        // So we overwrite or AND it.
-         // Fix: Handle case sensitivity. Role names from DB might be capitalized (e.g. 'Student'),
-         // but targetAudience might be lowercase (e.g. 'student').
-         // Postgres array 'has' is case-sensitive.
-         // We should check for both or normalize.
-         const roleLower = userRole.toLowerCase();
-         const roleCapitalized = userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase();
+      } else if (targetAudience) {
+        const roleLower = userRole.toLowerCase();
+        const roleCapitalized =
+          userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase();
 
-         where.targetAudience = {
-           hasSome: [userRole, roleLower, roleCapitalized],
-         };
-         console.log(`[Communications] Filtering by targetAudience: ${JSON.stringify(where.targetAudience)}`);
+        where.targetAudience = {
+          hasSome: [userRole, roleLower, roleCapitalized],
+        };
       }
-    } else if (institutionId) {
-      where.institutionId = institutionId;
     }
 
     if (search) {
@@ -322,8 +326,13 @@ export class CommunicationsService {
 
   /**
    * Get a single communication by ID (OPTIMIZED)
+   * @param adminInstitutionId - When provided (admin), verify ownership. When null (super_admin), allow any.
    */
-  async findOne(id: number, userId?: number) {
+  async findOne(
+    id: number,
+    userId?: number,
+    adminInstitutionId?: number | null
+  ) {
     const communication = await this.prisma.communication.findUnique({
       where: { id },
       select: {
@@ -386,6 +395,15 @@ export class CommunicationsService {
 
     if (!communication) {
       throw new NotFoundException(`Communication with ID ${id} not found`);
+    }
+
+    if (
+      adminInstitutionId != null &&
+      communication.institutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException(
+        'You do not have access to this communication'
+      );
     }
 
     return communication;
@@ -656,8 +674,12 @@ export class CommunicationsService {
 
   /**
    * Get read statistics for a communication (OPTIMIZED)
+   * @param adminInstitutionId - When provided (admin), verify ownership. When null (super_admin), allow any.
    */
-  async getReadStats(communicationId: number) {
+  async getReadStats(
+    communicationId: number,
+    adminInstitutionId?: number | null
+  ) {
     const communication = await this.prisma.communication.findUnique({
       where: { id: communicationId },
       select: {
@@ -694,6 +716,15 @@ export class CommunicationsService {
     if (!communication) {
       throw new NotFoundException(
         `Communication with ID ${communicationId} not found`,
+      );
+    }
+
+    if (
+      adminInstitutionId != null &&
+      communication.institutionId !== adminInstitutionId
+    ) {
+      throw new ForbiddenException(
+        'You do not have access to this communication',
       );
     }
 

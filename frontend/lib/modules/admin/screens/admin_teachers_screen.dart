@@ -97,7 +97,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('kram_institution'),
+        institutionName: user?.institution?.name ?? '',
         onNotificationIconPressed: () {},
       ),
       child: Column(

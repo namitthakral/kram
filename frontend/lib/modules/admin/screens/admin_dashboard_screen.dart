@@ -64,7 +64,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       appBarConfig: AppBarConfig.admin(
         userInitials: userInitials,
         userName: userName,
-        institutionName: context.translate('kram_institution'),
+        institutionName: user.institution?.name ?? '',
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(
@@ -92,47 +92,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildQuickActionsSection(bool isMobile) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossCount = isMobile ? 2 : 4;
-        return GridView.count(
-          crossAxisCount: crossCount,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: isMobile ? 1.4 : 2.2,
-          children: [
-            FeatureActionCard(
-              title: context.translate('add_student'),
-              icon: Icons.person_add_rounded,
-              color: AppTheme.blue500,
-              onTap: () => _showAddStudent(context),
-            ),
-            FeatureActionCard(
-              title: context.translate('add_teacher'),
-              icon: Icons.school_rounded,
-              color: AppTheme.success,
-              onTap: () => context.router.router.push('/teachers'),
-            ),
-            FeatureActionCard(
-              title: context.translate('generate_report'),
-              icon: Icons.analytics_rounded,
-              color: AppTheme.danger,
-              onTap: () => context.router.router.push('/reports'),
-            ),
-            FeatureActionCard(
-              title: context.translate('send_notice'),
-              icon: Icons.campaign_rounded,
-              color: AppTheme.warning,
-              onTap: () => context.router.router.push('/notifications'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  Widget _buildQuickActionsSection(bool isMobile) => LayoutBuilder(
+    builder: (context, constraints) {
+      final crossCount = isMobile ? 2 : 4;
+      return GridView.count(
+        crossAxisCount: crossCount,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: isMobile ? 1.4 : 2.2,
+        children: [
+          FeatureActionCard(
+            title: context.translate('add_student'),
+            icon: Icons.person_add_rounded,
+            color: AppTheme.blue500,
+            onTap: () => _showAddStudent(context),
+          ),
+          FeatureActionCard(
+            title: context.translate('add_teacher'),
+            icon: Icons.school_rounded,
+            color: AppTheme.success,
+            onTap: () => context.router.router.push('/teachers'),
+          ),
+          FeatureActionCard(
+            title: context.translate('generate_report'),
+            icon: Icons.analytics_rounded,
+            color: AppTheme.danger,
+            onTap: () => context.router.router.push('/reports'),
+          ),
+          FeatureActionCard(
+            title: context.translate('send_notice'),
+            icon: Icons.campaign_rounded,
+            color: AppTheme.warning,
+            onTap: () => context.router.router.push('/notifications'),
+          ),
+        ],
+      );
+    },
+  );
 
   void _showAddStudent(BuildContext context) {
     showDialog<void>(
@@ -303,10 +301,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             final alerts = provider.systemAlerts ?? [];
 
             if (alerts.isEmpty) {
-              return _buildAlertItem(
-                context.translate('attendance'),
-                context.translate('grade_4b_attendance'),
-                context.translate('high'),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Text(
+                    context.translate('no_alerts'),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF94a3b8),
+                    ),
+                  ),
+                ),
               );
             }
 
@@ -417,7 +422,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               _buildQuickStatCard(
                 context.translate('pending_fees'),
-                '\$${(pendingFees / 1000).toStringAsFixed(1)}K',
+                '₹${(pendingFees / 1000).toStringAsFixed(1)}K',
                 context.translate('needs_follow_up'),
                 Icons.warning_amber_rounded,
                 const Color(0xFFfee2e2),
@@ -427,7 +432,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(height: 16),
               _buildQuickStatCard(
                 context.translate('fee_collection'),
-                '\$${(feeCollection / 1000).toStringAsFixed(0)}K',
+                '₹${(feeCollection / 1000).toStringAsFixed(0)}K',
                 context.translate('this_month'),
                 Icons.attach_money,
                 const Color(0xFFdbeafe),

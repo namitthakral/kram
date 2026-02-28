@@ -20,12 +20,16 @@ export class SubjectsService {
 
   /**
    * Find all subjects with optional filters
+   * @param institutionId - When provided (admin), scope to this institution. When null (super_admin), no scope.
    */
-  async findAll(filters?: {
-    courseId?: number // Course = Program/Stream in Indian context
-    institutionId?: number
-    status?: string
-  }) {
+  async findAll(
+    filters?: {
+      courseId?: number // Course = Program/Stream in Indian context
+      institutionId?: number
+      status?: string
+    },
+    institutionId?: number | null
+  ) {
     const where: Prisma.SubjectWhereInput = {}
 
     if (filters?.courseId) {
@@ -33,10 +37,12 @@ export class SubjectsService {
     }
 
     if (filters?.status) {
-      where.status = filters.status as any
+      where.status = filters.status as 'ACTIVE' | 'INACTIVE'
     }
 
-    if (filters?.institutionId) {
+    if (institutionId) {
+      where.course = { institutionId }
+    } else if (filters?.institutionId) {
       where.course = {
         institutionId: filters.institutionId,
       }
@@ -363,8 +369,9 @@ export class SubjectsService {
 
   /**
    * Get subjects statistics
+   * @param institutionId - When provided (admin), scope to this institution. When null (super_admin), no scope.
    */
-  async getStats(institutionId?: number) {
+  async getStats(institutionId?: number | null) {
     const where: Prisma.SubjectWhereInput = {}
 
     if (institutionId) {
