@@ -228,37 +228,103 @@ class _LoginScreenState extends State<LoginScreen> {
               // Error message display - moved above email field
               if (provider.errorMessage != null)
                 Container(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   margin: const EdgeInsets.only(bottom: 16.0),
                   decoration: BoxDecoration(
-                    color: CustomAppColors.red50,
-                    borderRadius: BorderRadius.circular(8.0),
-                    border: Border.all(color: CustomAppColors.red200),
+                    color: provider.errorMessage!.contains('Account Locked')
+                        ? CustomAppColors.amber50
+                        : CustomAppColors.red50,
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: provider.errorMessage!.contains('Account Locked')
+                          ? CustomAppColors.amber200
+                          : CustomAppColors.red200,
+                      width: 1.5,
+                    ),
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: CustomAppColors.red500,
-                        size: 20,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            provider.errorMessage!.contains('Account Locked')
+                                ? Icons.lock_outline
+                                : Icons.error_outline,
+                            color: provider.errorMessage!.contains('Account Locked')
+                                ? CustomAppColors.amber600
+                                : CustomAppColors.red500,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              provider.errorMessage!,
+                              style: context.textTheme.bodySm.copyWith(
+                                color: provider.errorMessage!.contains('Account Locked')
+                                    ? CustomAppColors.amber800
+                                    : CustomAppColors.red700,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: provider.clearError,
+                            icon: Icon(
+                              Icons.close,
+                              color: provider.errorMessage!.contains('Account Locked')
+                                  ? CustomAppColors.amber600
+                                  : CustomAppColors.red500,
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          provider.errorMessage!,
-                          style: context.textTheme.bodySm.copyWith(
-                            color: CustomAppColors.red700,
+                      // Add contact support button for locked accounts
+                      if (provider.errorMessage!.contains('Account Locked')) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              // TODO: Implement contact support functionality
+                              // This could open email, phone dialer, or support chat
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Contact Support'),
+                                  content: const Text(
+                                    'Please contact your system administrator to unlock your account:\n\n'
+                                    '📧 Email: admin@yourschool.edu\n'
+                                    '📞 Phone: +1 (555) 123-4567\n'
+                                    '💬 Support Portal: support.yourschool.edu'
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: CustomAppColors.amber100,
+                              foregroundColor: CustomAppColors.amber800,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            icon: const Icon(Icons.support_agent, size: 18),
+                            label: Text(
+                              'Contact Support',
+                              style: context.textTheme.bodySm.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: provider.clearError,
-                        icon: const Icon(
-                          Icons.close,
-                          color: CustomAppColors.red500,
-                          size: 18,
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

@@ -154,7 +154,17 @@ class LoginProvider extends ChangeNotifier {
 
       final errorString = e.toString().toLowerCase();
 
-      if (errorString.contains('invalid credentials')) {
+      if (errorString.contains('account is locked') || 
+          errorString.contains('too many failed login attempts')) {
+        errorMessage = 
+            '🔒 Account Locked\n\n'
+            'Your account has been locked due to multiple failed login attempts.\n\n'
+            'To unlock your account:\n'
+            '• Contact your system administrator\n'
+            '• Or wait 24 hours for automatic unlock\n'
+            '• Ensure you\'re using the correct password\n\n'
+            'Need help? Contact support for immediate assistance.';
+      } else if (errorString.contains('invalid credentials')) {
         errorMessage = 'Invalid credentials. Please check your login details.';
       } else if (errorString.contains('account is not active')) {
         errorMessage =

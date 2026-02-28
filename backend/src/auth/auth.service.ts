@@ -8,9 +8,7 @@ import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcryptjs'
 import { PrismaService } from '../prisma/prisma.service'
 import { UserWithRelations } from '../types/auth.types'
-import {
-  generateTemporaryPassword,
-} from '../utils/kramid.util'
+import { generateTemporaryPassword } from '../utils/kramid.util'
 import {
   ActivateAccountDto,
   ChangePasswordDto,
@@ -26,7 +24,12 @@ export class AuthService {
     private configService: ConfigService
   ) {}
 
-  async validateUser(loginDto: LoginDto): Promise<UserWithRelations | null> {
+  /**
+   * Find user by credentials without password validation
+   */
+  private async findUserByCredentials(
+    loginDto: LoginDto
+  ): Promise<UserWithRelations | null> {
     let user: UserWithRelations | null = null
 
     // Try to find user by Kram ID, email, or phone
@@ -65,19 +68,28 @@ export class AuthService {
       })
     }
 
+    if (user) {
+      // Debug logging
+      console.log('User found:', {
+        id: user.id,
+        email: user.email,
+        accountLocked: user.accountLocked,
+        loginAttempts: user.loginAttempts,
+        student: user.student?.id,
+        teacher: user.teacher?.id,
+        staff: user.staff?.id,
+      })
+    }
+
+    return user
+  }
+
+  async validateUser(loginDto: LoginDto): Promise<UserWithRelations | null> {
+    const user = await this.findUserByCredentials(loginDto)
+
     if (!user) {
       return null
     }
-
-    // Debug logging
-    console.log('User found:', {
-      id: user.id,
-      email: user.email,
-      student: user.student?.id,
-      teacher: user.teacher?.id,
-      staff: user.staff?.id,
-      staffObject: user.staff,
-    })
 
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
@@ -145,27 +157,43 @@ export class AuthService {
     })
     if (!user) throw new UnauthorizedException('User not found')
     const institution = await this.resolveInstitution(user)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user
     return {
       success: true,
-      data: { ...safeUser, institutionId: institution?.id ?? null, institution },
+      data: {
+        ...safeUser,
+        institutionId: institution?.id ?? null,
+        institution,
+      },
     }
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto)
+    // First, find the user without validating password
+    const user = await this.findUserByCredentials(loginDto)
 
     if (!user) {
-      // Handle failed login attempt - increment loginAttempts
-      await this.handleFailedLogin(loginDto)
       throw new UnauthorizedException('Invalid credentials')
     }
 
-    // Check if account is locked
+    // Check if account is locked BEFORE password validation
     if (user.accountLocked) {
       throw new UnauthorizedException(
         'Account is locked due to too many failed login attempts. Please contact support to unlock your account.'
       )
+    }
+
+    // Now validate the password
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash
+    )
+
+    if (!isPasswordValid) {
+      // Handle failed login attempt - increment loginAttempts
+      await this.handleFailedLogin(loginDto)
+      throw new UnauthorizedException('Invalid credentials')
     }
 
     // Allow login even if INACTIVE (for users with temporary passwords)
@@ -195,6 +223,7 @@ export class AuthService {
       data: {
         lastLogin: new Date(),
         loginAttempts: 0, // Reset failed attempts counter
+        accountLocked: false, // Unlock account on successful login
       },
     })
 
@@ -555,9 +584,7 @@ export class AuthService {
     })
 
     if (!childUser || !childUser.student) {
-      throw new ConflictException(
-        'Student not found with the provided Kram ID'
-      )
+      throw new ConflictException('Student not found with the provided Kram ID')
     }
 
     // Check if parent record exists

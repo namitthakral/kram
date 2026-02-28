@@ -92,18 +92,20 @@ export class AdminService {
     // No need to manually generate it here
 
     // Use custom password if provided, otherwise auto-generate from name
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/
-    const useCustomPassword =
-      createUserDto.password &&
-      createUserDto.password.length >= 8 &&
-      passwordRegex.test(createUserDto.password)
-
-    const temporaryPassword = useCustomPassword
-      ? createUserDto.password
+    const temporaryPassword = createUserDto.password?.trim()
+      ? createUserDto.password.trim()
       : generateTemporaryPassword(
           createUserDto.firstName,
           createUserDto.lastName
         )
+
+    // Log which password method was used for debugging
+    console.log(`Creating user ${createUserDto.email}:`, {
+      firstName: createUserDto.firstName,
+      lastName: createUserDto.lastName,
+      customPasswordProvided: !!createUserDto.password?.trim(),
+      generatedPassword: !createUserDto.password?.trim() ? temporaryPassword : '[CUSTOM]'
+    })
 
     const hashedPassword = await bcrypt.hash(temporaryPassword, 12)
 
@@ -281,7 +283,8 @@ export class AdminService {
         phoneNumber: user.phone,
         role: user.role,
         status: user.status,
-        isTemporaryPassword: !useCustomPassword,
+        isTemporaryPassword: !createUserDto.password?.trim(),
+        temporaryPassword: !createUserDto.password?.trim() ? temporaryPassword : undefined,
         mustChangePassword: user.mustChangePassword,
         createdAt: user.createdAt,
       },

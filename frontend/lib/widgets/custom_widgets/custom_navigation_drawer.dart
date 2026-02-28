@@ -290,36 +290,36 @@ class CustomNavigationDrawer extends StatelessWidget {
       iconColor: AppTheme.danger,
     );
 
-    if (result == true && context.mounted) {
-      final loginProvider = context.read<LoginProvider>();
+  if (result == true && context.mounted) {
+    final loginProvider = context.read<LoginProvider>();
 
-      unawaited(
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder:
-              (BuildContext loadingContext) =>
-                  const Center(child: CircularProgressIndicator()),
-        ),
-      );
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (BuildContext loadingContext) =>
+                const Center(child: CircularProgressIndicator()),
+      ),
+    );
 
-      await loginProvider.logout();
+    await loginProvider.logout();
 
-      if (context.mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
+    if (context.mounted) {
+      Navigator.of(context).pop(); // Close loading dialog
 
-        // Use addPostFrameCallback to ensure dialog is fully dismissed before navigating
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) {
-            context.router.goToLogin();
+      // Use addPostFrameCallback to ensure dialog is fully dismissed before navigating
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.router.goToLogin();
 
-            showCustomSnackbar(
-              message: context.translate('logout_success'),
-              type: SnackbarType.success,
-            );
-          }
-        });
-      }
+          showCustomSnackbar(
+            message: context.translate('logout_success'),
+            type: SnackbarType.success,
+          );
+        }
+      });
     }
+  }
   }
 }

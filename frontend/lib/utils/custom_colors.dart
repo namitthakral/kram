@@ -39,6 +39,15 @@ class CustomAppColors {
   static const Color red500 = Color(0xFFef4444);
   static const Color red700 = Color(0xFFb91c1c);
 
+  // Amber color variants
+  static const Color amber50 = Color(0xFFFFFBEB);
+  static const Color amber100 = Color(0xFFFEF3C7);
+  static const Color amber200 = Color(0xFFFDE68A);
+  static const Color amber500 = Color(0xFFF59E0B);
+  static const Color amber600 = Color(0xFFD97706);
+  static const Color amber700 = Color(0xFFB45309);
+  static const Color amber800 = Color(0xFF92400E);
+
   // Surface Colors
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color backgroundColor = Color(0xFFF5F5F5);
