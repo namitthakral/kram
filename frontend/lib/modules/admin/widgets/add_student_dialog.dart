@@ -77,14 +77,15 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
       _sections = [];
     });
     try {
+      // Use smart API selection - automatically chooses between simple and complex
       final names = await CoursesService().getCourseSectionNames(courseId);
       if (mounted) setState(() {
-        _sections = names.isNotEmpty ? names : ['A', 'B', 'C', 'D'];
+        _sections = names;
         _loadingSections = false;
       });
     } catch (_) {
       if (mounted) setState(() {
-        _sections = ['A', 'B', 'C', 'D'];
+        _sections = [];
         _loadingSections = false;
       });
     }
@@ -422,17 +423,32 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
               isExpanded: true,
               hint: Text(_loadingSections
                   ? context.translate('loading')
-                  : context.translate('select_section')),
-              items: [
-                DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text(context.translate('select_section'))),
-                ..._sections.map((s) => DropdownMenuItem<String?>(
-                      value: s,
-                      child: Text(s),
-                    )),
-              ],
-              onChanged: _loadingSections
+                  : _sections.isEmpty && _selectedCourseId != null
+                      ? 'No sections available - create class sections first'
+                      : context.translate('select_section')),
+              items: _sections.isEmpty
+                  ? [
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        enabled: false,
+                        child: Text(
+                          _selectedCourseId == null
+                              ? context.translate('select_course_first')
+                              : 'No sections available',
+                          style: TextStyle(color: AppTheme.slate500),
+                        ),
+                      ),
+                    ]
+                  : [
+                      DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text(context.translate('select_section'))),
+                      ..._sections.map((s) => DropdownMenuItem<String?>(
+                            value: s,
+                            child: Text(s),
+                          )),
+                    ],
+              onChanged: _loadingSections || _sections.isEmpty
                   ? null
                   : (v) => setState(() => _selectedSection = v),
             ),

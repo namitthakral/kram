@@ -66,8 +66,9 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
             : _searchController.text.trim(),
       );
 
-      final data = response['data'] as List<dynamic>? ?? [];
-      final meta = response['meta'] as Map<String, dynamic>? ?? {};
+      final responseData = response['data'] as Map<String, dynamic>? ?? {};
+      final data = responseData['users'] as List<dynamic>? ?? [];
+      final meta = responseData['pagination'] as Map<String, dynamic>? ?? {};
       setState(() {
         _staffList = data;
         _isLoading = false;

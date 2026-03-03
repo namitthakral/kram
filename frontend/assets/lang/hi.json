@@ -500,6 +500,7 @@
   "enter_student_name": "छात्र का नाम दर्ज करें",
   "actions": "कार्रवाइयाँ",
   "active_students": "सक्रिय छात्र",
+  "inactive_students": "निष्क्रिय छात्र",
   "add_new_student": "नया छात्र जोड़ें",
   "add_new_student_subtitle": "नया प्रोफ़ाइल बनाने के लिए छात्र जानकारी दर्ज करें",
   "add_student": "छात्र जोड़ें",
@@ -528,5 +529,8 @@
   "grid_view": "ग्रिड दृश्य",
   "table_view": "टेबल दृश्य",
   "view_details": "विवरण देखें",
-  "export": "निर्यात"
+  "export": "निर्यात",
+  "close": "बंद करें",
+  "student_details": "छात्र विवरण",
+  "select_course_first": "पहले कोर्स चुनें"
 }

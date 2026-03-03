@@ -334,4 +334,106 @@ class ClassSectionService {
       );
     }
   }
+
+  /// Create a new class section
+  ///
+  /// Endpoint: POST /class-sections
+  Future<Map<String, dynamic>> createClassSection(Map<String, dynamic> sectionData) async {
+    try {
+      print('Creating class section with data: $sectionData');
+
+      final response = await _apiService.dio.post(
+        '/class-sections',
+        data: sectionData,
+      );
+
+      if (response.statusCode == 201) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create class section',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to create class section',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to create class section',
+      );
+    }
+  }
+
+  /// Update an existing class section
+  ///
+  /// Endpoint: PUT /class-sections/:id
+  Future<Map<String, dynamic>> updateClassSection(int id, Map<String, dynamic> sectionData) async {
+    try {
+      print('Updating class section $id with data: $sectionData');
+
+      final response = await _apiService.dio.put(
+        '/class-sections/$id',
+        data: sectionData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update class section',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to update class section',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to update class section',
+      );
+    }
+  }
+
+  /// Delete a class section
+  ///
+  /// Endpoint: DELETE /class-sections/:id
+  Future<Map<String, dynamic>> deleteClassSection(int id) async {
+    try {
+      print('Deleting class section: $id');
+
+      final response = await _apiService.dio.delete('/class-sections/$id');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete class section',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to delete class section',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to delete class section',
+      );
+    }
+  }
 }

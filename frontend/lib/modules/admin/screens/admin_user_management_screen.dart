@@ -135,11 +135,13 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     final provider = context.watch<UserManagementProvider>();
     final roles = {
       null: 'All',
-      1: 'Student',
-      2: 'Teacher',
-      3: 'Parent',
-      4: 'Staff',
-      5: 'Admin',
+      2: 'Admin',
+      3: 'Student',
+      4: 'Parent',
+      5: 'Teacher',
+      6: 'Librarian',
+      7: 'Staff',
+      8: 'Accountant',
     };
 
     return SingleChildScrollView(

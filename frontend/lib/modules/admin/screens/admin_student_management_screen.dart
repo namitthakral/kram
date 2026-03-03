@@ -10,6 +10,7 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../providers/admin_students_provider.dart';
 import '../widgets/add_student_dialog.dart';
+import '../widgets/edit_student_dialog.dart';
 
 class AdminStudentManagementScreen extends StatefulWidget {
   const AdminStudentManagementScreen({super.key});
@@ -278,7 +279,7 @@ class _AdminStudentManagementScreenState
             crossAxisCount: crossCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
+            childAspectRatio: 1.1,
           ),
           itemCount: students.length,
           itemBuilder: (context, index) => _studentCard(students[index]),
@@ -317,25 +318,25 @@ class _AdminStudentManagementScreenState
         side: BorderSide(color: AppTheme.slate200),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 CircleAvatar(
-                  radius: 28,
+                  radius: 22,
                   backgroundColor: AppTheme.blue500.withValues(alpha: 0.2),
                   child: Text(
                     initials,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: AppTheme.blue600,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,17 +345,17 @@ class _AdminStudentManagementScreenState
                         name,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          fontSize: 15,
                           color: AppTheme.slate800,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         dateStr,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: AppTheme.slate500,
                         ),
                       ),
@@ -384,25 +385,29 @@ class _AdminStudentManagementScreenState
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _infoRow(Icons.school_rounded, classLabel),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             _infoRow(Icons.person_outline_rounded, guardianName),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             _infoRow(Icons.phone_outlined, phone.toString()),
             const Spacer(),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.visibility_outlined, size: 20),
-                  onPressed: () {},
+                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  onPressed: () => _viewStudentDetails(context, s),
                   tooltip: context.translate('view_details'),
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: () {},
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  onPressed: () => _editStudent(context, s),
                   tooltip: context.translate('edit'),
+                  padding: const EdgeInsets.all(4),
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
               ],
             ),
@@ -415,12 +420,12 @@ class _AdminStudentManagementScreenState
   Widget _infoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppTheme.slate500),
-        const SizedBox(width: 8),
+        Icon(icon, size: 14, color: AppTheme.slate500),
+        const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 13, color: AppTheme.slate600),
+            style: TextStyle(fontSize: 12, color: AppTheme.slate600),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -478,11 +483,11 @@ class _AdminStudentManagementScreenState
                     children: [
                       IconButton(
                         icon: const Icon(Icons.visibility_outlined, size: 20),
-                        onPressed: () {},
+                        onPressed: () => _viewStudentDetails(context, s),
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 20),
-                        onPressed: () {},
+                        onPressed: () => _editStudent(context, s),
                       ),
                     ],
                   ),
@@ -497,7 +502,9 @@ class _AdminStudentManagementScreenState
 
   Widget _buildSummaryBar(BuildContext context) {
     final provider = context.watch<AdminStudentsProvider>();
-    final total = provider.total;
+    final totalStudents = provider.totalStudents;
+    final activeStudents = provider.activeStudents;
+    final inactiveStudents = provider.inactiveStudents;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -506,9 +513,11 @@ class _AdminStudentManagementScreenState
       ),
       child: Row(
         children: [
-          _summaryChip(context.translate('total_students'), '$total'),
+          _summaryChip(context.translate('total_students'), '$totalStudents'),
           const SizedBox(width: 24),
-          _summaryChip(context.translate('active_students'), '$total'),
+          _summaryChip(context.translate('active_students'), '$activeStudents'),
+          const SizedBox(width: 24),
+          _summaryChip(context.translate('inactive_students'), '$inactiveStudents'),
         ],
       ),
     );
@@ -543,6 +552,111 @@ class _AdminStudentManagementScreenState
           ),
         ),
       ],
+    );
+  }
+
+  void _viewStudentDetails(BuildContext context, dynamic student) {
+    final user = student['user'] as Map<String, dynamic>?;
+    final name = user?['name'] as String? ?? 'Student';
+    final admissionNumber = student['admissionNumber'] as String? ?? '';
+    final course = student['course'] as Map<String, dynamic>?;
+    final courseName = course?['name'] as String? ?? '';
+    final section = student['section'] as String? ?? '';
+    final rollNumber = student['rollNumber'] as String? ?? '';
+    final parents = student['parents'] as List<dynamic>? ?? [];
+    final guardian = parents.isNotEmpty 
+        ? (parents.first as Map<String, dynamic>)['user'] as Map<String, dynamic>?
+        : null;
+    final guardianName = guardian?['name'] as String? ?? '';
+    final phone = user?['phone'] as String? ?? '';
+    final email = user?['email'] as String? ?? '';
+    final status = user?['status'] as String? ?? 'ACTIVE';
+    final studentType = student['studentType'] as String? ?? '';
+    final residentialStatus = student['residentialStatus'] as String? ?? '';
+
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.person, color: AppTheme.blue500),
+            const SizedBox(width: 8),
+            Text(context.translate('student_details')),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _detailRow('Name', name),
+              _detailRow('Admission Number', admissionNumber),
+              _detailRow('Roll Number', rollNumber),
+              _detailRow('Course', courseName),
+              _detailRow('Section', section),
+              _detailRow('Guardian', guardianName),
+              _detailRow('Phone', phone),
+              _detailRow('Email', email),
+              _detailRow('Status', status),
+              _detailRow('Student Type', studentType),
+              _detailRow('Residential Status', residentialStatus.replaceAll('_', ' ')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.translate('close')),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _editStudent(context, student);
+            },
+            icon: const Icon(Icons.edit, size: 16),
+            label: Text(context.translate('edit')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: AppTheme.slate600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value.isEmpty ? '—' : value,
+              style: TextStyle(
+                color: AppTheme.slate800,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editStudent(BuildContext context, dynamic student) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => EditStudentDialog(student: student),
     );
   }
 

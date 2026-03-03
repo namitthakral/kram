@@ -466,6 +466,45 @@ class AdminService {
     }
   }
 
+  /// Update student information
+  ///
+  /// Endpoint: PATCH /students/:user_uuid
+  Future<Map<String, dynamic>> updateStudent(
+    String userUuid,
+    Map<String, dynamic> studentData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/students/$userUuid',
+        data: studentData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update student',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        throw Exception('Unauthorized');
+      } else if (e.response?.statusCode == 404) {
+        throw Exception('Student not found');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to update student: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to update student: $e');
+    }
+  }
+
   // ==================== USER MANAGEMENT ====================
 
   /// Create institutional user

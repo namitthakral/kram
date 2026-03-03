@@ -69,6 +69,29 @@ model ClassSection {
   @@map("class_sections")
 }
 
+// Simple Class Divisions - For basic school organization (e.g., "Class I - Section A")
+// This is separate from ClassSection which is subject-specific
+model ClassDivision {
+  id          Int      @id @default(autoincrement())
+  courseId    Int      @map("course_id") // Course this division belongs to
+  sectionName String   @map("section_name") @db.VarChar(10) // e.g., "A", "B", "Alpha", "Beta"
+  teacherId   Int?     @map("teacher_id") // Optional class teacher
+  maxCapacity Int      @default(50) @map("max_capacity")
+  roomNumber  String?  @map("room_number") @db.VarChar(50)
+  schedule    String?  @db.VarChar(200) // Optional schedule (e.g., "Mon-Fri 9:00-10:00 AM")
+  status      ClassDivisionStatus @default(ACTIVE)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  course      Course   @relation(fields: [courseId], references: [id])
+  teacher     Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  students    Student[] // Students assigned to this division
+
+  @@unique([courseId, sectionName], name: "unique_course_section")
+  @@map("class_divisions")
+}
+
 model Enrollment {
   id                Int              @id @default(autoincrement())
   studentId         Int              @map("student_id")
@@ -110,6 +133,11 @@ enum ClassSectionStatus {
   ACTIVE
   INACTIVE
   CANCELLED
+}
+
+enum ClassDivisionStatus {
+  ACTIVE
+  INACTIVE
 }
 
 enum EnrollmentStatus {

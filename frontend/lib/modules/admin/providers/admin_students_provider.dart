@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/admin_dashboard_models.dart';
 import '../services/admin_service.dart';
 
 class AdminStudentsProvider extends ChangeNotifier {
@@ -14,7 +15,7 @@ class AdminStudentsProvider extends ChangeNotifier {
   int _totalPages = 1;
   String _searchQuery = '';
   int? _courseIdFilter;
-  Map<String, dynamic>? _stats;
+  AdminDashboardStats? _dashboardStats;
 
   List<dynamic> get students => _students;
   bool get isLoading => _isLoading;
@@ -25,7 +26,12 @@ class AdminStudentsProvider extends ChangeNotifier {
   int get totalPages => _totalPages;
   String get searchQuery => _searchQuery;
   int? get courseIdFilter => _courseIdFilter;
-  Map<String, dynamic>? get stats => _stats;
+  AdminDashboardStats? get dashboardStats => _dashboardStats;
+  
+  // Convenience getters for student counts
+  int get totalStudents => _dashboardStats?.totalStudents ?? _total;
+  int get activeStudents => _dashboardStats?.activeStudents ?? 0;
+  int get inactiveStudents => _dashboardStats?.inactiveStudents ?? 0;
 
   void setSearchQuery(String value) {
     _searchQuery = value;
@@ -50,36 +56,61 @@ class AdminStudentsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _adminService.getStudents(
-        page: _page,
-        limit: _limit,
-        search: _searchQuery.isEmpty ? null : _searchQuery,
-        courseId: _courseIdFilter,
-      );
-      _students = (res['data'] as List<dynamic>?) ?? [];
-      final meta = res['pagination'] as Map<String, dynamic>?;
+      // Fetch both students and dashboard stats in parallel
+      final results = await Future.wait([
+        _adminService.getStudents(
+          page: _page,
+          limit: _limit,
+          search: _searchQuery.isEmpty ? null : _searchQuery,
+          courseId: _courseIdFilter,
+        ),
+        _adminService.getDashboardStats(),
+      ]);
+
+      final studentsRes = results[0] as Map<String, dynamic>;
+      final dashboardRes = results[1] as AdminDashboardResponse;
+
+      _students = (studentsRes['data'] as List<dynamic>?) ?? [];
+      final meta = studentsRes['pagination'] as Map<String, dynamic>?;
       if (meta != null) {
         _total = meta['total'] as int? ?? _students.length;
         _totalPages = meta['totalPages'] as int? ?? 1;
       }
+
+      _dashboardStats = dashboardRes.stats;
     } catch (e) {
       _error = e.toString();
       _students = [];
+      _dashboardStats = null;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Optional: fetch summary stats (total, active, avg attendance, honor) if backend provides
-  Future<void> fetchStats() async {
+  /// Fetch dashboard stats separately if needed
+  Future<void> fetchDashboardStats() async {
     try {
-      // Could be GET /admin/students/stats or derived from dashboard
-      _stats = null;
+      final dashboardRes = await _adminService.getDashboardStats();
+      _dashboardStats = dashboardRes.stats;
       notifyListeners();
-    } catch (_) {
-      _stats = null;
+    } catch (e) {
+      _dashboardStats = null;
       notifyListeners();
+    }
+  }
+
+  /// Update student information
+  Future<bool> updateStudent(String userUuid, Map<String, dynamic> studentData) async {
+    try {
+      await _adminService.updateStudent(userUuid, studentData);
+      // Refresh the student list after successful update
+      await fetchStudents();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 }

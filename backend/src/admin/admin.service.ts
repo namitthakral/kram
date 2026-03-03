@@ -211,6 +211,7 @@ export class AdminService {
                 phone: guardianPhone,
                 passwordHash: parentPasswordHash,
                 roleId: parentRole.id,
+                institutionId: adminInstitutionId, // Add institutionId so parent appears in user list
                 status: 'INACTIVE',
                 isTemporaryPassword: true,
                 mustChangePassword: true,
@@ -985,6 +986,8 @@ export class AdminService {
     const instFilter = institutionId ? { institutionId } : {}
     const [
       totalStudents,
+      activeStudents,
+      inactiveStudents,
       totalTeachers,
       totalStaff,
       totalClasses,
@@ -992,11 +995,32 @@ export class AdminService {
       feeStats,
     ] = await Promise.all([
       this.prisma.student.count({ where: instFilter }),
+      this.prisma.student.count({
+        where: {
+          ...instFilter,
+          user: { status: 'ACTIVE' },
+        },
+      }),
+      this.prisma.student.count({
+        where: {
+          ...instFilter,
+          user: { status: { not: 'ACTIVE' } },
+        },
+      }),
       this.prisma.teacher.count({ where: instFilter }),
       this.prisma.staff.count({ where: instFilter }),
-      this.prisma.classSection.count({
-        where: institutionId ? { teacher: { institutionId } } : {},
-      }),
+      // Count both complex class sections and simple class divisions
+      Promise.all([
+        this.prisma.classSection.count({
+          where: institutionId ? { teacher: { institutionId } } : {},
+        }),
+        this.prisma.classDivision.count({
+          where: institutionId ? { course: { institutionId } } : {},
+        }),
+      ]).then(
+        ([complexSections, simpleDivisions]) =>
+          complexSections + simpleDivisions
+      ),
       this.prisma.attendance.groupBy({
         by: ['status'],
         _count: { id: true },
@@ -1036,6 +1060,8 @@ export class AdminService {
 
     return {
       total_students: totalStudents,
+      active_students: activeStudents,
+      inactive_students: inactiveStudents,
       total_teachers: totalTeachers,
       total_staff: totalStaff,
       total_classes: totalClasses,

@@ -12,6 +12,8 @@ import '../modules/admin/screens/admin_staff_management_screen.dart';
 import '../modules/admin/screens/admin_student_management_screen.dart';
 import '../modules/admin/screens/admin_teachers_screen.dart';
 import '../modules/admin/screens/admin_user_management_screen.dart';
+import '../modules/admin/screens/class_section_management_screen.dart';
+import '../modules/admin/screens/course_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
 import '../modules/admin/screens/institution_settings_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
@@ -700,6 +702,24 @@ class RouterService {
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const AdminUserManagementScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/courses',
+          name: 'courses',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const CourseManagementScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/class-sections',
+          name: 'class_sections',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const ClassSectionManagementScreen(),
               ),
         ),
         GoRoute(

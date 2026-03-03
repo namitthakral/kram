@@ -199,8 +199,8 @@ class CoursesService {
   }
 
   /// Returns section names for a course (e.g. ['A', 'B', 'C']).
-  /// Uses GET /courses/:id/sections and extracts sectionName from each section.
-  Future<List<String>> getCourseSectionNames(int courseId) async {
+  /// DEPRECATED: Use getCourseSectionNames() for smart API selection
+  Future<List<String>> getCourseSectionNamesLegacy(int courseId) async {
     final list = await getCourseSections(courseId);
     final names = <String>[];
     for (final e in list) {
@@ -278,6 +278,333 @@ class CoursesService {
         e,
         defaultMessage: 'Failed to get class sections',
       );
+    }
+  }
+
+  /// Create a new course
+  ///
+  /// Endpoint: POST /courses
+  Future<Map<String, dynamic>> createCourse(Map<String, dynamic> courseData) async {
+    try {
+      final response = await _apiService.dio.post('/courses', data: courseData);
+
+      if (response.statusCode == 201) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create course',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to create course',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to create course',
+      );
+    }
+  }
+
+  /// Update an existing course
+  ///
+  /// Endpoint: PUT /courses/:id
+  Future<Map<String, dynamic>> updateCourse(int id, Map<String, dynamic> courseData) async {
+    try {
+      final response = await _apiService.dio.put('/courses/$id', data: courseData);
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update course',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to update course',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to update course',
+      );
+    }
+  }
+
+  /// Delete a course
+  ///
+  /// Endpoint: DELETE /courses/:id
+  Future<Map<String, dynamic>> deleteCourse(int id) async {
+    try {
+      final response = await _apiService.dio.delete('/courses/$id');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete course',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to delete course',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to delete course',
+      );
+    }
+  }
+
+  // ============================================================================
+  // CLASS DIVISIONS (Simple class organization)
+  // ============================================================================
+
+  /// Create a new class division (simple class organization)
+  Future<Map<String, dynamic>> createClassDivision(
+    Map<String, dynamic> classDivisionData,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/class-divisions',
+        data: classDivisionData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create class division',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to create class division',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to create class division',
+      );
+    }
+  }
+
+  /// Smart section loading - automatically chooses between simple divisions and complex sections
+  /// Based on course type and available data
+  Future<List<String>> getCourseSectionNames(int courseId) async {
+    try {
+      // First, get course details to determine the appropriate API
+      final courseResponse = await _apiService.dio.get('/courses/$courseId');
+      final course = courseResponse.data['data'] as Map<String, dynamic>;
+      
+      // Determine which API to use based on course characteristics
+      final shouldUseSimpleAPI = _shouldUseSimpleDivisions(course);
+      
+      if (shouldUseSimpleAPI) {
+        // Use simple class divisions API
+        return await _getSimpleClassDivisions(courseId);
+      } else {
+        // Use complex class sections API (subject-based)
+        return await _getComplexClassSections(courseId);
+      }
+    } catch (e) {
+      // Fallback: try simple API first, then complex
+      try {
+        return await _getSimpleClassDivisions(courseId);
+      } catch (_) {
+        try {
+          return await _getComplexClassSections(courseId);
+        } catch (_) {
+          return []; // Return empty if both fail
+        }
+      }
+    }
+  }
+
+  /// Determine if course should use simple divisions or complex sections
+  bool _shouldUseSimpleDivisions(Map<String, dynamic> course) {
+    final degreeType = course['degreeType'] as String?;
+    final courseName = course['name'] as String? ?? '';
+    
+    // Use simple divisions for:
+    // 1. School-level courses (CERTIFICATE degree type mapped from SCHOOL)
+    // 2. Courses with "Class" in the name (e.g., "Class I", "Class X")
+    // 3. Basic educational levels
+    
+    if (degreeType == 'CERTIFICATE') return true;
+    if (courseName.toLowerCase().contains('class')) return true;
+    if (courseName.toLowerCase().contains('grade')) return true;
+    if (RegExp(r'(class|std|standard)\s*[ivx\d]', caseSensitive: false).hasMatch(courseName)) return true;
+    
+    // Use complex sections for:
+    // - BACHELORS, MASTERS, PHD (university level)
+    // - Courses with specific subject structure
+    return false;
+  }
+
+  /// Get simple class divisions (basic school organization)
+  Future<List<String>> _getSimpleClassDivisions(int courseId) async {
+    final response = await _apiService.dio.get('/class-divisions/course/$courseId');
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      final divisions = data['data'] as List<dynamic>;
+      return divisions.map((division) => division['sectionName'] as String).toList();
+    }
+    throw Exception('Failed to get class divisions');
+  }
+
+  /// Get complex class sections (subject-based, semester-specific)
+  Future<List<String>> _getComplexClassSections(int courseId) async {
+    final response = await _apiService.dio.get('/courses/$courseId/sections');
+    if (response.statusCode == 200) {
+      final data = response.data as Map<String, dynamic>;
+      final sections = data['data'] as List<dynamic>;
+      // Extract unique section names from complex structure
+      final sectionNames = <String>{};
+      for (final section in sections) {
+        if (section['sectionName'] != null) {
+          sectionNames.add(section['sectionName'] as String);
+        }
+      }
+      return sectionNames.toList();
+    }
+    throw Exception('Failed to get class sections');
+  }
+
+  /// Get class divisions for a course (direct API call for advanced usage)
+  Future<List<dynamic>> getClassDivisions(int courseId) async {
+    try {
+      final response = await _apiService.dio.get('/class-divisions/course/$courseId');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return data['data'] as List<dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get class divisions',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get class divisions',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get class divisions',
+      );
+    }
+  }
+
+  /// Update an existing class division
+  Future<Map<String, dynamic>> updateClassDivision(
+    int id,
+    Map<String, dynamic> classDivisionData,
+  ) async {
+    try {
+      final response = await _apiService.dio.put(
+        '/class-divisions/$id',
+        data: classDivisionData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update class division',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to update class division',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to update class division',
+      );
+    }
+  }
+
+  /// Delete a class division
+  Future<Map<String, dynamic>> deleteClassDivision(int id) async {
+    try {
+      final response = await _apiService.dio.delete('/class-divisions/$id');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete class division',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to delete class division',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to delete class division',
+      );
+    }
+  }
+
+  /// Smart section creation - automatically chooses between simple divisions and complex sections
+  Future<Map<String, dynamic>> createCourseSection(
+    Map<String, dynamic> sectionData,
+  ) async {
+    try {
+      final courseId = sectionData['courseId'] as int;
+      
+      // Get course details to determine the appropriate API
+      final courseResponse = await _apiService.dio.get('/courses/$courseId');
+      final course = courseResponse.data['data'] as Map<String, dynamic>;
+      
+      // Determine which API to use based on course characteristics
+      final shouldUseSimpleAPI = _shouldUseSimpleDivisions(course);
+      
+      if (shouldUseSimpleAPI) {
+        // Use simple class divisions API
+        return await createClassDivision(sectionData);
+      } else {
+        // Use complex class sections API (would need to be implemented)
+        throw UnimplementedError('Complex class sections creation not yet implemented. Use simple divisions for now.');
+      }
+    } catch (e) {
+      // Fallback to simple API
+      return await createClassDivision(sectionData);
     }
   }
 }

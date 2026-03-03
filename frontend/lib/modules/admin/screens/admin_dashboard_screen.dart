@@ -94,7 +94,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildQuickActionsSection(bool isMobile) => LayoutBuilder(
     builder: (context, constraints) {
-      final crossCount = isMobile ? 2 : 4;
+      final crossCount = isMobile ? 3 : 4;
       return GridView.count(
         crossAxisCount: crossCount,
         shrinkWrap: true,
@@ -126,6 +126,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             icon: Icons.campaign_rounded,
             color: AppTheme.warning,
             onTap: () => context.router.router.push('/notifications'),
+          ),
+          FeatureActionCard(
+            title: context.translate('admin_features'),
+            icon: Icons.admin_panel_settings_rounded,
+            color: const Color(0xFF6366f1),
+            onTap: () => context.router.router.push('/admin-main'),
+          ),
+          FeatureActionCard(
+            title: context.translate('course_management'),
+            icon: Icons.book_rounded,
+            color: const Color(0xFF059669),
+            onTap: () => context.router.router.push('/courses'),
           ),
         ],
       );

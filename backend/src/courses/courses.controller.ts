@@ -1,8 +1,14 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
+  Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common'
@@ -16,6 +22,8 @@ import {
   CourseQueryDto,
   CoursesWithSectionsQueryDto,
 } from './dto/course-query.dto'
+import { CreateCourseDto } from './dto/create-course.dto'
+import { UpdateCourseDto } from './dto/update-course.dto'
 
 @Controller('courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -104,5 +112,46 @@ export class CoursesController {
     const institutionId = this.resolveInstitutionId(user)
     await this.coursesService.findOne(id, institutionId)
     return this.coursesService.getCourseSections(id)
+  }
+
+  /**
+   * Create a new course
+   */
+  @Post()
+  @Roles('super_admin', 'admin')
+  async create(
+    @Body() createCourseDto: CreateCourseDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.createCourse(createCourseDto, institutionId)
+  }
+
+  /**
+   * Update an existing course
+   */
+  @Put(':id')
+  @Roles('super_admin', 'admin')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCourseDto: UpdateCourseDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.updateCourse(id, updateCourseDto, institutionId)
+  }
+
+  /**
+   * Delete a course (soft delete)
+   */
+  @Delete(':id')
+  @Roles('super_admin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.deleteCourse(id, institutionId)
   }
 }

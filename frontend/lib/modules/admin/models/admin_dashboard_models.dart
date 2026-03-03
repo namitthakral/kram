@@ -1,6 +1,8 @@
 class AdminDashboardStats {
   AdminDashboardStats({
     required this.totalStudents,
+    required this.activeStudents,
+    required this.inactiveStudents,
     required this.totalTeachers,
     required this.totalStaff,
     required this.totalClasses,
@@ -12,6 +14,8 @@ class AdminDashboardStats {
   factory AdminDashboardStats.fromJson(Map<String, dynamic> json) =>
       AdminDashboardStats(
         totalStudents: json['total_students'] as int? ?? 0,
+        activeStudents: json['active_students'] as int? ?? 0,
+        inactiveStudents: json['inactive_students'] as int? ?? 0,
         totalTeachers: json['total_teachers'] as int? ?? 0,
         totalStaff: json['total_staff'] as int? ?? 0,
         totalClasses: json['total_classes'] as int? ?? 0,
@@ -27,6 +31,8 @@ class AdminDashboardStats {
     return 0.0;
   }
   final int totalStudents;
+  final int activeStudents;
+  final int inactiveStudents;
   final int totalTeachers;
   final int totalStaff;
   final int totalClasses;

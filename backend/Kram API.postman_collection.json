@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "6b340974-2f46-44c0-8072-8ba912b8757b",
     "name": "Kram API",
-    "description": "Complete API collection for Kram Education Management System",
+    "description": "Complete API collection for Kram Education Management System. Updated with Class Divisions API for simple class organization (dual support for basic and advanced academic management).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "46066551"
   },
@@ -3895,6 +3895,179 @@
             "description": "Get all class sections (subject-based).\n\nThese are sections for specific subjects in a semester, assigned to a teacher.\n\nExample response:\n```json\n{\n  \"id\": 1,\n  \"sectionName\": \"A\",\n  \"maxCapacity\": 60,\n  \"currentEnrollment\": 55,\n  \"subject\": { \"name\": \"Data Structures\", \"code\": \"CS201\" },\n  \"course\": { \"name\": \"B.Sc. Computer Science\" },\n  \"semester\": { \"name\": \"Semester 3\" },\n  \"teacher\": { \"name\": \"Dr. Sharma\" }\n}\n```"
           },
           "response": []
+        },
+        {
+          "name": "Get Class Divisions (Simple)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/class-divisions/course/:courseId?page=1&limit=50",
+              "host": ["{{api_url}}"],
+              "path": ["class-divisions", "course", ":courseId"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "limit", "value": "50", "description": "Items per page (max: 100, default: 50)" }
+              ],
+              "variable": [{ "key": "courseId", "value": "1", "description": "Course ID" }]
+            },
+            "description": "Get all class divisions for a course (simple class organization).\n\nPerformance optimized with pagination and selective field loading. Target response time < 50ms.\n\nExample response:\n```json\n{\n  \"message\": \"Class divisions retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"sectionName\": \"A\",\n      \"maxCapacity\": 50,\n      \"currentEnrollment\": 25,\n      \"roomNumber\": \"101\",\n      \"status\": \"ACTIVE\",\n      \"course\": { \"id\": 1, \"name\": \"Class I\", \"code\": \"CLS1\" },\n      \"teacher\": { \"id\": 1, \"name\": \"Ms. Smith\", \"email\": \"smith@school.edu\" },\n      \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n  ],\n  \"meta\": { \"total\": 3, \"page\": 1, \"limit\": 50, \"totalPages\": 1 }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                "url": {
+                  "raw": "{{api_url}}/class-divisions/course/1?page=1&limit=50",
+                  "host": ["{{api_url}}"],
+                  "path": ["class-divisions", "course", "1"],
+                  "query": [
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "50" }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Class divisions retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"sectionName\": \"A\",\n      \"maxCapacity\": 50,\n      \"currentEnrollment\": 25,\n      \"roomNumber\": \"101\",\n      \"status\": \"ACTIVE\",\n      \"course\": {\n        \"id\": 1,\n        \"name\": \"Class I\",\n        \"code\": \"CLS1\"\n      },\n      \"teacher\": {\n        \"id\": 1,\n        \"name\": \"Ms. Smith\",\n        \"email\": \"smith@school.edu\"\n      },\n      \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 3,\n    \"page\": 1,\n    \"limit\": 50,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Class Division",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": 1,\n  \"sectionName\": \"A\",\n  \"teacherId\": 1,\n  \"maxCapacity\": 50,\n  \"roomNumber\": \"101\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{api_url}}/class-divisions",
+              "host": ["{{api_url}}"],
+              "path": ["class-divisions"]
+            },
+            "description": "Create a new class division for basic student organization.\n\n**Required fields:**\n- courseId: Course this division belongs to\n- sectionName: Section identifier (e.g., \"A\", \"B\", \"Alpha\")\n\n**Optional fields:**\n- teacherId: Class teacher assignment\n- maxCapacity: Maximum students (default: 50)\n- roomNumber: Assigned room\n- status: ACTIVE or INACTIVE (default: ACTIVE)\n\n**Validation:**\n- Prevents duplicate section names within same course\n- Validates teacher and course existence\n- Institution-based access control"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"courseId\": 1,\n  \"sectionName\": \"A\",\n  \"teacherId\": 1,\n  \"maxCapacity\": 50,\n  \"roomNumber\": \"101\",\n  \"status\": \"ACTIVE\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/class-divisions",
+                  "host": ["{{api_url}}"],
+                  "path": ["class-divisions"]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Class division created successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"sectionName\": \"A\",\n    \"maxCapacity\": 50,\n    \"roomNumber\": \"101\",\n    \"status\": \"ACTIVE\",\n    \"course\": {\n      \"id\": 1,\n      \"name\": \"Class I\",\n      \"code\": \"CLS1\"\n    },\n    \"teacher\": {\n      \"id\": 1,\n      \"name\": \"Ms. Smith\",\n      \"email\": \"smith@school.edu\"\n    },\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Class Division",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sectionName\": \"Alpha\",\n  \"teacherId\": 2,\n  \"maxCapacity\": 45,\n  \"roomNumber\": \"102\",\n  \"status\": \"ACTIVE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{api_url}}/class-divisions/:id",
+              "host": ["{{api_url}}"],
+              "path": ["class-divisions", ":id"],
+              "variable": [{ "key": "id", "value": "1", "description": "Class Division ID" }]
+            },
+            "description": "Update an existing class division.\n\n**All fields are optional:**\n- sectionName: Update section name\n- teacherId: Change class teacher\n- maxCapacity: Update capacity\n- roomNumber: Change room assignment\n- status: Change status (ACTIVE/INACTIVE)\n\n**Validation:**\n- Prevents duplicate section names within same course\n- Validates new teacher assignment\n- Institution-based access control"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sectionName\": \"Alpha\",\n  \"teacherId\": 2,\n  \"maxCapacity\": 45,\n  \"roomNumber\": \"102\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/class-divisions/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["class-divisions", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Class division updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"sectionName\": \"Alpha\",\n    \"maxCapacity\": 45,\n    \"roomNumber\": \"102\",\n    \"status\": \"ACTIVE\",\n    \"course\": {\n      \"id\": 1,\n      \"name\": \"Class I\",\n      \"code\": \"CLS1\"\n    },\n    \"teacher\": {\n      \"id\": 2,\n      \"name\": \"Mr. Jones\",\n      \"email\": \"jones@school.edu\"\n    },\n    \"updatedAt\": \"2024-01-01T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Class Division",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{api_url}}/class-divisions/:id",
+              "host": ["{{api_url}}"],
+              "path": ["class-divisions", ":id"],
+              "variable": [{ "key": "id", "value": "1", "description": "Class Division ID" }]
+            },
+            "description": "Delete (soft delete) a class division.\n\n**Behavior:**\n- Sets status to INACTIVE (soft delete)\n- Cannot delete divisions with assigned students\n- Preserves data for historical records\n\n**Access Control:**\n- Institution-based access control\n- Admin/Super Admin roles required"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                "url": {
+                  "raw": "{{api_url}}/class-divisions/1",
+                  "host": ["{{api_url}}"],
+                  "path": ["class-divisions", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Class division deleted successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"INACTIVE\"\n  }\n}"
+            }
+          ]
         }
       ]
     },

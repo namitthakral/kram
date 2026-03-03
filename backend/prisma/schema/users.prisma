@@ -7,6 +7,7 @@ model Student {
   userId                Int              @unique @map("user_id")
   institutionId         Int              @map("institution_id")
   courseId              Int?             @map("course_id") // Course (program/stream) student is enrolled in
+  classDivisionId       Int?             @map("class_division_id") // Simple class division (e.g., "Class I - Section A")
   admissionNumber       String           @unique @map("admission_number") @db.VarChar(50)
   rollNumber            String?          @map("roll_number") @db.VarChar(50)
   admissionDate         DateTime?        @map("admission_date") @db.Date
@@ -31,6 +32,7 @@ model Student {
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
   course                Course?          @relation(fields: [courseId], references: [id])
+  classDivision         ClassDivision?   @relation(fields: [classDivisionId], references: [id])
   parents               Parent[]
   academicRecords       AcademicRecord[]
   attendance            Attendance[]
@@ -74,6 +76,7 @@ model Teacher {
   institution       Institution      @relation(fields: [institutionId], references: [id])
   attendanceMarked  Attendance[]     @relation("AttendanceMarker")
   classSections     ClassSection[]
+  classDivisions    ClassDivision[]  // Simple class divisions as class teacher
   examinations      Examination[]
   examResults       ExamResult[]
   assignments       Assignment[]

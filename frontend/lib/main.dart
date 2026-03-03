@@ -13,6 +13,8 @@ import 'core/services/local_notification_service.dart';
 import 'modules/admin/providers/admin_analytics_tab_provider.dart';
 import 'modules/admin/providers/admin_dashboard_provider.dart';
 import 'modules/admin/providers/admin_students_provider.dart';
+import 'modules/admin/providers/class_section_management_provider.dart';
+import 'modules/admin/providers/course_management_provider.dart';
 import 'modules/admin/providers/grading_config_provider.dart';
 import 'modules/admin/providers/user_management_provider.dart';
 import 'modules/library/providers/library_dashboard_provider.dart';
@@ -182,6 +184,12 @@ void main() async {
         ),
         ChangeNotifierProvider<AdminStudentsProvider>(
           create: (_) => AdminStudentsProvider(),
+        ),
+        ChangeNotifierProvider<CourseManagementProvider>(
+          create: (_) => CourseManagementProvider(),
+        ),
+        ChangeNotifierProvider<ClassSectionManagementProvider>(
+          create: (_) => ClassSectionManagementProvider(),
         ),
         ChangeNotifierProvider<InstitutionsProvider>(
           create: (_) => InstitutionsProvider(),

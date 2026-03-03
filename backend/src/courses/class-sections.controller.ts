@@ -1,4 +1,17 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
+import { 
+  Body,
+  Controller, 
+  Delete,
+  Get, 
+  HttpCode,
+  HttpStatus,
+  Param, 
+  ParseIntPipe,
+  Post,
+  Put,
+  Query, 
+  UseGuards 
+} from '@nestjs/common'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
@@ -6,6 +19,8 @@ import { RolesGuard } from '../auth/guards/roles.guard'
 import { UserWithRelations } from '../types/auth.types'
 import { CoursesService } from './courses.service'
 import { ClassSectionQueryDto } from './dto/class-section.dto'
+import { CreateClassSectionDto } from './dto/create-class-section.dto'
+import { UpdateClassSectionDto } from './dto/update-class-section.dto'
 
 /**
  * Class Sections Controller
@@ -106,5 +121,46 @@ export class ClassSectionsController {
       parseInt(sectionId, 10),
       date,
     )
+  }
+
+  /**
+   * Create a new class section
+   */
+  @Post()
+  @Roles('super_admin', 'admin')
+  async create(
+    @Body() createClassSectionDto: CreateClassSectionDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.createClassSection(createClassSectionDto, institutionId)
+  }
+
+  /**
+   * Update an existing class section
+   */
+  @Put(':id')
+  @Roles('super_admin', 'admin')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateClassSectionDto: UpdateClassSectionDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.updateClassSection(id, updateClassSectionDto, institutionId)
+  }
+
+  /**
+   * Delete a class section (soft delete)
+   */
+  @Delete(':id')
+  @Roles('super_admin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.coursesService.deleteClassSection(id, institutionId)
   }
 }

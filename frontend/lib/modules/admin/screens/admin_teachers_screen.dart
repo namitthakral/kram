@@ -9,6 +9,7 @@ import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../../modules/teacher/services/teacher_service.dart';
+import '../widgets/add_teacher_dialog.dart';
 
 class AdminTeachersScreen extends StatefulWidget {
   const AdminTeachersScreen({super.key});
@@ -514,8 +515,16 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     );
   }
 
-  void _showAddTeacher(BuildContext context) {
-    context.router.router.push('/admin-users');
+  void _showAddTeacher(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const AddTeacherDialog(),
+    );
+    
+    // If teacher was created successfully, refresh the list
+    if (result == true) {
+      _loadTeachers();
+    }
   }
 
   void _viewProfile(dynamic t) {
