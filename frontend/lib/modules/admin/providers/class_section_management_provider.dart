@@ -145,7 +145,7 @@ class ClassSectionManagementProvider extends ChangeNotifier {
             ? {
                 'id': divisionData['teacher']['id'],
                 'user': {
-                  'name': divisionData['teacher']['user']['name'],
+                  'name': divisionData['teacher']['name'],  // Fixed: direct access to name
                 }
               }
             : null,

@@ -159,9 +159,14 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
                 final filteredSections = provider.classSections.where((section) {
                   if (_searchQuery.isEmpty) return true;
                   final sectionName = (section['sectionName'] ?? '').toString().toLowerCase();
+                  
+                  // Handle both complex sections and simple divisions
                   final subjectName = (section['subject']?['subjectName'] ?? '').toString().toLowerCase();
-                  final courseName = (section['subject']?['course']?['name'] ?? '').toString().toLowerCase();
-                  final teacherName = (section['teacher']?['user']?['name'] ?? '').toString().toLowerCase();
+                  final courseName = (section['subject']?['course']?['name'] ?? 
+                                    section['course']?['name'] ?? '').toString().toLowerCase();
+                  final teacherName = (section['teacher']?['user']?['name'] ?? 
+                                     section['teacher']?['name'] ?? '').toString().toLowerCase();
+                  
                   return sectionName.contains(_searchQuery) ||
                       subjectName.contains(_searchQuery) ||
                       courseName.contains(_searchQuery) ||
@@ -196,18 +201,27 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
     ClassSectionManagementProvider provider,
   ) {
     final sectionName = section['sectionName'] ?? 'Unknown Section';
+    
+    // Handle both complex sections and simple divisions
     final subject = section['subject'] as Map<String, dynamic>?;
-    final subjectName = subject?['subjectName'] ?? 'Unknown Subject';
+    final subjectName = subject?['subjectName'] ?? 'Class Division';
     final subjectCode = subject?['subjectCode'] ?? '';
-    final course = subject?['course'] as Map<String, dynamic>?;
+    
+    // Course can be nested (complex) or direct (simple)
+    final course = subject?['course'] as Map<String, dynamic>? ?? 
+                   section['course'] as Map<String, dynamic>?;
     final courseName = course?['name'] ?? '';
+    
     final semester = section['semester'] as Map<String, dynamic>?;
     final semesterName = semester?['semesterName'] ?? '';
+    
+    // Teacher can be nested (complex) or direct (simple)
     final teacher = section['teacher'] as Map<String, dynamic>?;
     final teacherUser = teacher?['user'] as Map<String, dynamic>?;
-    final teacherName = teacherUser?['name'] ?? 'No Teacher Assigned';
+    final teacherName = teacherUser?['name'] ?? teacher?['name'] ?? 'No Teacher Assigned';
+    
     final maxCapacity = section['maxCapacity']?.toString() ?? '';
-    final room = section['room'] ?? '';
+    final room = section['room'] ?? section['roomNumber'] ?? '';
     final schedule = section['schedule'] ?? '';
     final status = section['status'] ?? 'ACTIVE';
 
