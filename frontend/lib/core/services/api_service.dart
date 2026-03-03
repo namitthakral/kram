@@ -30,6 +30,12 @@ class ApiService {
     '/institutions/public',
   ];
 
+  /// Reset the logout guard so future 401 errors can trigger logout again.
+  /// Called after a successful login.
+  void resetLogoutState() {
+    _isLoggingOut = false;
+  }
+
   void init() {
     _dio = Dio(
       BaseOptions(
@@ -117,10 +123,6 @@ class ApiService {
               if (!_isLoggingOut) {
                 _isLoggingOut = true;
                 await RouterService().performLogout();
-                // Reset flag after a delay to allow navigation to complete
-                Future.delayed(const Duration(seconds: 2), () {
-                  _isLoggingOut = false;
-                });
               }
 
               final sessionExpiredError = DioException(
@@ -153,9 +155,6 @@ class ApiService {
                 if (!_isLoggingOut) {
                   _isLoggingOut = true;
                   await RouterService().performLogout();
-                  Future.delayed(const Duration(seconds: 2), () {
-                    _isLoggingOut = false;
-                  });
                 }
 
                 final sessionExpiredError = DioException(
@@ -198,9 +197,6 @@ class ApiService {
                 if (!_isLoggingOut) {
                   _isLoggingOut = true;
                   await RouterService().performLogout();
-                  Future.delayed(const Duration(seconds: 2), () {
-                    _isLoggingOut = false;
-                  });
                 }
 
                 // Create a more informative error for session expiry

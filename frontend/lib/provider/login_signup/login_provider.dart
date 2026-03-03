@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/services/api_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/utils/validators.dart';
 import '../../models/auth_models.dart';
+import '../../utils/router_service.dart';
 
 class LoginProvider extends ChangeNotifier {
   TextEditingController? passwordController = TextEditingController(),
@@ -139,6 +141,10 @@ class LoginProvider extends ChangeNotifier {
       final response = await _authService.login(loginRequest);
       _currentUser = response.user;
 
+      // Reset logout guards so future logouts can proceed
+      _isLoggingOut = false;
+      ApiService().resetLogoutState();
+
       log('Login successful for user: ${response.user.email}');
 
       // Save credentials if Remember Me is checked
@@ -154,9 +160,9 @@ class LoginProvider extends ChangeNotifier {
 
       final errorString = e.toString().toLowerCase();
 
-      if (errorString.contains('account is locked') || 
+      if (errorString.contains('account is locked') ||
           errorString.contains('too many failed login attempts')) {
-        errorMessage = 
+        errorMessage =
             '🔒 Account Locked\n\n'
             'Your account has been locked due to multiple failed login attempts.\n\n'
             'To unlock your account:\n'
@@ -198,33 +204,36 @@ class LoginProvider extends ChangeNotifier {
     }
 
     _isLoggingOut = true;
-    _setLoading(true);
-    notifyListeners();
+    // Do NOT call notifyListeners() anywhere in this method.
+    // Calling it triggers widget rebuilds while on a protected route,
+    // which can: (a) unmount the calling widget so goToLogin() never fires,
+    // and (b) cause rebuilt widgets to make API calls with cleared tokens,
+    // producing 401 errors that loop back into performLogout().
 
     try {
       await _authService.logout();
 
-      // Clear local state
+      // Clear local state WITHOUT notifyListeners (set fields directly)
       _currentUser = null;
       emailController?.clear();
       passwordController?.clear();
-      updateLoginAccountClicked();
-      clearError();
+      _isLoginAccountClicked = false;
+      _errorMessage = null;
 
-      // Clear saved credentials on logout (user can re-check Remember Me on next login)
+      // Clear saved credentials on logout
       await _clearSavedCredentials();
       _rememberPassword = false;
 
       log('Logout successful');
     } on Exception catch (e) {
-      _setError('Logout failed: $e');
       log('Logout failed: $e');
       // Even if logout fails, clear local data
       _currentUser = null;
     } finally {
-      _setLoading(false);
       _isLoggingOut = false;
-      notifyListeners();
+      // Navigate to login directly from here, so it always fires
+      // regardless of whether the calling widget's context is still mounted.
+      RouterService().goToLogin();
     }
   }
 
