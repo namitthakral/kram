@@ -47,11 +47,13 @@ class LoginProvider extends ChangeNotifier {
   }
 
   void updateRememberPassword({bool rememberPass = false}) {
+    log('Remember Me toggled: $rememberPass');
     _rememberPassword = rememberPass;
     notifyListeners();
 
-    // If unchecked, clear saved credentials
+    // If unchecked, clear saved credentials immediately
     if (!rememberPass) {
+      log('Remember Me unchecked - clearing saved credentials');
       _clearSavedCredentials();
     }
   }
@@ -148,11 +150,11 @@ class LoginProvider extends ChangeNotifier {
       log('Login successful for user: ${response.user.email}');
 
       // Save credentials if Remember Me is checked
-      await _saveCredentials(identifier, password);
-      // if (_rememberPassword) {
-      // } else {
-      //   await _clearSavedCredentials();
-      // }
+      if (_rememberPassword) {
+        await _saveCredentials(identifier, password);
+      } else {
+        await _clearSavedCredentials();
+      }
 
       updateLoginAccountClicked(loginAccountClicked: true);
     } on Exception catch (e) {
@@ -220,9 +222,11 @@ class LoginProvider extends ChangeNotifier {
       _isLoginAccountClicked = false;
       _errorMessage = null;
 
-      // Clear saved credentials on logout
-      await _clearSavedCredentials();
-      _rememberPassword = false;
+      // Only clear saved credentials on logout if Remember Me was not checked
+      // This allows users to keep their credentials for next login
+      if (!_rememberPassword) {
+        await _clearSavedCredentials();
+      }
 
       log('Logout successful');
     } on Exception catch (e) {
@@ -272,11 +276,23 @@ class LoginProvider extends ChangeNotifier {
           passwordController?.text = savedPassword;
           _rememberPassword = true;
           notifyListeners();
-          log('Loaded saved credentials');
+          log('Loaded saved credentials for identifier: ${savedIdentifier.substring(0, 3)}***');
+        } else {
+          // If remember me is true but credentials are missing, clear the flag
+          log('Remember Me flag found but credentials missing, clearing flag');
+          await _clearSavedCredentials();
         }
+      } else {
+        // Ensure form is clear if Remember Me is not checked
+        _rememberPassword = false;
+        notifyListeners();
+        log('No saved credentials to load');
       }
     } on Exception catch (e) {
       log('Error loading saved credentials: $e');
+      // On error, ensure remember me is false
+      _rememberPassword = false;
+      notifyListeners();
     }
   }
 
@@ -284,12 +300,10 @@ class LoginProvider extends ChangeNotifier {
   Future<void> _saveCredentials(String identifier, String password) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_keyRememberMe, true);
+      await prefs.setBool(_keyRememberMe, _rememberPassword);
       await prefs.setString(_keySavedIdentifier, identifier);
-      if (_rememberPassword) {
-        await prefs.setString(_keySavedPassword, password);
-      }
-      log('Credentials saved');
+      await prefs.setString(_keySavedPassword, password);
+      log('Credentials saved - Remember Me: $_rememberPassword');
     } on Exception catch (e) {
       log('Error saving credentials: $e');
     }
@@ -306,6 +320,13 @@ class LoginProvider extends ChangeNotifier {
     } on Exception catch (e) {
       log('Error clearing saved credentials: $e');
     }
+  }
+
+  /// Clear form fields (useful when Remember Me is unchecked)
+  void clearFormFields() {
+    emailController?.clear();
+    passwordController?.clear();
+    notifyListeners();
   }
 
   @override
