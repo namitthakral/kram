@@ -77,6 +77,20 @@
         //     ]
         // },
         {
+            "name": "Build APK (Dev)",
+            "cwd": "frontend",
+            "type": "dart",
+            "request": "attach",
+            "preLaunchTask": "Build APK (Dev)"
+        },
+        {
+            "name": "Build APK (Production)",
+            "cwd": "frontend",
+            "type": "dart",
+            "request": "attach",
+            "preLaunchTask": "Build APK (Production)"
+        },
+        {
             "name": "frontend (profile mode)",
             "cwd": "frontend",
             "request": "launch",
