@@ -474,16 +474,26 @@ class _AdminStudentManagementScreenState
             ? '$courseName${section != null ? ' $section' : ''}'
             : '—';
     final parents = s['parents'] as List<dynamic>?;
-    final guardian =
-        parents?.isNotEmpty == true
-            ? (parents!.first as Map<String, dynamic>)['user']
-                as Map<String, dynamic>?
-            : null;
+    // Find the primary contact (guardian) among parents
+    final guardian = parents?.isNotEmpty == true
+        ? parents!.cast<Map<String, dynamic>>().firstWhere(
+            (p) => p['isPrimaryContact'] == true,
+            orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
+          )['user'] as Map<String, dynamic>?
+        : null;
     final guardianName = guardian?['name'] as String? ?? '—';
-    final phone =
-        user?['phone'] as String? ??
-        s['emergencyContactPhone'] as String? ??
-        '—';
+    // Get phone from student or primary parent contact
+    String phone = user?['phone'] as String? ?? '';
+    if (phone.isEmpty) {
+      final parents = s['parents'] as List<dynamic>? ?? [];
+      final primaryParent = parents.cast<Map<String, dynamic>>().firstWhere(
+        (p) => p['isPrimaryContact'] == true,
+        orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
+      );
+      final parentUser = primaryParent['user'] as Map<String, dynamic>?;
+      phone = parentUser?['phone'] as String? ?? '—';
+    }
+    if (phone.isEmpty) phone = '—';
     final status = user?['status'] as String? ?? 'ACTIVE';
     final admissionDate = s['admissionDate'] as String?;
     final dateStr =
@@ -649,11 +659,13 @@ class _AdminStudentManagementScreenState
                       ? '$courseName${section != null ? ' $section' : ''}'
                       : '—';
               final parents = s['parents'] as List<dynamic>?;
-              final guardian =
-                  parents?.isNotEmpty == true
-                      ? (parents!.first as Map<String, dynamic>)['user']
-                          as Map<String, dynamic>?
-                      : null;
+              // Find the primary contact (guardian) among parents
+              final guardian = parents?.isNotEmpty == true
+                  ? parents!.cast<Map<String, dynamic>>().firstWhere(
+                      (p) => p['isPrimaryContact'] == true,
+                      orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
+                    )['user'] as Map<String, dynamic>?
+                  : null;
               final guardianName = guardian?['name'] as String? ?? '—';
               final phone = user?['phone'] as String? ?? '—';
               final status = user?['status'] as String? ?? 'ACTIVE';
@@ -749,11 +761,13 @@ class _AdminStudentManagementScreenState
     final section = student['section'] as String? ?? '';
     final rollNumber = student['rollNumber'] as String? ?? '';
     final parents = student['parents'] as List<dynamic>? ?? [];
-    final guardian =
-        parents.isNotEmpty
-            ? (parents.first as Map<String, dynamic>)['user']
-                as Map<String, dynamic>?
-            : null;
+    // Find the primary contact (guardian) among parents
+    final guardian = parents.isNotEmpty
+        ? parents.cast<Map<String, dynamic>>().firstWhere(
+            (p) => p['isPrimaryContact'] == true,
+            orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
+          )['user'] as Map<String, dynamic>?
+        : null;
     final guardianName = guardian?['name'] as String? ?? '';
     final phone = user?['phone'] as String? ?? '';
     final email = user?['email'] as String? ?? '';

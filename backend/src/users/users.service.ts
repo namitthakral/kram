@@ -11,6 +11,7 @@ import { IdGenerationService } from '../id-generation/id-generation.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { generateTemporaryPassword } from '../utils/kramid.util'
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
+import { CreateParentDataDto } from '../common/dto/user.dto'
 
 @Injectable()
 export class UsersService {
@@ -157,13 +158,15 @@ export class UsersService {
                 residentialStatus:
                   studentData.residentialStatus || 'DAY_SCHOLAR',
                 transportRequired: studentData.transportRequired || false,
-                emergencyContactName: studentData.emergencyContactName,
-                emergencyContactPhone: studentData.emergencyContactPhone,
-                emergencyContactEmail: studentData.emergencyContactEmail,
                 bloodGroup: studentData.bloodGroup,
                 medicalConditions: studentData.medicalConditions,
               },
             })
+
+            // Create parent records if student data includes parent information
+            if (studentData.fatherInfo || studentData.motherInfo || studentData.guardianInfo) {
+              await this.createParentRecords((profile as any).id, studentData, createUserDto.institutionId)
+            }
           }
           break
 
@@ -202,8 +205,11 @@ export class UsersService {
           break
 
         case 'staff':
-          if (createUserDto.staffData) {
-            const staffData = createUserDto.staffData
+          if (createUserDto.staffData || role.roleName === 'staff') {
+            const staffData = createUserDto.staffData || {
+              staffType: 'ADMINISTRATIVE' as const,
+              designation: 'Staff Member',
+            }
 
             // Generate employee ID using IdGenerationService
             const employeeId =
@@ -236,16 +242,24 @@ export class UsersService {
           break
 
         case 'parent':
-          if (createUserDto.parentData?.childKramid) {
+          if (createUserDto.parentData || role.roleName === 'parent') {
+            const parentData: Partial<CreateParentDataDto> = createUserDto.parentData || {}
+            
+            if (!parentData.childKramid || parentData.childKramid.trim() === '') {
+              throw new BadRequestException(
+                'parentData with valid childKramid is required for parent role'
+              )
+            }
+
             // Find the child student by Kram ID
             const childUser = await tx.user.findUnique({
-              where: { kramid: createUserDto.parentData.childKramid },
+              where: { kramid: parentData.childKramid.trim() },
               include: { student: true },
             })
 
             if (!childUser || !childUser.student) {
               throw new NotFoundException(
-                'Student not found with the provided Kram ID'
+                `Student not found with Kram ID: ${parentData.childKramid}`
               )
             }
 
@@ -254,22 +268,18 @@ export class UsersService {
                 userId: user.id,
                 studentId: childUser.student.id,
                 relation:
-                  (createUserDto.parentData.relation as
+                  (parentData.relation as
                     | 'FATHER'
                     | 'MOTHER'
                     | 'GUARDIAN'
                     | 'OTHER') || 'GUARDIAN',
                 isPrimaryContact:
-                  createUserDto.parentData.isPrimaryContact ?? true,
-                occupation: createUserDto.parentData.occupation,
-                annualIncome: createUserDto.parentData.annualIncome,
-                educationLevel: createUserDto.parentData.educationLevel,
+                  parentData.isPrimaryContact ?? true,
+                occupation: parentData.occupation,
+                annualIncome: parentData.annualIncome,
+                educationLevel: parentData.educationLevel,
               },
             })
-          } else {
-            throw new BadRequestException(
-              'parentData with childKramid is required for parent role'
-            )
           }
           break
 
@@ -1073,5 +1083,224 @@ export class UsersService {
     })
 
     return { message: 'User deleted successfully' }
+  }
+
+  /**
+   * Create parent records for a student based on provided parent information
+   */
+  private async createParentRecords(
+    studentId: number,
+    studentData: {
+      fatherInfo?: { name?: string; email?: string; mobile?: string }
+      motherInfo?: { name?: string; email?: string; mobile?: string }
+      guardianInfo?: { name?: string; email?: string; mobile?: string }
+      guardianSameAsParent?: boolean
+      guardianParentType?: 'father' | 'mother'
+    },
+    institutionId: number
+  ) {
+    const parentRole = await this.prisma.role.findFirst({
+      where: { roleName: { equals: 'parent', mode: 'insensitive' } },
+    })
+
+    if (!parentRole) {
+      console.warn('Parent role not found, skipping parent creation')
+      return
+    }
+
+    const createdParents: Array<{
+      type: string
+      user: { id: number }
+      parent: { id: number }
+    }> = []
+
+    // Create Father record if provided
+    if (studentData.fatherInfo?.name?.trim()) {
+      const fatherUser = await this.createParentUser(
+        {
+          name: studentData.fatherInfo.name,
+          email: studentData.fatherInfo.email,
+          mobile: studentData.fatherInfo.mobile,
+        },
+        parentRole.id,
+        institutionId
+      )
+      if (fatherUser) {
+        const fatherParent = await this.prisma.parent.create({
+          data: {
+            userId: fatherUser.id,
+            studentId,
+            relation: 'FATHER',
+            isPrimaryContact: false, // Will be updated later based on guardian logic
+          },
+        })
+        createdParents.push({ type: 'father', user: fatherUser, parent: fatherParent })
+      }
+    }
+
+    // Create Mother record if provided
+    if (studentData.motherInfo?.name?.trim()) {
+      const motherUser = await this.createParentUser(
+        {
+          name: studentData.motherInfo.name,
+          email: studentData.motherInfo.email,
+          mobile: studentData.motherInfo.mobile,
+        },
+        parentRole.id,
+        institutionId
+      )
+      if (motherUser) {
+        const motherParent = await this.prisma.parent.create({
+          data: {
+            userId: motherUser.id,
+            studentId,
+            relation: 'MOTHER',
+            isPrimaryContact: false, // Will be updated later based on guardian logic
+          },
+        })
+        createdParents.push({ type: 'mother', user: motherUser, parent: motherParent })
+      }
+    }
+
+    // Handle Guardian logic
+    if (studentData.guardianSameAsParent && studentData.guardianParentType) {
+      // Guardian is same as father or mother - mark that parent as primary contact
+      const guardianParent = createdParents.find(p => p.type === studentData.guardianParentType)
+      if (guardianParent) {
+        await this.prisma.parent.update({
+          where: { id: guardianParent.parent.id },
+          data: { isPrimaryContact: true },
+        })
+      }
+    } else if (studentData.guardianInfo?.name?.trim()) {
+      // Create separate Guardian record
+      const guardianUser = await this.createParentUser(
+        {
+          name: studentData.guardianInfo.name,
+          email: studentData.guardianInfo.email,
+          mobile: studentData.guardianInfo.mobile,
+        },
+        parentRole.id,
+        institutionId
+      )
+      if (guardianUser) {
+        await this.prisma.parent.create({
+          data: {
+            userId: guardianUser.id,
+            studentId,
+            relation: 'GUARDIAN',
+            isPrimaryContact: true,
+          },
+        })
+      }
+    } else if (createdParents.length > 0) {
+      // No explicit guardian, make first parent the primary contact
+      await this.prisma.parent.update({
+        where: { id: createdParents[0].parent.id },
+        data: { isPrimaryContact: true },
+      })
+    }
+  }
+
+  /**
+   * Create a parent user account
+   */
+  private async createParentUser(
+    parentInfo: { name: string; email?: string; mobile?: string },
+    parentRoleId: number,
+    institutionId: number
+  ) {
+    const name = parentInfo.name.trim()
+    const email = parentInfo.email?.trim()
+    const mobile = parentInfo.mobile?.trim()
+
+    // Skip if no email provided (we need email for user account)
+    if (!email) {
+      console.warn(`Skipping parent creation for ${name} - no email provided`)
+      return null
+    }
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+    })
+
+    if (existingUser) {
+      console.log(`Parent user already exists for email: ${email}`)
+      return existingUser
+    }
+
+    // Parse name into first and last name
+    const [first = name, ...rest] = name.split(/\s+/)
+    const lastName = rest.length > 0 ? rest.join(' ') : first
+
+    // Generate temporary password
+    const tempPassword = generateTemporaryPassword(first, lastName)
+    const hashedPassword = await bcrypt.hash(tempPassword, 12)
+
+    // Create parent user
+    const parentUser = await this.prisma.user.create({
+      data: {
+        firstName: first,
+        lastName,
+        name,
+        email,
+        phone: mobile,
+        passwordHash: hashedPassword,
+        roleId: parentRoleId,
+        institutionId,
+        status: 'INACTIVE',
+        isTemporaryPassword: true,
+        mustChangePassword: true,
+      },
+    })
+
+    console.log(`Created parent user: ${name} (${email}) with temp password: ${tempPassword}`)
+    
+    // Generate Kram ID for parent user
+    const kramid = await this.generateKramIdForUser(parentUser.id, institutionId, 'parent')
+    
+    return { ...parentUser, kramid }
+  }
+
+  /**
+   * Generate Kram ID for a user
+   */
+  private async generateKramIdForUser(
+    userId: number,
+    institutionId: number,
+    roleName: string
+  ): Promise<string | null> {
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+      select: { code: true }
+    })
+
+    if (!institution?.code) {
+      console.warn(`Cannot generate Kram ID - institution code not found for ID: ${institutionId}`)
+      return null
+    }
+
+    try {
+      const result = await this.prisma.$queryRawUnsafe<{ kramid: string }[]>(
+        `SELECT generate_kramid($1, $2) as kramid`,
+        institution.code,
+        roleName
+      )
+
+      const kramid = result[0]?.kramid ?? null
+      if (kramid) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { kramid },
+        })
+        console.log(`Generated Kram ID ${kramid} for user ${userId}`)
+      }
+
+      return kramid
+    } catch (error) {
+      console.error(`Failed to generate Kram ID for user ${userId}:`, error)
+      return null
+    }
   }
 }

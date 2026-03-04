@@ -31,9 +31,23 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  
+  // Parent/Guardian Controllers
+  final _fatherNameController = TextEditingController();
+  final _fatherEmailController = TextEditingController();
+  final _fatherMobileController = TextEditingController();
+  
+  final _motherNameController = TextEditingController();
+  final _motherEmailController = TextEditingController();
+  final _motherMobileController = TextEditingController();
+  
   final _guardianNameController = TextEditingController();
   final _guardianEmailController = TextEditingController();
-  final _addressController = TextEditingController();
+  final _guardianMobileController = TextEditingController();
+  
+  bool _guardianSameAsParent = false;
+  String? _guardianParentType; // 'father' or 'mother'
   int? _selectedCourseId;
   String? _selectedSection;
   DateTime? _selectedDob;
@@ -97,9 +111,19 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
     _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _addressController.dispose();
+    
+    // Parent/Guardian controllers
+    _fatherNameController.dispose();
+    _fatherEmailController.dispose();
+    _fatherMobileController.dispose();
+    _motherNameController.dispose();
+    _motherEmailController.dispose();
+    _motherMobileController.dispose();
     _guardianNameController.dispose();
     _guardianEmailController.dispose();
-    _addressController.dispose();
+    _guardianMobileController.dispose();
+    
     super.dispose();
   }
 
@@ -114,6 +138,47 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
       );
       return;
     }
+    
+    // Validate parent information
+    final hasFather = _fatherNameController.text.trim().isNotEmpty;
+    final hasMother = _motherNameController.text.trim().isNotEmpty;
+    final hasGuardian = !_guardianSameAsParent && _guardianNameController.text.trim().isNotEmpty;
+    
+    if (!hasFather && !hasMother && !hasGuardian) {
+      showCustomSnackbar(
+        message: 'Please provide at least one parent/guardian information',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+    
+    // Validate guardian selection if "same as parent" is checked
+    if (_guardianSameAsParent && _guardianParentType == null) {
+      showCustomSnackbar(
+        message: 'Please select which parent is the guardian',
+        type: SnackbarType.error,
+      );
+      return;
+    }
+    
+    // Validate that selected guardian parent has information
+    if (_guardianSameAsParent) {
+      if (_guardianParentType == 'father' && !hasFather) {
+        showCustomSnackbar(
+          message: 'Please provide father information if father is the guardian',
+          type: SnackbarType.error,
+        );
+        return;
+      }
+      if (_guardianParentType == 'mother' && !hasMother) {
+        showCustomSnackbar(
+          message: 'Please provide mother information if mother is the guardian',
+          type: SnackbarType.error,
+        );
+        return;
+      }
+    }
+    
     try {
       final adminService = AdminService();
       final body = <String, dynamic>{
@@ -129,17 +194,38 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
         'studentData': <String, dynamic>{
           'courseId': _selectedCourseId,
           'section': _selectedSection,
-          'emergencyContactName': _guardianNameController.text.trim().isEmpty
-              ? null
-              : _guardianNameController.text.trim(),
-          'emergencyContactPhone': _phoneController.text.trim(),
-          'emergencyContactEmail': _guardianEmailController.text.trim().isEmpty
-              ? null
-              : _guardianEmailController.text.trim(),
           'admissionDate': (_selectedAdmissionDate ?? DateTime.now())
               .toIso8601String()
               .split('T')
               .first,
+          // Parent/Guardian Information
+          if (_fatherNameController.text.trim().isNotEmpty)
+            'fatherInfo': {
+              'name': _fatherNameController.text.trim(),
+              if (_fatherEmailController.text.trim().isNotEmpty)
+                'email': _fatherEmailController.text.trim(),
+              if (_fatherMobileController.text.trim().isNotEmpty)
+                'mobile': _fatherMobileController.text.trim(),
+            },
+          if (_motherNameController.text.trim().isNotEmpty)
+            'motherInfo': {
+              'name': _motherNameController.text.trim(),
+              if (_motherEmailController.text.trim().isNotEmpty)
+                'email': _motherEmailController.text.trim(),
+              if (_motherMobileController.text.trim().isNotEmpty)
+                'mobile': _motherMobileController.text.trim(),
+            },
+          if (!_guardianSameAsParent && _guardianNameController.text.trim().isNotEmpty)
+            'guardianInfo': {
+              'name': _guardianNameController.text.trim(),
+              if (_guardianEmailController.text.trim().isNotEmpty)
+                'email': _guardianEmailController.text.trim(),
+              if (_guardianMobileController.text.trim().isNotEmpty)
+                'mobile': _guardianMobileController.text.trim(),
+            },
+          'guardianSameAsParent': _guardianSameAsParent,
+          if (_guardianSameAsParent && _guardianParentType != null)
+            'guardianParentType': _guardianParentType,
         },
       };
       if (_selectedDob != null) {
@@ -258,32 +344,7 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      label: context.translate('guardian_name'),
-                      hintText: context.translate('enter_guardian_name'),
-                      controller: _guardianNameController,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: CustomTextField(
-                      label: context.translate('phone_number'),
-                      hintText: context.translate('enter_phone_number'),
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty)
-                              ? context.translate('please_enter_phone')
-                              : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+              // Student Email and Phone
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -307,15 +368,56 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: CustomTextField(
-                      label: context.translate('guardian_email'),
-                      hintText: context.translate('email'),
-                      controller: _guardianEmailController,
+                      label: context.translate('phone_number'),
+                      hintText: context.translate('enter_phone_number'),
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty)
+                              ? context.translate('please_enter_phone')
+                              : null,
+                    ),
+                  ),
+                ],
+              ),
+              
+              // Parent/Guardian Information Section
+              const SizedBox(height: 24),
+              Text(
+                'Parent/Guardian Information',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Father Information
+              Text(
+                'Father Information',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Father Name',
+                      hintText: 'Enter father name',
+                      controller: _fatherNameController,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Father Email',
+                      hintText: 'Enter father email',
+                      controller: _fatherEmailController,
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) {
-                        if (v != null &&
-                            v.trim().isNotEmpty &&
-                            !v.contains('@')) {
-                          return context.translate('please_enter_valid_email');
+                        if (v != null && v.trim().isNotEmpty && !v.contains('@')) {
+                          return 'Please enter valid email';
                         }
                         return null;
                       },
@@ -323,6 +425,160 @@ class _AddStudentDialogState extends State<AddStudentDialog> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              CustomTextField(
+                label: 'Father Mobile',
+                hintText: 'Enter father mobile number',
+                controller: _fatherMobileController,
+                keyboardType: TextInputType.phone,
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Mother Information
+              Text(
+                'Mother Information',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Mother Name',
+                      hintText: 'Enter mother name',
+                      controller: _motherNameController,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CustomTextField(
+                      label: 'Mother Email',
+                      hintText: 'Enter mother email',
+                      controller: _motherEmailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v != null && v.trim().isNotEmpty && !v.contains('@')) {
+                          return 'Please enter valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              CustomTextField(
+                label: 'Mother Mobile',
+                hintText: 'Enter mother mobile number',
+                controller: _motherMobileController,
+                keyboardType: TextInputType.phone,
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Guardian Logic
+              CheckboxListTile(
+                title: const Text('Guardian is same as Father/Mother'),
+                value: _guardianSameAsParent,
+                onChanged: (value) {
+                  setState(() {
+                    _guardianSameAsParent = value ?? false;
+                    if (!_guardianSameAsParent) {
+                      _guardianParentType = null;
+                    }
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+              ),
+              
+              if (_guardianSameAsParent) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Select Guardian',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text('Father'),
+                        value: 'father',
+                        groupValue: _guardianParentType,
+                        onChanged: (value) {
+                          setState(() {
+                            _guardianParentType = value;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text('Mother'),
+                        value: 'mother',
+                        groupValue: _guardianParentType,
+                        onChanged: (value) {
+                          setState(() {
+                            _guardianParentType = value;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              
+              if (!_guardianSameAsParent) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Guardian Information',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        label: 'Guardian Name',
+                        hintText: 'Enter guardian name',
+                        controller: _guardianNameController,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CustomTextField(
+                        label: 'Guardian Email',
+                        hintText: 'Enter guardian email',
+                        controller: _guardianEmailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v != null && v.trim().isNotEmpty && !v.contains('@')) {
+                            return 'Please enter valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                CustomTextField(
+                  label: 'Guardian Mobile',
+                  hintText: 'Enter guardian mobile number',
+                  controller: _guardianMobileController,
+                  keyboardType: TextInputType.phone,
+                ),
+              ],
               const SizedBox(height: 16),
               CustomTextField(
                 label: context.translate('address'),

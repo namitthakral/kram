@@ -39,6 +39,11 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   final _childKramidController = TextEditingController();
   String _parentRelation = 'FATHER';
 
+  // Staff-specific
+  final _staffDesignationController = TextEditingController();
+  final _staffDepartmentController = TextEditingController();
+  String _staffType = 'ADMINISTRATIVE';
+
   bool _showPassword = false;
 
   /// DB role IDs: 2=admin, 3=student, 4=parent, 5=teacher, 7=staff
@@ -57,6 +62,18 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     'MOTHER',
     'GUARDIAN',
     'OTHER',
+  ];
+
+  static const List<String> _staffTypes = [
+    'ADMINISTRATIVE',
+    'TECHNICAL',
+    'SUPPORT',
+    'SECURITY',
+    'MAINTENANCE',
+    'TRANSPORT',
+    'CLEANING',
+    'CAFETERIA',
+    'MEDICAL',
   ];
 
   @override
@@ -95,6 +112,8 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     _qualificationController.dispose();
     _sectionController.dispose();
     _childKramidController.dispose();
+    _staffDesignationController.dispose();
+    _staffDepartmentController.dispose();
     super.dispose();
   }
 
@@ -385,6 +404,67 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
                   ),
                 ),
               ],
+
+              // Staff-specific fields
+              if (_selectedRoleId == 7) ...[
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: CustomTextField(
+                        label: 'Designation *',
+                        hintText: 'Enter staff designation',
+                        controller: _staffDesignationController,
+                        validator: (v) {
+                          if (_selectedRoleId == 7 &&
+                              (v == null || v.trim().isEmpty)) {
+                            return 'Designation is required for staff';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CustomTextField(
+                        label: 'Department',
+                        hintText: 'Enter department',
+                        controller: _staffDepartmentController,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                FormFieldLabel(label: 'Staff Type', required: true),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppTheme.slate200),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _staffType,
+                      isExpanded: true,
+                      items: _staffTypes
+                          .map(
+                            (type) => DropdownMenuItem<String>(
+                              value: type,
+                              child: Text(
+                                type[0] + type.substring(1).toLowerCase(),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setState(() => _staffType = v);
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -431,7 +511,8 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
           if (qualification.isNotEmpty) {
             teacherData['qualification'] = qualification;
           }
-          if (teacherData.isNotEmpty) userData['teacherData'] = teacherData;
+          // Always send teacherData for teacher role, even if empty
+          userData['teacherData'] = teacherData;
         }
 
         // Student data
@@ -454,6 +535,18 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
             'relation': _parentRelation,
             'isPrimaryContact': true,
           };
+        }
+
+        // Staff data
+        if (_selectedRoleId == 7) {
+          final staffData = <String, dynamic>{
+            'staffType': _staffType,
+            'designation': _staffDesignationController.text.trim(),
+          };
+          final department = _staffDepartmentController.text.trim();
+          if (department.isNotEmpty) staffData['department'] = department;
+          // Always send staffData for staff role
+          userData['staffData'] = staffData;
         }
 
         final provider = context.read<UserManagementProvider>();

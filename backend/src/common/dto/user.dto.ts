@@ -25,6 +25,24 @@ import {
 // ROLE-SPECIFIC DATA DTOs
 // ============================================================================
 
+// Parent information for student creation
+export class ParentInfoDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  name?: string
+
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(100)
+  email?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  mobile?: string
+}
+
 export class CreateStudentDataDto {
   @IsOptional()
   @IsString()
@@ -72,19 +90,29 @@ export class CreateStudentDataDto {
   @IsBoolean()
   transportRequired?: boolean
 
+  // Parent/Guardian Information
   @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  emergencyContactName?: string
+  @ValidateNested()
+  @Type(() => ParentInfoDto)
+  fatherInfo?: ParentInfoDto
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ParentInfoDto)
+  motherInfo?: ParentInfoDto
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ParentInfoDto)
+  guardianInfo?: ParentInfoDto
+
+  @IsOptional()
+  @IsBoolean()
+  guardianSameAsParent?: boolean // If true, guardian is same as father or mother
 
   @IsOptional()
   @IsString()
-  emergencyContactPhone?: string
-
-  @IsOptional()
-  @IsEmail()
-  @MaxLength(100)
-  emergencyContactEmail?: string
+  guardianParentType?: 'father' | 'mother' // Which parent is the guardian
 
   @IsOptional()
   @IsString()
