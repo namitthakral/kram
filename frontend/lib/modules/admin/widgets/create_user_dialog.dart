@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/services/courses_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_snackbar.dart';
@@ -28,6 +29,12 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   final _designationController = TextEditingController();
   final _qualificationController = TextEditingController();
 
+  // Student-specific
+  int? _selectedCourseId;
+  final _sectionController = TextEditingController();
+  List<Map<String, dynamic>> _courses = [];
+  bool _loadingCourses = false;
+
   // Parent-specific
   final _childKramidController = TextEditingController();
   String _parentRelation = 'FATHER';
@@ -53,6 +60,31 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadCourses();
+  }
+
+  Future<void> _loadCourses() async {
+    setState(() => _loadingCourses = true);
+    try {
+      final coursesService = CoursesService();
+      final courses = await coursesService.getAllCourses();
+      setState(() {
+        _courses = courses.cast<Map<String, dynamic>>();
+        _loadingCourses = false;
+      });
+    } catch (e) {
+      setState(() => _loadingCourses = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load courses: $e')),
+        );
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
@@ -61,6 +93,7 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
     _passwordController.dispose();
     _designationController.dispose();
     _qualificationController.dispose();
+    _sectionController.dispose();
     _childKramidController.dispose();
     super.dispose();
   }
@@ -240,6 +273,73 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
                 ),
               ],
 
+              // Student-specific fields
+              if (_selectedRoleId == 3) ...[
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Course *',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: _loadingCourses
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                  )
+                                : DropdownButton<int>(
+                                    value: _selectedCourseId,
+                                    isExpanded: true,
+                                    underline: const SizedBox(),
+                                    hint: const Text('Select Course'),
+                                    items: _courses
+                                        .map(
+                                          (course) => DropdownMenuItem<int>(
+                                            value: course['id'] as int,
+                                            child: Text(course['name'] as String),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) {
+                                      setState(() => _selectedCourseId = v);
+                                    },
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CustomTextField(
+                        label: 'Section',
+                        hintText: 'e.g. A, B, C',
+                        controller: _sectionController,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
               // Parent-specific fields
               if (_selectedRoleId == 4) ...[
                 const SizedBox(height: 16),
@@ -332,6 +432,19 @@ class _CreateUserDialogState extends State<CreateUserDialog> {
             teacherData['qualification'] = qualification;
           }
           if (teacherData.isNotEmpty) userData['teacherData'] = teacherData;
+        }
+
+        // Student data
+        if (_selectedRoleId == 3) {
+          final studentData = <String, dynamic>{};
+          if (_selectedCourseId != null) {
+            studentData['courseId'] = _selectedCourseId;
+          }
+          final section = _sectionController.text.trim();
+          if (section.isNotEmpty) {
+            studentData['section'] = section;
+          }
+          userData['studentData'] = studentData;
         }
 
         // Parent data

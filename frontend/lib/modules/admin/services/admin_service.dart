@@ -420,7 +420,6 @@ class AdminService {
     int limit = 10,
     String? search,
     int? courseId,
-    String? gradeLevel,
     String? section,
     String sortBy = 'createdAt',
     String sortOrder = 'desc',
@@ -434,9 +433,6 @@ class AdminService {
       };
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (courseId != null) queryParams['courseId'] = courseId.toString();
-      if (gradeLevel != null && gradeLevel.isNotEmpty) {
-        queryParams['gradeLevel'] = gradeLevel;
-      }
       if (section != null && section.isNotEmpty) {
         queryParams['section'] = section;
       }
@@ -692,9 +688,7 @@ class AdminService {
   /// Endpoint: GET /admin/users/kramid/:kramid
   Future<Map<String, dynamic>> getUserByKramid(String kramid) async {
     try {
-      final response = await _apiService.dio.get(
-        '/admin/users/kramid/$kramid',
-      );
+      final response = await _apiService.dio.get('/admin/users/kramid/$kramid');
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;

@@ -23,7 +23,7 @@ import { StudentsService } from './students.service'
 @Controller('students')
 @UseGuards(JwtAuthGuard)
 export class StudentsController {
-  constructor(private readonly studentsService: StudentsService) { }
+  constructor(private readonly studentsService: StudentsService) {}
 
   @Get()
   @UseGuards(RolesGuard)

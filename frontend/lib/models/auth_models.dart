@@ -163,10 +163,8 @@ class AuthTokens {
 class Institution {
   Institution({required this.id, required this.name});
 
-  factory Institution.fromJson(Map<String, dynamic> json) => Institution(
-    id: json['id'],
-    name: json['name'],
-  );
+  factory Institution.fromJson(Map<String, dynamic> json) =>
+      Institution(id: json['id'], name: json['name']);
 
   final int id;
   final String name;
@@ -224,11 +222,11 @@ class User {
     teacher: json['teacher'] != null ? Teacher.fromJson(json['teacher']) : null,
     parent: json['parent'] != null ? Parent.fromJson(json['parent']) : null,
     staff: json['staff'] != null ? Staff.fromJson(json['staff']) : null,
-    institutionId: json['institutionId'] ??
-        _institutionIdFromRelations(json),
-    institution: json['institution'] != null
-        ? Institution.fromJson(json['institution'])
-        : null,
+    institutionId: json['institutionId'] ?? _institutionIdFromRelations(json),
+    institution:
+        json['institution'] != null
+            ? Institution.fromJson(json['institution'])
+            : null,
     status: json['status'],
     mustChangePassword: json['mustChangePassword'] ?? false,
     isTemporaryPassword: json['isTemporaryPassword'] ?? false,
@@ -325,7 +323,6 @@ class Student {
     this.graduationDate,
     this.currentSemester,
     this.currentYear,
-    this.gradeLevel,
     this.section,
     this.studentType,
     this.residentialStatus,
@@ -356,7 +353,6 @@ class Student {
             : null,
     currentSemester: json['currentSemester'],
     currentYear: json['currentYear'],
-    gradeLevel: json['gradeLevel'],
     section: json['section'],
     studentType: json['studentType'],
     residentialStatus: json['residentialStatus'],
@@ -381,7 +377,6 @@ class Student {
   final DateTime? graduationDate;
   final int? currentSemester;
   final int? currentYear;
-  final String? gradeLevel;
   final String? section;
   final String? studentType;
   final String? residentialStatus;
@@ -405,7 +400,6 @@ class Student {
     'graduationDate': graduationDate?.toIso8601String(),
     'currentSemester': currentSemester,
     'currentYear': currentYear,
-    'gradeLevel': gradeLevel,
     'section': section,
     'studentType': studentType,
     'residentialStatus': residentialStatus,

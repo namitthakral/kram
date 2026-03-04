@@ -16,7 +16,6 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _admissionNumberController;
   late TextEditingController _rollNumberController;
-  late TextEditingController _gradeLevelController;
   late TextEditingController _sectionController;
   late TextEditingController _admissionDateController;
   late TextEditingController _currentYearController;
@@ -33,9 +32,6 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
     );
     _rollNumberController = TextEditingController(
       text: student?.rollNumber ?? '',
-    );
-    _gradeLevelController = TextEditingController(
-      text: student?.gradeLevel ?? '',
     );
     _sectionController = TextEditingController(text: student?.section ?? '');
     _admissionDateController = TextEditingController(
@@ -54,7 +50,6 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
   void dispose() {
     _admissionNumberController.dispose();
     _rollNumberController.dispose();
-    _gradeLevelController.dispose();
     _sectionController.dispose();
     _admissionDateController.dispose();
     _currentYearController.dispose();
@@ -98,15 +93,6 @@ class _AcademicInfoTabState extends State<AcademicInfoTab> {
               const SizedBox(height: 20),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildTextField(
-                      context,
-                      label: context.translate('grade_level'),
-                      controller: _gradeLevelController,
-                      icon: Icons.grade_outlined,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildTextField(
                       context,

@@ -15,7 +15,6 @@ export interface Student {
   graduationDate?: Date
   currentSemester?: number
   currentYear?: number
-  gradeLevel?: string
   section?: string
   studentType: StudentType
   residentialStatus: ResidentialStatus
@@ -38,7 +37,6 @@ export interface CreateStudentRequest {
   admissionDate?: Date
   currentSemester?: number
   currentYear?: number
-  gradeLevel?: string
   section?: string
   studentType?: StudentType
   residentialStatus?: ResidentialStatus

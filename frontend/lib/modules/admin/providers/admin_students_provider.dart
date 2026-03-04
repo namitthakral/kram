@@ -15,6 +15,7 @@ class AdminStudentsProvider extends ChangeNotifier {
   int _totalPages = 1;
   String _searchQuery = '';
   int? _courseIdFilter;
+  String? _sectionFilter;
   AdminDashboardStats? _dashboardStats;
 
   List<dynamic> get students => _students;
@@ -26,6 +27,7 @@ class AdminStudentsProvider extends ChangeNotifier {
   int get totalPages => _totalPages;
   String get searchQuery => _searchQuery;
   int? get courseIdFilter => _courseIdFilter;
+  String? get sectionFilter => _sectionFilter;
   AdminDashboardStats? get dashboardStats => _dashboardStats;
   
   // Convenience getters for student counts
@@ -41,6 +43,12 @@ class AdminStudentsProvider extends ChangeNotifier {
 
   void setCourseFilter(int? courseId) {
     _courseIdFilter = courseId;
+    _page = 1;
+    fetchStudents();
+  }
+
+  void setSectionFilter(String? section) {
+    _sectionFilter = section;
     _page = 1;
     fetchStudents();
   }
@@ -63,6 +71,7 @@ class AdminStudentsProvider extends ChangeNotifier {
           limit: _limit,
           search: _searchQuery.isEmpty ? null : _searchQuery,
           courseId: _courseIdFilter,
+          section: _sectionFilter,
         ),
         _adminService.getDashboardStats(),
       ]);
@@ -101,16 +110,30 @@ class AdminStudentsProvider extends ChangeNotifier {
   }
 
   /// Update student information
-  Future<bool> updateStudent(String userUuid, Map<String, dynamic> studentData) async {
+  Future<Map<String, dynamic>?> updateStudent(String userUuid, Map<String, dynamic> studentData) async {
     try {
-      await _adminService.updateStudent(userUuid, studentData);
+      final response = await _adminService.updateStudent(userUuid, studentData);
       // Refresh the student list after successful update
       await fetchStudents();
-      return true;
+      return response;
     } catch (e) {
       _error = e.toString();
       notifyListeners();
-      return false;
+      return null;
     }
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  void clearAllFilters() {
+    _searchQuery = '';
+    _courseIdFilter = null;
+    _sectionFilter = null;
+    _page = 1;
+    _error = null;
+    notifyListeners();
   }
 }

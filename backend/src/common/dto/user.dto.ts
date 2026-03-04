@@ -55,8 +55,6 @@ export class CreateStudentDataDto {
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  gradeLevel?: string
-
   @IsOptional()
   @IsString()
   @MaxLength(10)

@@ -155,7 +155,7 @@ export class AdminService {
         section: sd.section ?? undefined,
       })
       let rollNumber: string | null = sd.rollNumber ?? null
-      if (!rollNumber && (sd.gradeLevel ?? sd.section)) {
+      if (!rollNumber && sd.section) {
         rollNumber = await this.idGeneration.generateRollNumber({
           institutionId: createUserDto.institutionId,
           courseCode: courseCode ?? 'GEN',
@@ -169,7 +169,6 @@ export class AdminService {
           admissionNumber,
           rollNumber,
           courseId: sd.courseId ?? undefined,
-          gradeLevel: sd.gradeLevel ?? undefined,
           section: sd.section ?? undefined,
           admissionDate: sd.admissionDate
             ? new Date(sd.admissionDate)

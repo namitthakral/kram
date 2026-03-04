@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import { PrismaService } from '../prisma/prisma.service'
-import { CreateClassSectionDto } from './dto/create-class-section.dto'
 import { CreateClassDivisionDto } from './dto/create-class-division.dto'
+import { CreateClassSectionDto } from './dto/create-class-section.dto'
 import { CreateCourseDto } from './dto/create-course.dto'
-import { UpdateClassSectionDto } from './dto/update-class-section.dto'
 import { UpdateClassDivisionDto } from './dto/update-class-division.dto'
+import { UpdateClassSectionDto } from './dto/update-class-section.dto'
 import { UpdateCourseDto } from './dto/update-course.dto'
 
 export interface CourseQueryParams {
@@ -257,7 +257,6 @@ export class CoursesService {
             section: true,
             currentSemester: true,
             currentYear: true,
-            gradeLevel: true,
           },
         },
         classTeachers: {
@@ -1170,7 +1169,7 @@ export class CoursesService {
    * Uses selective field loading and pagination
    */
   async getClassDivisions(
-    courseId: number, 
+    courseId: number,
     adminInstitutionId: number | null,
     page: number = 1,
     limit: number = 50
@@ -1178,12 +1177,12 @@ export class CoursesService {
     // Verify course exists and belongs to admin's institution (optimized query)
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
-      select: { 
-        id: true, 
+      select: {
+        id: true,
         institutionId: true,
         name: true,
-        code: true 
-      }
+        code: true,
+      },
     })
 
     if (!course) {
@@ -1203,9 +1202,9 @@ export class CoursesService {
     // Use optimized query with selective field loading
     const [divisions, totalCount] = await Promise.all([
       this.prisma.classDivision.findMany({
-        where: { 
+        where: {
           courseId,
-          status: 'ACTIVE' // Partial index optimization
+          status: 'ACTIVE', // Partial index optimization
         },
         select: {
           id: true,
@@ -1221,29 +1220,29 @@ export class CoursesService {
                 select: {
                   name: true,
                   email: true,
-                }
-              }
-            }
+                },
+              },
+            },
           },
           _count: {
             select: {
               students: {
-                where: { status: 'ACTIVE' } // Only count active students
-              }
-            }
-          }
+                where: { status: 'ACTIVE' }, // Only count active students
+              },
+            },
+          },
         },
         orderBy: { sectionName: 'asc' },
         skip,
-        take
+        take,
       }),
       // Separate count query for better performance
       this.prisma.classDivision.count({
-        where: { 
+        where: {
           courseId,
-          status: 'ACTIVE'
-        }
-      })
+          status: 'ACTIVE',
+        },
+      }),
     ])
 
     const totalPages = Math.ceil(totalCount / take)
@@ -1262,11 +1261,13 @@ export class CoursesService {
           name: course.name,
           code: course.code,
         },
-        teacher: division.teacher ? {
-          id: division.teacher.id,
-          name: division.teacher.user.name,
-          email: division.teacher.user.email,
-        } : null,
+        teacher: division.teacher
+          ? {
+              id: division.teacher.id,
+              name: division.teacher.user.name,
+              email: division.teacher.user.email,
+            }
+          : null,
         createdAt: division.createdAt,
       })),
       meta: {
@@ -1274,7 +1275,7 @@ export class CoursesService {
         page,
         limit: take,
         totalPages,
-      }
+      },
     }
   }
 

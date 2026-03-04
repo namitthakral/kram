@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/services/courses_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../providers/admin_students_provider.dart';
 
 class EditStudentDialog extends StatefulWidget {
-  final Map<String, dynamic> student;
 
   const EditStudentDialog({
-    super.key,
-    required this.student,
+    required this.student, super.key,
   });
+  final Map<String, dynamic> student;
 
   @override
   State<EditStudentDialog> createState() => _EditStudentDialogState();
@@ -23,7 +23,6 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   
   late TextEditingController _rollNumberController;
   late TextEditingController _sectionController;
-  late TextEditingController _gradeLevelController;
   late TextEditingController _emergencyContactNameController;
   late TextEditingController _emergencyContactPhoneController;
   late TextEditingController _bloodGroupController;
@@ -32,6 +31,11 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   String? _selectedStudentType;
   String? _selectedResidentialStatus;
   bool _transportRequired = false;
+  
+  // Course selection
+  int? _selectedCourseId;
+  List<Map<String, dynamic>> _courses = [];
+  bool _loadingCourses = false;
 
   final List<String> _studentTypes = ['REGULAR', 'SCHOLARSHIP', 'TRANSFER'];
   final List<String> _residentialStatuses = ['DAY_SCHOLAR', 'HOSTELLER'];
@@ -40,6 +44,21 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   void initState() {
     super.initState();
     _initializeControllers();
+    _loadCourses();
+  }
+
+  Future<void> _loadCourses() async {
+    setState(() => _loadingCourses = true);
+    try {
+      final coursesService = CoursesService();
+      final courses = await coursesService.getAllCourses();
+      setState(() {
+        _courses = courses.cast<Map<String, dynamic>>();
+        _loadingCourses = false;
+      });
+    } catch (e) {
+      setState(() => _loadingCourses = false);
+    }
   }
 
   void _initializeControllers() {
@@ -50,9 +69,6 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     );
     _sectionController = TextEditingController(
       text: student['section'] as String? ?? '',
-    );
-    _gradeLevelController = TextEditingController(
-      text: student['gradeLevel'] as String? ?? '',
     );
     _emergencyContactNameController = TextEditingController(
       text: student['emergencyContactName'] as String? ?? '',
@@ -70,13 +86,16 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     _selectedStudentType = student['studentType'] as String? ?? 'REGULAR';
     _selectedResidentialStatus = student['residentialStatus'] as String? ?? 'DAY_SCHOLAR';
     _transportRequired = student['transportRequired'] as bool? ?? false;
+    
+    // Initialize course selection
+    final course = student['course'] as Map<String, dynamic>?;
+    _selectedCourseId = course?['id'] as int?;
   }
 
   @override
   void dispose() {
     _rollNumberController.dispose();
     _sectionController.dispose();
-    _gradeLevelController.dispose();
     _emergencyContactNameController.dispose();
     _emergencyContactPhoneController.dispose();
     _bloodGroupController.dispose();
@@ -107,8 +126,8 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     if (_sectionController.text.isNotEmpty) {
       studentData['section'] = _sectionController.text;
     }
-    if (_gradeLevelController.text.isNotEmpty) {
-      studentData['gradeLevel'] = _gradeLevelController.text;
+    if (_selectedCourseId != null) {
+      studentData['courseId'] = _selectedCourseId;
     }
     if (_emergencyContactNameController.text.isNotEmpty) {
       studentData['emergencyContactName'] = _emergencyContactNameController.text;
@@ -127,11 +146,22 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     studentData['residentialStatus'] = _selectedResidentialStatus;
     studentData['transportRequired'] = _transportRequired;
 
-    final success = await provider.updateStudent(userUuid, studentData);
+    final response = await provider.updateStudent(userUuid, studentData);
     
-    if (success && mounted) {
+    if (response != null && mounted) {
       Navigator.of(context).pop();
-      _showSuccessSnackBar('Student updated successfully');
+      
+      // Check if roll number was auto-generated
+      final updatedStudent = response['data'];
+      final newRollNumber = updatedStudent?['rollNumber'] as String?;
+      final hadRollNumber = widget.student['rollNumber'] != null && 
+                           (widget.student['rollNumber'] as String).isNotEmpty;
+      
+      if (newRollNumber != null && !hadRollNumber && _rollNumberController.text.isEmpty) {
+        _showSuccessSnackBar('Student updated successfully. Roll number $newRollNumber was automatically generated.');
+      } else {
+        _showSuccessSnackBar('Student updated successfully');
+      }
     } else if (mounted) {
       _showErrorSnackBar(provider.error ?? 'Failed to update student');
     }
@@ -182,20 +212,63 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
                   hintText: 'Enter roll number',
                 ),
                 const SizedBox(height: 16),
+                // Course selection
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Course',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: _loadingCourses
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : DropdownButton<int>(
+                              value: _selectedCourseId,
+                              isExpanded: true,
+                              underline: const SizedBox(),
+                              hint: const Text('Select Course'),
+                              items: _courses
+                                  .map(
+                                    (course) => DropdownMenuItem<int>(
+                                      value: course['id'] as int,
+                                      child: Text(course['name'] as String),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (v) {
+                                setState(() => _selectedCourseId = v);
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 CustomTextField(
                   controller: _sectionController,
                   label: 'Section',
                   hintText: 'Enter section (e.g., A, B, C)',
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
-                  controller: _gradeLevelController,
-                  label: 'Grade Level',
-                  hintText: 'Enter grade level',
-                ),
-                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedStudentType,
+                  initialValue: _selectedStudentType,
                   decoration: const InputDecoration(
                     labelText: 'Student Type',
                     border: OutlineInputBorder(),
@@ -208,7 +281,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedResidentialStatus,
+                  initialValue: _selectedResidentialStatus,
                   decoration: const InputDecoration(
                     labelText: 'Residential Status',
                     border: OutlineInputBorder(),

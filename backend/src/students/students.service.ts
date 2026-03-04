@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
+import { IdGenerationService } from '../id-generation/id-generation.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { UserWithRelations } from '../types/auth.types'
 import {
@@ -34,7 +35,10 @@ import {
 
 @Injectable()
 export class StudentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private idGenerationService: IdGenerationService,
+  ) {}
 
   /**
    * Helper: Get attendance summary from database view
@@ -97,7 +101,6 @@ export class StudentsService {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       search,
-      gradeLevel,
       section,
       courseId,
     } = paginationDto
@@ -121,7 +124,6 @@ export class StudentsService {
       institutionId?: number
       isActive?: boolean
       status?: { not: 'SUSPENDED' }
-      gradeLevel?: string
       section?: string
       courseId?: number
     } = {
@@ -134,9 +136,6 @@ export class StudentsService {
         { user: { name: { contains: search } } },
         { user: { email: { contains: search } } },
       ]
-    }
-    if (gradeLevel) {
-      where.gradeLevel = gradeLevel
     }
     if (section) {
       where.section = section
@@ -657,15 +656,39 @@ export class StudentsService {
 
   // UUID-based methods
   async updateByUuid(uuid: string, updateStudentDto: UpdateStudentDto) {
-    // First find the student by UUID
+    // First find the student by UUID with course information
     const student = await this.prisma.student.findFirst({
       where: {
         user: { uuid },
+      },
+      include: {
+        course: {
+          select: {
+            id: true,
+            code: true,
+          },
+        },
       },
     })
 
     if (!student) {
       throw new NotFoundException(`Student with UUID ${uuid} not found`)
+    }
+
+    // Auto-generate roll number if conditions are met
+    if (this.shouldGenerateRollNumber(student, updateStudentDto)) {
+      try {
+        const courseCode = await this.getCourseCode(updateStudentDto.courseId || student.courseId)
+        const rollNumber = await this.idGenerationService.generateRollNumber({
+          institutionId: student.institutionId,
+          courseCode: courseCode || 'GEN',
+          section: updateStudentDto.section || student.section || 'A',
+        })
+        updateStudentDto.rollNumber = rollNumber
+      } catch (error) {
+        // Log error but don't fail the update - roll number can be generated later
+        console.warn('Failed to generate roll number:', error.message)
+      }
     }
 
     // Use the existing update method with the found student ID
@@ -2136,5 +2159,43 @@ export class StudentsService {
       success: true,
       data: reportCard,
     }
+  }
+
+  /**
+   * Determines if a roll number should be auto-generated
+   */
+  private shouldGenerateRollNumber(
+    student: any,
+    updateDto: UpdateStudentDto,
+  ): boolean {
+    // Don't generate if roll number is manually provided
+    if (updateDto.rollNumber) {
+      return false
+    }
+
+    // Don't generate if student already has a roll number
+    if (student.rollNumber) {
+      return false
+    }
+
+    // Generate if course and section are being assigned
+    const hasCourse = updateDto.courseId || student.courseId
+    const hasSection = updateDto.section || student.section
+
+    return !!(hasCourse && hasSection)
+  }
+
+  /**
+   * Gets course code for roll number generation
+   */
+  private async getCourseCode(courseId?: number): Promise<string | null> {
+    if (!courseId) return null
+
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: { code: true, name: true },
+    })
+
+    return course?.code || course?.name?.substring(0, 3).toUpperCase() || null
   }
 }

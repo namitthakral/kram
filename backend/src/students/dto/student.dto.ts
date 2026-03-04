@@ -70,8 +70,6 @@ export class CreateStudentDto {
   @IsString()
   @MaxLength(20)
   @IsOptional()
-  gradeLevel?: string
-
   @IsString()
   @MaxLength(10)
   @IsOptional()
@@ -129,12 +127,14 @@ export class UpdateStudentDto {
   @IsString()
   @MaxLength(20)
   @IsOptional()
-  gradeLevel?: string
-
   @IsString()
   @MaxLength(10)
   @IsOptional()
   section?: string
+
+  @IsNumber()
+  @IsOptional()
+  courseId?: number
 
   @IsEnum(StudentType)
   @IsOptional()
@@ -192,8 +192,6 @@ export class PaginationDto {
 
   @IsString()
   @IsOptional()
-  gradeLevel?: string
-
   @IsString()
   @IsOptional()
   section?: string

@@ -14,7 +14,6 @@ model Student {
   graduationDate        DateTime?        @map("graduation_date") @db.Date
   currentSemester       Int?             @map("current_semester")
   currentYear           Int?             @map("current_year")
-  gradeLevel            String?          @map("grade_level") @db.VarChar(20)
   section               String?          @db.VarChar(10)
   studentType           StudentType      @default(REGULAR) @map("student_type")
   residentialStatus     ResidentialStatus @default(DAY_SCHOLAR) @map("residential_status")

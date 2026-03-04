@@ -1,35 +1,35 @@
 /**
  * Kram Database Seed Script
  * ==============================
- * 
+ *
  * This script seeds the database with comprehensive test data for development
  * and production environments.
- * 
+ *
  * IDEMPOTENCY:
  * ------------
  * This script is SAFE to run multiple times. It uses a hybrid approach:
- * 
+ *
  * 1. REFERENCE DATA (Always Updated):
  *    - Roles, Institution, Core Users (Admin, Teacher)
  *    - Uses `upsert` to update if exists, create if not
- * 
+ *
  * 2. TRANSACTIONAL DATA (Skip if Exists):
  *    - Student Fees, Payments, Attendance, Assignments, etc.
  *    - Sentinel check: If StudentFee records exist, all transactional data is skipped
  *    - This prevents duplicate data on subsequent runs
- * 
+ *
  * USAGE:
  * ------
  * Development: npm run db:seed (uses local database)
  * Production:  npm run db:seed:production (uses AWS RDS)
- * 
+ *
  * TO RESET AND RE-SEED:
  * ---------------------
  * If you need to completely reset and re-seed:
  * 1. Backup your data first!
  * 2. Run: npx prisma migrate reset
  * 3. Run seed again: npm run db:seed
- * 
+ *
  * DEFAULT CREDENTIALS:
  * -------------------
  * Super Admin:        admin@kram.edu / admin123!
@@ -83,7 +83,7 @@ async function main() {
   // This ensures users are always created/updated even when transactional data exists
   console.log('Creating/updating users...')
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { superAdmin, institutionAdmin, teacher, students, parents, librarian, librarianUser } =
+  const { superAdmin, teacher, students, parents, librarianUser } =
     await createUsers(roles, institution.id, course.id)
   console.log(
     `✅ Created/updated users: 1 super admin, 1 institution admin, 1 teacher, ${students.length} students, ${parents.length} parents, 3 staff (librarian, accountant, support)`
@@ -93,18 +93,26 @@ async function main() {
   // SENTINEL CHECK: Skip transactional data if already seeded
   // ============================================================================
   const existingStudentFees = await prisma.studentFee.count()
-  
+
   if (existingStudentFees > 0) {
     console.log('')
-    console.log('⚠️  ═══════════════════════════════════════════════════════════')
+    console.log(
+      '⚠️  ═══════════════════════════════════════════════════════════'
+    )
     console.log('⚠️  DATABASE ALREADY CONTAINS TRANSACTIONAL DATA')
-    console.log('⚠️  ═══════════════════════════════════════════════════════════')
+    console.log(
+      '⚠️  ═══════════════════════════════════════════════════════════'
+    )
     console.log('')
     console.log(`   Found ${existingStudentFees} student fee records`)
     console.log('   Skipping transactional data to prevent duplicates')
     console.log('')
-    console.log('✅ Reference data (roles, institution, users) will be updated if needed')
-    console.log('❌ Transactional data (fees, payments, attendance) will be skipped')
+    console.log(
+      '✅ Reference data (roles, institution, users) will be updated if needed'
+    )
+    console.log(
+      '❌ Transactional data (fees, payments, attendance) will be skipped'
+    )
     console.log('')
     console.log('   If you want to re-seed from scratch:')
     console.log('   1. Backup your data first!')
@@ -115,7 +123,9 @@ async function main() {
     return
   }
 
-  console.log('✅ No existing transactional data found - proceeding with full seed')
+  console.log(
+    '✅ No existing transactional data found - proceeding with full seed'
+  )
   console.log('')
   console.log(
     `✅ Created users: 1 admin, 1 teacher, ${students.length} students, ${parents.length} parents, 3 staff (librarian, accountant, support)`
@@ -155,7 +165,9 @@ async function main() {
     academicYear.id
   )
   await createStudentFees(students, feeStructures, semesters[0])
-  console.log(`✅ Created ${feeStructures.length} fee structures with student fee assignments`)
+  console.log(
+    `✅ Created ${feeStructures.length} fee structures with student fee assignments`
+  )
 
   // Create assignments and examinations
   console.log('Creating assignments and examinations...')
@@ -212,7 +224,9 @@ async function main() {
   // Create report card seed data (attendance + academic records within semester dates)
   console.log('Creating report card seed data...')
   await createReportCardSeedData(students, subjects, semesters, teacher)
-  console.log('✅ Created report card seed data (attendance & academic records)')
+  console.log(
+    '✅ Created report card seed data (attendance & academic records)'
+  )
 
   console.log('')
   console.log('═══════════════════════════════════════════════════════════')
@@ -768,7 +782,6 @@ async function createUsers(
         admissionDate: new Date('2024-08-15'),
         currentSemester: 1,
         currentYear: 1,
-        gradeLevel: 'Freshman',
         section: 'A',
         studentType: 'REGULAR',
         residentialStatus: 'DAY_SCHOLAR',
@@ -928,14 +941,28 @@ async function createUsers(
       salary: 60000.0,
       employmentType: 'FULL_TIME',
       workingHours: 'Monday-Friday 9:00 AM - 5:00 PM',
-      skills: ['Accounting', 'Financial Management', 'Fee Collection', 'Tally ERP'],
+      skills: [
+        'Accounting',
+        'Financial Management',
+        'Fee Collection',
+        'Tally ERP',
+      ],
       qualifications: 'MBA in Finance, CA',
       experience: '7 years in educational finance management',
       emergencyContact: '+1-555-0015',
     },
   })
 
-  return { superAdmin, institutionAdmin, teacher, students, parents, librarian, librarianUser, accountant }
+  return {
+    superAdmin,
+    institutionAdmin,
+    teacher,
+    students,
+    parents,
+    librarian,
+    librarianUser,
+    accountant,
+  }
 }
 
 async function createClassSections(
@@ -1021,7 +1048,7 @@ async function createCommunications(
 ) {
   // Delete existing communications to avoid ID conflicts during re-seeding
   await prisma.communication.deleteMany({})
-  
+
   return await Promise.all([
     prisma.communication.create({
       data: {
@@ -1207,7 +1234,8 @@ async function createFeeStructures(
         lateFeeAfterDays: 7,
         isRecurring: true,
         recurringFrequency: 'SEMESTER',
-        description: 'Tuition fee for Fall 2024 semester - B.Sc. Computer Science',
+        description:
+          'Tuition fee for Fall 2024 semester - B.Sc. Computer Science',
         status: 'ACTIVE',
       },
     }),
@@ -1296,20 +1324,20 @@ async function createStudentFees(
   semester: any
 ) {
   console.log(`  💰 Creating student fees for ${students.length} students...`)
-  
+
   for (const student of students) {
     for (let i = 0; i < feeStructures.length; i++) {
       const feeStructure = feeStructures[i]
-      
+
       // Calculate discount for some students (scholarship/merit)
       const hasDiscount = i === 0 && student.id % 3 === 0 // First fee structure, every 3rd student
       const discountAmount = hasDiscount ? feeStructure.amount * 0.1 : 0 // 10% discount
       const netAmount = feeStructure.amount - discountAmount
-      
+
       // Some students have partial payments
       const hasPartialPayment = student.id % 4 === 0 // Every 4th student
       const paidAmount = hasPartialPayment ? netAmount * 0.5 : 0 // 50% paid
-      
+
       // Determine status
       let status = 'PENDING'
       if (paidAmount >= netAmount) {
@@ -1345,7 +1373,12 @@ async function createStudentFees(
           })
 
           if (studentFee) {
-            const paymentMethods = ['CASH', 'UPI', 'CARD', 'BANK_TRANSFER'] as const
+            const paymentMethods = [
+              'CASH',
+              'UPI',
+              'CARD',
+              'BANK_TRANSFER',
+            ] as const
             await prisma.payment.create({
               data: {
                 studentId: student.id,
@@ -1353,7 +1386,9 @@ async function createStudentFees(
                 amount: paidAmount,
                 paymentMethod: paymentMethods[student.id % 4] as any,
                 paymentMode: 'OFFLINE',
-                paymentDate: new Date(feeStructure.dueDate.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days before due
+                paymentDate: new Date(
+                  feeStructure.dueDate.getTime() - 5 * 24 * 60 * 60 * 1000
+                ), // 5 days before due
                 transactionId: `TXN${Date.now()}${student.id}${i}`,
                 status: 'COMPLETED',
                 remarks: 'First installment payment',
@@ -1367,7 +1402,7 @@ async function createStudentFees(
       }
     }
   }
-  
+
   console.log('  ✅ Student fees and payments created')
 }
 
@@ -1532,7 +1567,9 @@ async function createTimetableData(
 function printSummary(studentCount: number, parentCount: number) {
   console.log('\n📋 Sample Accounts Created:')
   console.log('Super Admin: admin@kram.edu / admin123!')
-  console.log('Institution Admin: institutionadmin@kram.edu / institutionadmin123!')
+  console.log(
+    'Institution Admin: institutionadmin@kram.edu / institutionadmin123!'
+  )
   console.log('Teacher: john.doe@kram.edu / teacher123!')
   console.log(
     `Students: student1@kram.edu / student123! (student1-${studentCount})`
@@ -1554,7 +1591,9 @@ function printSummary(studentCount: number, parentCount: number) {
   console.log('- 2 class sections with enrollments')
   console.log('- 5 communications (unified notices & announcements)')
   console.log('- 2 books with library settings')
-  console.log('- 5 fee structures (tuition, library, lab, exam, sports) with payments')
+  console.log(
+    '- 5 fee structures (tuition, library, lab, exam, sports) with payments'
+  )
   console.log('- 1 assignment + 1 examination')
   console.log('- 2 time slots + 2 rooms + 1 timetable entry')
   console.log('- Teacher dashboard data (attendance, grades, performance)')
@@ -1791,7 +1830,6 @@ async function createTeacherDashboardData(
             admissionDate: new Date('2024-08-15'),
             currentSemester: 1,
             currentYear: 1,
-            gradeLevel: 'Freshman',
             section: 'A',
             studentType: 'REGULAR',
             residentialStatus: 'DAY_SCHOLAR',
@@ -2532,7 +2570,12 @@ async function createPhase1TestData() {
 async function createReportCardSeedData(
   students: { id: number }[],
   subjects: { id: number }[],
-  semesters: { id: number; semesterName: string; startDate: Date; endDate: Date }[],
+  semesters: {
+    id: number
+    semesterName: string
+    startDate: Date
+    endDate: Date
+  }[],
   teacher: { id: number }
 ) {
   if (semesters.length < 2) {
@@ -2703,13 +2746,20 @@ async function createReportCardSeedData(
     startDate.setHours(0, 0, 0, 0)
     const endDate = new Date(end)
     endDate.setHours(23, 59, 59, 999)
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
       if (!isWeekday(d)) continue
-      const dateOnly = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+      const dateOnly = new Date(
+        Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
+      )
       for (const student of studentIds) {
         for (const section of sectionIds) {
           const rand = Math.random()
-          const status = rand < 0.08 ? 'ABSENT' : rand < 0.12 ? 'LATE' : 'PRESENT'
+          const status =
+            rand < 0.08 ? 'ABSENT' : rand < 0.12 ? 'LATE' : 'PRESENT'
           try {
             await prisma.attendance.create({
               data: {

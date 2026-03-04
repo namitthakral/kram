@@ -53,7 +53,7 @@ class AppBarConfigHelper {
         return AppBarConfig.student(
           userInitials: userInitials,
           userName: userName,
-          grade: student?.gradeLevel ?? 'N/A',
+          grade: 'N/A', // Grade level removed - using course instead
           rollNumber: student?.rollNumber ?? 'N/A',
           onNotificationIconPressed: onNotificationIconPressed,
         );
@@ -134,7 +134,8 @@ class AppBarConfigHelper {
       case 6:
         roleLabel = 'Librarian';
       case 7:
-        roleLabel = (user.staff?.staffType as String?) ??
+        roleLabel =
+            (user.staff?.staffType as String?) ??
             (user.staff?.designation as String?) ??
             'Staff';
       case 8:

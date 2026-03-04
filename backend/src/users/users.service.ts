@@ -9,9 +9,7 @@ import {
 import * as bcrypt from 'bcryptjs'
 import { IdGenerationService } from '../id-generation/id-generation.service'
 import { PrismaService } from '../prisma/prisma.service'
-import {
-  generateTemporaryPassword,
-} from '../utils/kramid.util'
+import { generateTemporaryPassword } from '../utils/kramid.util'
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
 
 @Injectable()
@@ -154,7 +152,6 @@ export class UsersService {
                   : null,
                 currentSemester: studentData.currentSemester,
                 currentYear: studentData.currentYear,
-                gradeLevel: studentData.gradeLevel,
                 section: studentData.section,
                 studentType: studentData.studentType || 'REGULAR',
                 residentialStatus:
