@@ -39,7 +39,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
   DateTime? _dueDate;
 
   bool _isLoading = false;
-  String _status = 'DRAFT';
+  String _status = 'PUBLISHED';
 
   // Assignment type: 'pdf', 'manual', or 'description_only'
   String _assignmentType = 'description_only';
@@ -363,18 +363,18 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
                       ],
                     ),
                   ),
-                  if (widget.assignmentId != null) ...[
-                    const SizedBox(width: 16),
-                    Expanded(
-                      flex: 2,
-                      child: CustomFormSection(
-                        title: 'Status',
-                        subtitle: 'Set assignment status',
-                        icon: Icons.info_outline,
-                        children: [_buildStatusDropdown()],
-                      ),
+                  // if (widget.assignmentId != null) ...[
+                  const SizedBox(width: 16),
+                  Expanded(
+                    flex: 2,
+                    child: CustomFormSection(
+                      title: 'Status',
+                      subtitle: 'Set assignment status',
+                      icon: Icons.info_outline,
+                      children: [_buildStatusDropdown()],
                     ),
-                  ],
+                  ),
+                  // ],
                 ],
               ),
             ),
