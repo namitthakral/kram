@@ -507,6 +507,14 @@ export class TeachersController {
     })
   }
 
+  @Get(':user_uuid/institution-info')
+  getInstitutionInfo(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+  ) {
+    return this.teachersService.getInstitutionInfo(userUuid, user)
+  }
+
   private resolveInstitutionId(user: UserWithRelations): number | null {
     return (
       user.institutionId ??

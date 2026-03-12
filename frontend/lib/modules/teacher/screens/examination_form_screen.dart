@@ -70,7 +70,10 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     if (mounted) {
       _checkAutoSelection(assignmentProvider);
     }
-    await examProvider.loadSemesters(uuid);
+    await Future.wait([
+      examProvider.loadSemesters(uuid),
+      examProvider.loadInstitutionInfo(uuid),
+    ]);
 
     // If editing, load examination data
     if (widget.examinationId != null) {
@@ -430,35 +433,71 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
   );
 
   Widget _buildSemesterDropdown() => Consumer<ExaminationProvider>(
-    builder:
-        (context, provider, child) => DropDownFormField<int>(
-          label: context.translate('semester_required'),
-          value: _selectedSemesterId ?? 1,
-          hintText: context.translate('select_semester'),
-          //prefixIcon: const Icon(Icons.calendar_month),
-          items: const [1, 2],
-          displayText: (value) {
-            switch (value) {
-              case 1:
-                return 'Spring 2025';
-              case 2:
-                return 'Fall 2024';
-              default:
-                return 'Semester $value';
-            }
-          },
-          onChanged: (semesterId) {
-            setState(() {
-              _selectedSemesterId = semesterId;
-            });
-          },
+    builder: (context, provider, child) {
+      // Determine if this is a school or college
+      final isSchool = provider.institutionType == 'SCHOOL';
+      
+      // Get available semesters from provider
+      final availableSemesters = provider.semesters;
+      
+      // If no semesters loaded, show loading or fallback
+      if (availableSemesters.isEmpty) {
+        return DropDownFormField<int>(
+          label: isSchool 
+              ? context.translate('term_required')
+              : context.translate('semester_required'),
+          value: null,
+          hintText: isSchool 
+              ? context.translate('select_term')
+              : context.translate('select_semester'),
+          items: const [],
+          displayText: (value) => '',
+          onChanged: null,
           validator: (value) {
-            if (value == null) {
-              return context.translate('please_select_semester');
-            }
-            return null;
+            return isSchool 
+                ? context.translate('please_select_term')
+                : context.translate('please_select_semester');
           },
-        ),
+        );
+      }
+
+      return DropDownFormField<int>(
+        label: isSchool 
+            ? context.translate('term_required')
+            : context.translate('semester_required'),
+        value: _selectedSemesterId,
+        hintText: isSchool 
+            ? context.translate('select_term')
+            : context.translate('select_semester'),
+        items: availableSemesters.map((semester) => semester.id).toList(),
+        displayText: (value) {
+          final semester = availableSemesters.firstWhere(
+            (s) => s.id == value,
+            orElse: () => Semester(
+              id: value ?? 0,
+              semesterName: isSchool ? 'Term $value' : 'Semester $value',
+              startDate: DateTime.now(),
+              endDate: DateTime.now(),
+              status: 'ACTIVE',
+            ),
+          );
+          return semester.semesterName;
+        },
+        onChanged: (semesterId) {
+          setState(() {
+            _selectedSemesterId = semesterId;
+          });
+        },
+        validator: (value) {
+          if (value == null) {
+            return isSchool 
+                ? context.translate('please_select_term')
+                : context.translate('please_select_semester');
+          }
+          return null;
+        },
+      );
+    },
   );
 
   Widget _buildMarksFields() => Row(
@@ -674,7 +713,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     final dto = CreateExaminationDto(
       courseId: _selectedSubject!.id, // Mapped to subjectId in backend
 
-      semesterId: _selectedSemesterId ?? 1,
+      semesterId: _selectedSemesterId ?? (context.read<ExaminationProvider>().semesters.isNotEmpty ? context.read<ExaminationProvider>().semesters.first.id : 1),
       examName: _examNameController.text.trim(),
       examType: _examType,
       totalMarks: int.parse(_totalMarksController.text.trim()),

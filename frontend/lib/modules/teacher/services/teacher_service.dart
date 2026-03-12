@@ -1300,4 +1300,30 @@ class TeacherService {
       throw Exception('Failed to generate report cards: $e');
     }
   }
+
+  /// Get institution information for a teacher
+  Future<Map<String, dynamic>> getInstitutionInfo(String userUuid) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/teachers/$userUuid/institution-info',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return data['data'];
+        }
+        throw Exception('Invalid response format');
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load institution information',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load institution information: $e');
+    }
+  }
 }

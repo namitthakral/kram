@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter'
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { ProgressUpdaterService } from '../students/services/progress-updater.service'
+import { UserWithRelations } from '../types/auth.types'
 import {
   BatchReportCardRequest,
   BatchReportCardResponse,
@@ -5027,6 +5028,48 @@ export class TeachersService {
       remarks,
       generatedAt: new Date().toISOString(),
       reportCardNumber,
+    }
+  }
+
+  /**
+   * Get institution information for a teacher
+   */
+  async getInstitutionInfo(userUuid: string, currentUser: UserWithRelations) {
+    // Get teacher info
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { user: { uuid: userUuid } },
+      include: {
+        user: {
+          select: { institutionId: true }
+        },
+        institution: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            code: true
+          }
+        }
+      }
+    })
+
+    if (!teacher) {
+      throw new NotFoundException('Teacher not found')
+    }
+
+    // Check authorization - teachers can only access their own info
+    if (currentUser.uuid !== userUuid && currentUser.role.roleName !== 'admin' && currentUser.role.roleName !== 'super_admin') {
+      throw new ForbiddenException('Access denied')
+    }
+
+    return {
+      success: true,
+      data: {
+        id: teacher.institution.id,
+        name: teacher.institution.name,
+        type: teacher.institution.type,
+        code: teacher.institution.code
+      }
     }
   }
 }

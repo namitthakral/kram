@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
@@ -7,6 +8,7 @@ import '../../../utils/custom_snackbar.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/responsive_layout.dart';
 import '../providers/grading_config_provider.dart';
+import '../services/admin_service.dart';
 
 class GradingConfigScreen extends StatefulWidget {
   const GradingConfigScreen({super.key});
@@ -16,34 +18,66 @@ class GradingConfigScreen extends StatefulWidget {
 }
 
 class _GradingConfigScreenState extends State<GradingConfigScreen> {
+  final AdminService _adminService = AdminService();
+  String? _institutionType;
+  Map<String, dynamic>? _restrictionInfo;
+  bool _isLoadingRestriction = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInstitutionInfo();
       _loadConfig();
     });
   }
 
+  Future<void> _loadInstitutionInfo() async {
+    try {
+      setState(() {
+        _isLoadingRestriction = true;
+      });
+
+      final institutionInfo = await _adminService.getInstitutionInfo(_institutionId);
+      final restrictionInfo = await _adminService.checkGradingRestriction(_institutionId);
+      
+      setState(() {
+        _institutionType = institutionInfo['type'];
+        _restrictionInfo = restrictionInfo;
+        _isLoadingRestriction = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingRestriction = false;
+      });
+      print('Error loading institution info: $e');
+    }
+  }
+
   Future<void> _loadConfig() async {
-    final loginProvider = context.read<LoginProvider>();
-    final user = loginProvider.currentUser;
-
-    final institutionId =
-        user?.student?.institutionId ??
-        user?.teacher?.institutionId ??
-        user?.staff?.institutionId ??
-        1;
-
-    await context.read<GradingConfigProvider>().loadConfig(institutionId);
+    await context.read<GradingConfigProvider>().loadConfig(_institutionId);
   }
 
   int get _institutionId {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
-    return user?.student?.institutionId ??
-        user?.teacher?.institutionId ??
-        user?.staff?.institutionId ??
-        1;
+    return user?.institutionId ??           // For admin users
+        user?.student?.institutionId ??  // For student users
+        user?.teacher?.institutionId ??  // For teacher users
+        user?.staff?.institutionId ??    // For staff users
+        1; // Fallback - should rarely be used
+  }
+
+  String get _periodType {
+    return _institutionType == 'SCHOOL' ? 'term' : 'semester';
+  }
+
+  String get _periodTypeCapitalized {
+    return _institutionType == 'SCHOOL' ? 'Term' : 'Semester';
+  }
+
+  bool get _isRestricted {
+    return _restrictionInfo?['isRestricted'] ?? false;
   }
 
   @override
@@ -145,7 +179,17 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _buildInfoBanner(),
+              if (_isLoadingRestriction)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(color: AppTheme.blue500),
+                  ),
+                )
+              else ...[
+                _buildRestrictionBanner(),
+                _buildInfoBanner(),
+              ],
               const SizedBox(height: 20),
               _buildWeightsSection(provider),
               const SizedBox(height: 20),
@@ -178,7 +222,17 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildInfoBanner(),
+                    if (_isLoadingRestriction)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: CircularProgressIndicator(color: AppTheme.blue500),
+                        ),
+                      )
+                    else ...[
+                      _buildRestrictionBanner(),
+                      _buildInfoBanner(),
+                    ],
                     const SizedBox(height: 24),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,6 +436,135 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
       ],
     ),
   );
+
+  Widget _buildRestrictionBanner() {
+    if (!_isRestricted || _restrictionInfo == null) {
+      return const SizedBox.shrink();
+    }
+
+    final details = _restrictionInfo!['details'];
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.warning.withValues(alpha: 0.1),
+            AppTheme.warning.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.warning,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.lock, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Grading Configuration Locked',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.warning,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Active $_periodTypeCapitalized: ${details['activePeriod']}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.slate800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Academic Year: ${details['academicYear']}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.slate600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Text(
+                      '📚 Why is this locked?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.slate800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Grading configuration cannot be changed during an active $_periodType to ensure '
+                  'all students are evaluated using the same grading standards throughout the $_periodType.',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.slate600,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.schedule, size: 16, color: AppTheme.slate500),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Changes allowed after: ${_formatDate(details['endDate'])}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.slate600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    final date = DateTime.parse(dateStr);
+    return DateFormat('MMM dd, yyyy').format(date);
+  }
 
   Widget _buildInfoBanner() => Container(
     padding: const EdgeInsets.all(16),
@@ -1083,28 +1266,34 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppTheme.slate100,
+                color: _isRestricted ? AppTheme.slate100 : AppTheme.blue500.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.save_outlined, size: 22, color: AppTheme.slate600),
+              child: Icon(
+                _isRestricted ? Icons.lock : Icons.save_outlined, 
+                size: 22, 
+                color: _isRestricted ? AppTheme.slate500 : AppTheme.blue500,
+              ),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Save Configuration',
+                    _isRestricted ? 'Configuration Locked' : 'Save Configuration',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.slate800,
+                      color: _isRestricted ? AppTheme.slate500 : AppTheme.slate800,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Apply changes to the grading system',
-                    style: TextStyle(
+                    _isRestricted 
+                      ? 'Changes restricted during active $_periodType'
+                      : 'Apply changes to the grading system',
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.slate500,
                     ),
@@ -1121,12 +1310,12 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
           alignment: WrapAlignment.end,
           children: [
             OutlinedButton.icon(
-              onPressed: () => _showResetConfirmation(_institutionId),
+              onPressed: _isRestricted ? null : () => _showResetConfirmation(_institutionId),
               icon: const Icon(Icons.restart_alt, size: 18),
               label: const Text('Reset to Defaults'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.danger,
-                side: const BorderSide(color: AppTheme.danger),
+                foregroundColor: _isRestricted ? AppTheme.slate500 : AppTheme.danger,
+                side: BorderSide(color: _isRestricted ? AppTheme.slate500 : AppTheme.danger),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -1134,9 +1323,9 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
               ),
             ),
             ElevatedButton.icon(
-              onPressed: provider.isWeightValid
-                  ? () => _saveConfig(provider, _institutionId)
-                  : null,
+              onPressed: _isRestricted 
+                  ? null 
+                  : (provider.isWeightValid ? () => _saveConfig(provider, _institutionId) : null),
               icon: provider.isLoading
                   ? const SizedBox(
                       width: 18,
@@ -1146,18 +1335,22 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Icon(Icons.check, size: 18),
-              label: Text(provider.isLoading ? 'Saving...' : 'Save Changes'),
+                  : Icon(_isRestricted ? Icons.lock : Icons.check, size: 18),
+              label: Text(
+                _isRestricted 
+                  ? 'Locked During $_periodTypeCapitalized'
+                  : (provider.isLoading ? 'Saving...' : 'Save Changes')
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.blue500,
-                foregroundColor: Colors.white,
+                backgroundColor: _isRestricted ? AppTheme.slate200 : AppTheme.blue500,
+                foregroundColor: _isRestricted ? AppTheme.slate500 : Colors.white,
                 disabledBackgroundColor: AppTheme.slate100,
                 disabledForegroundColor: AppTheme.slate500,
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                elevation: 0,
+                elevation: _isRestricted ? 0 : 2,
               ),
             ),
           ],
@@ -1170,21 +1363,59 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     GradingConfigProvider provider,
     int institutionId,
   ) async {
-    final success = await provider.saveConfig(institutionId);
+    try {
+      final success = await provider.saveConfig(institutionId);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (success) {
-      showCustomSnackbar(
-        message: 'Configuration saved successfully!',
-        type: SnackbarType.success,
-      );
-    } else {
-      showCustomSnackbar(
-        message: 'Failed to save: ${provider.error}',
-        type: SnackbarType.warning,
-      );
+      if (success) {
+        showCustomSnackbar(
+          message: 'Configuration saved successfully!',
+          type: SnackbarType.success,
+        );
+        // Reload restriction info in case semester status changed
+        await _loadInstitutionInfo();
+      } else {
+        showCustomSnackbar(
+          message: 'Failed to save: ${provider.error}',
+          type: SnackbarType.warning,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      
+      if (e.toString().contains('ACTIVE_PERIOD_RESTRICTION')) {
+        _showActivePeriodDialog();
+        // Reload restriction info to get latest status
+        await _loadInstitutionInfo();
+      } else {
+        showCustomSnackbar(
+          message: 'Failed to save: ${e.toString()}',
+          type: SnackbarType.warning,
+        );
+      }
     }
+  }
+
+  void _showActivePeriodDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.lock, color: AppTheme.warning, size: 48),
+        title: const Text('Configuration Locked'),
+        content: Text(
+          'Grading configuration cannot be modified during an active $_periodType. '
+          'This ensures fairness and consistency for all students.\n\n'
+          'Please wait until the current $_periodType ends to make changes.'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Understood'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showResetConfirmation(int institutionId) async {
@@ -1200,21 +1431,38 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     );
 
     if (confirmed == true && mounted) {
-      final provider = context.read<GradingConfigProvider>();
-      final success = await provider.resetToDefaults(institutionId);
+      try {
+        final provider = context.read<GradingConfigProvider>();
+        final success = await provider.resetToDefaults(institutionId);
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (success) {
-        showCustomSnackbar(
-          message: 'Configuration reset to defaults!',
-          type: SnackbarType.success,
-        );
-      } else {
-        showCustomSnackbar(
-          message: 'Failed to reset: ${provider.error}',
-          type: SnackbarType.warning,
-        );
+        if (success) {
+          showCustomSnackbar(
+            message: 'Configuration reset to defaults!',
+            type: SnackbarType.success,
+          );
+          // Reload restriction info in case semester status changed
+          await _loadInstitutionInfo();
+        } else {
+          showCustomSnackbar(
+            message: 'Failed to reset: ${provider.error}',
+            type: SnackbarType.warning,
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        
+        if (e.toString().contains('ACTIVE_PERIOD_RESTRICTION')) {
+          _showActivePeriodDialog();
+          // Reload restriction info to get latest status
+          await _loadInstitutionInfo();
+        } else {
+          showCustomSnackbar(
+            message: 'Failed to reset: ${e.toString()}',
+            type: SnackbarType.warning,
+          );
+        }
       }
     }
   }

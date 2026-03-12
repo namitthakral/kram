@@ -838,9 +838,10 @@ export class AdminService {
     updateDto: UpdateGradingConfigDto,
     adminInstitutionId: number | null
   ) {
-    // Verify institution exists
+    // Verify institution exists and get type for restriction logic
     const institution = await this.prisma.institution.findUnique({
       where: { id: institutionId },
+      select: { id: true, type: true, name: true }
     })
 
     if (!institution) {
@@ -850,6 +851,17 @@ export class AdminService {
     }
     if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
+    }
+
+    // Check for active term/semester restriction
+    const restrictionInfo = await this.checkGradingRestriction(institutionId, institution.type)
+    
+    if (restrictionInfo.isRestricted) {
+      throw new ForbiddenException({
+        message: restrictionInfo.message,
+        error: 'ACTIVE_PERIOD_RESTRICTION',
+        details: restrictionInfo.details
+      })
     }
 
     // Validate that weights sum to 100 if all are provided
@@ -917,9 +929,10 @@ export class AdminService {
     institutionId: number,
     adminInstitutionId: number | null
   ) {
-    // Verify institution exists
+    // Verify institution exists and get type for restriction logic
     const institution = await this.prisma.institution.findUnique({
       where: { id: institutionId },
+      select: { id: true, type: true, name: true }
     })
 
     if (!institution) {
@@ -929,6 +942,17 @@ export class AdminService {
     }
     if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
       throw new ForbiddenException('Access denied to this institution')
+    }
+
+    // Check for active term/semester restriction
+    const restrictionInfo = await this.checkGradingRestriction(institutionId, institution.type)
+    
+    if (restrictionInfo.isRestricted) {
+      throw new ForbiddenException({
+        message: restrictionInfo.message,
+        error: 'ACTIVE_PERIOD_RESTRICTION',
+        details: restrictionInfo.details
+      })
     }
 
     // Delete existing config (will use defaults)
@@ -1647,6 +1671,103 @@ export class AdminService {
     } catch (error) {
       console.error(`Failed to generate Kram ID for user ${userId}:`, error)
       return null
+    }
+  }
+
+  /**
+   * Check if grading configuration changes are restricted due to active term/semester
+   */
+  private async checkGradingRestriction(institutionId: number, institutionType: string) {
+    // Check for active semester/term (unified logic for both schools and colleges)
+    const activePeriod = await this.prisma.semester.findFirst({
+      where: { 
+        academicYear: { institutionId },
+        status: 'ACTIVE' 
+      },
+      select: {
+        id: true,
+        semesterName: true,
+        startDate: true,
+        endDate: true,
+        academicYear: {
+          select: { yearName: true }
+        }
+      }
+    })
+
+    if (activePeriod) {
+      // Adaptive terminology based on institution type
+      const periodType = institutionType === 'SCHOOL' ? 'term' : 'semester'
+      
+      return {
+        isRestricted: true,
+        message: `Cannot modify grading configuration during active ${periodType}`,
+        details: {
+          institutionType,
+          periodType,
+          activePeriod: activePeriod.semesterName,
+          academicYear: activePeriod.academicYear.yearName,
+          startDate: activePeriod.startDate,
+          endDate: activePeriod.endDate,
+          suggestion: `Grading configuration can be modified after the ${periodType} ends`,
+          explanation: `This ensures consistent grading standards throughout the ${periodType}`
+        }
+      }
+    }
+
+    return { isRestricted: false }
+  }
+
+  /**
+   * Get institution information including type
+   */
+  async getInstitutionInfo(institutionId: number, adminInstitutionId: number | null) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('Access denied to this institution')
+    }
+
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        code: true
+      }
+    })
+
+    if (!institution) {
+      throw new NotFoundException('Institution not found')
+    }
+
+    return { 
+      success: true, 
+      data: institution 
+    }
+  }
+
+  /**
+   * Check grading restriction status for an institution
+   */
+  async checkGradingRestrictionStatus(institutionId: number, adminInstitutionId: number | null) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('Access denied to this institution')
+    }
+
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+      select: { type: true }
+    })
+
+    if (!institution) {
+      throw new NotFoundException('Institution not found')
+    }
+
+    const restrictionInfo = await this.checkGradingRestriction(institutionId, institution.type)
+    
+    return {
+      success: true,
+      data: restrictionInfo
     }
   }
 }

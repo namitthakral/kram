@@ -11,6 +11,7 @@ class ExaminationProvider with ChangeNotifier {
   List<Semester> _semesters = [];
   bool _isLoading = false;
   String? _error;
+  String? _institutionType;
   String? _selectedCourseFilter;
   String? _selectedStatusFilter;
 
@@ -18,6 +19,7 @@ class ExaminationProvider with ChangeNotifier {
   List<Semester> get semesters => _semesters;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  String? get institutionType => _institutionType;
   String? get selectedCourseFilter => _selectedCourseFilter;
   String? get selectedStatusFilter => _selectedStatusFilter;
 
@@ -47,6 +49,17 @@ class ExaminationProvider with ChangeNotifier {
       notifyListeners();
     } on Exception catch (e) {
       debugPrint('Error loading semesters: $e');
+    }
+  }
+
+  /// Load institution information
+  Future<void> loadInstitutionInfo(String userUuid) async {
+    try {
+      final institutionInfo = await _teacherService.getInstitutionInfo(userUuid);
+      _institutionType = institutionInfo['type'];
+      notifyListeners();
+    } on Exception catch (e) {
+      debugPrint('Error loading institution info: $e');
     }
   }
 

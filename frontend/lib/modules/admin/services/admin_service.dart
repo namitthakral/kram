@@ -318,6 +318,62 @@ class AdminService {
     }
   }
 
+  /// Get institution information including type
+  ///
+  /// Endpoint: GET /admin/institutions/:institutionId/info
+  Future<Map<String, dynamic>> getInstitutionInfo(int institutionId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/admin/institutions/$institutionId/info',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return data['data'];
+        }
+        throw Exception('Invalid response format');
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load institution information',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load institution information: $e');
+    }
+  }
+
+  /// Check grading configuration restriction status
+  ///
+  /// Endpoint: GET /admin/institutions/:institutionId/grading-restriction
+  Future<Map<String, dynamic>> checkGradingRestriction(int institutionId) async {
+    try {
+      final response = await _apiService.dio.get(
+        '/admin/institutions/$institutionId/grading-restriction',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          return data['data'];
+        }
+        throw Exception('Invalid response format');
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to check grading restriction',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to check grading restriction: $e');
+    }
+  }
+
   // ==================== INSTITUTION SETTINGS ====================
 
   /// Get institution profile (school info)

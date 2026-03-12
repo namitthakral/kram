@@ -213,6 +213,28 @@ export class AdminController {
     )
   }
 
+  @Get('institutions/:institutionId/info')
+  getInstitutionInfo(
+    @Param('institutionId') institutionId: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.getInstitutionInfo(
+      +institutionId,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Get('institutions/:institutionId/grading-restriction')
+  checkGradingRestriction(
+    @Param('institutionId') institutionId: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.checkGradingRestrictionStatus(
+      +institutionId,
+      this.resolveInstitutionId(user)
+    )
+  }
+
   // Dashboard Analytics Endpoints
   @Get('dashboard-stats')
   getDashboardStats(@CurrentUser() user: UserWithRelations) {
