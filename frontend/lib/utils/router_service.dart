@@ -16,6 +16,7 @@ import '../modules/admin/screens/class_section_management_screen.dart';
 import '../modules/admin/screens/course_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
 import '../modules/admin/screens/institution_settings_screen.dart';
+import '../modules/admin/screens/subject_management_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
 import '../modules/fees/models/student_fee.dart';
 import '../modules/fees/screens/admin/assign_fee_screen.dart';
@@ -711,6 +712,15 @@ class RouterService {
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const CourseManagementScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/subjects',
+          name: 'subjects',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const SubjectManagementScreen(),
               ),
         ),
         GoRoute(

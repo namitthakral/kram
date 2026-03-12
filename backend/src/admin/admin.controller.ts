@@ -32,6 +32,11 @@ import { UpdateGradingConfigDto } from './dto/grading-config.dto'
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('academic-years')
+  getAcademicYears(@CurrentUser() user: UserWithRelations) {
+    return this.adminService.getAcademicYears(this.resolveInstitutionId(user))
+  }
+
   @Post('users')
   createInstitutionalUser(
     @Body() createUserDto: CreateUserDto,

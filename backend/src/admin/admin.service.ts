@@ -25,6 +25,17 @@ export class AdminService {
     private idGeneration: IdGenerationService
   ) {}
 
+  async getAcademicYears(institutionId: number | null) {
+    return this.prisma.academicYear.findMany({
+      where: {
+        ...(institutionId !== null && { institutionId }),
+      },
+      orderBy: {
+        startDate: 'desc',
+      },
+    })
+  }
+
   async createInstitutionalUser(
     createUserDto: CreateUserDto,
     adminInstitutionId: number | null

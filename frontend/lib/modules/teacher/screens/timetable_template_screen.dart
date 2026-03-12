@@ -8,6 +8,7 @@ import '../../../provider/teachers_provider.dart';
 import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/academic_year_dropdown.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_form_dialog.dart';
 import '../../../widgets/custom_widgets/custom_form_section.dart';
@@ -15,6 +16,7 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../models/template_models.dart';
 import '../providers/timetable_provider.dart';
+import '../../../provider/academic_year_provider.dart';
 import '../services/pdf_template_service.dart';
 import '../services/teacher_service.dart';
 
@@ -38,8 +40,10 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
   );
   final _classNameController = TextEditingController(text: 'Class 10');
   final _sectionController = TextEditingController(text: 'A');
-  final _academicYearController = TextEditingController(text: '2024-2025');
+  final _academicYearController = TextEditingController();
   final _classTeacherController = TextEditingController(text: 'Mrs. Johnson');
+
+  int? _selectedAcademicYearId;
 
   // Time slots from database
   List<Map<String, dynamic>> timeSlots = [];
@@ -165,6 +169,7 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
       });
     }
   }
+
 
   void _initializeTimetableData() {
     // Initialize empty timetable based on current time slots
@@ -1080,9 +1085,21 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: CustomTextField(
-                          label: 'Academic Year',
-                          controller: _academicYearController,
+                        child: AcademicYearDropdown(
+                          value: _selectedAcademicYearId,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedAcademicYearId = value;
+                              if (value != null) {
+                                final provider =
+                                    context.read<AcademicYearProvider>();
+                                final year = provider.academicYears.firstWhere(
+                                  (y) => y.id == value,
+                                );
+                                _academicYearController.text = year.yearName;
+                              }
+                            });
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),

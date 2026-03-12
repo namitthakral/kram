@@ -4,12 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
-import '../../../utils/router_service.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../../modules/teacher/services/teacher_service.dart';
 import '../widgets/add_teacher_dialog.dart';
+import '../widgets/edit_teacher_dialog.dart';
+import '../widgets/teacher_view_sheet.dart';
 
 class AdminTeachersScreen extends StatefulWidget {
   const AdminTeachersScreen({super.key});
@@ -378,12 +379,12 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.visibility_outlined, size: 20),
-                  onPressed: () => _viewProfile(t),
+                  onPressed: () => _showTeacherView(context, t),
                   tooltip: context.translate('view_details'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 20),
-                  onPressed: () {},
+                  onPressed: () => _showEditTeacher(context, t),
                   tooltip: context.translate('edit'),
                 ),
               ],
@@ -447,11 +448,12 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.visibility_outlined, size: 20),
-                        onPressed: () => _viewProfile(t),
+                        onPressed: () => _showTeacherView(context, t),
                       ),
                       IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 20),
-                        onPressed: () {},
+                        onPressed: () => _showEditTeacher(context, t),
+                        tooltip: context.translate('edit'),
                       ),
                     ],
                   ),
@@ -520,18 +522,40 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
       context: context,
       builder: (context) => const AddTeacherDialog(),
     );
-    
-    // If teacher was created successfully, refresh the list
     if (result == true) {
       _loadTeachers();
     }
   }
 
-  void _viewProfile(dynamic t) {
-    final user = t['user'] as Map<String, dynamic>?;
-    final uuid = user?['uuid'] as String?;
-    if (uuid != null) {
-      context.router.router.push('/profile');
+  void _showEditTeacher(BuildContext context, dynamic teacher) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => EditTeacherDialog(teacher: teacher as Map<String, dynamic>),
+    );
+    if (result == true) {
+      _loadTeachers();
+    }
+  }
+
+  Future<void> _showTeacherView(BuildContext context, dynamic teacher) async {
+    final result = await showModalBottomSheet<dynamic>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) =>
+          TeacherViewSheet(teacher: teacher as Map<String, dynamic>),
+    );
+
+    if (!mounted) return;
+
+    // result == true  →  Edit button was tapped; open the edit dialog.
+    // result is bool (could also be false if status was toggled and closed).
+    if (result == true) {
+      // Edit button was tapped inside the sheet; open edit dialog
+      _showEditTeacher(context, teacher);
+    } else if (result is bool) {
+      // Status was toggled (sheet closed via X or back)
+      _loadTeachers();
     }
   }
 }

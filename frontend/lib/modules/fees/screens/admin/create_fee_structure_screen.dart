@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
+import '../../../../provider/login_signup/login_provider.dart';
+import '../../../../widgets/custom_widgets/academic_year_dropdown.dart';
 import '../../providers/fees_provider.dart';
 
 class CreateFeeStructureScreen extends StatefulWidget {
@@ -22,7 +24,7 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
   final _lateFeeDaysController = TextEditingController(); // lateFeeAfterDays
 
   String _selectedFeeType = 'TUITION'; // Default
-  int? _selectedAcademicYearId = 1; // Hardcoded default for now
+  int? _selectedAcademicYearId;
   bool _isRecurring = false;
   String? _recurringFrequency;
   DateTime? _selectedDueDate;
@@ -39,6 +41,12 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
   final List<String> _frequencies = ['MONTHLY', 'QUARTERLY', 'YEARLY'];
 
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
 
   @override
   void dispose() {
@@ -69,8 +77,11 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
 
+      final loginProvider = context.read<LoginProvider>();
+      final institutionId = loginProvider.currentUser?.institutionId;
+
       final data = {
-        'institutionId': 1, // Hardcoded
+        'institutionId': institutionId,
         'academicYearId': _selectedAcademicYearId,
         'feeName': _nameController.text,
         'feeType': _selectedFeeType,
@@ -137,6 +148,11 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildSectionTitle('Basic Information'),
+              const SizedBox(height: 16),
+              AcademicYearDropdown(
+                value: _selectedAcademicYearId,
+                onChanged: (value) => setState(() => _selectedAcademicYearId = value),
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,

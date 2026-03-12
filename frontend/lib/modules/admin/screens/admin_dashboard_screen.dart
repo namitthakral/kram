@@ -139,6 +139,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             color: const Color(0xFF059669),
             onTap: () => context.router.router.push('/courses'),
           ),
+          FeatureActionCard(
+            title: 'Manage Subjects',
+            icon: Icons.menu_book_rounded,
+            color: const Color(0xFF3b82f6),
+            onTap: () => context.router.router.push('/subjects'),
+          ),
         ],
       );
     },

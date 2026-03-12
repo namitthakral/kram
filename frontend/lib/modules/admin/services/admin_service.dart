@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/services/api_service.dart';
 import '../../../models/grading_config.dart';
+import '../../../models/academic_year.dart';
 import '../models/admin_dashboard_models.dart';
 
 /// Service class for handling admin-related API calls
@@ -209,6 +210,29 @@ class AdminService {
       }
     } on Exception catch (e) {
       throw Exception('Failed to load system alerts: $e');
+    }
+  }
+
+  /// Get list of academic years for the institution
+  ///
+  /// Endpoint: GET /admin/academic-years
+  Future<List<AcademicYear>> getAcademicYears() async {
+    try {
+      final response = await _apiService.dio.get('/admin/academic-years');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => AcademicYear.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load academic years',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load academic years: $e');
     }
   }
 
@@ -863,6 +887,140 @@ class AdminService {
       throw Exception('Failed to unlock user account: ${e.message}');
     } on Exception catch (e) {
       throw Exception('Failed to unlock user account: $e');
+    }
+  }
+
+  // ==================== SUBJECT MANAGEMENT ====================
+
+  /// Get all subjects (optionally filtered)
+  ///
+  /// Endpoint: GET /subjects
+  Future<List<dynamic>> getSubjects({int? courseId, String? status}) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (courseId != null) queryParams['courseId'] = courseId.toString();
+      if (status != null) queryParams['status'] = status;
+
+      final response = await _apiService.dio.get(
+        '/subjects',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is List) return data;
+        if (data is Map<String, dynamic>) {
+          return (data['data'] as List<dynamic>?) ?? [];
+        }
+        return [];
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load subjects',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load subjects: $e');
+    }
+  }
+
+  /// Create a new subject
+  ///
+  /// Endpoint: POST /subjects
+  Future<Map<String, dynamic>> createSubject(
+    Map<String, dynamic> subjectData,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/subjects',
+        data: subjectData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create subject',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to create subject: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to create subject: $e');
+    }
+  }
+
+  /// Update an existing subject
+  ///
+  /// Endpoint: PATCH /subjects/:id
+  Future<Map<String, dynamic>> updateSubject(
+    int subjectId,
+    Map<String, dynamic> subjectData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/subjects/$subjectId',
+        data: subjectData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update subject',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Subject not found');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to update subject: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to update subject: $e');
+    }
+  }
+
+  /// Delete a subject (soft-delete → sets status to INACTIVE)
+  ///
+  /// Endpoint: DELETE /subjects/:id
+  Future<void> deleteSubject(int subjectId) async {
+    try {
+      final response = await _apiService.dio.delete('/subjects/$subjectId');
+
+      if (response.statusCode != 204 &&
+          response.statusCode != 200 &&
+          response.statusCode != 202) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete subject',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Subject not found');
+      }
+      throw Exception('Failed to delete subject: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to delete subject: $e');
     }
   }
 }

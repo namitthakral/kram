@@ -27,8 +27,9 @@ class AdminAttendanceTrendsChart extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: LineChart(
         LineChartData(
+          clipData: const FlClipData.all(),
           gridData: FlGridData(
-            horizontalInterval: 3,
+            horizontalInterval: 5,
             verticalInterval: 1,
             getDrawingHorizontalLine:
                 (value) => const FlLine(
@@ -49,16 +50,19 @@ class AdminAttendanceTrendsChart extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                interval: 1,
+                reservedSize: 32,
                 getTitlesWidget: (value, meta) {
                   const style = TextStyle(
                     color: Color(0xFF64748b),
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 11,
                   );
                   final index = value.toInt();
                   if (index >= 0 && index < data.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      space: 8,
                       child: Text(data[index].month, style: style),
                     );
                   }
@@ -69,15 +73,18 @@ class AdminAttendanceTrendsChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 40,
-                interval: 3,
+                reservedSize: 45,
+                interval: 10,
                 getTitlesWidget: (value, meta) {
                   const style = TextStyle(
                     color: Color(0xFF64748b),
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 11,
                   );
-                  return Text('${value.toInt()}', style: style);
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text('${value.toInt()}', style: style),
+                  );
                 },
               ),
             ),
@@ -88,7 +95,7 @@ class AdminAttendanceTrendsChart extends StatelessWidget {
           ),
           minX: 0,
           maxX: (data.length - 1).toDouble(),
-          minY: 90,
+          minY: 0,
           maxY: 100,
           lineBarsData: [
             // Actual attendance line
@@ -456,16 +463,19 @@ class AdminFinancialOverviewChart extends StatelessWidget {
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
+                interval: 1,
+                reservedSize: 32,
                 getTitlesWidget: (value, meta) {
                   const style = TextStyle(
                     color: Color(0xFF64748b),
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 11,
                   );
                   final index = value.toInt();
                   if (index >= 0 && index < data.length) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      space: 8,
                       child: Text(data[index].month, style: style),
                     );
                   }
@@ -476,15 +486,18 @@ class AdminFinancialOverviewChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 60,
+                reservedSize: 50,
                 interval: maxY / 5,
                 getTitlesWidget: (value, meta) {
                   const style = TextStyle(
                     color: Color(0xFF64748b),
                     fontWeight: FontWeight.w500,
-                    fontSize: 12,
+                    fontSize: 11,
                   );
-                  return Text('${(value / 1000).toInt()}k', style: style);
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text('${(value / 1000).toInt()}k', style: style),
+                  );
                 },
               ),
             ),

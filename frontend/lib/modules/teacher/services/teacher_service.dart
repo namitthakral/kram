@@ -1146,6 +1146,86 @@ class TeacherService {
     }
   }
 
+  // ==================== TEACHER UPDATE ====================
+
+  /// Update teacher profile data
+  ///
+  /// Endpoint: PATCH /teachers/:user_uuid
+  Future<Map<String, dynamic>> updateTeacher(
+    String userUuid,
+    Map<String, dynamic> updateData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/teachers/$userUuid',
+        data: updateData,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update teacher',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Teacher not found');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to update teacher: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to update teacher: $e');
+    }
+  }
+
+  /// Assign subjects to a teacher
+  ///
+  /// Endpoint: POST /teachers/:user_uuid/assign-subjects
+  Future<Map<String, dynamic>> assignSubjectsToTeacher(
+    String userUuid,
+    List<int> subjectIds,
+    int academicYearId,
+  ) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/teachers/$userUuid/assign-subjects',
+        data: {
+          'subjectIds': subjectIds,
+          'academicYearId': academicYearId,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to assign subjects',
+        );
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        throw Exception('Teacher or subject not found');
+      } else if (e.response?.statusCode == 400) {
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid data provided';
+        throw Exception(errorMessage);
+      }
+      throw Exception('Failed to assign subjects: ${e.message}');
+    } on Exception catch (e) {
+      throw Exception('Failed to assign subjects: $e');
+    }
+  }
+
   /// Generate batch report cards for students.
   ///
   /// Endpoint: POST /teachers/:user_uuid/report-cards/generate

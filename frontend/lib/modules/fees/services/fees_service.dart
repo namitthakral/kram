@@ -283,4 +283,16 @@ class FeesService {
       throw Exception('Error loading payment summary: $e');
     }
   }
+
+  Future<List<dynamic>> getAcademicYears() async {
+    try {
+      final response = await _apiService.dio.get('/admin/academic-years');
+      if (response.statusCode == 200) {
+        return response.data['data'];
+      }
+      throw Exception('Failed to load academic years');
+    } catch (e) {
+      throw Exception('Error loading academic years: $e');
+    }
+  }
 }

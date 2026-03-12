@@ -233,6 +233,12 @@ export class TeachersService {
               type: true,
             },
           },
+          teacherSubjects: {
+            include: {
+              subject: true,
+              academicYear: true,
+            },
+          },
         },
       }),
       this.prisma.teacher.count({ where }),
@@ -444,27 +450,92 @@ export class TeachersService {
       updateData.joinDate = new Date(updateTeacherDto.joinDate)
     }
 
-    const teacher = await this.prisma.teacher.update({
-      where: { id },
-      data: updateData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            status: true,
+    // Run in a transaction: update teacher record, then optionally sync user.status.
+    // userStatus (UserStatus enum) controls login access; teacher.status controls employment state.
+    const teacher = await this.prisma.$transaction(async tx => {
+      // If subjectIds provided, handle TeacherSubject sync and update specialization string
+      if (updateTeacherDto.subjectIds) {
+        let academicYearId = updateTeacherDto.academicYearId
+
+        // If no academicYearId provided, find the current one
+        if (!academicYearId) {
+          const currentYear = await tx.academicYear.findFirst({
+            where: {
+              institutionId: existingTeacher.institutionId,
+              status: 'CURRENT',
+            },
+          })
+          academicYearId = currentYear?.id
+        }
+
+        if (academicYearId) {
+          // Remove existing assignments for this academic year
+          await tx.teacherSubject.deleteMany({
+            where: {
+              teacherId: id,
+              academicYearId: academicYearId,
+            },
+          })
+
+          // Create new assignments
+          if (updateTeacherDto.subjectIds.length > 0) {
+            await tx.teacherSubject.createMany({
+              data: updateTeacherDto.subjectIds.map(subjectId => ({
+                teacherId: id,
+                subjectId,
+                academicYearId: academicYearId,
+              })),
+            })
+
+            // Fetch subject names to update the specialization string
+            const subjects = await tx.subject.findMany({
+              where: { id: { in: updateTeacherDto.subjectIds } },
+              select: { subjectName: true },
+            })
+            updateData.specialization = subjects
+              .map(s => s.subjectName)
+              .join(', ')
+          } else {
+            updateData.specialization = ''
+          }
+        }
+      }
+
+      const updated = await tx.teacher.update({
+        where: { id },
+        data: updateData,
+        include: {
+          user: {
+            select: {
+              id: true,
+              uuid: true,
+              name: true,
+              email: true,
+              phone: true,
+              status: true,
+            },
+          },
+          institution: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
           },
         },
-        institution: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-          },
-        },
-      },
+      })
+
+      // If userStatus was provided, update the linked User account status
+      if (updateTeacherDto.userStatus) {
+        await tx.user.update({
+          where: { id: updated.userId },
+          data: { status: updateTeacherDto.userStatus },
+        })
+        // Reflect the new user status in the returned object so the caller sees it
+        updated.user.status = updateTeacherDto.userStatus
+      }
+
+      return updated
     })
 
     return teacher

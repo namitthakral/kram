@@ -297,4 +297,13 @@ class FeesProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<List<dynamic>> getAcademicYears() async {
+    try {
+      return await _feesService.getAcademicYears();
+    } catch (e) {
+      _setError(e);
+      return [];
+    }
+  }
 }

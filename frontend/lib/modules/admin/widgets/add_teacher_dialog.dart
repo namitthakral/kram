@@ -29,9 +29,11 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
   final _specialtyController = TextEditingController();
 
   String _selectedGender = 'MALE';
+  String _status = 'ACTIVE';
   bool _isCreating = false;
 
   final List<String> _genderOptions = ['MALE', 'FEMALE', 'OTHER'];
+  final _designationController = TextEditingController();
 
   @override
   void dispose() {
@@ -43,6 +45,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
     _qualificationController.dispose();
     _experienceController.dispose();
     _specialtyController.dispose();
+    _designationController.dispose();
     super.dispose();
   }
 
@@ -51,7 +54,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
     return Dialog(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 800),
         padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
@@ -83,6 +86,11 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      _StatusToggle(
+                        value: _status,
+                        onChanged: (v) => setState(() => _status = v),
+                      ),
+                      const SizedBox(height: 24),
                       // Basic Information
                       Row(
                         children: [
@@ -108,6 +116,16 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      CustomTextField(
+                        controller: _designationController,
+                        label: context.translate('designation'),
+                        hintText: 'e.g., Senior Professor',
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? 'Designation is required'
+                            : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -279,7 +297,9 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
         'address': _addressController.text.trim(),
         'institutionId': institutionId,
         'roleId': 5, // Teacher role ID
+        'status': _status,
         'teacherData': {
+          'designation': _designationController.text.trim(),
           'qualification': _qualificationController.text.trim(),
           'experienceYears': int.parse(_experienceController.text.trim()),
           'specialization': _specialtyController.text.trim().isNotEmpty 
@@ -322,5 +342,87 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
         setState(() => _isCreating = false);
       }
     }
+  }
+}
+
+class _StatusToggle extends StatelessWidget {
+  const _StatusToggle({required this.value, required this.onChanged});
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = value == 'ACTIVE';
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: 'Account Status',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      ),
+      child: Row(
+        children: [
+          _chip(
+            label: 'Active',
+            selected: isActive,
+            color: const Color(0xFF10b981),
+            onTap: () => onChanged('ACTIVE'),
+          ),
+          const SizedBox(width: 8),
+          _chip(
+            label: 'Inactive',
+            selected: !isActive,
+            color: const Color(0xFFef4444),
+            onTap: () => onChanged('INACTIVE'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          border: Border.all(
+            color: selected ? color : AppTheme.slate200,
+            width: selected ? 1.5 : 1,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected)
+              Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                ),
+              ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected ? color : AppTheme.slate500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
