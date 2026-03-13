@@ -16,6 +16,7 @@ import '../modules/admin/screens/class_section_management_screen.dart';
 import '../modules/admin/screens/course_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
 import '../modules/admin/screens/institution_settings_screen.dart';
+import '../modules/admin/screens/academic_year_management_screen.dart';
 import '../modules/admin/screens/subject_management_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
 import '../modules/fees/models/student_fee.dart';
@@ -739,6 +740,15 @@ class RouterService {
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const InstitutionSettingsScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/academic-management',
+          name: 'academic_year_management',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AcademicYearManagementScreen(),
               ),
         ),
         GoRoute(

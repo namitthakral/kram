@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../core/services/api_service.dart';
 import '../../../models/grading_config.dart';
 import '../../../models/academic_year.dart';
+import '../../../models/semester.dart';
 import '../models/admin_dashboard_models.dart';
 
 /// Service class for handling admin-related API calls
@@ -233,6 +234,91 @@ class AdminService {
       }
     } on Exception catch (e) {
       throw Exception('Failed to load academic years: $e');
+    }
+  }
+
+  /// Get list of semesters for an academic year
+  ///
+  /// Endpoint: GET /admin/semesters/:academicYearId
+  Future<List<Semester>> getSemesters(int academicYearId) async {
+    try {
+      final response =
+          await _apiService.dio.get('/admin/semesters/$academicYearId');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Semester.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load semesters',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to load semesters: $e');
+    }
+  }
+
+  /// Create a new semester
+  ///
+  /// Endpoint: POST /admin/semesters
+  Future<Semester> createSemester(Map<String, dynamic> semesterData) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/admin/semesters',
+        data: semesterData,
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return Semester.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create semester',
+        );
+      }
+    } on DioException catch (e) {
+      final errorMessage =
+          e.response?.data['message'] ?? 'Failed to create semester';
+      throw Exception(errorMessage);
+    } on Exception catch (e) {
+      throw Exception('Failed to create semester: $e');
+    }
+  }
+
+  /// Update an existing semester
+  ///
+  /// Endpoint: PATCH /admin/semesters/:id
+  Future<Semester> updateSemester(
+    int id,
+    Map<String, dynamic> semesterData,
+  ) async {
+    try {
+      final response = await _apiService.dio.patch(
+        '/admin/semesters/$id',
+        data: semesterData,
+      );
+
+      if (response.statusCode == 200) {
+        return Semester.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update semester',
+        );
+      }
+    } on DioException catch (e) {
+      final errorMessage =
+          e.response?.data['message'] ?? 'Failed to update semester';
+      throw Exception(errorMessage);
+    } on Exception catch (e) {
+      throw Exception('Failed to update semester: $e');
     }
   }
 

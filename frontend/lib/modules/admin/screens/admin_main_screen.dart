@@ -80,7 +80,13 @@ class AdminMainScreen extends StatelessWidget {
                   title: context.translate('academic_management'),
                   icon: Icons.school_rounded,
                   color: const Color(0xFFa855f7),
-                  onTap: () => context.router.router.push('/academic'),
+                  onTap: () => context.router.router.push('/academic-management'),
+                ),
+                FeatureActionCard(
+                  title: 'Years & Semesters',
+                  icon: Icons.calendar_month_rounded,
+                  color: const Color(0xFF6366f1),
+                  onTap: () => context.router.router.push('/academic-management'),
                 ),
                 FeatureActionCard(
                   title: context.translate('course_management'),

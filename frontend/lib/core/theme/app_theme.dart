@@ -11,10 +11,14 @@ class AppTheme {
 
   // Secondary Colors
   static const Color slate800 = Color(0xFF1e293b); // Headings
+  static const Color slate700 = Color(0xFF334155); // Subheadings
   static const Color slate600 = Color(0xFF475569); // Body text
   static const Color slate500 = Color(0xFF64748b); // Muted text
-  static const Color slate200 = Color(0xFFe2e8f0); // Borders, dividers
+  static const Color slate400 = Color(0xFF94a3b8); // Lighter muted text
+  static const Color slate300 = Color(0xFFcbd5e1); // Borders
+  static const Color slate200 = Color(0xFFe2e8f0); // Light borders/dividers
   static const Color slate100 = Color(0xFFf1f5f9); // Subtle backgrounds
+  static const Color slate50 = Color(0xFFf8fafc); // Very light backgrounds
 
   // Status Colors
   static const Color success = Color(0xFF10b981); // Green

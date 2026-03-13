@@ -301,6 +301,17 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
                 foregroundColor: Colors.white,
               ),
             ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () =>
+                  context.router.router.push('/academic-management'),
+              icon: const Icon(Icons.calendar_month_rounded, size: 20),
+              label: const Text('Academic Years & Semesters'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.blue500,
+                foregroundColor: Colors.white,
+              ),
+            ),
           ],
         ),
       ),

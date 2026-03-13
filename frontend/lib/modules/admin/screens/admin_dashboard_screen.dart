@@ -145,6 +145,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             color: const Color(0xFF3b82f6),
             onTap: () => context.router.router.push('/subjects'),
           ),
+          FeatureActionCard(
+            title: 'Manage Semesters',
+            icon: Icons.calendar_month_rounded,
+            color: const Color(0xFFa855f7),
+            onTap: () => context.router.router.push('/academic-management'),
+          ),
         ],
       );
     },

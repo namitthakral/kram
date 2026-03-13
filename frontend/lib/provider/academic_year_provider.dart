@@ -7,11 +7,13 @@ class AcademicYearProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   int? _selectedAcademicYearId;
+  bool _hasLoadedOnce = false;
 
   List<AcademicYear> get academicYears => _academicYears;
   bool get isLoading => _isLoading;
   String? get error => _error;
   int? get selectedAcademicYearId => _selectedAcademicYearId;
+  bool get hasLoadedOnce => _hasLoadedOnce;
 
   AcademicYear? get selectedAcademicYear {
     if (_selectedAcademicYearId == null) return null;
@@ -45,6 +47,7 @@ class AcademicYearProvider extends ChangeNotifier {
       _error = e.toString();
     } finally {
       _isLoading = false;
+      _hasLoadedOnce = true;
       notifyListeners();
     }
   }

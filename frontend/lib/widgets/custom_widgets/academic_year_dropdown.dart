@@ -24,8 +24,8 @@ class AcademicYearDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AcademicYearProvider>(
       builder: (context, provider, child) {
-        if (provider.academicYears.isEmpty && !provider.isLoading) {
-          // Trigger load if empty
+        if (!provider.hasLoadedOnce && !provider.isLoading) {
+          // Trigger load if not yet loaded
           Future.microtask(() => provider.loadAcademicYears());
         }
 

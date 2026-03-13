@@ -25,6 +25,7 @@ import {
 import { UpdateInstitutionDto } from '../institutions/dto/institution.dto'
 import { AdminService } from './admin.service'
 import { UpdateGradingConfigDto } from './dto/grading-config.dto'
+import { CreateSemesterDto, UpdateSemesterDto } from './dto/semester.dto'
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,6 +36,32 @@ export class AdminController {
   @Get('academic-years')
   getAcademicYears(@CurrentUser() user: UserWithRelations) {
     return this.adminService.getAcademicYears(this.resolveInstitutionId(user))
+  }
+
+  @Get('semesters/:academicYearId')
+  getSemesters(@Param('academicYearId') academicYearId: string) {
+    return this.adminService.getSemesters(+academicYearId)
+  }
+
+  @Post('semesters')
+  createSemester(
+    @Body() dto: CreateSemesterDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.createSemester(dto, this.resolveInstitutionId(user))
+  }
+
+  @Patch('semesters/:id')
+  updateSemester(
+    @Param('id') id: string,
+    @Body() dto: UpdateSemesterDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.updateSemester(
+      +id,
+      dto,
+      this.resolveInstitutionId(user)
+    )
   }
 
   @Post('users')

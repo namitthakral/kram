@@ -17,6 +17,7 @@ import { UpdateInstitutionDto } from '../institutions/dto/institution.dto'
 import { PrismaService } from '../prisma/prisma.service'
 import { generateTemporaryPassword } from '../utils/kramid.util'
 import { UpdateGradingConfigDto } from './dto/grading-config.dto'
+import { CreateSemesterDto, UpdateSemesterDto } from './dto/semester.dto'
 
 @Injectable()
 export class AdminService {
@@ -32,6 +33,126 @@ export class AdminService {
       },
       orderBy: {
         startDate: 'desc',
+      },
+    })
+  }
+
+  async getSemesters(academicYearId: number) {
+    return this.prisma.semester.findMany({
+      where: {
+        academicYearId,
+      },
+      orderBy: {
+        semesterNumber: 'asc',
+      },
+    })
+  }
+
+  async createSemester(dto: CreateSemesterDto, institutionId: number | null) {
+    // Verify academic year belongs to the institution
+    const academicYear = await this.prisma.academicYear.findUnique({
+      where: { id: dto.academicYearId },
+    })
+
+    if (!academicYear) {
+      throw new NotFoundException('Academic year not found')
+    }
+
+    if (institutionId !== null && academicYear.institutionId !== institutionId) {
+      throw new ForbiddenException(
+        'You can only create semesters for your own institution'
+      )
+    }
+
+    // Check if semester number already exists for this academic year
+    const existingSemester = await this.prisma.semester.findFirst({
+      where: {
+        academicYearId: dto.academicYearId,
+        semesterNumber: dto.semesterNumber,
+      },
+    })
+
+    if (existingSemester) {
+      throw new ConflictException(
+        `Semester number ${dto.semesterNumber} already exists for this academic year`
+      )
+    }
+
+    return this.prisma.semester.create({
+      data: {
+        academicYearId: dto.academicYearId,
+        semesterName: dto.semesterName,
+        semesterNumber: dto.semesterNumber,
+        startDate: new Date(dto.startDate),
+        endDate: new Date(dto.endDate),
+        registrationStart: dto.registrationStart
+          ? new Date(dto.registrationStart)
+          : null,
+        registrationEnd: dto.registrationEnd
+          ? new Date(dto.registrationEnd)
+          : null,
+      },
+    })
+  }
+
+  async updateSemester(
+    id: number,
+    dto: UpdateSemesterDto,
+    institutionId: number | null
+  ) {
+    const semester = await this.prisma.semester.findUnique({
+      where: { id },
+      include: { academicYear: true },
+    })
+
+    if (!semester) {
+      throw new NotFoundException('Semester not found')
+    }
+
+    if (
+      institutionId !== null &&
+      semester.academicYear.institutionId !== institutionId
+    ) {
+      throw new ForbiddenException(
+        'You can only update semesters for your own institution'
+      )
+    }
+
+    if (dto.status === 'ACTIVE') {
+      // Find all active semesters for this institution and set them to COMPLETED
+      // Semesters are linked to AcademicYears which are linked to Institutions
+      await this.prisma.semester.updateMany({
+        where: {
+          status: 'ACTIVE',
+          academicYear: {
+            institutionId: semester.academicYear.institutionId,
+          },
+          id: { not: id },
+        },
+        data: {
+          status: 'COMPLETED',
+        },
+      })
+    }
+
+    return this.prisma.semester.update({
+      where: { id },
+      data: {
+        ...(dto.semesterName && { semesterName: dto.semesterName }),
+        ...(dto.semesterNumber && { semesterNumber: dto.semesterNumber }),
+        ...(dto.startDate && { startDate: new Date(dto.startDate) }),
+        ...(dto.endDate && { endDate: new Date(dto.endDate) }),
+        ...(dto.registrationStart !== undefined && {
+          registrationStart: dto.registrationStart
+            ? new Date(dto.registrationStart)
+            : null,
+        }),
+        ...(dto.registrationEnd !== undefined && {
+          registrationEnd: dto.registrationEnd
+            ? new Date(dto.registrationEnd)
+            : null,
+        }),
+        ...(dto.status && { status: dto.status }),
       },
     })
   }

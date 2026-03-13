@@ -53,9 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  bool _isInitializing = false;
   Future<void> _initializeNavigation() async {
-    final loginProvider = context.read<LoginProvider>();
-    final navProvider = context.read<BottomNavProvider>();
+    if (_isInitializing) return;
+    _isInitializing = true;
+
+    try {
+      final loginProvider = context.read<LoginProvider>();
+      final navProvider = context.read<BottomNavProvider>();
 
     // Check if user is already loaded
     if (loginProvider.currentUser?.role?.id != null) {
@@ -71,11 +76,14 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    if (isLoggedIn && loginProvider.currentUser?.role?.id != null) {
-      navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
-    } else {
-      // If still no valid session/role, redirect to login
-      context.router.goToLogin();
+      if (isLoggedIn && loginProvider.currentUser?.role?.id != null) {
+        navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
+      } else {
+        // If still no valid session/role, redirect to login
+        context.router.goToLogin();
+      }
+    } finally {
+      _isInitializing = false;
     }
   }
 
@@ -115,20 +123,41 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
     super.dispose();
   }
 
+  bool _isHandlingPopState = false;
   void _registerWebBackButtonListener() {
     web.window.onPopState.listen((web.PopStateEvent event) {
+      if (_isHandlingPopState) return;
+
       final path = web.window.location.pathname ?? '';
-      final isLeavingDashboard = path == '/' ||
+      final isLeavingDashboard =
+          path == '/' ||
           path == '/login' ||
           path == '/splash' ||
           path == '/onboarding' ||
           path.isEmpty;
+
       if (!isLeavingDashboard) return;
-      web.window.history.pushState(null, '', '/dashboard');
-      RouterService().router.go('/dashboard');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _WebBackButtonCallbackHolder.invoke();
-      });
+
+      _isHandlingPopState = true;
+      try {
+        // Only push state and navigate if we are not already at /dashboard
+        // to avoid recursive loops on some browsers.
+        if (path != '/dashboard') {
+          web.window.history.pushState(null, '', '/dashboard');
+          RouterService().router.go('/dashboard');
+        }
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _WebBackButtonCallbackHolder.invoke();
+          if (mounted) {
+            setState(() => _isHandlingPopState = false);
+          } else {
+            _isHandlingPopState = false;
+          }
+        });
+      } catch (_) {
+        _isHandlingPopState = false;
+      }
     });
   }
 

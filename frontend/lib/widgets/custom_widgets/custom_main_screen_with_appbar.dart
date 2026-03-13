@@ -310,15 +310,20 @@ bool _shouldShowBackButton(
   AppBarConfig config,
   bool isProfileType,
 ) {
-  // When route is pushed with root navigator (e.g. edit assignment), GoRouterState
-  // is not in the tree and of() throws. Treat as not-dashboard so back button shows.
+  // Use GoRouter.of(context) and path comparison for a more stable check
+  // that doesn't depend on GoRouterState inherited widget which can be
+  // sensitive during navigation transitions.
   bool isDashboard = false;
   try {
-    isDashboard = GoRouterState.of(context).matchedLocation == '/dashboard';
+    final router = GoRouter.of(context);
+    final String location = router.routeInformationProvider.value.uri.path;
+    isDashboard = location == '/dashboard';
   } catch (_) {
-    // Not under GoRouter (e.g. imperative Navigator.push with rootNavigator).
+    // If not under GoRouter, assume not dashboard
   }
+
   if (isDashboard) return false;
+
   return config.showBackButton ||
       (isProfileType && context.canPop()) ||
       context.canPop();
