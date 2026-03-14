@@ -351,8 +351,8 @@ model Subject {
   id              Int          @id @default(autoincrement())
   courseId        Int?         @map("course_id") // Optional - links to Course (degree/stream)
   subjectName     String       @map("subject_name") @db.VarChar(200) // e.g., "Data Structures", "English"
-  subjectCode     String       @unique @map("subject_code") @db.VarChar(20) // e.g., "CS201", "ENG101", "MATH10"
-  credits         Int          // For colleges; marks/total for schools
+  subjectCode     String?      @unique @map("subject_code") @db.VarChar(20) // e.g., "CS201", "ENG101", "MATH10"
+  credits         Int?         // For colleges; marks/total for schools
   theoryHours     Int          @default(0) @map("theory_hours") // Lecture hours
   practicalHours  Int          @default(0) @map("practical_hours") // Lab hours
   tutorialHours   Int          @default(0) @map("tutorial_hours")
