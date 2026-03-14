@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
-import '../../providers/fees_provider.dart';
 import '../../models/student_fee.dart';
+import '../../providers/fees_provider.dart';
 
 class RecordPaymentScreen extends StatefulWidget {
-  final StudentFee? studentFee;
-
   const RecordPaymentScreen({super.key, this.studentFee});
+  final StudentFee? studentFee;
 
   @override
   State<RecordPaymentScreen> createState() => _RecordPaymentScreenState();
@@ -21,8 +21,8 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
   final _remarksController = TextEditingController();
 
   String _paymentMethod = 'CASH';
-  String _paymentMode = 'OFFLINE';
-  DateTime _paymentDate = DateTime.now();
+  final String _paymentMode = 'OFFLINE';
+  final DateTime _paymentDate = DateTime.now();
 
   final List<String> _methods = [
     'CASH',
@@ -138,7 +138,7 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _paymentMethod,
+                initialValue: _paymentMethod,
                 decoration: _inputDecoration('Payment Method', ''),
                 items:
                     _methods
@@ -190,69 +190,66 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
     );
   }
 
-  Widget _buildInfoCard(StudentFee fee) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade100),
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow('Student', fee.student?['user']?['name'] ?? 'N/A'),
-          const SizedBox(height: 8),
-          _buildInfoRow('Fee Type', fee.feeStructure?.feeName ?? 'N/A'),
-          const SizedBox(height: 8),
-          _buildInfoRow('Total Due', '₹${fee.totalAmount.toStringAsFixed(2)}'),
-          const SizedBox(height: 8),
-          _buildInfoRow(
-            'Remaining',
-            '₹${fee.remainingAmount.toStringAsFixed(2)}',
-            isBold: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value, {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildInfoCard(StudentFee fee) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.blue.shade50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.blue.shade100),
+    ),
+    child: Column(
       children: [
-        Text(
-          label,
-          style: AppStyles.bodyMedium.copyWith(color: Colors.grey[700]),
-        ),
-        Text(
-          value,
-          style: AppStyles.bodyMedium.copyWith(
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            color: isBold ? AppColors.primary : Colors.black87,
-          ),
+        _buildInfoRow('Student', fee.student?['user']?['name'] ?? 'N/A'),
+        const SizedBox(height: 8),
+        _buildInfoRow('Fee Type', fee.feeStructure?.feeName ?? 'N/A'),
+        const SizedBox(height: 8),
+        _buildInfoRow('Total Due', '₹${fee.totalAmount.toStringAsFixed(2)}'),
+        const SizedBox(height: 8),
+        _buildInfoRow(
+          'Remaining',
+          '₹${fee.remainingAmount.toStringAsFixed(2)}',
+          isBold: true,
         ),
       ],
-    );
-  }
+    ),
+  );
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppStyles.titleMedium.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
-    );
-  }
+  Widget _buildInfoRow(String label, String value, {bool isBold = false}) =>
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppStyles.bodyMedium.copyWith(color: Colors.grey[700]),
+          ),
+          Text(
+            value,
+            style: AppStyles.bodyMedium.copyWith(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              color: isBold ? AppColors.primary : Colors.black87,
+            ),
+          ),
+        ],
+      );
 
-  InputDecoration _inputDecoration(String label, String hint) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      fillColor: Colors.white,
-      filled: true,
-    );
-  }
+  Widget _buildSectionTitle(String title) => Text(
+    title,
+    style: AppStyles.titleMedium.copyWith(
+      fontWeight: FontWeight.bold,
+      color: AppColors.textPrimary,
+    ),
+  );
+
+  InputDecoration _inputDecoration(String label, String hint) =>
+      InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        fillColor: Colors.white,
+        filled: true,
+      );
 }

@@ -4,10 +4,7 @@ import '../../../utils/responsive_utils.dart';
 import '../models/parent_dashboard_models.dart';
 
 class AnnouncementCard extends StatelessWidget {
-  const AnnouncementCard({
-    required this.announcement,
-    super.key,
-  });
+  const AnnouncementCard({required this.announcement, super.key});
 
   final SchoolAnnouncement announcement;
 
@@ -126,4 +123,3 @@ class AnnouncementCard extends StatelessWidget {
     );
   }
 }
-

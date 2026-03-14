@@ -3,7 +3,9 @@ import 'dart:ui';
 class CustomAppColors {
   // Primary Colors
   static const Color primary = Color(0xFF3b82f6);
-  static const Color primaryBlue = Color(0xFF155dfc); // Primary interactive elements
+  static const Color primaryBlue = Color(
+    0xFF155dfc,
+  ); // Primary interactive elements
   static const Color blue500 = Color(
     0xFF3b82f6,
   ); // Primary buttons, active states

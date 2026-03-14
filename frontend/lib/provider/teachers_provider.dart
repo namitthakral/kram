@@ -34,10 +34,7 @@ class TeachersProvider extends ChangeNotifier {
   ///
   /// [page] - Page number for pagination
   /// [limit] - Items per page
-  Future<void> loadTeachers({
-    int page = 1,
-    int limit = 100,
-  }) async {
+  Future<void> loadTeachers({int page = 1, int limit = 100}) async {
     // Prevent duplicate loading
     if (_isLoadingTeachers) {
       debugPrint('⏳ Teachers already loading, skipping duplicate request');
@@ -60,22 +57,25 @@ class TeachersProvider extends ChangeNotifier {
         final List<dynamic> teachersData = response['data'];
         debugPrint('📊 Raw teachers data: $teachersData');
 
-        _teachers = teachersData.map((t) {
-          final teacher = t as Map<String, dynamic>;
-          final user = teacher['user'] as Map<String, dynamic>?;
+        _teachers =
+            teachersData.map((t) {
+              final teacher = t as Map<String, dynamic>;
+              final user = teacher['user'] as Map<String, dynamic>?;
 
-          return {
-            'uuid': user?['uuid'] ?? '',
-            'name': user?['name'] ?? 'Unknown Teacher',
-            'employeeId': teacher['employeeId'],
-            'designation': teacher['designation'],
-            'email': user?['email'],
-            'phone': user?['phone'],
-            'teacherId': teacher['id'],
-          };
-        }).toList();
+              return {
+                'uuid': user?['uuid'] ?? '',
+                'name': user?['name'] ?? 'Unknown Teacher',
+                'employeeId': teacher['employeeId'],
+                'designation': teacher['designation'],
+                'email': user?['email'],
+                'phone': user?['phone'],
+                'teacherId': teacher['id'],
+              };
+            }).toList();
         _teachersError = null;
-        debugPrint('✅ Teachers loaded successfully: ${_teachers?.length} teachers');
+        debugPrint(
+          '✅ Teachers loaded successfully: ${_teachers?.length} teachers',
+        );
         debugPrint('📋 Processed teachers: $_teachers');
       } else {
         _teachers = [];

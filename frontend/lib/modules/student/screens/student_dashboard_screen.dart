@@ -10,6 +10,7 @@ import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_tab_bar.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
+import '../../fees/providers/fees_provider.dart';
 import '../providers/dashboard_tab_provider.dart';
 import '../providers/student_dashboard_provider.dart';
 import '../providers/student_provider.dart';
@@ -17,7 +18,6 @@ import '../widgets/assignment_card.dart';
 import '../widgets/event_card.dart';
 import '../widgets/student_chart_widgets.dart';
 import '../widgets/subject_performance_card.dart';
-import '../../fees/providers/fees_provider.dart';
 
 class StudentDashboardScreen extends StatefulWidget {
   const StudentDashboardScreen({super.key});
@@ -46,7 +46,6 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     if (user?.uuid != null) {
       debugPrint('✅ Loading dashboard data for UUID: ${user!.uuid}');
       context.read<StudentDashboardProvider>().loadAllDashboardData(user.uuid!);
-
 
       // Load student data first, then fees
       context.read<StudentProvider>().loadStudentData(user.uuid!).then((_) {
@@ -120,10 +119,13 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     await dashboardProvider.refresh(user.uuid!);
                     // Refresh fees if student data is loaded
                     if (context.mounted) {
-                      final profile = context.read<StudentProvider>().studentProfile;
+                      final profile =
+                          context.read<StudentProvider>().studentProfile;
                       final studentId = user.student?.id ?? profile?['id'];
                       if (studentId != null) {
-                        context.read<FeesProvider>().loadStudentFeeSummary(studentId);
+                        context.read<FeesProvider>().loadStudentFeeSummary(
+                          studentId,
+                        );
                       }
                     }
                   }
@@ -508,14 +510,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                         dashboardProvider,
                         containerHeight,
                       ),
-                    DashboardTab.performanceTrends =>
-                      SingleChildScrollView(
-                        child: _buildPerformanceTrendsTab(dashboardProvider),
-                      ),
-                    DashboardTab.attendanceHistory =>
-                      SingleChildScrollView(
-                        child: _buildAttendanceHistoryTab(dashboardProvider),
-                      ),
+                    DashboardTab.performanceTrends => SingleChildScrollView(
+                      child: _buildPerformanceTrendsTab(dashboardProvider),
+                    ),
+                    DashboardTab.attendanceHistory => SingleChildScrollView(
+                      child: _buildAttendanceHistoryTab(dashboardProvider),
+                    ),
                   },
                 ),
               ),
@@ -562,9 +562,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
         color: Color(0xFFF8FAFC),
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFe2e8f0), width: 2),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFe2e8f0), width: 2)),
       ),
       child: const Row(
         children: [
@@ -646,13 +644,12 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
       children: [
         sectionHeader,
         const SizedBox(height: 20),
         if (assignments.isEmpty)
-          Expanded(
-            child: const Center(
+          const Expanded(
+            child: Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Text('No assignments available'),
@@ -666,8 +663,9 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
               shrinkWrap: true,
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: assignments.length,
-              itemBuilder: (context, index) =>
-                  AssignmentCard(assignment: assignments[index]),
+              itemBuilder:
+                  (context, index) =>
+                      AssignmentCard(assignment: assignments[index]),
             ),
           ),
         ],

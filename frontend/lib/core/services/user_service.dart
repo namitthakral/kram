@@ -56,9 +56,7 @@ class UserService {
   /// [kramid] - The Kram ID to search for
   Future<User> getUserByKramid(String kramid) async {
     try {
-      final response = await _apiService.dio.get(
-        '/users/kramid/$kramid',
-      );
+      final response = await _apiService.dio.get('/users/kramid/$kramid');
 
       if (response.statusCode == 200) {
         return User.fromJson(response.data as Map<String, dynamic>);

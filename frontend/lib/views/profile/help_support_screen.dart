@@ -19,7 +19,10 @@ class HelpSupportScreen extends StatelessWidget {
           _CustomExpansionTile(
             title: context.translate('help_and_support'),
             description: [
-              Text(context.translate('help_and_support'), style: descriptionStyle),
+              Text(
+                context.translate('help_and_support'),
+                style: descriptionStyle,
+              ),
             ],
           ),
           const Divider(),

@@ -338,7 +338,9 @@ class ClassSectionService {
   /// Create a new class section
   ///
   /// Endpoint: POST /class-sections
-  Future<Map<String, dynamic>> createClassSection(Map<String, dynamic> sectionData) async {
+  Future<Map<String, dynamic>> createClassSection(
+    Map<String, dynamic> sectionData,
+  ) async {
     try {
       print('Creating class section with data: $sectionData');
 
@@ -373,7 +375,10 @@ class ClassSectionService {
   /// Update an existing class section
   ///
   /// Endpoint: PUT /class-sections/:id
-  Future<Map<String, dynamic>> updateClassSection(int id, Map<String, dynamic> sectionData) async {
+  Future<Map<String, dynamic>> updateClassSection(
+    int id,
+    Map<String, dynamic> sectionData,
+  ) async {
     try {
       print('Updating class section $id with data: $sectionData');
 

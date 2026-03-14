@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
-import '../../providers/fees_provider.dart';
 import '../../models/fee_structure.dart';
+import '../../providers/fees_provider.dart';
 
 class FeeStructuresScreen extends StatefulWidget {
   const FeeStructuresScreen({super.key});
@@ -29,75 +30,73 @@ class _FeeStructuresScreenState extends State<FeeStructuresScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Fee Structures'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: AppStyles.headlineSmall.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(
+      title: const Text('Fee Structures'),
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: AppStyles.headlineSmall.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.bold,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(context, '/admin/fees/structures/create');
-        },
-        label: const Text('Create New'),
-        icon: const Icon(Icons.add),
-        backgroundColor: AppColors.primary,
-      ),
-      body: Consumer<FeesProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading && provider.feeStructures.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: () {
+        Navigator.pushNamed(context, '/admin/fees/structures/create');
+      },
+      label: const Text('Create New'),
+      icon: const Icon(Icons.add),
+      backgroundColor: AppColors.primary,
+    ),
+    body: Consumer<FeesProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading && provider.feeStructures.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (provider.feeStructures.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No fee structures found',
-                    style: AppStyles.titleMedium.copyWith(
-                      color: Colors.grey[600],
-                    ),
+        if (provider.feeStructures.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'No fee structures found',
+                  style: AppStyles.titleMedium.copyWith(
+                    color: Colors.grey[600],
                   ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/admin/fees/structures/create',
-                      );
-                    },
-                    child: const Text('Create One'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.feeStructures.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final structure = provider.feeStructures[index];
-              return _buildFeeStructureCard(context, structure);
-            },
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/admin/fees/structures/create',
+                    );
+                  },
+                  child: const Text('Create One'),
+                ),
+              ],
+            ),
           );
-        },
-      ),
-    );
-  }
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: provider.feeStructures.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final structure = provider.feeStructures[index];
+            return _buildFeeStructureCard(context, structure);
+          },
+        );
+      },
+    ),
+  );
 
   Widget _buildFeeStructureCard(BuildContext context, FeeStructure structure) {
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
@@ -202,27 +201,25 @@ class _FeeStructuresScreenState extends State<FeeStructuresScreen> {
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: AppStyles.bodySmall.copyWith(color: Colors.grey[600]),
-            ),
-            Text(
-              value,
-              style: AppStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  Widget _buildInfoItem(IconData icon, String label, String value) => Row(
+    children: [
+      Icon(icon, size: 16, color: Colors.grey[600]),
+      const SizedBox(width: 8),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppStyles.bodySmall.copyWith(color: Colors.grey[600]),
+          ),
+          Text(
+            value,
+            style: AppStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    ],
+  );
 
   Future<void> _confirmDelete(
     BuildContext context,

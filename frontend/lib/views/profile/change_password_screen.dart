@@ -108,10 +108,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         }
       });
     } else if (provider.error != null) {
-      showCustomSnackbar(
-        message: provider.error!,
-        type: SnackbarType.warning,
-      );
+      showCustomSnackbar(message: provider.error!, type: SnackbarType.warning);
     }
   }
 
@@ -130,128 +127,137 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return PopScope(
       canPop: !widget.forced,
       child: Scaffold(
-      body: CustomMainScreenWithAppbar(
-        title: context.translate('Change Password'),
-        appBarConfig: AppBarConfigHelper.getConfigForUser(
-          user,
-          onNotificationIconPressed: () {},
-          isProfileScreen: true,
-        ),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (widget.forced) ...[
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.warning_amber_rounded,
-                          color: Color(0xFFD97706), size: 22),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'You are using a temporary password. '
-                          'Please set a new password to continue.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.slate800,
-                          ),
-                        ),
+        body: CustomMainScreenWithAppbar(
+          title: context.translate('Change Password'),
+          appBarConfig: AppBarConfigHelper.getConfigForUser(
+            user,
+            onNotificationIconPressed: () {},
+            isProfileScreen: true,
+          ),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.forced) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
-                    ],
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Color(0xFFD97706),
+                            size: 22,
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'You are using a temporary password. '
+                              'Please set a new password to continue.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.slate800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                  CustomTextField(
+                    label: context.translate('Current Password'),
+                    hintText: context.translate('Enter current password'),
+                    prefixButtonIcon: ButtonIcon(icon: CustomImages.iconLock),
+                    suffixButtonIcon: ButtonIcon(
+                      icon:
+                          _obscureCurrentPassword
+                              ? CustomImages.iconVisible
+                              : CustomImages.iconVisibleOff,
+                      onIconTapped: () {
+                        setState(() {
+                          _obscureCurrentPassword = !_obscureCurrentPassword;
+                        });
+                      },
+                    ),
+                    controller: _currentPasswordController,
+                    obscureText: _obscureCurrentPassword,
+                    validator: _validatePassword,
                   ),
-                ),
-                const SizedBox(height: 20),
-              ],
-              CustomTextField(
-                label: context.translate('Current Password'),
-                hintText: context.translate('Enter current password'),
-                prefixButtonIcon: ButtonIcon(icon: CustomImages.iconLock),
-                suffixButtonIcon: ButtonIcon(
-                  icon: _obscureCurrentPassword
-                      ? CustomImages.iconVisible
-                      : CustomImages.iconVisibleOff,
-                  onIconTapped: () {
-                    setState(() {
-                      _obscureCurrentPassword = !_obscureCurrentPassword;
-                    });
-                  },
-                ),
-                controller: _currentPasswordController,
-                obscureText: _obscureCurrentPassword,
-                validator: _validatePassword,
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    label: context.translate('New Password'),
+                    hintText: context.translate('Enter new password'),
+                    prefixButtonIcon: ButtonIcon(icon: CustomImages.iconLock),
+                    suffixButtonIcon: ButtonIcon(
+                      icon:
+                          _obscureNewPassword
+                              ? CustomImages.iconVisible
+                              : CustomImages.iconVisibleOff,
+                      onIconTapped: () {
+                        setState(() {
+                          _obscureNewPassword = !_obscureNewPassword;
+                        });
+                      },
+                    ),
+                    controller: _newPasswordController,
+                    obscureText: _obscureNewPassword,
+                    validator: _validatePassword,
+                  ),
+                  const SizedBox(height: 20),
+                  CustomTextField(
+                    label: context.translate('Confirm Password'),
+                    hintText: context.translate('Confirm new password'),
+                    prefixButtonIcon: ButtonIcon(icon: CustomImages.iconLock),
+                    suffixButtonIcon: ButtonIcon(
+                      icon:
+                          _obscureConfirmPassword
+                              ? CustomImages.iconVisible
+                              : CustomImages.iconVisibleOff,
+                      onIconTapped: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                    controller: _confirmPasswordController,
+                    obscureText: _obscureConfirmPassword,
+                    validator: _validateConfirmPassword,
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: context.translate('New Password'),
-                hintText: context.translate('Enter new password'),
-                prefixButtonIcon: ButtonIcon(icon: CustomImages.iconLock),
-                suffixButtonIcon: ButtonIcon(
-                  icon: _obscureNewPassword
-                      ? CustomImages.iconVisible
-                      : CustomImages.iconVisibleOff,
-                  onIconTapped: () {
-                    setState(() {
-                      _obscureNewPassword = !_obscureNewPassword;
-                    });
-                  },
-                ),
-                controller: _newPasswordController,
-                obscureText: _obscureNewPassword,
-                validator: _validatePassword,
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: context.translate('Confirm Password'),
-                hintText: context.translate('Confirm new password'),
-                prefixButtonIcon: ButtonIcon(icon: CustomImages.iconLock),
-                suffixButtonIcon: ButtonIcon(
-                  icon: _obscureConfirmPassword
-                      ? CustomImages.iconVisible
-                      : CustomImages.iconVisibleOff,
-                  onIconTapped: () {
-                    setState(() {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                    });
-                  },
-                ),
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirmPassword,
-                validator: _validateConfirmPassword,
-              ),
-            ],
+            ),
           ),
         ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: provider.isLoading ? null : _handleChangePassword,
+          icon:
+              provider.isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                  : const Icon(Icons.check),
+          label: Text(provider.isLoading ? 'Updating...' : 'Update Password'),
+          backgroundColor:
+              provider.isLoading
+                  ? AppTheme.blue500.withValues(alpha: 0.6)
+                  : AppTheme.blue500,
+          foregroundColor: Colors.white,
+          elevation: 4,
+        ),
       ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: provider.isLoading ? null : _handleChangePassword,
-        icon: provider.isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : const Icon(Icons.check),
-        label: Text(provider.isLoading ? 'Updating...' : 'Update Password'),
-        backgroundColor:
-            provider.isLoading ? AppTheme.blue500.withValues(alpha: 0.6) : AppTheme.blue500,
-        foregroundColor: Colors.white,
-        elevation: 4,
-      ),
-    ),
     );
   }
 }

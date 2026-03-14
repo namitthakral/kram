@@ -1196,10 +1196,7 @@ class TeacherService {
     try {
       final response = await _apiService.dio.post(
         '/teachers/$userUuid/assign-subjects',
-        data: {
-          'subjectIds': subjectIds,
-          'academicYearId': academicYearId,
-        },
+        data: {'subjectIds': subjectIds, 'academicYearId': academicYearId},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -1282,15 +1279,15 @@ class TeacherService {
       }
     } on DioException catch (e) {
       final data = e.response?.data;
-      final serverMessage = data is Map<String, dynamic>
-          ? (data['message'] as String?)
-          : null;
+      final serverMessage =
+          data is Map<String, dynamic> ? (data['message'] as String?) : null;
 
       if (e.response?.statusCode == 404) {
         throw Exception(serverMessage ?? 'Resource not found');
       } else if (e.response?.statusCode == 403) {
         throw Exception(
-          serverMessage ?? 'Not allowed to generate report cards for this section',
+          serverMessage ??
+              'Not allowed to generate report cards for this section',
         );
       }
       throw Exception(

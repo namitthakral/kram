@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -10,11 +9,14 @@ class CommunicationsService {
   final ApiService _apiService = ApiService();
 
   /// Get unread communications for the current user
-  Future<List<Communication>> getUnreadCommunications({int? institutionId}) async {
+  Future<List<Communication>> getUnreadCommunications({
+    int? institutionId,
+  }) async {
     try {
       final response = await _apiService.dio.get(
         '/communications/unread',
-        queryParameters: institutionId != null ? {'institutionId': institutionId} : null,
+        queryParameters:
+            institutionId != null ? {'institutionId': institutionId} : null,
       );
 
       if (response.statusCode == 200) {
@@ -25,7 +27,7 @@ class CommunicationsService {
     } on DioException catch (e) {
       debugPrint('Error fetching unread communications: $e');
       throw ApiErrorHandler.handleDioException(e);
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error fetching unread communications: $e');
       throw ApiErrorHandler.handleException(e);
     }
@@ -55,16 +57,17 @@ class CommunicationsService {
 
       if (response.statusCode == 200) {
         return {
-          'data': (response.data['data'] as List)
-              .map((json) => Communication.fromJson(json))
-              .toList(),
+          'data':
+              (response.data['data'] as List)
+                  .map((json) => Communication.fromJson(json))
+                  .toList(),
           'meta': response.data['meta'],
         };
       }
       throw Exception('Failed to load communications');
     } on DioException catch (e) {
       throw ApiErrorHandler.handleDioException(e);
-    } catch (e) {
+    } on Exception catch (e) {
       throw ApiErrorHandler.handleException(e);
     }
   }
@@ -74,25 +77,28 @@ class CommunicationsService {
     try {
       final response = await _apiService.dio.post('/communications/$id/read');
       return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error marking communication as read: $e');
       return false;
     }
   }
 
   /// Get communication statistics
-  Future<Map<String, dynamic>> getCommunicationStats({int? institutionId}) async {
+  Future<Map<String, dynamic>> getCommunicationStats({
+    int? institutionId,
+  }) async {
     try {
       final response = await _apiService.dio.get(
         '/communications/statistics',
-        queryParameters: institutionId != null ? {'institutionId': institutionId} : null,
+        queryParameters:
+            institutionId != null ? {'institutionId': institutionId} : null,
       );
 
       if (response.statusCode == 200) {
         return response.data;
       }
       return {};
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error fetching communication stats: $e');
       return {};
     }

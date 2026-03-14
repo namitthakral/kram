@@ -44,7 +44,6 @@ class ClassInfo {
   final String sectionName;
   final int? sectionId; // The actual ClassSection database ID
 
-
   final String? subjectName;
   final String? className; // The actual Class Name (e.g. "Class 10", "Grade 5")
 
@@ -64,14 +63,15 @@ class ClassInfo {
   }
 
   @override
-  int get hashCode => id.hashCode ^
-        name.hashCode ^
-        totalStudents.hashCode ^
-        courseId.hashCode ^
-        sectionName.hashCode ^
-        sectionId.hashCode ^
-        subjectName.hashCode ^
-        className.hashCode;
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      totalStudents.hashCode ^
+      courseId.hashCode ^
+      sectionName.hashCode ^
+      sectionId.hashCode ^
+      subjectName.hashCode ^
+      className.hashCode;
 }
 
 class AttendanceSummary {

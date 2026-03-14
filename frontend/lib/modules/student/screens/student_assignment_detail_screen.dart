@@ -174,7 +174,10 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [statusColor, statusColor.withValues(alpha: 0.5)],
+                          colors: [
+                            statusColor,
+                            statusColor.withValues(alpha: 0.5),
+                          ],
                         ),
                       ),
                     ),
@@ -191,8 +194,8 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: CustomAppColors.primary.withValues(alpha:
-                                    0.08,
+                                  color: CustomAppColors.primary.withValues(
+                                    alpha: 0.08,
                                   ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),

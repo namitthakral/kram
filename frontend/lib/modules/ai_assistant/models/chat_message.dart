@@ -1,7 +1,6 @@
 enum MessageSender { user, ai }
 
 class ChatMessage {
-
   ChatMessage({
     required this.text,
     required this.sender,

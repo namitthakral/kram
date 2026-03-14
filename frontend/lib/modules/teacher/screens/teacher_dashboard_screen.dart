@@ -446,7 +446,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         builder:
             (context, dashboardProvider, child) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
                   context.translate('weekly_attendance_overview'),
@@ -528,7 +527,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         builder:
             (context, dashboardProvider, child) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
                   context.translate('subject_performance_overview'),
@@ -564,7 +562,6 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
         builder:
             (context, dashboardProvider, child) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
                   context.translate('grade_distribution'),

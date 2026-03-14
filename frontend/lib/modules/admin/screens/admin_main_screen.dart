@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../../utils/router_service.dart';
-import '../../../widgets/custom_widgets/dashboard_widgets.dart';
-import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
-import '../../../provider/login_signup/login_provider.dart';
-import 'package:provider/provider.dart';
 import '../../../utils/user_utils.dart';
+import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
+import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 
 class AdminMainScreen extends StatelessWidget {
   const AdminMainScreen({super.key});
@@ -23,6 +24,7 @@ class AdminMainScreen extends StatelessWidget {
     return CustomMainScreenWithAppbar(
       title: context.translate('admin_features'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -80,15 +82,19 @@ class AdminMainScreen extends StatelessWidget {
                   title: context.translate('academic_management'),
                   icon: Icons.school_rounded,
                   color: const Color(0xFFa855f7),
-                  onTap: () => context.router.router.push('/academic-management'),
+                  onTap:
+                      () => context.router.router.push('/academic-management'),
                 ),
                 FeatureActionCard(
-                  title: context.translate(loginProvider.isSchool
-                      ? 'years_and_terms'
-                      : 'years_and_semesters'),
+                  title: context.translate(
+                    loginProvider.isSchool
+                        ? 'years_and_terms'
+                        : 'years_and_semesters',
+                  ),
                   icon: Icons.calendar_month_rounded,
                   color: const Color(0xFF6366f1),
-                  onTap: () => context.router.router.push('/academic-management'),
+                  onTap:
+                      () => context.router.router.push('/academic-management'),
                 ),
                 FeatureActionCard(
                   title: context.translate('course_management'),

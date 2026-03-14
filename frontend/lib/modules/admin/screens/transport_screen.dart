@@ -88,24 +88,33 @@ class _TransportScreenState extends State<TransportScreen> {
             label: 'Route name',
             hintText: 'e.g. Route 1: City Center',
             controller: routeNameController,
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Please enter route name' : null,
+            validator:
+                (v) =>
+                    (v == null || v.trim().isEmpty)
+                        ? 'Please enter route name'
+                        : null,
           ),
           const SizedBox(height: 16),
           CustomTextField(
             label: 'Bus number',
             hintText: 'e.g. WB-01-1234',
             controller: busNumberController,
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Please enter bus number' : null,
+            validator:
+                (v) =>
+                    (v == null || v.trim().isEmpty)
+                        ? 'Please enter bus number'
+                        : null,
           ),
           const SizedBox(height: 16),
           CustomTextField(
             label: 'Driver name',
             hintText: 'Driver full name',
             controller: driverNameController,
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Please enter driver name' : null,
+            validator:
+                (v) =>
+                    (v == null || v.trim().isEmpty)
+                        ? 'Please enter driver name'
+                        : null,
           ),
         ],
       ),
@@ -122,7 +131,6 @@ class _TransportScreenState extends State<TransportScreen> {
                 routeName: name,
                 busNumber: bus,
                 driverName: driver,
-                studentCount: 0,
               ),
             );
           });
@@ -151,6 +159,7 @@ class _TransportScreenState extends State<TransportScreen> {
     return CustomMainScreenWithAppbar(
       title: context.translate('transport'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -176,128 +185,123 @@ class _TransportScreenState extends State<TransportScreen> {
     BuildContext context,
     TransportRouteItem r,
     bool isMobile,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      r.routeName,
-                      style: const TextStyle(
-                        fontWeight: AppTheme.fontWeightSemibold,
-                        fontSize: AppTheme.fontSizeBase,
-                        color: AppTheme.slate800,
-                      ),
+  ) => Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    r.routeName,
+                    style: const TextStyle(
+                      fontWeight: AppTheme.fontWeightSemibold,
+                      fontSize: AppTheme.fontSizeBase,
+                      color: AppTheme.slate800,
                     ),
                   ),
-                  Container(
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.blue500.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${r.studentCount} Students',
+                    style: const TextStyle(
+                      color: AppTheme.blue500,
+                      fontWeight: AppTheme.fontWeightSemibold,
+                      fontSize: AppTheme.fontSizeXs,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(
+                  Icons.directions_bus_rounded,
+                  size: 18,
+                  color: AppTheme.slate500,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  r.busNumber,
+                  style: const TextStyle(
+                    fontSize: AppTheme.fontSizeSm,
+                    color: AppTheme.slate600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(
+                  Icons.person_outline_rounded,
+                  size: 18,
+                  color: AppTheme.slate500,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  r.driverName,
+                  style: const TextStyle(
+                    fontSize: AppTheme.fontSizeSm,
+                    color: AppTheme.slate600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(onPressed: () {}, child: const Text('View Stops')),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.location_on_outlined, size: 18),
+                  label: const Text('Track'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.blue500,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+                      horizontal: 16,
+                      vertical: 10,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.blue500.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${r.studentCount} Students',
-                      style: const TextStyle(
-                        color: AppTheme.blue500,
-                        fontWeight: AppTheme.fontWeightSemibold,
-                        fontSize: AppTheme.fontSizeXs,
-                      ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.directions_bus_rounded,
-                    size: 18,
-                    color: AppTheme.slate500,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    r.busNumber,
-                    style: const TextStyle(
-                      fontSize: AppTheme.fontSizeSm,
-                      color: AppTheme.slate600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.person_outline_rounded,
-                    size: 18,
-                    color: AppTheme.slate500,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    r.driverName,
-                    style: const TextStyle(
-                      fontSize: AppTheme.fontSizeSm,
-                      color: AppTheme.slate600,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('View Stops'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.location_on_outlined, size: 18),
-                    label: const Text('Track'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.blue500,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }

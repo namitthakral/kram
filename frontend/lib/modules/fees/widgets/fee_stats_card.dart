@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import '../../../utils/app_styles.dart';
 
 class FeeStatsCard extends StatelessWidget {
+  const FeeStatsCard({
+    required this.title,
+    required this.color,
+    required this.icon,
+    super.key,
+    this.amount,
+    this.value,
+    this.isCurrency = true,
+  });
   final String title;
   final double? amount;
   final String? value;
@@ -9,22 +18,12 @@ class FeeStatsCard extends StatelessWidget {
   final IconData icon;
   final bool isCurrency;
 
-  const FeeStatsCard({
-    super.key,
-    required this.title,
-    this.amount,
-    this.value,
-    required this.color,
-    required this.icon,
-    this.isCurrency = true,
-  });
-
   @override
   Widget build(BuildContext context) {
     final displayValue =
         isCurrency
             ? '₹${amount?.toStringAsFixed(2) ?? "0.00"}'
-            : (value ?? "0");
+            : (value ?? '0');
 
     return Container(
       width: 160,

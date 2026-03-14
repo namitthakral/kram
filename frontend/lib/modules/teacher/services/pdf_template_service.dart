@@ -162,18 +162,23 @@ class PdfTemplateService {
 
     // Save PDF
     // Sanitize filename by replacing spaces with underscores and removing special chars
-    final className = template.className.replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\-]'), '');
-    final section = template.section.replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\-]'), '');
+    final className = template.className
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^\w\-]'), '');
+    final section = template.section
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^\w\-]'), '');
     final fileName = 'TimeTable_${className}_$section.pdf';
 
     final pdfBytes = await pdf.save();
 
     if (kIsWeb) {
       final fileInts = List<int>.from(pdfBytes);
-      final anchor = web.AnchorElement()
-        ..href = 'data:application/pdf;base64,${base64.encode(fileInts)}'
-        ..setAttribute('download', fileName)
-        ..style.display = 'none';
+      final anchor =
+          web.AnchorElement()
+            ..href = 'data:application/pdf;base64,${base64.encode(fileInts)}'
+            ..setAttribute('download', fileName)
+            ..style.display = 'none';
       web.document.body?.append(anchor);
       anchor.click();
       anchor.remove();
@@ -336,19 +341,26 @@ class PdfTemplateService {
 
     // Save PDF
     // Sanitize filename by replacing spaces with underscores and removing special chars
-    final subject = template.subject.replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\-]'), '');
-    final className = template.className.replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\-]'), '');
-    final section = template.section.replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\-]'), '');
+    final subject = template.subject
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^\w\-]'), '');
+    final className = template.className
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^\w\-]'), '');
+    final section = template.section
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^\w\-]'), '');
     final fileName = 'QuestionPaper_${subject}_${className}_$section.pdf';
 
     final pdfBytes = await pdf.save();
 
     if (kIsWeb) {
       final fileInts = List<int>.from(pdfBytes);
-      final anchor = web.AnchorElement()
-        ..href = 'data:application/pdf;base64,${base64.encode(fileInts)}'
-        ..setAttribute('download', fileName)
-        ..style.display = 'none';
+      final anchor =
+          web.AnchorElement()
+            ..href = 'data:application/pdf;base64,${base64.encode(fileInts)}'
+            ..setAttribute('download', fileName)
+            ..style.display = 'none';
       web.document.body?.append(anchor);
       anchor.click();
       anchor.remove();
@@ -367,252 +379,274 @@ class PdfTemplateService {
     final perf = card.performanceSummary;
     final att = card.attendanceSummary;
     final courseSection =
-        '${student.courseName ?? ''}${student.section != null ? ' / ${student.section}' : ''}'.trim();
+        '${student.courseName ?? ''}${student.section != null ? ' / ${student.section}' : ''}'
+            .trim();
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(28),
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-          // Header using Table to avoid Expanded/Flex issues
-          pw.Table(
-            columnWidths: {
-              0: const pw.FixedColumnWidth(44),
-              1: const pw.FlexColumnWidth(3),
-              2: const pw.FlexColumnWidth(1.2),
-            },
-            children: [
-              pw.TableRow(
-                children: [
-                  pw.Container(
-                    width: 40,
-                    height: 40,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(width: 1.5),
-                      borderRadius: pw.BorderRadius.circular(4),
-                    ),
-                    child: pw.Center(
-                      child: pw.Text(
-                        'LOGO',
-                        style: pw.TextStyle(
-                          fontSize: 8,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.only(left: 12),
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+        build:
+            (context) => pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Header using Table to avoid Expanded/Flex issues
+                pw.Table(
+                  columnWidths: {
+                    0: const pw.FixedColumnWidth(44),
+                    1: const pw.FlexColumnWidth(3),
+                    2: const pw.FlexColumnWidth(1.2),
+                  },
+                  children: [
+                    pw.TableRow(
                       children: [
-                        pw.Text(
-                          'REPORT CARD',
-                          style: pw.TextStyle(
-                            fontSize: 22,
-                            fontWeight: pw.FontWeight.bold,
-                            letterSpacing: 1.5,
+                        pw.Container(
+                          width: 40,
+                          height: 40,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(width: 1.5),
+                            borderRadius: pw.BorderRadius.circular(4),
+                          ),
+                          child: pw.Center(
+                            child: pw.Text(
+                              'LOGO',
+                              style: pw.TextStyle(
+                                fontSize: 8,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                        pw.SizedBox(height: 4),
-                        pw.Text(
-                          student.institutionName,
-                          style: const pw.TextStyle(fontSize: 12),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(left: 12),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Text(
+                                'REPORT CARD',
+                                style: pw.TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: pw.FontWeight.bold,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              pw.SizedBox(height: 4),
+                              pw.Text(
+                                student.institutionName,
+                                style: const pw.TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        pw.Container(
+                          alignment: pw.Alignment.topRight,
+                          child: pw.Text(
+                            'Sheet No: ${card.reportCardNumber}',
+                            style: const pw.TextStyle(fontSize: 11),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  pw.Container(
-                    alignment: pw.Alignment.topRight,
-                    child: pw.Text(
-                      'Sheet No: ${card.reportCardNumber}',
-                      style: const pw.TextStyle(fontSize: 11),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          pw.SizedBox(height: 24),
-
-          // Student info using Table (2 columns)
-          pw.Table(
-            columnWidths: {
-              0: const pw.FlexColumnWidth(1),
-              1: const pw.FlexColumnWidth(1),
-            },
-            children: [
-              pw.TableRow(children: [
-                _pdfInfoCell('Student Name:', student.name),
-                _pdfInfoCell(
-                  'Class/Section:',
-                  courseSection.isEmpty ? '-' : courseSection,
-                ),
-              ]),
-              pw.TableRow(children: [
-                _pdfInfoCell('School Year:', semester.academicYear),
-                _pdfInfoCell("Teacher's Name:", ''),
-              ]),
-            ],
-          ),
-          pw.SizedBox(height: 20),
-
-          // Subject table
-          pw.Table(
-            border: pw.TableBorder.all(width: 0.5),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(2.2),
-              1: const pw.FlexColumnWidth(1),
-              2: const pw.FlexColumnWidth(1),
-              3: const pw.FlexColumnWidth(1),
-              4: const pw.FlexColumnWidth(0.8),
-              5: const pw.FlexColumnWidth(0.8),
-              6: const pw.FlexColumnWidth(0.8),
-            },
-            children: [
-              pw.TableRow(
-                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                children: [
-                  _pdfTableCell('SUBJECTS', bold: true),
-                  _pdfTableCell('1st Term', bold: true),
-                  _pdfTableCell('2nd Term', bold: true),
-                  _pdfTableCell('3rd Term', bold: true),
-                  _pdfTableCell('Total', bold: true),
-                  _pdfTableCell('Obtained', bold: true),
-                  _pdfTableCell('Grade', bold: true),
-                ],
-              ),
-              for (final sub in card.subjectRecords)
-                pw.TableRow(
-                  children: [
-                    _pdfTableCell(sub.subjectName),
-                    _pdfTableCell(sub.marksObtained?.toString() ?? '-'),
-                    _pdfTableCell('-'),
-                    _pdfTableCell('-'),
-                    _pdfTableCell(sub.maxMarks?.toString() ?? '-'),
-                    _pdfTableCell(sub.marksObtained?.toString() ?? '-'),
-                    _pdfTableCell(sub.grade ?? '-'),
                   ],
                 ),
-            ],
-          ),
-          pw.SizedBox(height: 16),
+                pw.SizedBox(height: 24),
 
-          // Overall grade summary
-          pw.Table(
-            border: pw.TableBorder.all(width: 0.5),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(2.5),
-              1: const pw.FlexColumnWidth(1),
-              2: const pw.FlexColumnWidth(1),
-              3: const pw.FlexColumnWidth(1),
-            },
-            children: [
-              pw.TableRow(
-                decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-                children: [
-                  _pdfTableCell('', bold: true),
-                  _pdfTableCell('1st', bold: true),
-                  _pdfTableCell('2nd', bold: true),
-                  _pdfTableCell('3rd', bold: true),
+                // Student info using Table (2 columns)
+                pw.Table(
+                  columnWidths: {
+                    0: const pw.FlexColumnWidth(),
+                    1: const pw.FlexColumnWidth(),
+                  },
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        _pdfInfoCell('Student Name:', student.name),
+                        _pdfInfoCell(
+                          'Class/Section:',
+                          courseSection.isEmpty ? '-' : courseSection,
+                        ),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        _pdfInfoCell('School Year:', semester.academicYear),
+                        _pdfInfoCell("Teacher's Name:", ''),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+
+                // Subject table
+                pw.Table(
+                  border: pw.TableBorder.all(width: 0.5),
+                  columnWidths: {
+                    0: const pw.FlexColumnWidth(2.2),
+                    1: const pw.FlexColumnWidth(),
+                    2: const pw.FlexColumnWidth(),
+                    3: const pw.FlexColumnWidth(),
+                    4: const pw.FlexColumnWidth(0.8),
+                    5: const pw.FlexColumnWidth(0.8),
+                    6: const pw.FlexColumnWidth(0.8),
+                  },
+                  children: [
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.grey300,
+                      ),
+                      children: [
+                        _pdfTableCell('SUBJECTS', bold: true),
+                        _pdfTableCell('1st Term', bold: true),
+                        _pdfTableCell('2nd Term', bold: true),
+                        _pdfTableCell('3rd Term', bold: true),
+                        _pdfTableCell('Total', bold: true),
+                        _pdfTableCell('Obtained', bold: true),
+                        _pdfTableCell('Grade', bold: true),
+                      ],
+                    ),
+                    for (final sub in card.subjectRecords)
+                      pw.TableRow(
+                        children: [
+                          _pdfTableCell(sub.subjectName),
+                          _pdfTableCell(sub.marksObtained?.toString() ?? '-'),
+                          _pdfTableCell('-'),
+                          _pdfTableCell('-'),
+                          _pdfTableCell(sub.maxMarks?.toString() ?? '-'),
+                          _pdfTableCell(sub.marksObtained?.toString() ?? '-'),
+                          _pdfTableCell(sub.grade ?? '-'),
+                        ],
+                      ),
+                  ],
+                ),
+                pw.SizedBox(height: 16),
+
+                // Overall grade summary
+                pw.Table(
+                  border: pw.TableBorder.all(width: 0.5),
+                  columnWidths: {
+                    0: const pw.FlexColumnWidth(2.5),
+                    1: const pw.FlexColumnWidth(),
+                    2: const pw.FlexColumnWidth(),
+                    3: const pw.FlexColumnWidth(),
+                  },
+                  children: [
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.grey300,
+                      ),
+                      children: [
+                        _pdfTableCell('', bold: true),
+                        _pdfTableCell('1st', bold: true),
+                        _pdfTableCell('2nd', bold: true),
+                        _pdfTableCell('3rd', bold: true),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        _pdfTableCell('Terms Based Grade'),
+                        _pdfTableCell(perf.overallGrade),
+                        _pdfTableCell('-'),
+                        _pdfTableCell('-'),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        _pdfTableCell('Quarterly Grade'),
+                        _pdfTableCell(perf.sgpa.toString()),
+                        _pdfTableCell('-'),
+                        _pdfTableCell('-'),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        _pdfTableCell('Average Grade'),
+                        _pdfTableCell(perf.overallGrade),
+                        _pdfTableCell('-'),
+                        _pdfTableCell('-'),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+
+                // TEACHERS FEEDBACK
+                pw.Text(
+                  'TEACHERS FEEDBACK',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                pw.SizedBox(height: 8),
+                ..._feedbackLines(3),
+                if (card.remarks.principalRemarks != null &&
+                    card.remarks.principalRemarks!.isNotEmpty) ...[
+                  pw.SizedBox(height: 6),
+                  pw.Text(
+                    card.remarks.principalRemarks!,
+                    style: const pw.TextStyle(fontSize: 10),
+                  ),
                 ],
-              ),
-              pw.TableRow(children: [
-                _pdfTableCell('Terms Based Grade'),
-                _pdfTableCell(perf.overallGrade),
-                _pdfTableCell('-'),
-                _pdfTableCell('-'),
-              ]),
-              pw.TableRow(children: [
-                _pdfTableCell('Quarterly Grade'),
-                _pdfTableCell(perf.sgpa.toString()),
-                _pdfTableCell('-'),
-                _pdfTableCell('-'),
-              ]),
-              pw.TableRow(children: [
-                _pdfTableCell('Average Grade'),
-                _pdfTableCell(perf.overallGrade),
-                _pdfTableCell('-'),
-                _pdfTableCell('-'),
-              ]),
-            ],
-          ),
-          pw.SizedBox(height: 20),
+                pw.SizedBox(height: 24),
 
-          // TEACHERS FEEDBACK
-          pw.Text(
-            'TEACHERS FEEDBACK',
-            style: pw.TextStyle(
-              fontSize: 12,
-              fontWeight: pw.FontWeight.bold,
-              letterSpacing: 0.5,
+                // Attendance summary using Table
+                pw.Table(
+                  columnWidths: {
+                    0: const pw.FixedColumnWidth(120),
+                    1: const pw.FlexColumnWidth(),
+                  },
+                  children: [
+                    pw.TableRow(
+                      children: [
+                        pw.Text(
+                          'Total School Days:',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                        pw.Text(
+                          '${att.totalClasses}',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                    pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(top: 6),
+                          child: pw.Text(
+                            'Attendance:',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.only(top: 6),
+                          child: pw.Text(
+                            '${att.percentage.toStringAsFixed(1)}%',
+                            style: const pw.TextStyle(fontSize: 10),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          pw.SizedBox(height: 8),
-          ..._feedbackLines(3),
-          if (card.remarks.principalRemarks != null &&
-              card.remarks.principalRemarks!.isNotEmpty) ...[
-            pw.SizedBox(height: 6),
-            pw.Text(
-              card.remarks.principalRemarks!,
-              style: const pw.TextStyle(fontSize: 10),
-            ),
-          ],
-          pw.SizedBox(height: 24),
-
-          // Attendance summary using Table
-          pw.Table(
-            columnWidths: {
-              0: const pw.FixedColumnWidth(120),
-              1: const pw.FlexColumnWidth(1),
-            },
-            children: [
-              pw.TableRow(children: [
-                pw.Text(
-                  'Total School Days:',
-                  style: const pw.TextStyle(fontSize: 10),
-                ),
-                pw.Text(
-                  '${att.totalClasses}',
-                  style: const pw.TextStyle(fontSize: 10),
-                ),
-              ]),
-              pw.TableRow(children: [
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 6),
-                  child: pw.Text(
-                    'Attendance:',
-                    style: const pw.TextStyle(fontSize: 10),
-                  ),
-                ),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 6),
-                  child: pw.Text(
-                    '${att.percentage.toStringAsFixed(1)}%',
-                    style: const pw.TextStyle(fontSize: 10),
-                  ),
-                ),
-              ]),
-            ],
-          ),
-        ]),
       ),
     );
 
-    final safeName =
-        student.name.replaceAll(' ', '_').replaceAll(RegExp(r'[^\w\-]'), '');
+    final safeName = student.name
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^\w\-]'), '');
     final fileName = 'ReportCard_${safeName}_${card.reportCardNumber}.pdf';
     final pdfBytes = await pdf.save();
 
     if (kIsWeb) {
       final fileInts = List<int>.from(pdfBytes);
-      final anchor = web.AnchorElement()
-        ..href =
-            'data:application/pdf;base64,${base64.encode(fileInts)}'
-        ..setAttribute('download', fileName)
-        ..style.display = 'none';
+      final anchor =
+          web.AnchorElement()
+            ..href = 'data:application/pdf;base64,${base64.encode(fileInts)}'
+            ..setAttribute('download', fileName)
+            ..style.display = 'none';
       web.document.body?.append(anchor);
       anchor.click();
       anchor.remove();
@@ -624,42 +658,36 @@ class PdfTemplateService {
   }
 
   static pw.Widget _pdfInfoCell(String label, String value) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 4),
-        child: pw.RichText(
-          text: pw.TextSpan(
-            children: [
-              pw.TextSpan(
-                text: '$label  ',
-                style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.TextSpan(
-                text: value,
-                style: const pw.TextStyle(fontSize: 10),
-              ),
-            ],
+    padding: const pw.EdgeInsets.symmetric(vertical: 4),
+    child: pw.RichText(
+      text: pw.TextSpan(
+        children: [
+          pw.TextSpan(
+            text: '$label  ',
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
           ),
-        ),
-      );
+          pw.TextSpan(text: value, style: const pw.TextStyle(fontSize: 10)),
+        ],
+      ),
+    ),
+  );
 
   static List<pw.Widget> _feedbackLines(int count) => List.generate(
-        count,
-        (i) => pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 6),
-          child: pw.Container(
-            width: double.infinity,
-            height: 24,
-            decoration: pw.BoxDecoration(
-              border: pw.Border(bottom: pw.BorderSide(width: 0.5)),
-            ),
-          ),
+    count,
+    (i) => pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Container(
+        width: double.infinity,
+        height: 24,
+        decoration: const pw.BoxDecoration(
+          border: pw.Border(bottom: pw.BorderSide(width: 0.5)),
         ),
-      );
+      ),
+    ),
+  );
 
-  static pw.Widget _pdfTableCell(String text, {bool bold = false}) => pw
-      .Container(
+  static pw.Widget _pdfTableCell(String text, {bool bold = false}) =>
+      pw.Container(
         padding: const pw.EdgeInsets.all(6),
         child: pw.Text(
           text,

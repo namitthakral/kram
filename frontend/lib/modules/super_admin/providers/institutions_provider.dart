@@ -18,7 +18,7 @@ class InstitutionsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _setError(dynamic e) {
+  void _setError(e) {
     _error = e.toString().replaceAll('Exception: ', '');
     debugPrint('InstitutionsProvider Error: $_error');
     notifyListeners();
@@ -39,7 +39,7 @@ class InstitutionsProvider extends ChangeNotifier {
               .toList()
               .cast<Map<String, dynamic>>();
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
     } finally {
       _setLoading(false);
@@ -54,7 +54,7 @@ class InstitutionsProvider extends ChangeNotifier {
       _error = null;
       await loadInstitutions();
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
       _setLoading(false);
       return false;

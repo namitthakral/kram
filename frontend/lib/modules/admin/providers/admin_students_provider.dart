@@ -10,7 +10,7 @@ class AdminStudentsProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   int _page = 1;
-  int _limit = 20;
+  final int _limit = 20;
   int _total = 0;
   int _totalPages = 1;
   String _searchQuery = '';
@@ -29,7 +29,7 @@ class AdminStudentsProvider extends ChangeNotifier {
   int? get courseIdFilter => _courseIdFilter;
   String? get sectionFilter => _sectionFilter;
   AdminDashboardStats? get dashboardStats => _dashboardStats;
-  
+
   // Convenience getters for student counts
   int get totalStudents => _dashboardStats?.totalStudents ?? _total;
   int get activeStudents => _dashboardStats?.activeStudents ?? 0;
@@ -87,7 +87,7 @@ class AdminStudentsProvider extends ChangeNotifier {
       }
 
       _dashboardStats = dashboardRes.stats;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _students = [];
       _dashboardStats = null;
@@ -103,20 +103,23 @@ class AdminStudentsProvider extends ChangeNotifier {
       final dashboardRes = await _adminService.getDashboardStats();
       _dashboardStats = dashboardRes.stats;
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       _dashboardStats = null;
       notifyListeners();
     }
   }
 
   /// Update student information
-  Future<Map<String, dynamic>?> updateStudent(String userUuid, Map<String, dynamic> studentData) async {
+  Future<Map<String, dynamic>?> updateStudent(
+    String userUuid,
+    Map<String, dynamic> studentData,
+  ) async {
     try {
       final response = await _adminService.updateStudent(userUuid, studentData);
       // Refresh the student list after successful update
       await fetchStudents();
       return response;
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       notifyListeners();
       return null;

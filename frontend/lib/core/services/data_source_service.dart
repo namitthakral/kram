@@ -1,10 +1,7 @@
 import '../constants/role_constants.dart';
 
 /// Enum to represent the data source type
-enum DataSourceType {
-  api,
-  localDatabase,
-}
+enum DataSourceType { api, localDatabase }
 
 /// Service to determine which data source to use based on user role
 class DataSourceService {

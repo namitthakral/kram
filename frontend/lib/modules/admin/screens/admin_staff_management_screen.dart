@@ -18,14 +18,15 @@ class AdminStaffManagementScreen extends StatefulWidget {
       _AdminStaffManagementScreenState();
 }
 
-class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen> {
+class _AdminStaffManagementScreenState
+    extends State<AdminStaffManagementScreen> {
   final AdminService _adminService = AdminService();
   final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = true;
   String? _error;
   List<dynamic> _staffList = [];
-  int _page = 1;
+  final int _page = 1;
   static const int _limit = 20;
 
   @override
@@ -61,9 +62,10 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
         7, // roleId 7 = staff
         page: _page,
         limit: _limit,
-        search: _searchController.text.trim().isEmpty
-            ? null
-            : _searchController.text.trim(),
+        search:
+            _searchController.text.trim().isEmpty
+                ? null
+                : _searchController.text.trim(),
       );
 
       final responseData = response['data'] as Map<String, dynamic>? ?? {};
@@ -73,7 +75,7 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
         _staffList = data;
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
         _isLoading = false;
@@ -92,6 +94,7 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
     return CustomMainScreenWithAppbar(
       title: context.translate('staff_management'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -132,13 +135,20 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
                 decoration: BoxDecoration(
                   color: AppTheme.danger.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppTheme.danger.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.error_outline, color: AppTheme.danger),
                     const SizedBox(width: 12),
-                    Expanded(child: Text(_error!, style: const TextStyle(color: AppTheme.slate800))),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: AppTheme.slate800),
+                      ),
+                    ),
                     TextButton(
                       onPressed: _loadStaff,
                       child: Text(context.translate('retry')),
@@ -149,24 +159,25 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
             ),
           if (_error != null) const SizedBox(height: 16),
           Expanded(
-            child: _staffList.isEmpty && !_isLoading
-                ? Center(
-                    child: Text(
-                      context.translate('no_users_found'),
-                      style: const TextStyle(
-                        fontSize: AppTheme.fontSizeBase,
-                        color: AppTheme.slate500,
+            child:
+                _staffList.isEmpty && !_isLoading
+                    ? Center(
+                      child: Text(
+                        context.translate('no_users_found'),
+                        style: const TextStyle(
+                          fontSize: AppTheme.fontSizeBase,
+                          color: AppTheme.slate500,
+                        ),
                       ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _staffList.length,
+                      itemBuilder: (context, index) {
+                        final staff = _staffList[index] as Map<String, dynamic>;
+                        return _buildStaffCard(context, staff);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _staffList.length,
-                    itemBuilder: (context, index) {
-                      final staff = _staffList[index] as Map<String, dynamic>;
-                      return _buildStaffCard(context, staff);
-                    },
-                  ),
           ),
         ],
       ),
@@ -174,7 +185,8 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
   }
 
   Widget _buildStaffCard(BuildContext context, Map<String, dynamic> staff) {
-    final name = staff['name']?.toString() ??
+    final name =
+        staff['name']?.toString() ??
         '${staff['firstName'] ?? ''} ${staff['lastName'] ?? ''}'.trim();
     final email = staff['email']?.toString() ?? '';
     final kramid = staff['kramid']?.toString() ?? '';
@@ -245,7 +257,9 @@ class _AdminStaffManagementScreenState extends State<AdminStaffManagementScreen>
             decoration: BoxDecoration(
               color: _statusColor(status).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: _statusColor(status).withValues(alpha: 0.5)),
+              border: Border.all(
+                color: _statusColor(status).withValues(alpha: 0.5),
+              ),
             ),
             child: Text(
               status,

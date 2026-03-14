@@ -277,7 +277,9 @@ class LoginProvider extends ChangeNotifier {
           passwordController?.text = savedPassword;
           _rememberPassword = true;
           notifyListeners();
-          log('Loaded saved credentials for identifier: ${savedIdentifier.substring(0, 3)}***');
+          log(
+            'Loaded saved credentials for identifier: ${savedIdentifier.substring(0, 3)}***',
+          );
         } else {
           // If remember me is true but credentials are missing, clear the flag
           log('Remember Me flag found but credentials missing, clearing flag');
@@ -347,7 +349,7 @@ class LoginProvider extends ChangeNotifier {
       final user = await _authService.getProfile();
       _currentUser = user;
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       log('Error refreshing profile: $e');
     }
   }

@@ -15,10 +15,12 @@ class ClassSectionManagementScreen extends StatefulWidget {
   const ClassSectionManagementScreen({super.key});
 
   @override
-  State<ClassSectionManagementScreen> createState() => _ClassSectionManagementScreenState();
+  State<ClassSectionManagementScreen> createState() =>
+      _ClassSectionManagementScreenState();
 }
 
-class _ClassSectionManagementScreenState extends State<ClassSectionManagementScreen> {
+class _ClassSectionManagementScreenState
+    extends State<ClassSectionManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -58,6 +60,7 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
     return CustomMainScreenWithAppbar(
       title: context.translate('class_section_management'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -156,26 +159,43 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
                 }
 
                 // Filter class sections based on search query
-                final filteredSections = provider.classSections.where((section) {
-                  if (_searchQuery.isEmpty) return true;
-                  final sectionName = (section['sectionName'] ?? '').toString().toLowerCase();
-                  
-                  // Handle both complex sections and simple divisions
-                  final subjectName = (section['subject']?['subjectName'] ?? '').toString().toLowerCase();
-                  final courseName = (section['subject']?['course']?['name'] ?? 
-                                    section['course']?['name'] ?? '').toString().toLowerCase();
-                  final teacherName = (section['teacher']?['user']?['name'] ?? 
-                                     section['teacher']?['name'] ?? '').toString().toLowerCase();
-                  
-                  return sectionName.contains(_searchQuery) ||
-                      subjectName.contains(_searchQuery) ||
-                      courseName.contains(_searchQuery) ||
-                      teacherName.contains(_searchQuery);
-                }).toList();
+                final filteredSections =
+                    provider.classSections.where((section) {
+                      if (_searchQuery.isEmpty) return true;
+                      final sectionName =
+                          (section['sectionName'] ?? '')
+                              .toString()
+                              .toLowerCase();
+
+                      // Handle both complex sections and simple divisions
+                      final subjectName =
+                          (section['subject']?['subjectName'] ?? '')
+                              .toString()
+                              .toLowerCase();
+                      final courseName =
+                          (section['subject']?['course']?['name'] ??
+                                  section['course']?['name'] ??
+                                  '')
+                              .toString()
+                              .toLowerCase();
+                      final teacherName =
+                          (section['teacher']?['user']?['name'] ??
+                                  section['teacher']?['name'] ??
+                                  '')
+                              .toString()
+                              .toLowerCase();
+
+                      return sectionName.contains(_searchQuery) ||
+                          subjectName.contains(_searchQuery) ||
+                          courseName.contains(_searchQuery) ||
+                          teacherName.contains(_searchQuery);
+                    }).toList();
 
                 if (filteredSections.isEmpty) {
                   return Center(
-                    child: Text(context.translate('no_class_sections_match_search')),
+                    child: Text(
+                      context.translate('no_class_sections_match_search'),
+                    ),
                   );
                 }
 
@@ -183,7 +203,8 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
                   itemCount: filteredSections.length,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemBuilder: (context, index) {
-                    final section = filteredSections[index] as Map<String, dynamic>;
+                    final section =
+                        filteredSections[index] as Map<String, dynamic>;
                     return _buildClassSectionCard(context, section, provider);
                   },
                 );
@@ -201,25 +222,27 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
     ClassSectionManagementProvider provider,
   ) {
     final sectionName = section['sectionName'] ?? 'Unknown Section';
-    
+
     // Handle both complex sections and simple divisions
     final subject = section['subject'] as Map<String, dynamic>?;
     final subjectName = subject?['subjectName'] ?? 'Class Division';
     final subjectCode = subject?['subjectCode'] ?? '';
-    
+
     // Course can be nested (complex) or direct (simple)
-    final course = subject?['course'] as Map<String, dynamic>? ?? 
-                   section['course'] as Map<String, dynamic>?;
+    final course =
+        subject?['course'] as Map<String, dynamic>? ??
+        section['course'] as Map<String, dynamic>?;
     final courseName = course?['name'] ?? '';
-    
+
     final semester = section['semester'] as Map<String, dynamic>?;
     final semesterName = semester?['semesterName'] ?? '';
-    
+
     // Teacher can be nested (complex) or direct (simple)
     final teacher = section['teacher'] as Map<String, dynamic>?;
     final teacherUser = teacher?['user'] as Map<String, dynamic>?;
-    final teacherName = teacherUser?['name'] ?? teacher?['name'] ?? 'No Teacher Assigned';
-    
+    final teacherName =
+        teacherUser?['name'] ?? teacher?['name'] ?? 'No Teacher Assigned';
+
     final maxCapacity = section['maxCapacity']?.toString() ?? '';
     final room = section['room'] ?? section['roomNumber'] ?? '';
     final schedule = section['schedule'] ?? '';
@@ -260,7 +283,7 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
                               ),
                               child: Text(
                                 subjectCode,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.blue600,
@@ -304,31 +327,36 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
                         break;
                     }
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.edit, size: 20),
-                          const SizedBox(width: 8),
-                          Text(context.translate('edit')),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, size: 20, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Text(
-                            context.translate('delete'),
-                            style: const TextStyle(color: Colors.red),
+                  itemBuilder:
+                      (context) => [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit, size: 20),
+                              const SizedBox(width: 8),
+                              Text(context.translate('edit')),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete,
+                                size: 20,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                context.translate('delete'),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -337,10 +365,7 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
               children: [
                 Icon(Icons.person, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
-                Text(
-                  teacherName,
-                  style: const TextStyle(fontSize: 14),
-                ),
+                Text(teacherName, style: const TextStyle(fontSize: 14)),
                 if (maxCapacity.isNotEmpty) ...[
                   const SizedBox(width: 16),
                   Icon(Icons.people, size: 16, color: Colors.grey[600]),
@@ -359,19 +384,14 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
                   if (room.isNotEmpty) ...[
                     Icon(Icons.room, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    Text(
-                      room,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                    Text(room, style: const TextStyle(fontSize: 14)),
                   ],
-                  if (room.isNotEmpty && schedule.isNotEmpty) const SizedBox(width: 16),
+                  if (room.isNotEmpty && schedule.isNotEmpty)
+                    const SizedBox(width: 16),
                   if (schedule.isNotEmpty) ...[
                     Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
                     const SizedBox(width: 4),
-                    Text(
-                      schedule,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                    Text(schedule, style: const TextStyle(fontSize: 14)),
                   ],
                 ],
               ),
@@ -381,7 +401,10 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -419,7 +442,10 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
     builder: (context) => const CreateClassSectionDialog(),
   );
 
-  void _showEditClassSectionDialog(BuildContext context, Map<String, dynamic> section) => showDialog(
+  void _showEditClassSectionDialog(
+    BuildContext context,
+    Map<String, dynamic> section,
+  ) => showDialog(
     context: context,
     builder: (context) => EditClassSectionDialog(section: section),
   );
@@ -434,44 +460,53 @@ class _ClassSectionManagementScreenState extends State<ClassSectionManagementScr
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.translate('delete_class_section')),
-        content: Text(
-          context.translate('delete_class_section_confirmation').replaceAll(
-            '{sectionName}',
-            '$subjectName - Section $sectionName',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.translate('cancel')),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              final success = await provider.deleteClassSection(section['id'] as int);
-              if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.translate('class_section_deleted_successfully')),
-                    backgroundColor: Colors.green,
+      builder:
+          (context) => AlertDialog(
+            title: Text(context.translate('delete_class_section')),
+            content: Text(
+              context
+                  .translate('delete_class_section_confirmation')
+                  .replaceAll(
+                    '{sectionName}',
+                    '$subjectName - Section $sectionName',
                   ),
-                );
-              } else if (mounted && provider.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(provider.error!),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(context.translate('delete')),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(context.translate('cancel')),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  final success = await provider.deleteClassSection(
+                    section['id'] as int,
+                  );
+                  if (success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          context.translate(
+                            'class_section_deleted_successfully',
+                          ),
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else if (mounted && provider.error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(provider.error!),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: Text(context.translate('delete')),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

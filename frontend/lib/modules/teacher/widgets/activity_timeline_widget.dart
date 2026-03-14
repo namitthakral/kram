@@ -108,7 +108,10 @@ class ActivityTimelineWidget extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     activity.description,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.slate600),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.slate600,
+                    ),
                   ),
                   if (activity.studentName != null) ...[
                     const SizedBox(height: 4),
@@ -124,7 +127,10 @@ class ActivityTimelineWidget extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     _formatTimestamp(activity.timestamp),
-                    style: const TextStyle(fontSize: 12, color: AppTheme.slate500),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.slate500,
+                    ),
                   ),
                 ],
               ),

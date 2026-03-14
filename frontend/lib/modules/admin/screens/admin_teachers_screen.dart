@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../modules/teacher/services/teacher_service.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
-import '../../../modules/teacher/services/teacher_service.dart';
 import '../widgets/add_teacher_dialog.dart';
 import '../widgets/edit_teacher_dialog.dart';
 import '../widgets/teacher_view_sheet.dart';
@@ -45,7 +45,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
       _error = null;
     });
     try {
-      final res = await _teacherService.getAllTeachers(page: 1, limit: 100);
+      final res = await _teacherService.getAllTeachers(limit: 100);
       final data = res['data'] as List<dynamic>?;
       if (mounted) {
         setState(() {
@@ -53,7 +53,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -72,7 +72,8 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
       final name = (user?['name'] as String? ?? '').toLowerCase();
       final email = (user?['email'] as String? ?? '').toLowerCase();
       final designation = (t['designation'] as String? ?? '').toLowerCase();
-      final specialization = (t['specialization'] as String? ?? '').toLowerCase();
+      final specialization =
+          (t['specialization'] as String? ?? '').toLowerCase();
       return name.contains(query) ||
           email.contains(query) ||
           designation.contains(query) ||
@@ -121,7 +122,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                 const SizedBox(height: 4),
                 Text(
                   context.translate('manage_all_teaching_staff'),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: AppTheme.slate500,
                   ),
@@ -135,7 +136,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                       label: Text(context.translate('export')),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.slate600,
-                        side: BorderSide(color: AppTheme.slate200),
+                        side: const BorderSide(color: AppTheme.slate200),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -168,41 +169,38 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _buildViewToggle(context),
-                  ],
-                ),
+                Row(children: [_buildViewToggle(context)]),
               ],
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(_error!, textAlign: TextAlign.center),
-                            const SizedBox(height: 16),
-                            TextButton(
-                              onPressed: _loadTeachers,
-                              child: Text(context.translate('retry')),
-                            ),
-                          ],
-                        ),
-                      )
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(_error!, textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: _loadTeachers,
+                            child: Text(context.translate('retry')),
+                          ),
+                        ],
+                      ),
+                    )
                     : filtered.isEmpty
-                        ? Center(
-                            child: Text(
-                              context.translate('no_teachers_found'),
-                              style: TextStyle(color: AppTheme.slate500),
-                            ),
-                          )
-                        : _gridView
-                            ? _buildGrid(filtered)
-                            : _buildTable(filtered),
+                    ? Center(
+                      child: Text(
+                        context.translate('no_teachers_found'),
+                        style: const TextStyle(color: AppTheme.slate500),
+                      ),
+                    )
+                    : _gridView
+                    ? _buildGrid(filtered)
+                    : _buildTable(filtered),
           ),
           _buildSummaryBar(context),
         ],
@@ -210,79 +208,73 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     );
   }
 
-  Widget _buildViewToggle(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.slate100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _segmentChip(
-            context,
-            label: context.translate('grid_view'),
-            selected: _gridView,
-            onTap: () => setState(() => _gridView = true),
-          ),
-          _segmentChip(
-            context,
-            label: context.translate('table_view'),
-            selected: !_gridView,
-            onTap: () => setState(() => _gridView = false),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildViewToggle(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      color: AppTheme.slate100,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _segmentChip(
+          context,
+          label: context.translate('grid_view'),
+          selected: _gridView,
+          onTap: () => setState(() => _gridView = true),
+        ),
+        _segmentChip(
+          context,
+          label: context.translate('table_view'),
+          selected: !_gridView,
+          onTap: () => setState(() => _gridView = false),
+        ),
+      ],
+    ),
+  );
 
   Widget _segmentChip(
     BuildContext context, {
     required String label,
     required bool selected,
     required VoidCallback onTap,
-  }) {
-    return Material(
-      color: selected ? AppTheme.blue500 : Colors.transparent,
+  }) => Material(
+    color: selected ? AppTheme.blue500 : Colors.transparent,
+    borderRadius: BorderRadius.circular(8),
+    child: InkWell(
+      onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: selected ? Colors.white : AppTheme.slate600,
-              fontSize: 14,
-            ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: selected ? Colors.white : AppTheme.slate600,
+            fontSize: 14,
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _buildGrid(List<dynamic> teachers) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossCount = constraints.maxWidth > 800 ? 3 : 2;
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossCount,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: teachers.length,
-          itemBuilder: (context, index) => _teacherCard(teachers[index]),
-        );
-      },
-    );
-  }
+  Widget _buildGrid(List<dynamic> teachers) => LayoutBuilder(
+    builder: (context, constraints) {
+      final crossCount = constraints.maxWidth > 800 ? 3 : 2;
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.85,
+        ),
+        itemCount: teachers.length,
+        itemBuilder: (context, index) => _teacherCard(teachers[index]),
+      );
+    },
+  );
 
-  Widget _teacherCard(dynamic t) {
+  Widget _teacherCard(t) {
     final user = t['user'] as Map<String, dynamic>?;
     final name = user?['name'] as String? ?? 'Teacher';
     final initials = UserUtils.getInitials(name);
@@ -291,15 +283,14 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     final phone = user?['phone'] as String? ?? user?['email'] as String? ?? '—';
     final status = user?['status'] as String? ?? 'ACTIVE';
     final joinedAt = user?['createdAt'] as String?;
-    final dateStr = joinedAt != null
-        ? joinedAt.toString().split('T').first
-        : '—';
+    final dateStr =
+        joinedAt != null ? joinedAt.toString().split('T').first : '—';
 
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppTheme.slate200),
+        side: const BorderSide(color: AppTheme.slate200),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -338,7 +329,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                       const SizedBox(height: 2),
                       Text(
                         dateStr,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.slate500,
                         ),
@@ -347,23 +338,26 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: status == 'ACTIVE'
-                        ? AppTheme.blue50
-                        : AppTheme.slate100,
+                    color:
+                        status == 'ACTIVE'
+                            ? AppTheme.blue50
+                            : AppTheme.slate100,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    status == 'ACTIVE'
-                        ? context.translate('active')
-                        : status,
+                    status == 'ACTIVE' ? context.translate('active') : status,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: status == 'ACTIVE'
-                          ? AppTheme.blue600
-                          : AppTheme.slate600,
+                      color:
+                          status == 'ACTIVE'
+                              ? AppTheme.blue600
+                              : AppTheme.slate600,
                     ),
                   ),
                 ),
@@ -395,83 +389,83 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: AppTheme.slate500),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 13, color: AppTheme.slate600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTable(List<dynamic> teachers) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: AppTheme.slate200),
-        ),
-        child: DataTable(
-          columns: [
-            DataColumn(label: Text(context.translate('name'))),
-            DataColumn(label: Text(context.translate('designation'))),
-            DataColumn(label: Text(context.translate('phone_number'))),
-            DataColumn(label: Text(context.translate('status'))),
-            DataColumn(label: Text(context.translate('actions'))),
-          ],
-          rows: teachers.map((t) {
-            final user = t['user'] as Map<String, dynamic>?;
-            final name = user?['name'] as String? ?? '—';
-            final designation =
-                t['designation'] as String? ?? t['specialization'] as String? ?? '—';
-            final phone = user?['phone'] as String? ?? user?['email'] as String? ?? '—';
-            final status = user?['status'] as String? ?? 'ACTIVE';
-            return DataRow(
-              cells: [
-                DataCell(Text(name)),
-                DataCell(Text(designation)),
-                DataCell(Text(phone)),
-                DataCell(Text(status)),
-                DataCell(
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.visibility_outlined, size: 20),
-                        onPressed: () => _showTeacherView(context, t),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 20),
-                        onPressed: () => _showEditTeacher(context, t),
-                        tooltip: context.translate('edit'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
+  Widget _infoRow(IconData icon, String text) => Row(
+    children: [
+      Icon(icon, size: 16, color: AppTheme.slate500),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 13, color: AppTheme.slate600),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
-    );
-  }
+    ],
+  );
+
+  Widget _buildTable(List<dynamic> teachers) => SingleChildScrollView(
+    padding: const EdgeInsets.all(16),
+    child: Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: AppTheme.slate200),
+      ),
+      child: DataTable(
+        columns: [
+          DataColumn(label: Text(context.translate('name'))),
+          DataColumn(label: Text(context.translate('designation'))),
+          DataColumn(label: Text(context.translate('phone_number'))),
+          DataColumn(label: Text(context.translate('status'))),
+          DataColumn(label: Text(context.translate('actions'))),
+        ],
+        rows:
+            teachers.map((t) {
+              final user = t['user'] as Map<String, dynamic>?;
+              final name = user?['name'] as String? ?? '—';
+              final designation =
+                  t['designation'] as String? ??
+                  t['specialization'] as String? ??
+                  '—';
+              final phone =
+                  user?['phone'] as String? ?? user?['email'] as String? ?? '—';
+              final status = user?['status'] as String? ?? 'ACTIVE';
+              return DataRow(
+                cells: [
+                  DataCell(Text(name)),
+                  DataCell(Text(designation)),
+                  DataCell(Text(phone)),
+                  DataCell(Text(status)),
+                  DataCell(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.visibility_outlined, size: 20),
+                          onPressed: () => _showTeacherView(context, t),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          onPressed: () => _showEditTeacher(context, t),
+                          tooltip: context.translate('edit'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+      ),
+    ),
+  );
 
   Widget _buildSummaryBar(BuildContext context) {
     final total = _teachers.length;
     final active = _activeCount;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.slate100,
         border: Border(top: BorderSide(color: AppTheme.slate200)),
       ),
@@ -485,39 +479,34 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     );
   }
 
-  Widget _summaryChip(String label, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: AppTheme.slate600,
+  Widget _summaryChip(String label, String value) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(fontSize: 13, color: AppTheme.slate600),
+      ),
+      const SizedBox(width: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTheme.slate200),
+        ),
+        child: Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: AppTheme.slate800,
           ),
         ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.slate200),
-          ),
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: AppTheme.slate800,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 
-  void _showAddTeacher(BuildContext context) async {
+  Future<void> _showAddTeacher(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => const AddTeacherDialog(),
@@ -527,23 +516,25 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     }
   }
 
-  void _showEditTeacher(BuildContext context, dynamic teacher) async {
+  Future<void> _showEditTeacher(BuildContext context, teacher) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => EditTeacherDialog(teacher: teacher as Map<String, dynamic>),
+      builder:
+          (context) =>
+              EditTeacherDialog(teacher: teacher as Map<String, dynamic>),
     );
     if (result == true) {
       _loadTeachers();
     }
   }
 
-  Future<void> _showTeacherView(BuildContext context, dynamic teacher) async {
+  Future<void> _showTeacherView(BuildContext context, teacher) async {
     final result = await showModalBottomSheet<dynamic>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-          TeacherViewSheet(teacher: teacher as Map<String, dynamic>),
+      builder:
+          (_) => TeacherViewSheet(teacher: teacher as Map<String, dynamic>),
     );
 
     if (!mounted) return;

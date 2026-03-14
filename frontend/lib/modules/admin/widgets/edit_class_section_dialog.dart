@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../teacher/services/teacher_service.dart';
 import '../providers/class_section_management_provider.dart';
-import '../../../provider/login_signup/login_provider.dart';
 
 class EditClassSectionDialog extends StatefulWidget {
+  const EditClassSectionDialog({required this.section, super.key});
   final Map<String, dynamic> section;
-
-  const EditClassSectionDialog({
-    super.key,
-    required this.section,
-  });
 
   @override
   State<EditClassSectionDialog> createState() => _EditClassSectionDialogState();
@@ -43,13 +39,19 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
   }
 
   void _initializeControllers() {
-    _sectionNameController = TextEditingController(text: widget.section['sectionName'] ?? '');
-    _maxCapacityController = TextEditingController(text: widget.section['maxCapacity']?.toString() ?? '');
+    _sectionNameController = TextEditingController(
+      text: widget.section['sectionName'] ?? '',
+    );
+    _maxCapacityController = TextEditingController(
+      text: widget.section['maxCapacity']?.toString() ?? '',
+    );
     _roomController = TextEditingController(text: widget.section['room'] ?? '');
-    _scheduleController = TextEditingController(text: widget.section['schedule'] ?? '');
+    _scheduleController = TextEditingController(
+      text: widget.section['schedule'] ?? '',
+    );
 
     _selectedStatus = widget.section['status'] ?? 'ACTIVE';
-    
+
     // Initialize teacher selection
     final teacher = widget.section['teacher'] as Map<String, dynamic>?;
     _selectedTeacherId = teacher?['id'] as int?;
@@ -58,20 +60,20 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
   Future<void> _loadTeachers() async {
     try {
       setState(() => _loadingTeachers = true);
-      
+
       final response = await _teacherService.getAllTeachers(limit: 100);
       final teachersList = response['data'] as List<dynamic>? ?? [];
-      
+
       setState(() {
         _teachers = teachersList;
         _loadingTeachers = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _teachers = [];
         _loadingTeachers = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -166,9 +168,11 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                                context.translate(context.read<LoginProvider>().isSchool
+                              context.translate(
+                                context.read<LoginProvider>().isSchool
                                     ? 'term'
-                                    : 'semester'),
+                                    : 'semester',
+                              ),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -210,9 +214,11 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
                         controller: _sectionNameController,
                         label: context.translate('section_name'),
                         hintText: context.translate('enter_section_name'),
-                        validator: (value) => value == null || value.trim().isEmpty
-                            ? context.translate('section_name_required')
-                            : null,
+                        validator:
+                            (value) =>
+                                value == null || value.trim().isEmpty
+                                    ? context.translate('section_name_required')
+                                    : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -243,56 +249,73 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
 
                       // Status
                       DropdownButtonFormField<String>(
-                        value: _selectedStatus,
+                        initialValue: _selectedStatus,
                         decoration: InputDecoration(
                           labelText: context.translate('status'),
                           border: const OutlineInputBorder(),
                         ),
-                        items: _statusOptions.map((status) => DropdownMenuItem(
-                            value: status,
-                            child: Text(status),
-                          )).toList(),
-                        onChanged: (value) => setState(() => _selectedStatus = value!),
+                        items:
+                            _statusOptions
+                                .map(
+                                  (status) => DropdownMenuItem(
+                                    value: status,
+                                    child: Text(status),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged:
+                            (value) => setState(() => _selectedStatus = value!),
                       ),
                       const SizedBox(height: 16),
 
                       // Teacher Dropdown (Optional)
                       DropdownButtonFormField<int>(
-                        value: _selectedTeacherId,
+                        initialValue: _selectedTeacherId,
                         decoration: InputDecoration(
                           labelText: context.translate('teacher'),
                           border: const OutlineInputBorder(),
-                          helperText: 'Optional - assign teacher later if needed',
-                          suffixIcon: _loadingTeachers 
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : null,
+                          helperText:
+                              'Optional - assign teacher later if needed',
+                          suffixIcon:
+                              _loadingTeachers
+                                  ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : null,
                         ),
-                        hint: _loadingTeachers
-                            ? const Text('Loading teachers...')
-                            : _teachers.isEmpty
+                        hint:
+                            _loadingTeachers
+                                ? const Text('Loading teachers...')
+                                : _teachers.isEmpty
                                 ? const Text('No teachers available')
                                 : const Text('Select teacher (optional)'),
-                        items: _loadingTeachers
-                            ? []
-                            : [
-                                const DropdownMenuItem<int>(
-                                  value: null,
-                                  child: Text('No teacher assigned'),
-                                ),
-                                ..._teachers.map((teacher) => DropdownMenuItem<int>(
-                                  value: teacher['id'] as int,
-                                  child: Text(teacher['user']?['name'] ?? 'Unknown Teacher'),
-                                )),
-                              ],
-                        onChanged: _loadingTeachers
-                            ? null
-                            : (value) => setState(() {
-                                _selectedTeacherId = value;
-                              }),
+                        items:
+                            _loadingTeachers
+                                ? []
+                                : [
+                                  const DropdownMenuItem<int>(
+                                    child: Text('No teacher assigned'),
+                                  ),
+                                  ..._teachers.map(
+                                    (teacher) => DropdownMenuItem<int>(
+                                      value: teacher['id'] as int,
+                                      child: Text(
+                                        teacher['user']?['name'] ??
+                                            'Unknown Teacher',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                        onChanged:
+                            _loadingTeachers
+                                ? null
+                                : (value) => setState(() {
+                                  _selectedTeacherId = value;
+                                }),
                       ),
                     ],
                   ),
@@ -308,23 +331,30 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
                   ),
                   const SizedBox(width: 16),
                   Consumer<ClassSectionManagementProvider>(
-                    builder: (context, provider, child) => ElevatedButton(
-                        onPressed: provider.isUpdating ? null : _updateClassSection,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.blue500,
-                          foregroundColor: Colors.white,
+                    builder:
+                        (context, provider, child) => ElevatedButton(
+                          onPressed:
+                              provider.isUpdating ? null : _updateClassSection,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.blue500,
+                            foregroundColor: Colors.white,
+                          ),
+                          child:
+                              provider.isUpdating
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                  : Text(
+                                    context.translate('update_class_section'),
+                                  ),
                         ),
-                        child: provider.isUpdating
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(context.translate('update_class_section')),
-                    ),
                   ),
                 ],
               ),
@@ -346,7 +376,9 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
     };
 
     if (_maxCapacityController.text.trim().isNotEmpty) {
-      sectionData['maxCapacity'] = int.tryParse(_maxCapacityController.text.trim());
+      sectionData['maxCapacity'] = int.tryParse(
+        _maxCapacityController.text.trim(),
+      );
     }
 
     if (_roomController.text.trim().isNotEmpty) {
@@ -362,22 +394,24 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
     }
 
     final provider = context.read<ClassSectionManagementProvider>();
-    final success = await provider.updateClassSection(widget.section['id'] as int, sectionData);
+    final success = await provider.updateClassSection(
+      widget.section['id'] as int,
+      sectionData,
+    );
 
     if (success && mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.translate('class_section_updated_successfully')),
+          content: Text(
+            context.translate('class_section_updated_successfully'),
+          ),
           backgroundColor: Colors.green,
         ),
       );
     } else if (mounted && provider.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.error!),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(provider.error!), backgroundColor: Colors.red),
       );
     }
   }

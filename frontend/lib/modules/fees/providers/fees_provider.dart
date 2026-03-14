@@ -53,7 +53,7 @@ class FeesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _setError(dynamic e) {
+  void _setError(e) {
     _error = e.toString().replaceAll('Exception: ', '');
     debugPrint('❌ FeesProvider Error: $_error');
     notifyListeners();
@@ -77,7 +77,7 @@ class FeesProvider extends ChangeNotifier {
         academicYearId: academicYearId,
       );
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
     } finally {
       _setLoading(false);
@@ -91,7 +91,7 @@ class FeesProvider extends ChangeNotifier {
       _feeStructures.insert(0, newStructure);
       _error = null;
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
       return false;
     } finally {
@@ -106,7 +106,7 @@ class FeesProvider extends ChangeNotifier {
       _feeStructures.removeWhere((item) => item.id == id);
       _error = null;
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
       return false;
     } finally {
@@ -129,7 +129,7 @@ class FeesProvider extends ChangeNotifier {
         institutionId: institutionId,
       );
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
     } finally {
       _setLoading(false);
@@ -143,7 +143,7 @@ class FeesProvider extends ChangeNotifier {
       // Reload lists if needed, or just return success
       _error = null;
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
       return false;
     } finally {
@@ -156,7 +156,7 @@ class FeesProvider extends ChangeNotifier {
     try {
       _studentFeeSummary = await _feesService.getStudentFeeSummary(studentId);
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading student fee summary: $e');
     }
   }
@@ -166,12 +166,16 @@ class FeesProvider extends ChangeNotifier {
   Future<void> loadPayments({int? studentId}) async {
     _setLoading(true);
     try {
-      final result = await _feesService.getPayments(studentId: studentId, limit: 500);
+      final result = await _feesService.getPayments(
+        studentId: studentId,
+        limit: 500,
+      );
       final data = result['data'];
       _payments = data is List ? data.cast<Payment>() : [];
-      _paymentsMeta = result['meta'] is Map ? _mapToIntMeta(result['meta'] as Map) : null;
+      _paymentsMeta =
+          result['meta'] is Map ? _mapToIntMeta(result['meta'] as Map) : null;
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
     } finally {
       _setLoading(false);
@@ -179,7 +183,11 @@ class FeesProvider extends ChangeNotifier {
   }
 
   /// Load recent payments for institution (dashboard Recent Payments tab)
-  Future<void> loadRecentPayments({required int institutionId, int page = 1, int limit = 20}) async {
+  Future<void> loadRecentPayments({
+    required int institutionId,
+    int page = 1,
+    int limit = 20,
+  }) async {
     _setLoading(true);
     try {
       final result = await _feesService.getPayments(
@@ -189,23 +197,22 @@ class FeesProvider extends ChangeNotifier {
       );
       final data = result['data'];
       _payments = data is List ? data.cast<Payment>() : [];
-      _paymentsMeta = result['meta'] is Map ? _mapToIntMeta(result['meta'] as Map) : null;
+      _paymentsMeta =
+          result['meta'] is Map ? _mapToIntMeta(result['meta'] as Map) : null;
       _error = null;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
     } finally {
       _setLoading(false);
     }
   }
 
-  static Map<String, int>? _mapToIntMeta(Map meta) {
-    return {
-      'total': int.tryParse((meta['total'] ?? 0).toString()) ?? 0,
-      'page': int.tryParse((meta['page'] ?? 1).toString()) ?? 1,
-      'limit': int.tryParse((meta['limit'] ?? 10).toString()) ?? 10,
-      'totalPages': int.tryParse((meta['totalPages'] ?? 0).toString()) ?? 0,
-    };
-  }
+  static Map<String, int>? _mapToIntMeta(Map meta) => {
+    'total': int.tryParse((meta['total'] ?? 0).toString()) ?? 0,
+    'page': int.tryParse((meta['page'] ?? 1).toString()) ?? 1,
+    'limit': int.tryParse((meta['limit'] ?? 10).toString()) ?? 10,
+    'totalPages': int.tryParse((meta['totalPages'] ?? 0).toString()) ?? 0,
+  };
 
   Future<bool> recordPayment(Map<String, dynamic> data) async {
     _setLoading(true);
@@ -218,7 +225,7 @@ class FeesProvider extends ChangeNotifier {
       }
       _error = null;
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
       return false;
     } finally {
@@ -234,16 +241,18 @@ class FeesProvider extends ChangeNotifier {
         institutionId: institutionId,
       );
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading collection summary: $e');
     }
   }
 
   Future<void> loadOverdueFees({int? institutionId}) async {
     try {
-      _overdueSummary = await _feesService.getOverdueFees(institutionId: institutionId);
+      _overdueSummary = await _feesService.getOverdueFees(
+        institutionId: institutionId,
+      );
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading overdue fees: $e');
     }
   }
@@ -260,7 +269,7 @@ class FeesProvider extends ChangeNotifier {
         endDate: endDate,
       );
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading payment summary: $e');
     }
   }
@@ -272,16 +281,21 @@ class FeesProvider extends ChangeNotifier {
     notifyListeners();
     try {
       await Future.wait([
-        _feesService.getCollectionSummary(institutionId: institutionId).then((v) {
+        _feesService.getCollectionSummary(institutionId: institutionId).then((
+          v,
+        ) {
           _collectionSummary = v;
         }),
         _feesService.getOverdueFees(institutionId: institutionId).then((v) {
           _overdueSummary = v;
         }),
-        _feesService.getPayments(institutionId: institutionId, page: 1, limit: 20).then((result) {
+        _feesService.getPayments(institutionId: institutionId).then((result) {
           final data = result['data'];
           _payments = data is List ? data.cast<Payment>() : [];
-          _paymentsMeta = result['meta'] is Map ? _mapToIntMeta(result['meta'] as Map) : null;
+          _paymentsMeta =
+              result['meta'] is Map
+                  ? _mapToIntMeta(result['meta'] as Map)
+                  : null;
         }),
         _feesService.getStudentFees(institutionId: institutionId).then((list) {
           _studentFees = list;
@@ -291,7 +305,7 @@ class FeesProvider extends ChangeNotifier {
         }),
       ]);
       notifyListeners();
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
     } finally {
       _setLoading(false);
@@ -301,7 +315,7 @@ class FeesProvider extends ChangeNotifier {
   Future<List<dynamic>> getAcademicYears() async {
     try {
       return await _feesService.getAcademicYears();
-    } catch (e) {
+    } on Exception catch (e) {
       _setError(e);
       return [];
     }

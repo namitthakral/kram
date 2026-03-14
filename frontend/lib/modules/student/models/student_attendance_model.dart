@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 enum AttendanceStatus { PRESENT, ABSENT, LATE, EXCUSED }
 
 class StudentAttendanceRecord {
-
   StudentAttendanceRecord({
     required this.id,
     required this.studentId,
@@ -15,16 +14,17 @@ class StudentAttendanceRecord {
     this.subjectCode,
   });
 
-  factory StudentAttendanceRecord.fromJson(Map<String, dynamic> json) => StudentAttendanceRecord(
-      id: json['id'],
-      studentId: json['studentId'],
-      sectionId: json['sectionId'],
-      date: DateTime.parse(json['date']),
-      status: _parseStatus(json['status']),
-      remarks: json['remarks'],
-      subjectName: json['section']?['subject']?['subjectName'],
-      subjectCode: json['section']?['subject']?['subjectCode'],
-    );
+  factory StudentAttendanceRecord.fromJson(Map<String, dynamic> json) =>
+      StudentAttendanceRecord(
+        id: json['id'],
+        studentId: json['studentId'],
+        sectionId: json['sectionId'],
+        date: DateTime.parse(json['date']),
+        status: _parseStatus(json['status']),
+        remarks: json['remarks'],
+        subjectName: json['section']?['subject']?['subjectName'],
+        subjectCode: json['section']?['subject']?['subjectCode'],
+      );
   final int id;
   final int studentId;
   final int sectionId;
@@ -34,10 +34,11 @@ class StudentAttendanceRecord {
   final String? subjectName;
   final String? subjectCode;
 
-  static AttendanceStatus _parseStatus(String status) => AttendanceStatus.values.firstWhere(
-      (e) => e.toString().split('.').last == status,
-      orElse: () => AttendanceStatus.PRESENT,
-    );
+  static AttendanceStatus _parseStatus(String status) =>
+      AttendanceStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == status,
+        orElse: () => AttendanceStatus.PRESENT,
+      );
 
   Color get statusColor {
     switch (status) {
@@ -56,7 +57,6 @@ class StudentAttendanceRecord {
 }
 
 class AttendanceStats {
-
   AttendanceStats({
     required this.totalClasses,
     required this.present,

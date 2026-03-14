@@ -33,13 +33,13 @@ class AdminDashboardScreen extends StatelessWidget {
     final institutionId = user.institutionId;
 
     return FutureBuilder<Map<String, dynamic>?>(
-      future: institutionId != null
-          ? AdminService().getInstitutionProfile(institutionId)
-          : null,
+      future:
+          institutionId != null
+              ? AdminService().getInstitutionProfile(institutionId)
+              : null,
       builder: (context, snapshot) {
-        final institutionName = snapshot.data?['name'] as String? ??
-            user.institution?.name ??
-            '';
+        final institutionName =
+            snapshot.data?['name'] as String? ?? user.institution?.name ?? '';
         return CustomMainScreenWithAppbar(
           title: context.translate('Admin Dashboard'),
           appBarConfig: AppBarConfig.admin(

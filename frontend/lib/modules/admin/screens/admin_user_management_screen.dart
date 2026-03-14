@@ -46,6 +46,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     return CustomMainScreenWithAppbar(
       title: context.translate('user_management'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -68,7 +69,9 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
                     controller: _searchController,
                     hintText: context.translate('search_users'),
                     onChanged: (value) {
-                      context.read<UserManagementProvider>().setSearchQuery(value);
+                      context.read<UserManagementProvider>().setSearchQuery(
+                        value,
+                      );
                     },
                   ),
                 ),

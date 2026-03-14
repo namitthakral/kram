@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../services/admin_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
+import '../services/admin_service.dart';
 
 class AddTeacherDialog extends StatefulWidget {
   const AddTeacherDialog({super.key});
@@ -50,227 +50,255 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        constraints: const BoxConstraints(maxWidth: 600, maxHeight: 800),
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.person_add, color: AppTheme.blue500),
-                  const SizedBox(width: 8),
-                  Text(
-                    context.translate('add_teacher'),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _StatusToggle(
-                        value: _status,
-                        onChanged: (v) => setState(() => _status = v),
-                      ),
-                      const SizedBox(height: 24),
-                      // Basic Information
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _firstNameController,
-                              label: context.translate('first_name'),
-                              hintText: context.translate('enter_first_name'),
-                              validator: (value) => value == null || value.trim().isEmpty
-                                  ? context.translate('first_name_required')
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _lastNameController,
-                              label: context.translate('last_name'),
-                              hintText: context.translate('enter_last_name'),
-                              validator: (value) => value == null || value.trim().isEmpty
-                                  ? context.translate('last_name_required')
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      CustomTextField(
-                        controller: _designationController,
-                        label: context.translate('designation'),
-                        hintText: 'e.g., Senior Professor',
-                        validator: (value) => value == null || value.trim().isEmpty
-                            ? 'Designation is required'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Email and Phone
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _emailController,
-                              label: context.translate('email'),
-                              hintText: context.translate('enter_email'),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return context.translate('email_required');
-                                }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                  return context.translate('invalid_email');
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _phoneController,
-                              label: context.translate('phone'),
-                              hintText: context.translate('enter_phone'),
-                              keyboardType: TextInputType.phone,
-                              validator: (value) => value == null || value.trim().isEmpty
-                                  ? context.translate('phone_required')
-                                  : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Gender
-                      DropdownButtonFormField<String>(
-                        value: _selectedGender,
-                        decoration: InputDecoration(
-                          labelText: context.translate('gender'),
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: _genderOptions.map((gender) => DropdownMenuItem(
-                            value: gender,
-                            child: Text(context.translate(gender.toLowerCase())),
-                          )).toList(),
-                        onChanged: (value) => setState(() => _selectedGender = value!),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Address
-                      CustomTextField(
-                        controller: _addressController,
-                        label: context.translate('address'),
-                        hintText: context.translate('enter_address'),
-                        maxLines: 3,
-                        validator: (value) => value == null || value.trim().isEmpty
-                            ? context.translate('address_required')
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Professional Information
-                      CustomTextField(
-                        controller: _qualificationController,
-                        label: context.translate('qualification'),
-                        hintText: 'e.g., M.Sc. Computer Science',
-                        validator: (value) => value == null || value.trim().isEmpty
-                            ? context.translate('qualification_required')
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _experienceController,
-                              label: context.translate('experience_years'),
-                              hintText: 'e.g., 5',
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return context.translate('experience_required');
-                                }
-                                if (int.tryParse(value) == null) {
-                                  return context.translate('invalid_number');
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _specialtyController,
-                              label: context.translate('specialty'),
-                              hintText: 'e.g., Mathematics, Physics',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+  Widget build(BuildContext context) => Dialog(
+    child: Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      constraints: const BoxConstraints(maxWidth: 600, maxHeight: 800),
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.person_add, color: AppTheme.blue500),
+                const SizedBox(width: 8),
+                Text(
+                  context.translate('add_teacher'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: _isCreating ? null : () => Navigator.of(context).pop(),
-                    child: Text(context.translate('cancel')),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _isCreating ? null : _createTeacher,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.blue500,
-                      foregroundColor: Colors.white,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _StatusToggle(
+                      value: _status,
+                      onChanged: (v) => setState(() => _status = v),
                     ),
-                    child: _isCreating
-                        ? const SizedBox(
+                    const SizedBox(height: 24),
+                    // Basic Information
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _firstNameController,
+                            label: context.translate('first_name'),
+                            hintText: context.translate('enter_first_name'),
+                            validator:
+                                (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? context.translate(
+                                          'first_name_required',
+                                        )
+                                        : null,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _lastNameController,
+                            label: context.translate('last_name'),
+                            hintText: context.translate('enter_last_name'),
+                            validator:
+                                (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? context.translate(
+                                          'last_name_required',
+                                        )
+                                        : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    CustomTextField(
+                      controller: _designationController,
+                      label: context.translate('designation'),
+                      hintText: 'e.g., Senior Professor',
+                      validator:
+                          (value) =>
+                              value == null || value.trim().isEmpty
+                                  ? 'Designation is required'
+                                  : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Email and Phone
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _emailController,
+                            label: context.translate('email'),
+                            hintText: context.translate('enter_email'),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return context.translate('email_required');
+                              }
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
+                                return context.translate('invalid_email');
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _phoneController,
+                            label: context.translate('phone'),
+                            hintText: context.translate('enter_phone'),
+                            keyboardType: TextInputType.phone,
+                            validator:
+                                (value) =>
+                                    value == null || value.trim().isEmpty
+                                        ? context.translate('phone_required')
+                                        : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Gender
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedGender,
+                      decoration: InputDecoration(
+                        labelText: context.translate('gender'),
+                        border: const OutlineInputBorder(),
+                      ),
+                      items:
+                          _genderOptions
+                              .map(
+                                (gender) => DropdownMenuItem(
+                                  value: gender,
+                                  child: Text(
+                                    context.translate(gender.toLowerCase()),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                      onChanged:
+                          (value) => setState(() => _selectedGender = value!),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Address
+                    CustomTextField(
+                      controller: _addressController,
+                      label: context.translate('address'),
+                      hintText: context.translate('enter_address'),
+                      maxLines: 3,
+                      validator:
+                          (value) =>
+                              value == null || value.trim().isEmpty
+                                  ? context.translate('address_required')
+                                  : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Professional Information
+                    CustomTextField(
+                      controller: _qualificationController,
+                      label: context.translate('qualification'),
+                      hintText: 'e.g., M.Sc. Computer Science',
+                      validator:
+                          (value) =>
+                              value == null || value.trim().isEmpty
+                                  ? context.translate('qualification_required')
+                                  : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _experienceController,
+                            label: context.translate('experience_years'),
+                            hintText: 'e.g., 5',
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return context.translate('experience_required');
+                              }
+                              if (int.tryParse(value) == null) {
+                                return context.translate('invalid_number');
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _specialtyController,
+                            label: context.translate('specialty'),
+                            hintText: 'e.g., Mathematics, Physics',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed:
+                      _isCreating ? null : () => Navigator.of(context).pop(),
+                  child: Text(context.translate('cancel')),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: _isCreating ? null : _createTeacher,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.blue500,
+                    foregroundColor: Colors.white,
+                  ),
+                  child:
+                      _isCreating
+                          ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
-                        : Text(context.translate('create_teacher')),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                          : Text(context.translate('create_teacher')),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 
   Future<void> _createTeacher() async {
     if (!_formKey.currentState!.validate()) {
@@ -302,9 +330,10 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
           'designation': _designationController.text.trim(),
           'qualification': _qualificationController.text.trim(),
           'experienceYears': int.parse(_experienceController.text.trim()),
-          'specialization': _specialtyController.text.trim().isNotEmpty 
-              ? _specialtyController.text.trim() 
-              : null,
+          'specialization':
+              _specialtyController.text.trim().isNotEmpty
+                  ? _specialtyController.text.trim()
+                  : null,
         },
       };
 
@@ -328,7 +357,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
           );
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -358,7 +387,10 @@ class _StatusToggle extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Account Status',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 10,
+        ),
       ),
       child: Row(
         children: [
@@ -385,44 +417,39 @@ class _StatusToggle extends StatelessWidget {
     required bool selected,
     required Color color,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
-          border: Border.all(
-            color: selected ? color : AppTheme.slate200,
-            width: selected ? 1.5 : 1,
-          ),
-          borderRadius: BorderRadius.circular(20),
+  }) => GestureDetector(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+        border: Border.all(
+          color: selected ? color : AppTheme.slate200,
+          width: selected ? 1.5 : 1,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selected)
-              Container(
-                width: 6,
-                height: 6,
-                margin: const EdgeInsets.only(right: 6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                ),
-              ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? color : AppTheme.slate500,
-              ),
-            ),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(20),
       ),
-    );
-  }
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (selected)
+            Container(
+              width: 6,
+              height: 6,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+            ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              color: selected ? color : AppTheme.slate500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

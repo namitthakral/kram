@@ -9,7 +9,7 @@ import '../../teacher/services/teacher_service.dart';
 /// Returns `true` if the caller should refresh the teacher list (status
 /// toggled or edit dialog saved).
 class TeacherViewSheet extends StatefulWidget {
-  const TeacherViewSheet({super.key, required this.teacher});
+  const TeacherViewSheet({required this.teacher, super.key});
 
   final Map<String, dynamic> teacher;
 
@@ -45,15 +45,13 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
 
   String get _teacherUuid => _user['uuid'] as String? ?? '';
 
-  String get _designation =>
-      widget.teacher['designation'] as String? ?? '—';
+  String get _designation => widget.teacher['designation'] as String? ?? '—';
   String get _specialization =>
       widget.teacher['specialization'] as String? ?? '—';
   String get _qualification =>
       widget.teacher['qualification'] as String? ?? '—';
   String get _employmentType =>
-      (widget.teacher['employmentType'] as String? ?? '—')
-          .replaceAll('_', ' ');
+      (widget.teacher['employmentType'] as String? ?? '—').replaceAll('_', ' ');
   String get _experienceYears {
     final v = widget.teacher['experienceYears'];
     if (v == null) return '—';
@@ -67,10 +65,9 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
     setState(() => _isTogglingStatus = true);
     try {
       // Send `userStatus` — the backend maps this to User.status (ACTIVE/INACTIVE)
-      await _teacherService.updateTeacher(
-        _teacherUuid,
-        {'userStatus': newStatus},
-      );
+      await _teacherService.updateTeacher(_teacherUuid, {
+        'userStatus': newStatus,
+      });
       if (mounted) {
         _localUserStatus = newStatus; // update local reactive state
         _needsRefresh = true;
@@ -80,13 +77,14 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
             content: Text(
               'Teacher marked as ${newStatus == 'ACTIVE' ? 'Active' : 'Inactive'}',
             ),
-            backgroundColor: newStatus == 'ACTIVE'
-                ? const Color(0xFF10b981)
-                : AppTheme.slate600,
+            backgroundColor:
+                newStatus == 'ACTIVE'
+                    ? const Color(0xFF10b981)
+                    : AppTheme.slate600,
           ),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -117,7 +115,7 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
       onPopInvokedWithResult: (_, __) {
         // nothing special needed; parent detects result via Navigator.pop value
       },
-      child: Container(
+      child: DecoratedBox(
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -173,7 +171,7 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
                         const SizedBox(height: 4),
                         Text(
                           _designation,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             color: AppTheme.slate500,
                           ),
@@ -185,15 +183,14 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
-                    onPressed: () =>
-                        Navigator.of(context).pop(_needsRefresh),
+                    onPressed: () => Navigator.of(context).pop(_needsRefresh),
                   ),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
-            Divider(color: AppTheme.slate100, height: 1),
+            const Divider(color: AppTheme.slate100, height: 1),
 
             // ── Details ───────────────────────────────────────────────────
             Flexible(
@@ -257,7 +254,7 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
                       label: const Text('Edit'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.blue600,
-                        side: BorderSide(color: AppTheme.blue500),
+                        side: const BorderSide(color: AppTheme.blue500),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -270,28 +267,28 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: _isTogglingStatus ? null : _toggleStatus,
-                      icon: _isTogglingStatus
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
+                      icon:
+                          _isTogglingStatus
+                              ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : Icon(
+                                _isActive
+                                    ? Icons.block_rounded
+                                    : Icons.check_circle_outline_rounded,
+                                size: 18,
                               ),
-                            )
-                          : Icon(
-                              _isActive
-                                  ? Icons.block_rounded
-                                  : Icons.check_circle_outline_rounded,
-                              size: 18,
-                            ),
-                      label: Text(
-                        _isActive ? 'Mark Inactive' : 'Mark Active',
-                      ),
+                      label: Text(_isActive ? 'Mark Inactive' : 'Mark Active'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _isActive
-                            ? const Color(0xFFef4444)
-                            : const Color(0xFF10b981),
+                        backgroundColor:
+                            _isActive
+                                ? const Color(0xFFef4444)
+                                : const Color(0xFF10b981),
                         foregroundColor: Colors.white,
                         disabledBackgroundColor: AppTheme.slate200,
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -318,43 +315,38 @@ class _StatusBadge extends StatelessWidget {
   final bool isActive;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-      decoration: BoxDecoration(
-        color: isActive
-            ? const Color(0xFF10b981).withValues(alpha: 0.12)
-            : AppTheme.slate100,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isActive
-                  ? const Color(0xFF10b981)
-                  : AppTheme.slate500,
-            ),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+    decoration: BoxDecoration(
+      color:
+          isActive
+              ? const Color(0xFF10b981).withValues(alpha: 0.12)
+              : AppTheme.slate100,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive ? const Color(0xFF10b981) : AppTheme.slate500,
           ),
-          const SizedBox(width: 6),
-          Text(
-            isActive ? 'Active' : 'Inactive',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isActive
-                  ? const Color(0xFF059669)
-                  : AppTheme.slate600,
-            ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          isActive ? 'Active' : 'Inactive',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isActive ? const Color(0xFF059669) : AppTheme.slate600,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
 
 class _DetailRow extends StatelessWidget {
@@ -369,48 +361,46 @@ class _DetailRow extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppTheme.slate100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 18, color: AppTheme.slate500),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppTheme.slate100,
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.slate500,
-                    fontWeight: FontWeight.w500,
-                  ),
+          child: Icon(icon, size: 18, color: AppTheme.slate500),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.slate500,
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.slate600,
-                    fontWeight: FontWeight.w500,
-                  ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.slate600,
+                  fontWeight: FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

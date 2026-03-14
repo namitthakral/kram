@@ -28,26 +28,24 @@ class CustomOutlinedButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       style: OutlinedButton.styleFrom(
         foregroundColor: buttonColor,
-        side: BorderSide(
-          color: buttonColor,
-          width: 1.5,
-        ),
+        side: BorderSide(color: buttonColor, width: 1.5),
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 32.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         minimumSize: Size(MediaQuery.sizeOf(context).width, 48.0),
       ),
-      icon: isLoading
-          ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(buttonColor),
-              ),
-            )
-          : icon != null
+      icon:
+          isLoading
+              ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(buttonColor),
+                ),
+              )
+              : icon != null
               ? Icon(icon, size: 20)
               : const SizedBox.shrink(),
       label: Text(

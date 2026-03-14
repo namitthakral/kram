@@ -12,4 +12,3 @@ class ParentTabProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

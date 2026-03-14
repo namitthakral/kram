@@ -163,8 +163,8 @@ class BookInventoryCard extends StatelessWidget {
                           availablePercentage > 50
                               ? const Color(0xFF10b981)
                               : availablePercentage > 20
-                                  ? const Color(0xFFf59e0b)
-                                  : const Color(0xFFef4444),
+                              ? const Color(0xFFf59e0b)
+                              : const Color(0xFFef4444),
                         ),
                       ),
                     ),
@@ -178,5 +178,3 @@ class BookInventoryCard extends StatelessWidget {
     );
   }
 }
-
-

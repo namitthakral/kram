@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
-import '../../providers/fees_provider.dart';
 import '../../models/student_fee.dart';
+import '../../providers/fees_provider.dart';
 import '../../widgets/fee_status_chip.dart';
 
 class StudentFeesScreen extends StatefulWidget {
@@ -30,125 +30,118 @@ class _StudentFeesScreenState extends State<StudentFeesScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('My Fees'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: AppStyles.headlineSmall.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(
+      title: const Text('My Fees'),
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: AppStyles.headlineSmall.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.bold,
       ),
-      body: Consumer<FeesProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading && provider.studentFees.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+    ),
+    body: Consumer<FeesProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading && provider.studentFees.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (provider.studentFeeSummary != null)
-                  _buildSummaryCard(provider.studentFeeSummary!.pendingAmount),
-                const SizedBox(height: 24),
-                Text('Fee Breakdown', style: AppStyles.headlineSmall),
-                const SizedBox(height: 16),
-                if (provider.studentFees.isEmpty)
-                  _buildEmptyState()
-                else
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: provider.studentFees.length,
-                    separatorBuilder:
-                        (context, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      return _buildFeeCard(
-                        context,
-                        provider.studentFees[index],
-                      );
-                    },
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(double pendingAmount) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Total Pending Amount',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '₹${pendingAmount.toStringAsFixed(2)}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // TODO: Integrate Payment Gateway
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Payment Gateway Integration Pending'),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (provider.studentFeeSummary != null)
+                _buildSummaryCard(provider.studentFeeSummary!.pendingAmount),
+              const SizedBox(height: 24),
+              const Text('Fee Breakdown', style: AppStyles.headlineSmall),
+              const SizedBox(height: 16),
+              if (provider.studentFees.isEmpty)
+                _buildEmptyState()
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: provider.studentFees.length,
+                  separatorBuilder:
+                      (context, index) => const SizedBox(height: 12),
+                  itemBuilder:
+                      (context, index) =>
+                          _buildFeeCard(context, provider.studentFees[index]),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+
+  Widget _buildSummaryCard(double pendingAmount) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.3),
+          blurRadius: 10,
+          offset: const Offset(0, 5),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Total Pending Amount',
+          style: TextStyle(color: Colors.white70, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '₹${pendingAmount.toStringAsFixed(2)}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              // TODO: Integrate Payment Gateway
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Payment Gateway Integration Pending'),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                'PAY NOW',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: const Text(
+              'PAY NOW',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 
   Widget _buildFeeCard(BuildContext context, StudentFee fee) {
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
@@ -158,7 +151,7 @@ class _StudentFeesScreenState extends State<StudentFeesScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.white, width: 1),
+        side: const BorderSide(color: Colors.white),
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -222,7 +215,7 @@ class _StudentFeesScreenState extends State<StudentFeesScreen> {
                 ),
                 const SizedBox(height: 8),
                 if (fee.payments != null && fee.payments!.isNotEmpty) ...[
-                  Align(
+                  const Align(
                     alignment: Alignment.centerLeft,
                     child: Text('Payment History', style: AppStyles.titleSmall),
                   ),
@@ -259,47 +252,39 @@ class _StudentFeesScreenState extends State<StudentFeesScreen> {
     String value, {
     Color? color,
     bool isBold = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: AppStyles.bodyMedium.copyWith(color: Colors.grey[600]),
+  }) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppStyles.bodyMedium.copyWith(color: Colors.grey[600]),
+        ),
+        Text(
+          value,
+          style: AppStyles.bodyMedium.copyWith(
+            color: color ?? Colors.black87,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _buildEmptyState() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(Icons.check_circle_outline, size: 64, color: Colors.green[200]),
+          const SizedBox(height: 16),
           Text(
-            value,
-            style: AppStyles.bodyMedium.copyWith(
-              color: color ?? Colors.black87,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-            ),
+            'No fees due!',
+            style: AppStyles.titleMedium.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 64,
-              color: Colors.green[200],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No fees due!',
-              style: AppStyles.titleMedium.copyWith(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }

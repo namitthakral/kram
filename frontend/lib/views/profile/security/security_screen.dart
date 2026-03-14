@@ -34,41 +34,42 @@ class _SecurityScreenState extends State<SecurityScreen> {
         isProfileScreen: true,
       ),
       child: Consumer<ProfileSecurityProvider>(
-      builder:
-          (context, profileSecurityProvider, child) => Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFFE3E7EC)),
+        builder:
+            (context, profileSecurityProvider, child) => Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Color(0xFFE3E7EC)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    title: Text(context.translate('face_id')),
+                    value: profileSecurityProvider.faceId,
+                    onChanged:
+                        (val) => profileSecurityProvider.setFaceId(faceId: val),
+                  ),
+                  const Divider(indent: 16.0, endIndent: 16.0),
+                  SwitchListTile(
+                    title: Text(context.translate('remember_password')),
+                    value: profileSecurityProvider.rememberPassword,
+                    onChanged:
+                        (val) => profileSecurityProvider.setRememberPassword(
+                          rememberPassword: val,
+                        ),
+                  ),
+                  const Divider(indent: 16.0, endIndent: 16.0),
+                  SwitchListTile(
+                    title: Text(context.translate('touch_id')),
+                    value: profileSecurityProvider.touchId,
+                    onChanged:
+                        (val) =>
+                            profileSecurityProvider.setTouchId(touchId: val),
+                  ),
+                ],
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SwitchListTile(
-                  title: Text(context.translate('face_id')),
-                  value: profileSecurityProvider.faceId,
-                  onChanged:
-                      (val) => profileSecurityProvider.setFaceId(faceId: val),
-                ),
-                const Divider(indent: 16.0, endIndent: 16.0),
-                SwitchListTile(
-                  title: Text(context.translate('remember_password')),
-                  value: profileSecurityProvider.rememberPassword,
-                  onChanged:
-                      (val) => profileSecurityProvider.setRememberPassword(
-                        rememberPassword: val,
-                      ),
-                ),
-                const Divider(indent: 16.0, endIndent: 16.0),
-                SwitchListTile(
-                  title: Text(context.translate('touch_id')),
-                  value: profileSecurityProvider.touchId,
-                  onChanged:
-                      (val) => profileSecurityProvider.setTouchId(touchId: val),
-                ),
-              ],
-            ),
-          ),
       ),
     );
   }

@@ -469,12 +469,7 @@ class _QuestionPaperTemplateScreenState
           passingMarks: (totalMarksVal * 0.4).toInt(),
           durationMinutes: durationMin,
           examDate: examDate,
-          startTime: DateTime(
-            examDate.year,
-            examDate.month,
-            examDate.day,
-            9,
-          ),
+          startTime: DateTime(examDate.year, examDate.month, examDate.day, 9),
         );
 
         final successExam = await examProvider.createExamination(
@@ -640,7 +635,7 @@ class _QuestionPaperTemplateScreenState
         final cleanText = currentText.replaceAll(RegExp('(st|nd|rd|th)'), '');
         initialDate = DateFormat('d MMMM, yyyy').parse(cleanText);
       }
-    } catch (_) {
+    } on Exception catch (_) {
       initialDate = now;
     }
 
@@ -996,7 +991,7 @@ class _QuestionPaperTemplateScreenState
                 ),
                 child: QuestionSectionsBuilder(
                   sections: sections,
-                  onSectionsChanged: (_) => setState(() => _updateMaxMarks()),
+                  onSectionsChanged: (_) => setState(_updateMaxMarks),
                   showStats: false,
                   onTotalMarksChanged: (_) => _updateMaxMarks(),
                   trailingWidget: Row(
@@ -1004,10 +999,7 @@ class _QuestionPaperTemplateScreenState
                     children: [
                       Text(
                         'Total: ${_calculateTotalMarks()} marks',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       const SizedBox(width: 8),
                       TextButton.icon(
@@ -1142,5 +1134,4 @@ class _QuestionPaperTemplateScreenState
       ),
     );
   }
-
 }

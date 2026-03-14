@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/services/api_service.dart';
-import '../../../models/grading_config.dart';
 import '../../../models/academic_year.dart';
+import '../../../models/grading_config.dart';
 import '../../../models/semester.dart';
 import '../models/admin_dashboard_models.dart';
 
@@ -242,8 +242,9 @@ class AdminService {
   /// Endpoint: GET /admin/semesters/:academicYearId
   Future<List<Semester>> getSemesters(int academicYearId) async {
     try {
-      final response =
-          await _apiService.dio.get('/admin/semesters/$academicYearId');
+      final response = await _apiService.dio.get(
+        '/admin/semesters/$academicYearId',
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
@@ -435,7 +436,9 @@ class AdminService {
   /// Check grading configuration restriction status
   ///
   /// Endpoint: GET /admin/institutions/:institutionId/grading-restriction
-  Future<Map<String, dynamic>> checkGradingRestriction(int institutionId) async {
+  Future<Map<String, dynamic>> checkGradingRestriction(
+    int institutionId,
+  ) async {
     try {
       final response = await _apiService.dio.get(
         '/admin/institutions/$institutionId/grading-restriction',

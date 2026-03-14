@@ -78,9 +78,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
     final textColor = theme.colorScheme.onSurface;
 
     final isFocused = _focusNode.hasFocus;
-    final fillColor = widget.filled
-        ? (isFocused ? Colors.white : CustomAppColors.slate50)
-        : null;
+    final fillColor =
+        widget.filled
+            ? (isFocused ? Colors.white : CustomAppColors.slate50)
+            : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,7 +103,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
           style:
-              widget.textStyle ?? context.textTheme.bodySm.copyWith(color: textColor),
+              widget.textStyle ??
+              context.textTheme.bodySm.copyWith(color: textColor),
           readOnly: !widget.isEnabled,
           onTap: widget.onTap,
           onChanged: widget.onChanged,
@@ -151,13 +153,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 widget.border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: CustomAppColors.lightGrey01),
+                  borderSide: const BorderSide(
+                    color: CustomAppColors.lightGrey01,
+                  ),
                 ),
             enabledBorder:
                 widget.border ??
                 OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
-                  borderSide: const BorderSide(color: CustomAppColors.lightGrey01),
+                  borderSide: const BorderSide(
+                    color: CustomAppColors.lightGrey01,
+                  ),
                 ),
             focusedBorder:
                 widget.border ??
@@ -167,7 +173,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15),
-              borderSide: const BorderSide(color: CustomAppColors.lightGrey01, width: 2),
+              borderSide: const BorderSide(
+                color: CustomAppColors.lightGrey01,
+                width: 2,
+              ),
             ),
           ),
         ),

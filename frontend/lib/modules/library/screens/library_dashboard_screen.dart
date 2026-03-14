@@ -248,42 +248,42 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
             icon: Icons.menu_book_rounded,
           ),
         ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: DashboardStatCard(
-              title: context.translate('available_books'),
-              value: stats.availableBooks.toString(),
-              subtitle:
-                  '${stats.availablePercentage.toStringAsFixed(1)}% ${context.translate("available")}',
-              backgroundColor: const Color(0xFF10B981),
-              iconColor: const Color(0xFF10B981),
-              icon: Icons.check_circle_outline,
-            ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: DashboardStatCard(
+            title: context.translate('available_books'),
+            value: stats.availableBooks.toString(),
+            subtitle:
+                '${stats.availablePercentage.toStringAsFixed(1)}% ${context.translate("available")}',
+            backgroundColor: const Color(0xFF10B981),
+            iconColor: const Color(0xFF10B981),
+            icon: Icons.check_circle_outline,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: DashboardStatCard(
-              title: context.translate('books_issued'),
-              value: stats.booksIssued.toString(),
-              subtitle: context.translate(
-                'to_members',
-                params: {'count': stats.membersCount.toString()},
-              ),
-              backgroundColor: const Color(0xFF3B82F6),
-              iconColor: const Color(0xFF3B82F6),
-              icon: Icons.library_books_outlined,
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: DashboardStatCard(
+            title: context.translate('books_issued'),
+            value: stats.booksIssued.toString(),
+            subtitle: context.translate(
+              'to_members',
+              params: {'count': stats.membersCount.toString()},
             ),
+            backgroundColor: const Color(0xFF3B82F6),
+            iconColor: const Color(0xFF3B82F6),
+            icon: Icons.library_books_outlined,
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: DashboardStatCard(
-              title: context.translate('overdue_books'),
-              value: stats.overdueBooks.toString(),
-              subtitle: context.translate('require_immediate_action'),
-              backgroundColor: const Color(0xFFEF4444),
-              iconColor: const Color(0xFFEF4444),
-              icon: Icons.warning_amber_rounded,
-            ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: DashboardStatCard(
+            title: context.translate('overdue_books'),
+            value: stats.overdueBooks.toString(),
+            subtitle: context.translate('require_immediate_action'),
+            backgroundColor: const Color(0xFFEF4444),
+            iconColor: const Color(0xFFEF4444),
+            icon: Icons.warning_amber_rounded,
+          ),
         ),
       ],
     );
@@ -662,109 +662,118 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => CustomFormDialog(
-          title: 'Add New Book',
-          subtitle: 'Enter book details to add it to the library inventory',
-          headerIcon: Icons.menu_book,
-          confirmText: 'Add Book',
-          confirmColor: CustomAppColors.primary,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CustomTextField(
-                label: 'Book Title',
-                hintText: 'Enter book title',
-              ),
-              const SizedBox(height: 16),
-              const Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'Author',
-                      hintText: 'Author name',
-                    ),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setDialogState) => CustomFormDialog(
+                  title: 'Add New Book',
+                  subtitle:
+                      'Enter book details to add it to the library inventory',
+                  headerIcon: Icons.menu_book,
+                  confirmText: 'Add Book',
+                  confirmColor: CustomAppColors.primary,
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CustomTextField(
+                        label: 'Book Title',
+                        hintText: 'Enter book title',
+                      ),
+                      const SizedBox(height: 16),
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Author',
+                              hintText: 'Author name',
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'ISBN',
+                              hintText: '978-0-123456-78-9',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FormDropdownField<String>(
+                              label: 'Category',
+                              hint: 'Select category',
+                              value:
+                                  selectedCategory == 'Select category'
+                                      ? null
+                                      : selectedCategory,
+                              items:
+                                  const [
+                                        'Science',
+                                        'Mathematics',
+                                        'Literature',
+                                        'History',
+                                        'Arts',
+                                        'Others',
+                                      ]
+                                      .map(
+                                        (cat) => DropdownMenuItem(
+                                          value: cat,
+                                          child: Text(cat),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  selectedCategory = value ?? 'Select category';
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: CustomTextField(
+                              label: 'Publish Year',
+                              hintText: '2024',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Total Copies',
+                              hintText: 'Number of copies',
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: CustomTextField(
+                              label: 'Shelf Number',
+                              hintText: 'e.g., A-15',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const CustomTextField(
+                        label: 'Description (Optional)',
+                        hintText: 'Brief description of the book',
+                        maxLines: 2,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'ISBN',
-                      hintText: '978-0-123456-78-9',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: FormDropdownField<String>(
-                      label: 'Category',
-                      hint: 'Select category',
-                      value: selectedCategory == 'Select category'
-                          ? null
-                          : selectedCategory,
-                      items: const [
-                        'Science',
-                        'Mathematics',
-                        'Literature',
-                        'History',
-                        'Arts',
-                        'Others',
-                      ]
-                          .map((cat) =>
-                              DropdownMenuItem(value: cat, child: Text(cat)))
-                          .toList(),
-                      onChanged: (value) {
-                        setDialogState(() {
-                          selectedCategory = value ?? 'Select category';
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: CustomTextField(
-                      label: 'Publish Year',
-                      hintText: '2024',
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Row(
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'Total Copies',
-                      hintText: 'Number of copies',
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: CustomTextField(
-                      label: 'Shelf Number',
-                      hintText: 'e.g., A-15',
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const CustomTextField(
-                label: 'Description (Optional)',
-                hintText: 'Brief description of the book',
-                maxLines: 2,
-              ),
-            ],
+                  onConfirm: () {
+                    // Handle add book
+                    Navigator.pop(context);
+                  },
+                ),
           ),
-          onConfirm: () {
-            // Handle add book
-            Navigator.pop(context);
-          },
-        ),
-      ),
     );
   }
 
@@ -773,73 +782,80 @@ class _LibraryDashboardScreenState extends State<LibraryDashboardScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => CustomFormDialog(
-          title: 'Generate Library Report',
-          subtitle: 'Choose report type and format',
-          headerIcon: Icons.download_outlined,
-          showActions: false,
-          maxWidth: 500,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FormDropdownField<String>(
-                label: 'Report Type',
-                value: selectedReportType,
-                items: const [
-                  'Complete Inventory',
-                  'Issued Books',
-                  'Overdue Books',
-                  'Available Books',
-                  'Analytics Report',
-                ]
-                    .map((type) =>
-                        DropdownMenuItem(value: type, child: Text(type)))
-                    .toList(),
-                onChanged: (value) {
-                  setDialogState(() {
-                    selectedReportType = value ?? 'Complete Inventory';
-                  });
-                },
-              ),
-              const SizedBox(height: 24),
-              const FormFieldLabel(label: 'Export Format'),
-              const SizedBox(height: 8),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 2.5,
-                children: [
-                  _buildExportFormatButton(
-                    icon: Icons.picture_as_pdf,
-                    label: 'PDF Report',
-                    color: const Color(0xFFEF4444),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setDialogState) => CustomFormDialog(
+                  title: 'Generate Library Report',
+                  subtitle: 'Choose report type and format',
+                  headerIcon: Icons.download_outlined,
+                  showActions: false,
+                  maxWidth: 500,
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FormDropdownField<String>(
+                        label: 'Report Type',
+                        value: selectedReportType,
+                        items:
+                            const [
+                                  'Complete Inventory',
+                                  'Issued Books',
+                                  'Overdue Books',
+                                  'Available Books',
+                                  'Analytics Report',
+                                ]
+                                .map(
+                                  (type) => DropdownMenuItem(
+                                    value: type,
+                                    child: Text(type),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            selectedReportType = value ?? 'Complete Inventory';
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      const FormFieldLabel(label: 'Export Format'),
+                      const SizedBox(height: 8),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 2.5,
+                        children: [
+                          _buildExportFormatButton(
+                            icon: Icons.picture_as_pdf,
+                            label: 'PDF Report',
+                            color: const Color(0xFFEF4444),
+                          ),
+                          _buildExportFormatButton(
+                            icon: Icons.table_chart,
+                            label: 'Excel Sheet',
+                            color: const Color(0xFF10B981),
+                          ),
+                          _buildExportFormatButton(
+                            icon: Icons.insert_drive_file,
+                            label: 'CSV File',
+                            color: const Color(0xFF3B82F6),
+                          ),
+                          _buildExportFormatButton(
+                            icon: Icons.print,
+                            label: 'Print View',
+                            color: const Color(0xFF8B5CF6),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  _buildExportFormatButton(
-                    icon: Icons.table_chart,
-                    label: 'Excel Sheet',
-                    color: const Color(0xFF10B981),
-                  ),
-                  _buildExportFormatButton(
-                    icon: Icons.insert_drive_file,
-                    label: 'CSV File',
-                    color: const Color(0xFF3B82F6),
-                  ),
-                  _buildExportFormatButton(
-                    icon: Icons.print,
-                    label: 'Print View',
-                    color: const Color(0xFF8B5CF6),
-                  ),
-                ],
-              ),
-            ],
+                ),
           ),
-        ),
-      ),
     );
   }
 

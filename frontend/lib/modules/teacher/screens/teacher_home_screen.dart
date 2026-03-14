@@ -48,7 +48,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       ClassSection? classTeacherAssignment;
       try {
         classTeacherAssignment = classes.firstWhere((c) => c.isClassTeacher);
-      } catch (_) {
+      } on Exception catch (_) {
         classTeacherAssignment = null;
       }
 

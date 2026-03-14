@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../provider/login_signup/login_provider.dart';
@@ -38,15 +38,19 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
         _isLoadingRestriction = true;
       });
 
-      final institutionInfo = await _adminService.getInstitutionInfo(_institutionId);
-      final restrictionInfo = await _adminService.checkGradingRestriction(_institutionId);
-      
+      final institutionInfo = await _adminService.getInstitutionInfo(
+        _institutionId,
+      );
+      final restrictionInfo = await _adminService.checkGradingRestriction(
+        _institutionId,
+      );
+
       setState(() {
         _institutionType = institutionInfo['type'];
         _restrictionInfo = restrictionInfo;
         _isLoadingRestriction = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _isLoadingRestriction = false;
       });
@@ -61,24 +65,19 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
   int get _institutionId {
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
-    return user?.institutionId ??           // For admin users
-        user?.student?.institutionId ??  // For student users
-        user?.teacher?.institutionId ??  // For teacher users
-        user?.staff?.institutionId ??    // For staff users
+    return user?.institutionId ?? // For admin users
+        user?.student?.institutionId ?? // For student users
+        user?.teacher?.institutionId ?? // For teacher users
+        user?.staff?.institutionId ?? // For staff users
         1; // Fallback - should rarely be used
   }
 
-  String get _periodType {
-    return _institutionType == 'SCHOOL' ? 'term' : 'semester';
-  }
+  String get _periodType => _institutionType == 'SCHOOL' ? 'term' : 'semester';
 
-  String get _periodTypeCapitalized {
-    return _institutionType == 'SCHOOL' ? 'Term' : 'Semester';
-  }
+  String get _periodTypeCapitalized =>
+      _institutionType == 'SCHOOL' ? 'Term' : 'Semester';
 
-  bool get _isRestricted {
-    return _restrictionInfo?['isRestricted'] ?? false;
-  }
+  bool get _isRestricted => _restrictionInfo?['isRestricted'] ?? false;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -146,10 +145,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
           const SizedBox(height: 8),
           Text(
             provider.error ?? 'An unexpected error occurred',
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppTheme.slate500,
-            ),
+            style: const TextStyle(fontSize: 14, color: AppTheme.slate500),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -226,7 +222,9 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.all(20),
-                          child: CircularProgressIndicator(color: AppTheme.blue500),
+                          child: CircularProgressIndicator(
+                            color: AppTheme.blue500,
+                          ),
                         ),
                       )
                     else ...[
@@ -317,11 +315,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
               child: const CircleAvatar(
                 radius: 32,
                 backgroundColor: Colors.white,
-                child: Icon(
-                  Icons.tune,
-                  size: 32,
-                  color: AppTheme.blue500,
-                ),
+                child: Icon(Icons.tune, size: 32, color: AppTheme.blue500),
               ),
             ),
             const SizedBox(height: 12),
@@ -424,11 +418,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.tune,
-                  color: Colors.white,
-                  size: 32,
-                ),
+                child: const Icon(Icons.tune, color: Colors.white, size: 32),
               ),
             ],
           ),
@@ -443,7 +433,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     }
 
     final details = _restrictionInfo!['details'];
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
@@ -541,7 +531,11 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(Icons.schedule, size: 16, color: AppTheme.slate500),
+                    const Icon(
+                      Icons.schedule,
+                      size: 16,
+                      color: AppTheme.slate500,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Changes allowed after: ${_formatDate(details['endDate'])}',
@@ -610,10 +604,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
               SizedBox(height: 4),
               Text(
                 'Configure how grades are calculated and when students are flagged as at-risk. Changes apply immediately to new calculations.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.slate600,
-                ),
+                style: TextStyle(fontSize: 13, color: AppTheme.slate600),
               ),
             ],
           ),
@@ -626,7 +617,8 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     icon: Icons.pie_chart_rounded,
     iconColor: AppTheme.blue500,
     title: 'Grading Formula Weights',
-    subtitle: 'Configure how different components contribute to the overall grade',
+    subtitle:
+        'Configure how different components contribute to the overall grade',
     child: Column(
       children: [
         _buildWeightItem(
@@ -753,10 +745,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Icon(
               isValid ? Icons.check : Icons.warning,
               color: Colors.white,
@@ -779,10 +768,7 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
                 if (!isValid)
                   const Text(
                     'Weights must add up to 100%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.danger,
-                    ),
+                    style: TextStyle(fontSize: 12, color: AppTheme.danger),
                   ),
               ],
             ),
@@ -792,19 +778,55 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     );
   }
 
-  Widget _buildGradeBoundariesSection(GradingConfigProvider provider) => _buildCard(
+  Widget _buildGradeBoundariesSection(
+    GradingConfigProvider provider,
+  ) => _buildCard(
     icon: Icons.leaderboard_rounded,
     iconColor: const Color(0xFF8B5CF6),
     title: 'Grade Boundaries',
     subtitle: 'Set minimum percentage scores for each letter grade',
     child: Column(
       children: [
-        _buildGradeBoundaryItem('A+', provider.gradeAPlusThreshold, provider.updateGradeAPlusThreshold, const Color(0xFF10B981), '${provider.gradeAPlusThreshold.toInt()}% and above'),
-        _buildGradeBoundaryItem('A', provider.gradeAThreshold, provider.updateGradeAThreshold, const Color(0xFF22C55E), '${provider.gradeAThreshold.toInt()}% - ${(provider.gradeAPlusThreshold - 1).toInt()}%'),
-        _buildGradeBoundaryItem('B+', provider.gradeBPlusThreshold, provider.updateGradeBPlusThreshold, const Color(0xFF3B82F6), '${provider.gradeBPlusThreshold.toInt()}% - ${(provider.gradeAThreshold - 1).toInt()}%'),
-        _buildGradeBoundaryItem('B', provider.gradeBThreshold, provider.updateGradeBThreshold, const Color(0xFF6366F1), '${provider.gradeBThreshold.toInt()}% - ${(provider.gradeBPlusThreshold - 1).toInt()}%'),
-        _buildGradeBoundaryItem('C', provider.gradeCThreshold, provider.updateGradeCThreshold, const Color(0xFFF59E0B), '${provider.gradeCThreshold.toInt()}% - ${(provider.gradeBThreshold - 1).toInt()}%'),
-        _buildStaticGradeItem('D', const Color(0xFFEF4444), 'Below ${provider.gradeCThreshold.toInt()}%'),
+        _buildGradeBoundaryItem(
+          'A+',
+          provider.gradeAPlusThreshold,
+          provider.updateGradeAPlusThreshold,
+          const Color(0xFF10B981),
+          '${provider.gradeAPlusThreshold.toInt()}% and above',
+        ),
+        _buildGradeBoundaryItem(
+          'A',
+          provider.gradeAThreshold,
+          provider.updateGradeAThreshold,
+          const Color(0xFF22C55E),
+          '${provider.gradeAThreshold.toInt()}% - ${(provider.gradeAPlusThreshold - 1).toInt()}%',
+        ),
+        _buildGradeBoundaryItem(
+          'B+',
+          provider.gradeBPlusThreshold,
+          provider.updateGradeBPlusThreshold,
+          const Color(0xFF3B82F6),
+          '${provider.gradeBPlusThreshold.toInt()}% - ${(provider.gradeAThreshold - 1).toInt()}%',
+        ),
+        _buildGradeBoundaryItem(
+          'B',
+          provider.gradeBThreshold,
+          provider.updateGradeBThreshold,
+          const Color(0xFF6366F1),
+          '${provider.gradeBThreshold.toInt()}% - ${(provider.gradeBPlusThreshold - 1).toInt()}%',
+        ),
+        _buildGradeBoundaryItem(
+          'C',
+          provider.gradeCThreshold,
+          provider.updateGradeCThreshold,
+          const Color(0xFFF59E0B),
+          '${provider.gradeCThreshold.toInt()}% - ${(provider.gradeBThreshold - 1).toInt()}%',
+        ),
+        _buildStaticGradeItem(
+          'D',
+          const Color(0xFFEF4444),
+          'Below ${provider.gradeCThreshold.toInt()}%',
+        ),
       ],
     ),
   );
@@ -876,55 +898,56 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     ),
   );
 
-  Widget _buildStaticGradeItem(String grade, Color color, String range) => Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: color.withValues(alpha: 0.3)),
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              grade,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: Colors.white,
+  Widget _buildStaticGradeItem(String grade, Color color, String range) =>
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  grade,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            'Lowest Grade',
-            style: TextStyle(
-              fontSize: 13,
-              color: color,
-              fontWeight: FontWeight.w500,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Lowest Grade',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
+            Text(
+              range,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-        Text(
-          range,
-          style: TextStyle(
-            fontSize: 12,
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 
   Widget _buildGradePointsSection(GradingConfigProvider provider) => _buildCard(
     icon: Icons.analytics_rounded,
@@ -933,12 +956,42 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     subtitle: 'Configure GPA values for each letter grade',
     child: Column(
       children: [
-        _buildGradePointItem('A+', provider.gradeAPlusPoints, provider.updateGradeAPlusPoints, const Color(0xFF10B981)),
-        _buildGradePointItem('A', provider.gradeAPoints, provider.updateGradeAPoints, const Color(0xFF22C55E)),
-        _buildGradePointItem('B+', provider.gradeBPlusPoints, provider.updateGradeBPlusPoints, const Color(0xFF3B82F6)),
-        _buildGradePointItem('B', provider.gradeBPoints, provider.updateGradeBPoints, const Color(0xFF6366F1)),
-        _buildGradePointItem('C', provider.gradeCPoints, provider.updateGradeCPoints, const Color(0xFFF59E0B)),
-        _buildGradePointItem('D', provider.gradeDPoints, provider.updateGradeDPoints, const Color(0xFFEF4444)),
+        _buildGradePointItem(
+          'A+',
+          provider.gradeAPlusPoints,
+          provider.updateGradeAPlusPoints,
+          const Color(0xFF10B981),
+        ),
+        _buildGradePointItem(
+          'A',
+          provider.gradeAPoints,
+          provider.updateGradeAPoints,
+          const Color(0xFF22C55E),
+        ),
+        _buildGradePointItem(
+          'B+',
+          provider.gradeBPlusPoints,
+          provider.updateGradeBPlusPoints,
+          const Color(0xFF3B82F6),
+        ),
+        _buildGradePointItem(
+          'B',
+          provider.gradeBPoints,
+          provider.updateGradeBPoints,
+          const Color(0xFF6366F1),
+        ),
+        _buildGradePointItem(
+          'C',
+          provider.gradeCPoints,
+          provider.updateGradeCPoints,
+          const Color(0xFFF59E0B),
+        ),
+        _buildGradePointItem(
+          'D',
+          provider.gradeDPoints,
+          provider.updateGradeDPoints,
+          const Color(0xFFEF4444),
+        ),
       ],
     ),
   );
@@ -1014,7 +1067,9 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     ),
   );
 
-  Widget _buildRiskThresholdsSection(GradingConfigProvider provider) => _buildCard(
+  Widget _buildRiskThresholdsSection(
+    GradingConfigProvider provider,
+  ) => _buildCard(
     icon: Icons.warning_amber_rounded,
     iconColor: AppTheme.warning,
     title: 'Risk Status Thresholds',
@@ -1111,8 +1166,20 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        _buildThresholdRow('Attendance', attendanceValue, onAttendanceChanged, '%', color),
-        _buildThresholdRow('Assignment Score', assignmentValue, onAssignmentChanged, '%', color),
+        _buildThresholdRow(
+          'Attendance',
+          attendanceValue,
+          onAttendanceChanged,
+          '%',
+          color,
+        ),
+        _buildThresholdRow(
+          'Assignment Score',
+          assignmentValue,
+          onAssignmentChanged,
+          '%',
+          color,
+        ),
         _buildThresholdRow('Exam Score', examValue, onExamChanged, '%', color),
         _buildThresholdRow('GPA', gpaValue, onGpaChanged, '', color, max: 5.0),
       ],
@@ -1266,12 +1333,15 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _isRestricted ? AppTheme.slate100 : AppTheme.blue500.withValues(alpha: 0.1),
+                color:
+                    _isRestricted
+                        ? AppTheme.slate100
+                        : AppTheme.blue500.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
-                _isRestricted ? Icons.lock : Icons.save_outlined, 
-                size: 22, 
+                _isRestricted ? Icons.lock : Icons.save_outlined,
+                size: 22,
                 color: _isRestricted ? AppTheme.slate500 : AppTheme.blue500,
               ),
             ),
@@ -1281,18 +1351,21 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _isRestricted ? 'Configuration Locked' : 'Save Configuration',
+                    _isRestricted
+                        ? 'Configuration Locked'
+                        : 'Save Configuration',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: _isRestricted ? AppTheme.slate500 : AppTheme.slate800,
+                      color:
+                          _isRestricted ? AppTheme.slate500 : AppTheme.slate800,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _isRestricted 
-                      ? 'Changes restricted during active $_periodType'
-                      : 'Apply changes to the grading system',
+                    _isRestricted
+                        ? 'Changes restricted during active $_periodType'
+                        : 'Apply changes to the grading system',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.slate500,
@@ -1310,43 +1383,66 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
           alignment: WrapAlignment.end,
           children: [
             OutlinedButton.icon(
-              onPressed: _isRestricted ? null : () => _showResetConfirmation(_institutionId),
+              onPressed:
+                  _isRestricted
+                      ? null
+                      : () => _showResetConfirmation(_institutionId),
               icon: const Icon(Icons.restart_alt, size: 18),
               label: const Text('Reset to Defaults'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: _isRestricted ? AppTheme.slate500 : AppTheme.danger,
-                side: BorderSide(color: _isRestricted ? AppTheme.slate500 : AppTheme.danger),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                foregroundColor:
+                    _isRestricted ? AppTheme.slate500 : AppTheme.danger,
+                side: BorderSide(
+                  color: _isRestricted ? AppTheme.slate500 : AppTheme.danger,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
             ElevatedButton.icon(
-              onPressed: _isRestricted 
-                  ? null 
-                  : (provider.isWeightValid ? () => _saveConfig(provider, _institutionId) : null),
-              icon: provider.isLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              onPressed:
+                  _isRestricted
+                      ? null
+                      : (provider.isWeightValid
+                          ? () => _saveConfig(provider, _institutionId)
+                          : null),
+              icon:
+                  provider.isLoading
+                      ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                      : Icon(
+                        _isRestricted ? Icons.lock : Icons.check,
+                        size: 18,
                       ),
-                    )
-                  : Icon(_isRestricted ? Icons.lock : Icons.check, size: 18),
               label: Text(
-                _isRestricted 
-                  ? 'Locked During $_periodTypeCapitalized'
-                  : (provider.isLoading ? 'Saving...' : 'Save Changes')
+                _isRestricted
+                    ? 'Locked During $_periodTypeCapitalized'
+                    : (provider.isLoading ? 'Saving...' : 'Save Changes'),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _isRestricted ? AppTheme.slate200 : AppTheme.blue500,
-                foregroundColor: _isRestricted ? AppTheme.slate500 : Colors.white,
+                backgroundColor:
+                    _isRestricted ? AppTheme.slate200 : AppTheme.blue500,
+                foregroundColor:
+                    _isRestricted ? AppTheme.slate500 : Colors.white,
                 disabledBackgroundColor: AppTheme.slate100,
                 disabledForegroundColor: AppTheme.slate500,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1381,9 +1477,9 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
           type: SnackbarType.warning,
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (!mounted) return;
-      
+
       if (e.toString().contains('ACTIVE_PERIOD_RESTRICTION')) {
         _showActivePeriodDialog();
         // Reload restriction info to get latest status
@@ -1400,21 +1496,22 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
   void _showActivePeriodDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.lock, color: AppTheme.warning, size: 48),
-        title: const Text('Configuration Locked'),
-        content: Text(
-          'Grading configuration cannot be modified during an active $_periodType. '
-          'This ensures fairness and consistency for all students.\n\n'
-          'Please wait until the current $_periodType ends to make changes.'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Understood'),
+      builder:
+          (context) => AlertDialog(
+            icon: const Icon(Icons.lock, color: AppTheme.warning, size: 48),
+            title: const Text('Configuration Locked'),
+            content: Text(
+              'Grading configuration cannot be modified during an active $_periodType. '
+              'This ensures fairness and consistency for all students.\n\n'
+              'Please wait until the current $_periodType ends to make changes.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Understood'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -1422,7 +1519,8 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
     final confirmed = await CustomDialog.showConfirmation(
       context: context,
       title: 'Reset to Defaults?',
-      message: 'This will restore the standard grading formula. All custom settings will be lost. This action cannot be undone.',
+      message:
+          'This will restore the standard grading formula. All custom settings will be lost. This action cannot be undone.',
       confirmText: 'Reset',
       cancelText: 'Cancel',
       confirmColor: AppTheme.danger,
@@ -1450,9 +1548,9 @@ class _GradingConfigScreenState extends State<GradingConfigScreen> {
             type: SnackbarType.warning,
           );
         }
-      } catch (e) {
+      } on Exception catch (e) {
         if (!mounted) return;
-        
+
         if (e.toString().contains('ACTIVE_PERIOD_RESTRICTION')) {
           _showActivePeriodDialog();
           // Reload restriction info to get latest status

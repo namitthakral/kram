@@ -24,12 +24,13 @@ class AdminDashboardStats {
         pendingFees: _parseDouble(json['pending_fees']),
       );
 
-  static double _parseDouble(dynamic value) {
+  static double _parseDouble(value) {
     if (value == null) return 0.0;
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
+
   final int totalStudents;
   final int activeStudents;
   final int inactiveStudents;
@@ -59,12 +60,13 @@ class TeacherPerformance {
         rating: _parseDouble(json['rating']),
       );
 
-  static double _parseDouble(dynamic value) {
+  static double _parseDouble(value) {
     if (value == null) return 0.0;
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
+
   final String teacherName;
   final String subject;
   final int students;
@@ -83,15 +85,19 @@ class AttendanceTrend {
       AttendanceTrend(
         month: json['month']?.toString() ?? '',
         actualAttendance: _parseDouble(json['actual_attendance']),
-        targetAttendance: _parseDouble(json['target_attendance']) == 0.0 ? 95.0 : _parseDouble(json['target_attendance']),
+        targetAttendance:
+            _parseDouble(json['target_attendance']) == 0.0
+                ? 95.0
+                : _parseDouble(json['target_attendance']),
       );
 
-  static double _parseDouble(dynamic value) {
+  static double _parseDouble(value) {
     if (value == null) return 0.0;
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
+
   final String month;
   final double actualAttendance;
   final double targetAttendance;
@@ -125,12 +131,13 @@ class ClassPerformance {
         attendanceRate: _parseDouble(json['attendance_rate']),
       );
 
-  static double _parseDouble(dynamic value) {
+  static double _parseDouble(value) {
     if (value == null) return 0.0;
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
+
   final String className;
   final int studentCount;
   final double avgGrade;
@@ -153,12 +160,13 @@ class FinancialOverview {
         profit: _parseDouble(json['profit']),
       );
 
-  static double _parseDouble(dynamic value) {
+  static double _parseDouble(value) {
     if (value == null) return 0.0;
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
   }
+
   final String month;
   final double expenses;
   final double feeCollection;

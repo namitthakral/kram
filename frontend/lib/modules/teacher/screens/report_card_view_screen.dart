@@ -8,7 +8,7 @@ import '../services/pdf_template_service.dart';
 
 /// Viewable report card screen: shows full report and provides Download.
 class ReportCardViewScreen extends StatelessWidget {
-  const ReportCardViewScreen({super.key, required this.reportCard});
+  const ReportCardViewScreen({required this.reportCard, super.key});
 
   final ReportCardData reportCard;
 
@@ -25,7 +25,6 @@ class ReportCardViewScreen extends StatelessWidget {
     return CustomMainScreenWithAppbar(
       title: 'Report Card - ${student.name}',
       appBarConfig: AppBarConfig.standard(
-        showBackButton: true,
         onBackButtonTapped: () => context.pop(),
         actions: [
           IconButton(
@@ -81,9 +80,9 @@ class ReportCardViewScreen extends StatelessWidget {
                 border: TableBorder.all(color: Colors.grey.shade300),
                 columnWidths: const {
                   0: FlexColumnWidth(2.5),
-                  1: FlexColumnWidth(1),
-                  2: FlexColumnWidth(1),
-                  3: FlexColumnWidth(1),
+                  1: FlexColumnWidth(),
+                  2: FlexColumnWidth(),
+                  3: FlexColumnWidth(),
                 },
                 children: [
                   TableRow(
@@ -136,7 +135,7 @@ class ReportCardViewScreen extends StatelessWidget {
                   _InfoRow('Total school days', '${att.totalClasses}'),
                   _InfoRow(
                     'Attendance',
-                    '${(att.percentage).toStringAsFixed(1)}%',
+                    '${att.percentage.toStringAsFixed(1)}%',
                   ),
                 ],
               ),
@@ -186,46 +185,44 @@ class _SectionCard extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey.shade200),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.04),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF1e293b),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1e293b),
-            ),
+            subtitle!,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-          ],
-          const SizedBox(height: 12),
-          child,
         ],
-      ),
-    );
-  }
+        const SizedBox(height: 12),
+        child,
+      ],
+    ),
+  );
 }
 
 class _InfoRow extends StatelessWidget {
@@ -235,37 +232,35 @@ class _InfoRow extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 140,
+          child: Text(
+            '$label:',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
 
 Widget _tableHeader(String text) => Padding(

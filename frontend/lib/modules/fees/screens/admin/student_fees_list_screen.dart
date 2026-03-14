@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
-import '../../providers/fees_provider.dart';
 import '../../models/student_fee.dart';
+import '../../providers/fees_provider.dart';
 import '../../widgets/fee_status_chip.dart';
 
 class StudentFeesListScreen extends StatefulWidget {
@@ -36,91 +37,89 @@ class _StudentFeesListScreenState extends State<StudentFeesListScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Student Fees'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: AppStyles.headlineSmall.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(
+      title: const Text('Student Fees'),
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: AppStyles.headlineSmall.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.bold,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(context, '/admin/fees/assign');
-        },
-        label: const Text('Assign Fee'),
-        icon: const Icon(Icons.assignment_ind),
-        backgroundColor: AppColors.primary,
-      ),
-      body: Consumer<FeesProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading && provider.studentFees.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+    ),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: () {
+        Navigator.pushNamed(context, '/admin/fees/assign');
+      },
+      label: const Text('Assign Fee'),
+      icon: const Icon(Icons.assignment_ind),
+      backgroundColor: AppColors.primary,
+    ),
+    body: Consumer<FeesProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading && provider.studentFees.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (provider.studentFees.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No student fees found',
-                    style: AppStyles.titleMedium.copyWith(
-                      color: Colors.grey[600],
-                    ),
+        if (provider.studentFees.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'No student fees found',
+                  style: AppStyles.titleMedium.copyWith(
+                    color: Colors.grey[600],
                   ),
-                ],
-              ),
-            );
-          }
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search by Student Name or ID',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    fillColor: Colors.white,
-                    filled: true,
-                  ),
-                  onChanged: (value) {
-                    // TODO: Implement local filtering or debounce API search
-                  },
                 ),
-              ),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: provider.studentFees.length,
-                  separatorBuilder:
-                      (context, index) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final studentFee = provider.studentFees[index];
-                    return _buildStudentFeeCard(context, studentFee);
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           );
-        },
-      ),
-    );
-  }
+        }
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Search by Student Name or ID',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  fillColor: Colors.white,
+                  filled: true,
+                ),
+                onChanged: (value) {
+                  // TODO: Implement local filtering or debounce API search
+                },
+              ),
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: provider.studentFees.length,
+                separatorBuilder:
+                    (context, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final studentFee = provider.studentFees[index];
+                  return _buildStudentFeeCard(context, studentFee);
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
 
   Widget _buildStudentFeeCard(BuildContext context, StudentFee studentFee) {
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 class FeeStatusChip extends StatelessWidget {
+  const FeeStatusChip({required this.status, super.key});
   final String status;
-
-  const FeeStatusChip({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {

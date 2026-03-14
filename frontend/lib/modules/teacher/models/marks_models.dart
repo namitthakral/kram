@@ -77,14 +77,15 @@ class ClassInfo {
   }
 
   @override
-  int get hashCode => id.hashCode ^
-        name.hashCode ^
-        totalStudents.hashCode ^
-        courseId.hashCode ^
-        sectionName.hashCode ^
-        sectionId.hashCode ^
-        subjectName.hashCode ^
-        className.hashCode;
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      totalStudents.hashCode ^
+      courseId.hashCode ^
+      sectionName.hashCode ^
+      sectionId.hashCode ^
+      subjectName.hashCode ^
+      className.hashCode;
 }
 
 class MarksSummary {

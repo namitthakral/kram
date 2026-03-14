@@ -116,7 +116,7 @@ class AppLifecycleService extends WidgetsBindingObserver {
     await _handleAppResume();
   }
 
-  void _startPollingIfLoggedIn() async {
+  Future<void> _startPollingIfLoggedIn() async {
     if (_context != null && _context!.mounted) {
       final isLoggedIn = await _authService.isLoggedIn();
       if (isLoggedIn && _context!.mounted) {

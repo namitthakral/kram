@@ -72,7 +72,7 @@ class StudentEventsProvider with ChangeNotifier {
         );
         break;
       case 'month':
-        _startDate = DateTime(now.year, now.month, 1);
+        _startDate = DateTime(now.year, now.month);
         _endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
         break;
       case 'custom':

@@ -1,10 +1,7 @@
 enum LoginIdentifierType { email, phone, kramid }
 
 class LoginIdentifier {
-  LoginIdentifier({
-    required this.type,
-    required this.value,
-  });
+  LoginIdentifier({required this.type, required this.value});
   final LoginIdentifierType type;
   final String value;
 }

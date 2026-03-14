@@ -4,13 +4,13 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/user_utils.dart';
-import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../../widgets/custom_widgets/academic_year_dropdown.dart';
+import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../teacher/services/teacher_service.dart';
 import '../services/admin_service.dart';
 
 class EditTeacherDialog extends StatefulWidget {
-  const EditTeacherDialog({super.key, required this.teacher});
+  const EditTeacherDialog({required this.teacher, super.key});
   final Map<String, dynamic> teacher;
 
   @override
@@ -41,22 +41,28 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
     super.initState();
     _loadSubjects();
     final t = widget.teacher;
-    _designationController = TextEditingController(text: t['designation'] as String? ?? '');
-    
+    _designationController = TextEditingController(
+      text: t['designation'] as String? ?? '',
+    );
+
     // Pre-populate subjects from teacherSubjects
     final subjects = t['teacherSubjects'] as List<dynamic>? ?? [];
-    for (var ts in subjects) {
+    for (final ts in subjects) {
       final s = ts['subject'] as Map<String, dynamic>?;
       if (s != null && s['id'] != null) {
-        _selectedSubjects[s['id'] as int] = s['subjectName'] as String? ?? 'Subject';
+        _selectedSubjects[s['id'] as int] =
+            s['subjectName'] as String? ?? 'Subject';
         // Take the academic year from the first subject if not set (usually they are all for the same year in this view)
         _selectedAcademicYearId ??= ts['academicYearId'] as int?;
       }
     }
 
-    _qualificationController = TextEditingController(text: t['qualification'] as String? ?? '');
+    _qualificationController = TextEditingController(
+      text: t['qualification'] as String? ?? '',
+    );
     _experienceController = TextEditingController(
-      text: (t['experienceYears'] != null) ? t['experienceYears'].toString() : '',
+      text:
+          (t['experienceYears'] != null) ? t['experienceYears'].toString() : '',
     );
     _employmentType = (t['employmentType'] as String?) ?? 'FULL_TIME';
     // Normalize in case the stored value isn't in our list
@@ -86,7 +92,8 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
           _allSubjects = subjects.cast<Map<String, dynamic>>();
         });
       }
-    } catch (_) {} finally {
+    } on Exception catch (_) {
+    } finally {
       if (mounted) setState(() => _isLoadingSubjects = false);
     }
   }
@@ -137,9 +144,9 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Edit Teacher',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.slate800,
@@ -147,7 +154,10 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                         ),
                         Text(
                           _teacherName,
-                          style: TextStyle(fontSize: 13, color: AppTheme.slate500),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.slate500,
+                          ),
                         ),
                       ],
                     ),
@@ -171,7 +181,8 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                       const SizedBox(height: 14),
                       AcademicYearDropdown(
                         value: _selectedAcademicYearId,
-                        onChanged: (v) => setState(() => _selectedAcademicYearId = v),
+                        onChanged:
+                            (v) => setState(() => _selectedAcademicYearId = v),
                       ),
                       const SizedBox(height: 14),
                       _buildSubjectSelector(),
@@ -188,16 +199,24 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                             child: TextFormField(
                               controller: _experienceController,
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
                               decoration: InputDecoration(
                                 labelText: 'Experience (years)',
                                 hintText: 'e.g., 5',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 14,
+                                ),
                               ),
                               validator: (v) {
                                 if (v != null && v.trim().isNotEmpty) {
-                                  if (int.tryParse(v) == null) return 'Invalid number';
+                                  if (int.tryParse(v) == null)
+                                    return 'Invalid number';
                                 }
                                 return null;
                               },
@@ -206,17 +225,28 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _employmentType,
+                              initialValue: _employmentType,
                               decoration: InputDecoration(
                                 labelText: 'Employment Type',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 16,
+                                ),
                               ),
-                              items: _employmentTypes.map((t) => DropdownMenuItem(
-                                value: t,
-                                child: Text(t.replaceAll('_', ' ')),
-                              )).toList(),
-                              onChanged: (v) => setState(() => _employmentType = v!),
+                              items:
+                                  _employmentTypes
+                                      .map(
+                                        (t) => DropdownMenuItem(
+                                          value: t,
+                                          child: Text(t.replaceAll('_', ' ')),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged:
+                                  (v) => setState(() => _employmentType = v!),
                             ),
                           ),
                         ],
@@ -242,7 +272,8 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                    onPressed:
+                        _isSaving ? null : () => Navigator.of(context).pop(),
                     child: Text(context.translate('cancel')),
                   ),
                   const SizedBox(width: 12),
@@ -251,14 +282,22 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.blue500,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
-                    child: _isSaving
-                        ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Save Changes'),
+                    child:
+                        _isSaving
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text('Save Changes'),
                   ),
                 ],
               ),
@@ -274,7 +313,10 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
     final uuid = _teacherUuid;
     if (uuid.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Teacher UUID not found'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Teacher UUID not found'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -298,13 +340,19 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
       if (mounted) {
         Navigator.of(context).pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Teacher updated successfully'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Teacher updated successfully'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update teacher: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to update teacher: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -312,84 +360,117 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
     }
   }
 
-  Widget _buildSubjectSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Subjects (Specialization)',
-          style: TextStyle(fontWeight: FontWeight.w600, color: AppTheme.slate600, fontSize: 13),
+  Widget _buildSubjectSelector() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'Subjects (Specialization)',
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppTheme.slate600,
+          fontSize: 13,
         ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppTheme.slate200),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
-              value: null,
-              isExpanded: true,
-              hint: _isLoadingSubjects
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(
-                      _allSubjects.isEmpty ? 'No subjects available' : 'Select subjects...',
-                      style: TextStyle(color: AppTheme.slate500, fontSize: 14),
-                    ),
-              items: _allSubjects.map((s) {
-                final id = s['id'] as int;
-                final name = s['subjectName'] as String;
-                final isSelected = _selectedSubjects.containsKey(id);
-                return DropdownMenuItem<int>(
-                  value: id,
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
-                        size: 16,
-                        color: isSelected ? AppTheme.blue500 : AppTheme.slate500,
+      ),
+      const SizedBox(height: 6),
+      Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppTheme.slate200),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<int>(
+            isExpanded: true,
+            hint:
+                _isLoadingSubjects
+                    ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : Text(
+                      _allSubjects.isEmpty
+                          ? 'No subjects available'
+                          : 'Select subjects...',
+                      style: const TextStyle(
+                        color: AppTheme.slate500,
+                        fontSize: 14,
                       ),
-                      const SizedBox(width: 10),
-                      Text(name, style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal)),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (id) {
-                if (id == null) return;
-                setState(() {
-                  if (_selectedSubjects.containsKey(id)) {
-                    _selectedSubjects.remove(id);
-                  } else {
-                    final s = _allSubjects.firstWhere((x) => x['id'] == id);
-                    _selectedSubjects[id] = s['subjectName'] as String;
-                  }
-                });
-              },
-            ),
+                    ),
+            items:
+                _allSubjects.map((s) {
+                  final id = s['id'] as int;
+                  final name = s['subjectName'] as String;
+                  final isSelected = _selectedSubjects.containsKey(id);
+                  return DropdownMenuItem<int>(
+                    value: id,
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked,
+                          size: 16,
+                          color:
+                              isSelected ? AppTheme.blue500 : AppTheme.slate500,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight:
+                                isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+            onChanged: (id) {
+              if (id == null) return;
+              setState(() {
+                if (_selectedSubjects.containsKey(id)) {
+                  _selectedSubjects.remove(id);
+                } else {
+                  final s = _allSubjects.firstWhere((x) => x['id'] == id);
+                  _selectedSubjects[id] = s['subjectName'] as String;
+                }
+              });
+            },
           ),
         ),
-        if (_selectedSubjects.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _selectedSubjects.entries.map((e) {
-              return Chip(
-                label: Text(e.value, style: const TextStyle(fontSize: 12)),
-                onDeleted: () => setState(() => _selectedSubjects.remove(e.key)),
-                backgroundColor: AppTheme.blue500.withValues(alpha: 0.1),
-                side: BorderSide(color: AppTheme.blue500.withValues(alpha: 0.2)),
-                deleteIconColor: AppTheme.blue500,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              );
-            }).toList(),
-          ),
-        ],
+      ),
+      if (_selectedSubjects.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children:
+              _selectedSubjects.entries
+                  .map(
+                    (e) => Chip(
+                      label: Text(
+                        e.value,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      onDeleted:
+                          () => setState(() => _selectedSubjects.remove(e.key)),
+                      backgroundColor: AppTheme.blue500.withValues(alpha: 0.1),
+                      side: BorderSide(
+                        color: AppTheme.blue500.withValues(alpha: 0.2),
+                      ),
+                      deleteIconColor: AppTheme.blue500,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                    ),
+                  )
+                  .toList(),
+        ),
       ],
-    );
-  }
+    ],
+  );
 }
 
 // ── Status toggle widget ─────────────────────────────────────────────
@@ -407,7 +488,10 @@ class _StatusToggle extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Status',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 10,
+        ),
       ),
       child: Row(
         children: [
@@ -434,44 +518,39 @@ class _StatusToggle extends StatelessWidget {
     required bool selected,
     required Color color,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
-          border: Border.all(
-            color: selected ? color : AppTheme.slate200,
-            width: selected ? 1.5 : 1,
-          ),
-          borderRadius: BorderRadius.circular(20),
+  }) => GestureDetector(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+        border: Border.all(
+          color: selected ? color : AppTheme.slate200,
+          width: selected ? 1.5 : 1,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selected)
-              Container(
-                width: 6,
-                height: 6,
-                margin: const EdgeInsets.only(right: 6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color,
-                ),
-              ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? color : AppTheme.slate500,
-              ),
-            ),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(20),
       ),
-    );
-  }
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (selected)
+            Container(
+              width: 6,
+              height: 6,
+              margin: const EdgeInsets.only(right: 6),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+            ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              color: selected ? color : AppTheme.slate500,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

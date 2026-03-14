@@ -24,16 +24,15 @@ class DashboardScreen extends StatelessWidget {
     ),
   );
 
-  Widget _buildMobileLayout(BuildContext context) =>
-      SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.translate('mobile_dashboard_layout')),
-            // Add your mobile-specific widgets here
-          ],
-        ),
-      );
+  Widget _buildMobileLayout(BuildContext context) => SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.translate('mobile_dashboard_layout')),
+        // Add your mobile-specific widgets here
+      ],
+    ),
+  );
 
   Widget _buildTabletLayout(BuildContext context) => SingleChildScrollView(
     child: Column(
@@ -52,8 +51,11 @@ class DashboardScreen extends StatelessWidget {
           ),
           itemCount: 4,
           itemBuilder:
-              (context, index) =>
-                  Card(child: Center(child: Text('${context.translate("card")} $index'))),
+              (context, index) => Card(
+                child: Center(
+                  child: Text('${context.translate("card")} $index'),
+                ),
+              ),
         ),
       ],
     ),
@@ -76,8 +78,11 @@ class DashboardScreen extends StatelessWidget {
           ),
           itemCount: 6,
           itemBuilder:
-              (context, index) =>
-                  Card(child: Center(child: Text('${context.translate("card")} $index'))),
+              (context, index) => Card(
+                child: Center(
+                  child: Text('${context.translate("card")} $index'),
+                ),
+              ),
         ),
       ],
     ),

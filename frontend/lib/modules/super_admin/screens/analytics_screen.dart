@@ -78,24 +78,24 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildStatCard(String label, String value, Color color) => Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
           ),
-          const SizedBox(height: 8),
-          Text(label, style: TextStyle(color: Colors.grey[700])),
-        ],
-      ),
-    );
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: TextStyle(color: Colors.grey[700])),
+      ],
+    ),
+  );
 }

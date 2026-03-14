@@ -34,17 +34,17 @@ class _AdminStudentManagementScreenState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<AdminStudentsProvider>();
-      
+
       // Always start with clean state - clear all filters on entry
       provider.clearAllFilters();
-      
+
       // Ensure clean local state
       _sections.clear();
-      
+
       // Load courses and fetch all students (no filters applied)
       await _loadCourses();
       provider.fetchStudents();
-      
+
       // Mark initialization as complete
       if (mounted) {
         setState(() {
@@ -58,7 +58,7 @@ class _AdminStudentManagementScreenState
     try {
       final list = await CoursesService().getAllCourses();
       if (mounted) setState(() => _courses = list);
-    } catch (_) {}
+    } on Exception catch (_) {}
   }
 
   Future<void> _loadSectionsForCourse(int? courseId) async {
@@ -71,7 +71,7 @@ class _AdminStudentManagementScreenState
     }
 
     setState(() => _loadingSections = true);
-    
+
     try {
       final sections = await CoursesService().getCourseSections(courseId);
       if (mounted) {
@@ -80,7 +80,7 @@ class _AdminStudentManagementScreenState
           _loadingSections = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _sections = [];
@@ -97,7 +97,7 @@ class _AdminStudentManagementScreenState
     _searchController.dispose();
     _sections.clear();
     _initializing = true; // Reset for next visit
-    
+
     super.dispose();
   }
 
@@ -201,7 +201,9 @@ class _AdminStudentManagementScreenState
                 if (provider.isLoading && provider.students.isEmpty) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (provider.error != null && provider.students.isEmpty && !provider.isLoading) {
+                if (provider.error != null &&
+                    provider.students.isEmpty &&
+                    !provider.isLoading) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -247,77 +249,79 @@ class _AdminStudentManagementScreenState
         color: Colors.white,
       ),
       child: DropdownButtonHideUnderline(
-        child: _initializing
-            ? const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 8),
-                    Text('Loading...'),
-                  ],
-                ),
-              )
-            : DropdownButton<int?>(
-                value: provider.courseIdFilter,
-                isExpanded: true,
-                hint: Text(context.translate('all_classes')),
-                items: [
-                  DropdownMenuItem<int?>(
-                    child: Text(context.translate('all_classes')),
+        child:
+            _initializing
+                ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Loading...'),
+                    ],
                   ),
-                  ..._courses.map((c) {
-                    final id = c['id'] as int?;
-                    final name = c['name'] as String? ?? '${c['id']}';
-                    return DropdownMenuItem<int?>(
-                      value: id,
-                      child: Text(name.toString()),
-                    );
-                  }),
-                ],
-                onChanged: (courseId) {
-                  // Clear sections immediately to prevent stale state
-                  setState(() {
-                    _sections = [];
-                  });
-                  // Clear section filter when course changes
-                  provider.setSectionFilter(null);
-                  // Set course filter
-                  provider.setCourseFilter(courseId);
-                  // Load sections for the selected course
-                  _loadSectionsForCourse(courseId);
-                },
-              ),
+                )
+                : DropdownButton<int?>(
+                  value: provider.courseIdFilter,
+                  isExpanded: true,
+                  hint: Text(context.translate('all_classes')),
+                  items: [
+                    DropdownMenuItem<int?>(
+                      child: Text(context.translate('all_classes')),
+                    ),
+                    ..._courses.map((c) {
+                      final id = c['id'] as int?;
+                      final name = c['name'] as String? ?? '${c['id']}';
+                      return DropdownMenuItem<int?>(
+                        value: id,
+                        child: Text(name.toString()),
+                      );
+                    }),
+                  ],
+                  onChanged: (courseId) {
+                    // Clear sections immediately to prevent stale state
+                    setState(() {
+                      _sections = [];
+                    });
+                    // Clear section filter when course changes
+                    provider.setSectionFilter(null);
+                    // Set course filter
+                    provider.setCourseFilter(courseId);
+                    // Load sections for the selected course
+                    _loadSectionsForCourse(courseId);
+                  },
+                ),
       ),
     );
   }
 
   Widget _buildSectionFilter(BuildContext context) {
     final provider = context.watch<AdminStudentsProvider>();
-    
+
     // Build available section values
     final availableSections = <String>[];
     if (_sections.isNotEmpty) {
       for (final section in _sections) {
-        final sectionName = section is Map<String, dynamic>
-            ? (section['sectionName'] as String? ?? 
-               section['section'] as String? ?? 
-               section['name'] as String? ?? 
-               section.toString())
-            : section.toString();
+        final sectionName =
+            section is Map<String, dynamic>
+                ? (section['sectionName'] as String? ??
+                    section['section'] as String? ??
+                    section['name'] as String? ??
+                    section.toString())
+                : section.toString();
         if (sectionName.isNotEmpty) {
           availableSections.add(sectionName);
         }
       }
     }
-    
+
     final isDisabled = provider.courseIdFilter == null || _loadingSections;
-    
+
     // Determine the current value - only use provider value if it's in available sections
     String? currentValue;
     if (!isDisabled && provider.sectionFilter != null) {
@@ -330,7 +334,7 @@ class _AdminStudentManagementScreenState
         });
       }
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -339,61 +343,61 @@ class _AdminStudentManagementScreenState
         color: isDisabled ? AppTheme.slate100 : Colors.white,
       ),
       child: DropdownButtonHideUnderline(
-        child: (_loadingSections || _initializing)
-            ? const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 8),
-                    Text('Loading...'),
-                  ],
-                ),
-              )
-            : DropdownButton<String?>(
-                key: ValueKey('section_dropdown_${provider.courseIdFilter}_${availableSections.length}'),
-                value: currentValue,
-                isExpanded: true,
-                hint: Text(
-                  provider.courseIdFilter == null
-                      ? 'Select course first'
-                      : context.translate('all_sections'),
-                  style: TextStyle(
-                    color: isDisabled ? AppTheme.slate500 : null,
+        child:
+            (_loadingSections || _initializing)
+                ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 8),
+                      Text('Loading...'),
+                    ],
                   ),
+                )
+                : DropdownButton<String?>(
+                  key: ValueKey(
+                    'section_dropdown_${provider.courseIdFilter}_${availableSections.length}',
+                  ),
+                  value: currentValue,
+                  isExpanded: true,
+                  hint: Text(
+                    provider.courseIdFilter == null
+                        ? 'Select course first'
+                        : context.translate('all_sections'),
+                    style: TextStyle(
+                      color: isDisabled ? AppTheme.slate500 : null,
+                    ),
+                  ),
+                  items:
+                      isDisabled || availableSections.isEmpty
+                          ? [
+                            DropdownMenuItem<String?>(
+                              child: Text(
+                                provider.courseIdFilter == null
+                                    ? 'Select course first'
+                                    : 'No sections available',
+                              ),
+                            ),
+                          ]
+                          : [
+                            DropdownMenuItem<String?>(
+                              child: Text(context.translate('all_sections')),
+                            ),
+                            ...availableSections.map(
+                              (sectionName) => DropdownMenuItem<String?>(
+                                value: sectionName,
+                                child: Text('Section $sectionName'),
+                              ),
+                            ),
+                          ],
+                  onChanged: isDisabled ? null : provider.setSectionFilter,
                 ),
-                items: isDisabled || availableSections.isEmpty
-                    ? [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(
-                            provider.courseIdFilter == null
-                                ? 'Select course first'
-                                : 'No sections available',
-                          ),
-                        ),
-                      ]
-                    : [
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text(context.translate('all_sections')),
-                        ),
-                        ...availableSections.map((sectionName) {
-                          return DropdownMenuItem<String?>(
-                            value: sectionName,
-                            child: Text('Section $sectionName'),
-                          );
-                        }),
-                      ],
-                onChanged: isDisabled ? null : (value) {
-                  provider.setSectionFilter(value);
-                },
-              ),
       ),
     );
   }
@@ -475,20 +479,30 @@ class _AdminStudentManagementScreenState
             : '—';
     final parents = s['parents'] as List<dynamic>?;
     // Find the primary contact (guardian) among parents
-    final guardian = parents?.isNotEmpty == true
-        ? parents!.cast<Map<String, dynamic>>().firstWhere(
-            (p) => p['isPrimaryContact'] == true,
-            orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
-          )['user'] as Map<String, dynamic>?
-        : null;
+    final guardian =
+        parents?.isNotEmpty == true
+            ? parents!.cast<Map<String, dynamic>>().firstWhere(
+                  (p) => p['isPrimaryContact'] == true,
+                  orElse:
+                      () =>
+                          parents.isNotEmpty
+                              ? parents.first as Map<String, dynamic>
+                              : <String, dynamic>{},
+                )['user']
+                as Map<String, dynamic>?
+            : null;
     final guardianName = guardian?['name'] as String? ?? '—';
     // Get phone from student or primary parent contact
-    String phone = user?['phone'] as String? ?? '';
+    var phone = user?['phone'] as String? ?? '';
     if (phone.isEmpty) {
       final parents = s['parents'] as List<dynamic>? ?? [];
       final primaryParent = parents.cast<Map<String, dynamic>>().firstWhere(
         (p) => p['isPrimaryContact'] == true,
-        orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
+        orElse:
+            () =>
+                parents.isNotEmpty
+                    ? parents.first as Map<String, dynamic>
+                    : <String, dynamic>{},
       );
       final parentUser = primaryParent['user'] as Map<String, dynamic>?;
       phone = parentUser?['phone'] as String? ?? '—';
@@ -660,12 +674,18 @@ class _AdminStudentManagementScreenState
                       : '—';
               final parents = s['parents'] as List<dynamic>?;
               // Find the primary contact (guardian) among parents
-              final guardian = parents?.isNotEmpty == true
-                  ? parents!.cast<Map<String, dynamic>>().firstWhere(
-                      (p) => p['isPrimaryContact'] == true,
-                      orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
-                    )['user'] as Map<String, dynamic>?
-                  : null;
+              final guardian =
+                  parents?.isNotEmpty == true
+                      ? parents!.cast<Map<String, dynamic>>().firstWhere(
+                            (p) => p['isPrimaryContact'] == true,
+                            orElse:
+                                () =>
+                                    parents.isNotEmpty
+                                        ? parents.first as Map<String, dynamic>
+                                        : <String, dynamic>{},
+                          )['user']
+                          as Map<String, dynamic>?
+                      : null;
               final guardianName = guardian?['name'] as String? ?? '—';
               final phone = user?['phone'] as String? ?? '—';
               final status = user?['status'] as String? ?? 'ACTIVE';
@@ -762,12 +782,18 @@ class _AdminStudentManagementScreenState
     final rollNumber = student['rollNumber'] as String? ?? '';
     final parents = student['parents'] as List<dynamic>? ?? [];
     // Find the primary contact (guardian) among parents
-    final guardian = parents.isNotEmpty
-        ? parents.cast<Map<String, dynamic>>().firstWhere(
-            (p) => p['isPrimaryContact'] == true,
-            orElse: () => parents.isNotEmpty ? parents.first as Map<String, dynamic> : <String, dynamic>{},
-          )['user'] as Map<String, dynamic>?
-        : null;
+    final guardian =
+        parents.isNotEmpty
+            ? parents.cast<Map<String, dynamic>>().firstWhere(
+                  (p) => p['isPrimaryContact'] == true,
+                  orElse:
+                      () =>
+                          parents.isNotEmpty
+                              ? parents.first as Map<String, dynamic>
+                              : <String, dynamic>{},
+                )['user']
+                as Map<String, dynamic>?
+            : null;
     final guardianName = guardian?['name'] as String? ?? '';
     final phone = user?['phone'] as String? ?? '';
     final email = user?['email'] as String? ?? '';

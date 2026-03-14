@@ -138,20 +138,21 @@ class AttendanceTrendsChart extends StatelessWidget {
                 topLeft: Radius.circular(4),
                 topRight: Radius.circular(4),
               ),
-              rodStackItems: totalValue > 0
-                  ? [
-                      BarChartRodStackItem(
-                        0,
-                        presentValue,
-                        const Color(0xFF10b981),
-                      ),
-                      BarChartRodStackItem(
-                        presentValue,
-                        totalValue,
-                        const Color(0xFFef4444),
-                      ),
-                    ]
-                  : null,
+              rodStackItems:
+                  totalValue > 0
+                      ? [
+                        BarChartRodStackItem(
+                          0,
+                          presentValue,
+                          const Color(0xFF10b981),
+                        ),
+                        BarChartRodStackItem(
+                          presentValue,
+                          totalValue,
+                          const Color(0xFFef4444),
+                        ),
+                      ]
+                      : null,
               color: totalValue == 0 ? const Color(0xFFe2e8f0) : null,
             ),
           ],

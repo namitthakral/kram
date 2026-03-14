@@ -15,7 +15,6 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_search_bar.dart';
 import '../providers/examination_provider.dart';
 
-
 /// Screen to display and manage all examinations for a teacher
 class ExaminationsListScreen extends StatefulWidget {
   const ExaminationsListScreen({super.key});
@@ -116,7 +115,8 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
           Expanded(
             child: Builder(
               builder: (context) {
-                if (examProvider.isLoading && examProvider.examinations.isEmpty) {
+                if (examProvider.isLoading &&
+                    examProvider.examinations.isEmpty) {
                   return const SizedBox(); // UnifiedLoader handles this
                 }
 
@@ -137,10 +137,10 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
                         return true;
                       }
                       final query = _searchQuery.toLowerCase();
-                      return examination.examName.toLowerCase().contains(query) ||
-                          examination.courseName
-                              .toLowerCase()
-                              .contains(query);
+                      return examination.examName.toLowerCase().contains(
+                            query,
+                          ) ||
+                          examination.courseName.toLowerCase().contains(query);
                     }).toList();
 
                 return RefreshIndicator(
@@ -237,11 +237,12 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     ),
   );
 
-  Widget? _buildFloatingActionButton(BuildContext context) => FloatingActionButton.extended(
-      onPressed: _navigateToCreate,
-      icon: const Icon(Icons.add),
-      label: Text(context.translate('new_examination')),
-    );
+  Widget? _buildFloatingActionButton(BuildContext context) =>
+      FloatingActionButton.extended(
+        onPressed: _navigateToCreate,
+        icon: const Icon(Icons.add),
+        label: Text(context.translate('new_examination')),
+      );
 
   void _showFilterDialog(BuildContext context) {
     final provider = context.read<ExaminationProvider>();
@@ -256,29 +257,29 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     BuildContext context,
     ExaminationProvider provider,
   ) {
-    String? pendingStatus = provider.selectedStatusFilter;
+    var pendingStatus = provider.selectedStatusFilter;
 
     CustomBottomSheet.showCustomModalBottomSheet(
       context: context,
       config: const BottomSheetConfig(height: 0.65, canDismiss: true),
       child: StatefulBuilder(
-        builder: (ctx, setModalState) {
-          return _examinationFilterContent(
-            context: ctx,
-            provider: provider,
-            pendingStatus: pendingStatus,
-            onPendingStatusChanged: (v) => setModalState(() => pendingStatus = v),
-            onClear: () {
-              provider.clearFilters();
-              Navigator.pop(context);
-            },
-            onApply: (status) {
-              provider.setStatusFilter(status);
-              Navigator.pop(context);
-            },
-            showTitle: true,
-          );
-        },
+        builder:
+            (ctx, setModalState) => _examinationFilterContent(
+              context: ctx,
+              provider: provider,
+              pendingStatus: pendingStatus,
+              onPendingStatusChanged:
+                  (v) => setModalState(() => pendingStatus = v),
+              onClear: () {
+                provider.clearFilters();
+                Navigator.pop(context);
+              },
+              onApply: (status) {
+                provider.setStatusFilter(status);
+                Navigator.pop(context);
+              },
+              showTitle: true,
+            ),
       ),
     );
   }
@@ -287,39 +288,39 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     BuildContext context,
     ExaminationProvider provider,
   ) {
-    String? pendingStatus = provider.selectedStatusFilter;
+    var pendingStatus = provider.selectedStatusFilter;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (_, setModalState) {
-          return AlertDialog(
-            title: Text(dialogContext.translate('filter_examinations')),
-            content: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: _examinationFilterContent(
-                  context: dialogContext,
-                  provider: provider,
-                  pendingStatus: pendingStatus,
-                  onPendingStatusChanged: (v) =>
-                      setModalState(() => pendingStatus = v),
-                  onClear: () {
-                    provider.clearFilters();
-                    Navigator.of(dialogContext).pop();
-                  },
-                  onApply: (status) {
-                    provider.setStatusFilter(status);
-                    Navigator.of(dialogContext).pop();
-                  },
-                  showTitle: false,
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (_, setModalState) => AlertDialog(
+                  title: Text(dialogContext.translate('filter_examinations')),
+                  content: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: _examinationFilterContent(
+                        context: dialogContext,
+                        provider: provider,
+                        pendingStatus: pendingStatus,
+                        onPendingStatusChanged:
+                            (v) => setModalState(() => pendingStatus = v),
+                        onClear: () {
+                          provider.clearFilters();
+                          Navigator.of(dialogContext).pop();
+                        },
+                        onApply: (status) {
+                          provider.setStatusFilter(status);
+                          Navigator.of(dialogContext).pop();
+                        },
+                        showTitle: false,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+          ),
     );
   }
 
@@ -331,87 +332,82 @@ class _ExaminationsListScreenState extends State<ExaminationsListScreen> {
     required VoidCallback onClear,
     required void Function(String?) onApply,
     required bool showTitle,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (showTitle) ...[
-          Text(
-            context.translate('filter_examinations'),
-            style: context.textTheme.titleXl.copyWith(
-              color: AppTheme.slate800,
-              fontWeight: AppTheme.fontWeightSemibold,
-            ),
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (showTitle) ...[
+        Text(
+          context.translate('filter_examinations'),
+          style: context.textTheme.titleXl.copyWith(
+            color: AppTheme.slate800,
+            fontWeight: AppTheme.fontWeightSemibold,
           ),
-          const SizedBox(height: 24),
-        ],
-        DropdownButtonFormField<String?>(
-          initialValue: pendingStatus,
-          decoration: InputDecoration(
-            labelText: context.translate('status'),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: const Icon(Icons.info_outline),
-          ),
-          items: [
-            DropdownMenuItem<String?>(
-              value: null,
-              child: Text(context.translate('all_statuses')),
-            ),
-            DropdownMenuItem(
-              value: 'SCHEDULED',
-              child: Text(context.translate('scheduled')),
-            ),
-            DropdownMenuItem(
-              value: 'ONGOING',
-              child: Text(context.translate('ongoing')),
-            ),
-            DropdownMenuItem(
-              value: 'COMPLETED',
-              child: Text(context.translate('completed')),
-            ),
-            DropdownMenuItem(
-              value: 'CANCELLED',
-              child: Text(context.translate('cancelled')),
-            ),
-          ],
-          onChanged: (value) => onPendingStatusChanged(value),
         ),
         const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: onClear,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(context.translate('clear')),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => onApply(pendingStatus),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(context.translate('apply')),
-              ),
-            ),
-          ],
-        ),
       ],
-    );
-  }
+      DropdownButtonFormField<String?>(
+        initialValue: pendingStatus,
+        decoration: InputDecoration(
+          labelText: context.translate('status'),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: const Icon(Icons.info_outline),
+        ),
+        items: [
+          DropdownMenuItem<String?>(
+            child: Text(context.translate('all_statuses')),
+          ),
+          DropdownMenuItem(
+            value: 'SCHEDULED',
+            child: Text(context.translate('scheduled')),
+          ),
+          DropdownMenuItem(
+            value: 'ONGOING',
+            child: Text(context.translate('ongoing')),
+          ),
+          DropdownMenuItem(
+            value: 'COMPLETED',
+            child: Text(context.translate('completed')),
+          ),
+          DropdownMenuItem(
+            value: 'CANCELLED',
+            child: Text(context.translate('cancelled')),
+          ),
+        ],
+        onChanged: (value) => onPendingStatusChanged(value),
+      ),
+      const SizedBox(height: 24),
+      Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: onClear,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(context.translate('clear')),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => onApply(pendingStatus),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(context.translate('apply')),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
 
   void _navigateToCreate() {
     context.pushNamed('create_exam').then((_) => _loadData());

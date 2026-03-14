@@ -60,7 +60,7 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -78,78 +78,93 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
     return CustomMainScreenWithAppbar(
       title: context.translate('institution_settings'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
         onNotificationIconPressed: () {},
       ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
+      child:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_error!),
-                      ElevatedButton(onPressed: _loadData, child: Text(context.translate('retry'))),
-                    ],
-                  ),
-                )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_error!),
+                    ElevatedButton(
+                      onPressed: _loadData,
+                      child: Text(context.translate('retry')),
+                    ),
+                  ],
+                ),
+              )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionHeader(context.translate('school_info')),
-                      const SizedBox(height: 12),
-                      _buildSchoolInfoSection(),
-                      const SizedBox(height: 32),
-                      _buildSectionHeader(context.translate('id_configuration')),
-                      const SizedBox(height: 16),
-                      if (_idConfig != null) ...[
-                        _buildConfigItem('Admission ID Format', _idConfig!['admissionIdFormat']),
-                        _buildConfigItem('Employee ID Format', _idConfig!['employeeIdFormat']),
-                        _buildConfigItem('Roll No Format', _idConfig!['rollNoFormat']),
-                      ],
-                      const SizedBox(height: 24),
-                      Center(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showEditConfigDialog(context),
-                          icon: const Icon(Icons.edit),
-                          label: Text(context.translate('edit_configuration')),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.blue500,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(context.translate('school_info')),
+                    const SizedBox(height: 12),
+                    _buildSchoolInfoSection(),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(context.translate('id_configuration')),
+                    const SizedBox(height: 16),
+                    if (_idConfig != null) ...[
+                      _buildConfigItem(
+                        'Admission ID Format',
+                        _idConfig!['admissionIdFormat'],
+                      ),
+                      _buildConfigItem(
+                        'Employee ID Format',
+                        _idConfig!['employeeIdFormat'],
+                      ),
+                      _buildConfigItem(
+                        'Roll No Format',
+                        _idConfig!['rollNoFormat'],
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showEditConfigDialog(context),
+                        icon: const Icon(Icons.edit),
+                        label: Text(context.translate('edit_configuration')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.blue500,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      _buildSectionHeader(context.translate('academic_settings')),
-                      const SizedBox(height: 12),
-                      _buildAcademicSection(context, loginProvider),
-                      const SizedBox(height: 32),
-                      _buildSectionHeader(context.translate('system')),
-                      const SizedBox(height: 12),
-                      _buildSystemSection(context),
-                      const SizedBox(height: 32),
-                      _buildSectionHeader(context.translate('branding')),
-                      const SizedBox(height: 12),
-                      _buildBrandingSection(context),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(context.translate('academic_settings')),
+                    const SizedBox(height: 12),
+                    _buildAcademicSection(context, loginProvider),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(context.translate('system')),
+                    const SizedBox(height: 12),
+                    _buildSystemSection(context),
+                    const SizedBox(height: 32),
+                    _buildSectionHeader(context.translate('branding')),
+                    const SizedBox(height: 12),
+                    _buildBrandingSection(context),
+                  ],
                 ),
+              ),
     );
   }
 
   void _showEditConfigDialog(BuildContext context) {
-    final institutionId = context.read<LoginProvider>().currentUser?.institutionId;
+    final institutionId =
+        context.read<LoginProvider>().currentUser?.institutionId;
     if (institutionId == null) return;
 
     final admissionController = TextEditingController(
@@ -167,7 +182,6 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
       title: context.translate('edit_configuration'),
       subtitle: 'ID format patterns for admission, employee, and roll number',
       headerIcon: Icons.settings_applications_rounded,
-      confirmText: 'Save',
       cancelText: context.translate('cancel'),
       confirmColor: AppTheme.blue500,
       maxWidth: 500,
@@ -198,14 +212,11 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
         if (_isSaving) return;
         setState(() => _isSaving = true);
         try {
-          await _adminService.updateIdConfig(
-            institutionId,
-            {
-              'admissionIdFormat': admissionController.text.trim(),
-              'employeeIdFormat': employeeController.text.trim(),
-              'rollNoFormat': rollNoController.text.trim(),
-            },
-          );
+          await _adminService.updateIdConfig(institutionId, {
+            'admissionIdFormat': admissionController.text.trim(),
+            'employeeIdFormat': employeeController.text.trim(),
+            'rollNoFormat': rollNoController.text.trim(),
+          });
           admissionController.dispose();
           employeeController.dispose();
           rollNoController.dispose();
@@ -217,7 +228,7 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
               type: SnackbarType.success,
             );
           }
-        } catch (e) {
+        } on Exception catch (e) {
           if (mounted) {
             showCustomSnackbar(
               message: e.toString().replaceFirst('Exception: ', ''),
@@ -252,7 +263,10 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
         _buildConfigItem(context.translate('phone_number'), info['phone']),
         _buildConfigItem(context.translate('email'), info['email']),
         _buildConfigItem('Website', info['website']),
-        _buildConfigItem(context.translate('established_year'), info['establishedYear']),
+        _buildConfigItem(
+          context.translate('established_year'),
+          info['establishedYear'],
+        ),
         _buildConfigItem('Accreditation', info['accreditation']),
         const SizedBox(height: 12),
         Center(
@@ -274,118 +288,135 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
     );
   }
 
-  Widget _buildAcademicSection(BuildContext context, LoginProvider loginProvider) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: AppTheme.slate100,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.translate('grading_and_terms'),
+  Widget _buildAcademicSection(
+    BuildContext context,
+    LoginProvider loginProvider,
+  ) => Card(
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    color: AppTheme.slate100,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.translate('grading_and_terms'),
+            style: const TextStyle(
+              fontSize: AppTheme.fontSizeSm,
+              color: AppTheme.slate600,
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => context.router.router.push('/grading-config'),
+            icon: const Icon(Icons.grid_view_rounded, size: 20),
+            label: Text(context.translate('grading_config')),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.blue500,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => context.router.router.push('/academic-management'),
+            icon: const Icon(Icons.calendar_month_rounded, size: 20),
+            label: Text(
+              context.translate(
+                loginProvider.isSchool
+                    ? 'years_and_terms'
+                    : 'years_and_semesters',
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.blue500,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildSystemSection(BuildContext context) => Card(
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    color: AppTheme.slate100,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildConfigItem(context.translate('timezone'), 'IST (Asia/Kolkata)'),
+          _buildConfigItem(context.translate('date_format'), 'DD/MM/YYYY'),
+          _buildConfigItem(context.translate('currency'), 'INR (₹)'),
+          Text(
+            context.translate('system_settings_coming_soon'),
+            style: const TextStyle(
+              fontSize: AppTheme.fontSizeXs,
+              color: AppTheme.slate500,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildBrandingSection(BuildContext context) => Card(
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    color: AppTheme.slate100,
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const Icon(Icons.image_rounded, color: AppTheme.slate500, size: 40),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              context.translate('branding_coming_soon'),
               style: const TextStyle(
                 fontSize: AppTheme.fontSizeSm,
                 color: AppTheme.slate600,
               ),
             ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: () => context.router.router.push('/grading-config'),
-              icon: const Icon(Icons.grid_view_rounded, size: 20),
-              label: Text(context.translate('grading_config')),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.blue500,
-                foregroundColor: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: () =>
-                  context.router.router.push('/academic-management'),
-              icon: const Icon(Icons.calendar_month_rounded, size: 20),
-              label: Text(context.translate(loginProvider.isSchool
-                  ? 'years_and_terms'
-                  : 'years_and_semesters')),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.blue500,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSystemSection(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: AppTheme.slate100,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildConfigItem(context.translate('timezone'), 'IST (Asia/Kolkata)'),
-            _buildConfigItem(context.translate('date_format'), 'DD/MM/YYYY'),
-            _buildConfigItem(context.translate('currency'), 'INR (₹)'),
-            Text(
-              context.translate('system_settings_coming_soon'),
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeXs,
-                color: AppTheme.slate500,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBrandingSection(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: AppTheme.slate100,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(Icons.image_rounded, color: AppTheme.slate500, size: 40),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                context.translate('branding_coming_soon'),
-                style: const TextStyle(
-                  fontSize: AppTheme.fontSizeSm,
-                  color: AppTheme.slate600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
 
   void _showEditSchoolInfoDialog(BuildContext context) {
-    final institutionId = context.read<LoginProvider>().currentUser?.institutionId;
+    final institutionId =
+        context.read<LoginProvider>().currentUser?.institutionId;
     if (institutionId == null) return;
     final info = _schoolInfo ?? {};
 
-    final nameController = TextEditingController(text: info['name']?.toString() ?? '');
-    final addressController = TextEditingController(text: info['address']?.toString() ?? '');
-    final cityController = TextEditingController(text: info['city']?.toString() ?? '');
-    final stateController = TextEditingController(text: info['state']?.toString() ?? '');
-    final countryController = TextEditingController(text: info['country']?.toString() ?? '');
-    final phoneController = TextEditingController(text: info['phone']?.toString() ?? '');
-    final emailController = TextEditingController(text: info['email']?.toString() ?? '');
-    final websiteController = TextEditingController(text: info['website']?.toString() ?? '');
+    final nameController = TextEditingController(
+      text: info['name']?.toString() ?? '',
+    );
+    final addressController = TextEditingController(
+      text: info['address']?.toString() ?? '',
+    );
+    final cityController = TextEditingController(
+      text: info['city']?.toString() ?? '',
+    );
+    final stateController = TextEditingController(
+      text: info['state']?.toString() ?? '',
+    );
+    final countryController = TextEditingController(
+      text: info['country']?.toString() ?? '',
+    );
+    final phoneController = TextEditingController(
+      text: info['phone']?.toString() ?? '',
+    );
+    final emailController = TextEditingController(
+      text: info['email']?.toString() ?? '',
+    );
+    final websiteController = TextEditingController(
+      text: info['website']?.toString() ?? '',
+    );
     final establishedController = TextEditingController(
       text: info['establishedYear']?.toString() ?? '',
     );
@@ -407,19 +438,40 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            CustomTextField(label: context.translate('name'), controller: nameController),
+            CustomTextField(
+              label: context.translate('name'),
+              controller: nameController,
+            ),
             const SizedBox(height: 12),
-            CustomTextField(label: context.translate('address'), controller: addressController),
+            CustomTextField(
+              label: context.translate('address'),
+              controller: addressController,
+            ),
             const SizedBox(height: 12),
-            CustomTextField(label: context.translate('city'), controller: cityController),
+            CustomTextField(
+              label: context.translate('city'),
+              controller: cityController,
+            ),
             const SizedBox(height: 12),
-            CustomTextField(label: context.translate('state'), controller: stateController),
+            CustomTextField(
+              label: context.translate('state'),
+              controller: stateController,
+            ),
             const SizedBox(height: 12),
-            CustomTextField(label: context.translate('country'), controller: countryController),
+            CustomTextField(
+              label: context.translate('country'),
+              controller: countryController,
+            ),
             const SizedBox(height: 12),
-            CustomTextField(label: context.translate('phone_number'), controller: phoneController),
+            CustomTextField(
+              label: context.translate('phone_number'),
+              controller: phoneController,
+            ),
             const SizedBox(height: 12),
-            CustomTextField(label: context.translate('email'), controller: emailController),
+            CustomTextField(
+              label: context.translate('email'),
+              controller: emailController,
+            ),
             const SizedBox(height: 12),
             CustomTextField(label: 'Website', controller: websiteController),
             const SizedBox(height: 12),
@@ -429,7 +481,10 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
               hintText: 'e.g. 1990',
             ),
             const SizedBox(height: 12),
-            CustomTextField(label: 'Accreditation', controller: accreditationController),
+            CustomTextField(
+              label: 'Accreditation',
+              controller: accreditationController,
+            ),
           ],
         ),
       ),
@@ -438,21 +493,42 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
         setState(() => _isSaving = true);
         try {
           final year = int.tryParse(establishedController.text.trim());
-          await _adminService.updateInstitutionProfile(
-            institutionId,
-            {
-              'name': nameController.text.trim(),
-              'address': addressController.text.trim().isEmpty ? null : addressController.text.trim(),
-              'city': cityController.text.trim().isEmpty ? null : cityController.text.trim(),
-              'state': stateController.text.trim().isEmpty ? null : stateController.text.trim(),
-              'country': countryController.text.trim().isEmpty ? null : countryController.text.trim(),
-              'phone': phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
-              'email': emailController.text.trim().isEmpty ? null : emailController.text.trim(),
-              'website': websiteController.text.trim().isEmpty ? null : websiteController.text.trim(),
-              'establishedYear': year,
-              'accreditation': accreditationController.text.trim().isEmpty ? null : accreditationController.text.trim(),
-            },
-          );
+          await _adminService.updateInstitutionProfile(institutionId, {
+            'name': nameController.text.trim(),
+            'address':
+                addressController.text.trim().isEmpty
+                    ? null
+                    : addressController.text.trim(),
+            'city':
+                cityController.text.trim().isEmpty
+                    ? null
+                    : cityController.text.trim(),
+            'state':
+                stateController.text.trim().isEmpty
+                    ? null
+                    : stateController.text.trim(),
+            'country':
+                countryController.text.trim().isEmpty
+                    ? null
+                    : countryController.text.trim(),
+            'phone':
+                phoneController.text.trim().isEmpty
+                    ? null
+                    : phoneController.text.trim(),
+            'email':
+                emailController.text.trim().isEmpty
+                    ? null
+                    : emailController.text.trim(),
+            'website':
+                websiteController.text.trim().isEmpty
+                    ? null
+                    : websiteController.text.trim(),
+            'establishedYear': year,
+            'accreditation':
+                accreditationController.text.trim().isEmpty
+                    ? null
+                    : accreditationController.text.trim(),
+          });
           _disposeControllers(
             nameController,
             addressController,
@@ -473,7 +549,7 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
               type: SnackbarType.success,
             );
           }
-        } catch (e) {
+        } on Exception catch (e) {
           if (mounted) {
             showCustomSnackbar(
               message: e.toString().replaceFirst('Exception: ', ''),
@@ -501,10 +577,18 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
     );
   }
 
-  void _disposeControllers(TextEditingController a, TextEditingController b,
-      TextEditingController c, TextEditingController d, TextEditingController e,
-      TextEditingController f, TextEditingController g, TextEditingController h,
-      TextEditingController i, TextEditingController j) {
+  void _disposeControllers(
+    TextEditingController a,
+    TextEditingController b,
+    TextEditingController c,
+    TextEditingController d,
+    TextEditingController e,
+    TextEditingController f,
+    TextEditingController g,
+    TextEditingController h,
+    TextEditingController i,
+    TextEditingController j,
+  ) {
     a.dispose();
     b.dispose();
     c.dispose();
@@ -517,51 +601,47 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
     j.dispose();
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: AppTheme.fontSizeLg,
-        fontWeight: AppTheme.fontWeightBold,
-        color: AppTheme.slate800,
-      ),
-    );
-  }
+  Widget _buildSectionHeader(String title) => Text(
+    title,
+    style: const TextStyle(
+      fontSize: AppTheme.fontSizeLg,
+      fontWeight: AppTheme.fontWeightBold,
+      color: AppTheme.slate800,
+    ),
+  );
 
-  Widget _buildConfigItem(String label, dynamic value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
+  Widget _buildConfigItem(String label, value) => Padding(
+    padding: const EdgeInsets.only(bottom: 16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: AppTheme.fontWeightSemibold,
+            color: AppTheme.slate600,
+            fontSize: AppTheme.fontSizeSm,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.slate100,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppTheme.slate200),
+          ),
+          child: Text(
+            value?.toString() ?? 'Not Configured',
             style: const TextStyle(
-              fontWeight: AppTheme.fontWeightSemibold,
-              color: AppTheme.slate600,
-              fontSize: AppTheme.fontSizeSm,
+              fontSize: AppTheme.fontSizeBase,
+              fontFamily: 'monospace',
+              color: AppTheme.slate800,
             ),
           ),
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.slate100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.slate200),
-            ),
-            child: Text(
-              value?.toString() ?? 'Not Configured',
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                fontFamily: 'monospace',
-                color: AppTheme.slate800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

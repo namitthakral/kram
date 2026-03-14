@@ -25,6 +25,7 @@ class AdminReportsScreen extends StatelessWidget {
     return CustomMainScreenWithAppbar(
       title: context.translate('admin_reports'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: institutionName,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../modules/admin/screens/academic_year_management_screen.dart';
 import '../modules/admin/screens/admin_dashboard_screen.dart';
 import '../modules/admin/screens/admin_main_screen.dart';
 import '../modules/admin/screens/admin_reports_screen.dart';
@@ -16,7 +17,6 @@ import '../modules/admin/screens/class_section_management_screen.dart';
 import '../modules/admin/screens/course_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
 import '../modules/admin/screens/institution_settings_screen.dart';
-import '../modules/admin/screens/academic_year_management_screen.dart';
 import '../modules/admin/screens/subject_management_screen.dart';
 import '../modules/admin/screens/transport_screen.dart';
 import '../modules/fees/models/student_fee.dart';

@@ -177,7 +177,9 @@ class CustomTabBar<T> extends StatelessWidget {
                                     ? selectedFontWeight
                                     : unselectedFontWeight,
                             color:
-                                isSelected ? selectedTextColor : unselectedTxtColor,
+                                isSelected
+                                    ? selectedTextColor
+                                    : unselectedTxtColor,
                           ),
                         ),
                       ],
@@ -195,11 +197,7 @@ class CustomTabBar<T> extends StatelessWidget {
 
 /// Represents a single tab item in the CustomTabBar
 class TabItem<T> {
-  const TabItem({
-    required this.value,
-    required this.label,
-    this.icon,
-  });
+  const TabItem({required this.value, required this.label, this.icon});
 
   /// The value associated with this tab
   final T value;

@@ -82,7 +82,10 @@ class CourseManagementProvider extends ChangeNotifier {
   }
 
   /// Update an existing course
-  Future<bool> updateCourse(int courseId, Map<String, dynamic> courseData) async {
+  Future<bool> updateCourse(
+    int courseId,
+    Map<String, dynamic> courseData,
+  ) async {
     try {
       _isUpdating = true;
       setError(null);
@@ -137,10 +140,11 @@ class CourseManagementProvider extends ChangeNotifier {
   Map<String, dynamic>? getCourseById(int courseId) {
     try {
       return _courses.firstWhere(
-        (course) => course['id'] == courseId,
-        orElse: () => null,
-      ) as Map<String, dynamic>?;
-    } catch (e) {
+            (course) => course['id'] == courseId,
+            orElse: () => null,
+          )
+          as Map<String, dynamic>?;
+    } on Exception catch (e) {
       return null;
     }
   }

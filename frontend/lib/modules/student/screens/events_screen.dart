@@ -203,45 +203,40 @@ class _EventsScreenContentState extends State<_EventsScreenContent> {
     required String label,
     required DateTime date,
     required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.slate200),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today, color: AppTheme.blue500),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.slate600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  DateFormat('MMM d, yyyy').format(date),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.slate800,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+  }) => InkWell(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppTheme.slate200),
+        borderRadius: BorderRadius.circular(8),
       ),
-    );
-  }
+      child: Row(
+        children: [
+          const Icon(Icons.calendar_today, color: AppTheme.blue500),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: AppTheme.slate600),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                DateFormat('MMM d, yyyy').format(date),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.slate800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -258,49 +253,52 @@ class _EventsScreenContentState extends State<_EventsScreenContent> {
         onNotificationIconPressed: () {},
       ),
       child: Consumer<StudentEventsProvider>(
-        builder: (context, provider, child) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: CustomTabBar<String>(
-                  tabs: const [
-                    TabItem(
-                      value: 'upcoming',
-                      label: 'Upcoming',
-                      icon: Icons.event,
-                    ),
-                    TabItem(value: 'today', label: 'Today', icon: Icons.today),
-                    TabItem(
-                      value: 'week',
-                      label: 'Week',
-                      icon: Icons.view_week,
-                    ),
-                    TabItem(
-                      value: 'month',
-                      label: 'Month',
-                      icon: Icons.calendar_month,
-                    ),
-                    TabItem(
-                      value: 'custom',
-                      label: 'Custom',
-                      icon: Icons.date_range,
-                    ),
-                  ],
-                  selectedValue: provider.selectedFilter,
-                  onTabSelected: (value) async {
-                    if (value == 'custom') {
-                      await _selectDateRange(context, provider);
-                    } else if (user != null) {
-                      provider.setFilter(value, user);
-                    }
-                  },
+        builder:
+            (context, provider, child) => Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: CustomTabBar<String>(
+                    tabs: const [
+                      TabItem(
+                        value: 'upcoming',
+                        label: 'Upcoming',
+                        icon: Icons.event,
+                      ),
+                      TabItem(
+                        value: 'today',
+                        label: 'Today',
+                        icon: Icons.today,
+                      ),
+                      TabItem(
+                        value: 'week',
+                        label: 'Week',
+                        icon: Icons.view_week,
+                      ),
+                      TabItem(
+                        value: 'month',
+                        label: 'Month',
+                        icon: Icons.calendar_month,
+                      ),
+                      TabItem(
+                        value: 'custom',
+                        label: 'Custom',
+                        icon: Icons.date_range,
+                      ),
+                    ],
+                    selectedValue: provider.selectedFilter,
+                    onTabSelected: (value) async {
+                      if (value == 'custom') {
+                        await _selectDateRange(context, provider);
+                      } else if (user != null) {
+                        provider.setFilter(value, user);
+                      }
+                    },
+                  ),
                 ),
-              ),
-              Expanded(child: _buildEventsList(provider)),
-            ],
-          );
-        },
+                Expanded(child: _buildEventsList(provider)),
+              ],
+            ),
       ),
     );
   }
@@ -342,7 +340,7 @@ class _EventsScreenContentState extends State<_EventsScreenContent> {
               final dateTime = DateTime(2000, 1, 1, hour, minute);
               time = DateFormat('h:mm a').format(dateTime);
             }
-          } catch (e) {
+          } on Exception catch (e) {
             // Keep original if parsing fails
           }
         }

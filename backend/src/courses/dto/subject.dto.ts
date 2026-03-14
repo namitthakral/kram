@@ -41,14 +41,16 @@ export class CreateSubjectDto {
   @MaxLength(200)
   subjectName: string // e.g., "Data Structures", "English Literature", "Physics"
 
+  @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(20)
-  subjectCode: string // e.g., "CS201", "ENG101", "PHY10"
+  subjectCode?: string // e.g., "CS201", "ENG101", "PHY10"
 
+  @IsOptional()
   @IsInt()
   @Min(1)
-  credits: number // For colleges: credit hours; For schools: marks total
+  credits?: number // For colleges: credit hours; For schools: marks total
 
   @IsOptional()
   @IsInt()

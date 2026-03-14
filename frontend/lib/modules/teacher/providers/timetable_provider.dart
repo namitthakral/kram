@@ -226,7 +226,9 @@ class TimetableProvider extends ChangeNotifier {
   }
 
   /// Create a new timetable entry
-  Future<Map<String, dynamic>?> createTimetableEntry(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>?> createTimetableEntry(
+    Map<String, dynamic> data,
+  ) async {
     _isCreating = true;
     _createError = null;
     notifyListeners();
@@ -319,8 +321,6 @@ class TimetableProvider extends ChangeNotifier {
     _isLoadingTimetable = false;
     notifyListeners();
   }
-
-
 
   /// Create a new time slot
   Future<bool> createTimeSlot(Map<String, dynamic> data) async {

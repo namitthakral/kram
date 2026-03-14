@@ -62,19 +62,19 @@ class _HomeScreenState extends State<HomeScreen> {
       final loginProvider = context.read<LoginProvider>();
       final navProvider = context.read<BottomNavProvider>();
 
-    // Check if user is already loaded
-    if (loginProvider.currentUser?.role?.id != null) {
-      navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
-      return;
-    }
+      // Check if user is already loaded
+      if (loginProvider.currentUser?.role?.id != null) {
+        navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
+        return;
+      }
 
-    // If no user loaded, try to restore session
-    // This handles hot restart case where provider state is lost but auth token exists
-    final isLoggedIn = await loginProvider.checkLoginStatus();
+      // If no user loaded, try to restore session
+      // This handles hot restart case where provider state is lost but auth token exists
+      final isLoggedIn = await loginProvider.checkLoginStatus();
 
-    if (!mounted) {
-      return;
-    }
+      if (!mounted) {
+        return;
+      }
 
       if (isLoggedIn && loginProvider.currentUser?.role?.id != null) {
         navProvider.initializeForRole(loginProvider.currentUser!.role!.id);
@@ -155,7 +155,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
             _isHandlingPopState = false;
           }
         });
-      } catch (_) {
+      } on Exception catch (_) {
         _isHandlingPopState = false;
       }
     });
@@ -189,7 +189,9 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       builder: (context, navProvider, _) {
         // Check if navigation is initialized
         if (navProvider.navigationItems.isEmpty) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         // When we can pop (e.g. assignment detail), allow back. When at root, show logout.
@@ -209,8 +211,8 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
           },
           child: _buildScaffold(context, navProvider),
         );
-    },
-  );
+      },
+    );
   }
 
   Widget _buildScaffold(BuildContext context, BottomNavProvider navProvider) {
@@ -269,7 +271,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       confirmColor: AppTheme.danger,
       icon: Icons.logout_rounded,
       iconColor: AppTheme.danger,
-      useRootNavigator: true,
     );
 
     if (result != true || !context.mounted) {
@@ -284,7 +285,6 @@ class _HomeScreenContentState extends State<_HomeScreenContent> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        useRootNavigator: true,
         builder:
             (BuildContext loadingContext) =>
                 const Center(child: CircularProgressIndicator()),

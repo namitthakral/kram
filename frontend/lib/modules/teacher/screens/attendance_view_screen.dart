@@ -722,22 +722,21 @@ class _StatusButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onPressed,
+    onTap: onPressed,
+    borderRadius: BorderRadius.circular(12),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isSelected ? color : color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isSelected ? color : color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? color : color.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: Icon(icon, color: isSelected ? Colors.white : color, size: 20),
+        border: Border.all(
+          color: isSelected ? color : color.withValues(alpha: 0.2),
         ),
-      );
+      ),
+      child: Icon(icon, color: isSelected ? Colors.white : color, size: 20),
+    ),
+  );
 }
 
 // Attendance Summary Bar

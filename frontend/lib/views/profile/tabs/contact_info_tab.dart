@@ -62,7 +62,8 @@ class _ContactInfoTabState extends State<ContactInfoTab> {
     }
 
     if (_emergencyContactNameController.text.isNotEmpty) {
-      data['emergencyContactName'] = _emergencyContactNameController.text.trim();
+      data['emergencyContactName'] =
+          _emergencyContactNameController.text.trim();
     }
 
     if (_emergencyContactPhoneController.text.isNotEmpty) {

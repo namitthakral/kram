@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../provider/login_signup/login_provider.dart';
-import '../../utils/extensions.dart';
 import '../../utils/app_bar_config_helper.dart';
+import '../../utils/extensions.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../widgets/custom_widgets/responsive_layout.dart';

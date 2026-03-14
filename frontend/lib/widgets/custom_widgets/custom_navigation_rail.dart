@@ -589,83 +589,85 @@ class _NavigationRailItemState extends State<_NavigationRailItem> {
                         widget.isExtended && constraints.maxWidth > 50;
 
                     return Row(
-                  mainAxisAlignment:
-                      showExtended
-                          ? MainAxisAlignment.start
-                          : MainAxisAlignment.center,
-                  children: [
-                    // Icon with subtle background
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            widget.isSelected
-                                ? CustomAppColors.primary.withValues(
-                                  alpha: 0.15,
-                                )
-                                : Colors.transparent,
-                      ),
-                      child: BaseImage(
-                        asset: LocalAsset(
-                          url:
-                              widget.isSelected
-                                  ? widget.item.iconFilledUrl
-                                  : widget.item.iconUrl,
-                        ),
-                        height: 22,
-                        width: 22,
-                        fit: BoxFit.contain,
-                        color:
-                            widget.isSelected
-                                ? CustomAppColors.primary
-                                : theme.iconTheme.color?.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    if (showExtended) ...[
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          context.translate(widget.item.labelKey),
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight:
+                      mainAxisAlignment:
+                          showExtended
+                              ? MainAxisAlignment.start
+                              : MainAxisAlignment.center,
+                      children: [
+                        // Icon with subtle background
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
                                 widget.isSelected
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                                    ? CustomAppColors.primary.withValues(
+                                      alpha: 0.15,
+                                    )
+                                    : Colors.transparent,
+                          ),
+                          child: BaseImage(
+                            asset: LocalAsset(
+                              url:
+                                  widget.isSelected
+                                      ? widget.item.iconFilledUrl
+                                      : widget.item.iconUrl,
+                            ),
+                            height: 22,
+                            width: 22,
+                            fit: BoxFit.contain,
                             color:
                                 widget.isSelected
                                     ? CustomAppColors.primary
-                                    : theme.textTheme.bodyLarge?.color,
-                            letterSpacing: 0.3,
+                                    : theme.iconTheme.color?.withValues(
+                                      alpha: 0.7,
+                                    ),
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      // Selection indicator
-                      if (widget.isSelected)
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: CustomAppColors.primary,
-                            boxShadow: [
-                              BoxShadow(
-                                color: CustomAppColors.primary.withValues(
-                                  alpha: 0.5,
-                                ),
-                                blurRadius: 4,
-                                spreadRadius: 1,
+                        if (showExtended) ...[
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Text(
+                              context.translate(widget.item.labelKey),
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight:
+                                    widget.isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                color:
+                                    widget.isSelected
+                                        ? CustomAppColors.primary
+                                        : theme.textTheme.bodyLarge?.color,
+                                letterSpacing: 0.3,
                               ),
-                            ],
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                    ],
-                  ],
-                );
-              },
-            ),
+                          // Selection indicator
+                          if (widget.isSelected)
+                            Container(
+                              width: 4,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: CustomAppColors.primary,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: CustomAppColors.primary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
               ),
             ),
           ),

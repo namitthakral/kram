@@ -14,8 +14,4 @@ class DashboardTabProvider extends ChangeNotifier {
   }
 }
 
-enum DashboardTab {
-  recentAssignments,
-  performanceTrends,
-  attendanceHistory,
-}
+enum DashboardTab { recentAssignments, performanceTrends, attendanceHistory }

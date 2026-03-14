@@ -14,7 +14,8 @@ class SubjectManagementScreen extends StatefulWidget {
   const SubjectManagementScreen({super.key});
 
   @override
-  State<SubjectManagementScreen> createState() => _SubjectManagementScreenState();
+  State<SubjectManagementScreen> createState() =>
+      _SubjectManagementScreenState();
 }
 
 class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
@@ -39,7 +40,10 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
   }
 
   Future<void> _loadSubjects() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
       final subjects = await _adminService.getSubjects();
       if (mounted) {
@@ -48,15 +52,20 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
-        setState(() { _error = e.toString(); _isLoading = false; });
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
       }
     }
   }
 
   List<dynamic> get _filtered {
-    if (_searchQuery.isEmpty) return _subjects;
+    if (_searchQuery.isEmpty) {
+      return _subjects;
+    }
     final q = _searchQuery.toLowerCase();
     return _subjects.where((s) {
       final name = (s['subjectName'] as String? ?? '').toLowerCase();
@@ -77,6 +86,7 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
     return CustomMainScreenWithAppbar(
       title: 'Subject Management',
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -86,7 +96,10 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
         onPressed: () => _showAddSubject(context),
         backgroundColor: AppTheme.blue500,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Add Subject', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        label: const Text(
+          'Add Subject',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
       ),
       child: Column(
         children: [
@@ -97,10 +110,14 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
               children: [
                 const Text(
                   'Subjects',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.slate800),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.slate800,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Manage all academic subjects for your institution',
                   style: TextStyle(fontSize: 14, color: AppTheme.slate500),
                 ),
@@ -114,59 +131,91 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
                     ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-                            const SizedBox(height: 12),
-                            Text(_error!, textAlign: TextAlign.center),
-                            const SizedBox(height: 12),
-                            ElevatedButton(onPressed: _loadSubjects, child: const Text('Retry')),
-                          ],
-                        ),
-                      )
-                    : filtered.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.book_outlined, size: 64, color: AppTheme.slate500),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _searchQuery.isEmpty ? 'No subjects yet' : 'No subjects match your search',
-                                  style: TextStyle(fontSize: 16, color: AppTheme.slate500),
-                                ),
-                                if (_searchQuery.isEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Text('Tap "Add Subject" to create the first one', style: TextStyle(fontSize: 14, color: AppTheme.slate500)),
-                                ],
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: filtered.length,
-                            itemBuilder: (context, index) => _buildSubjectCard(filtered[index] as Map<String, dynamic>),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Colors.redAccent,
                           ),
+                          const SizedBox(height: 12),
+                          Text(_error!, textAlign: TextAlign.center),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _loadSubjects,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                    : filtered.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.book_outlined,
+                            size: 64,
+                            color: AppTheme.slate500,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _searchQuery.isEmpty
+                                ? 'No subjects yet'
+                                : 'No subjects match your search',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: AppTheme.slate500,
+                            ),
+                          ),
+                          if (_searchQuery.isEmpty) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Tap "Add Subject" to create the first one',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.slate500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filtered.length,
+                      itemBuilder:
+                          (context, index) => _buildSubjectCard(
+                            filtered[index] as Map<String, dynamic>,
+                          ),
+                    ),
           ),
           // Summary bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.slate100,
               border: Border(top: BorderSide(color: AppTheme.slate200)),
             ),
             child: Row(
               children: [
-                Text('Total: ${_subjects.length} subjects', style: TextStyle(fontSize: 13, color: AppTheme.slate600)),
+                Text(
+                  'Total: ${_subjects.length} subjects',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.slate600,
+                  ),
+                ),
                 const SizedBox(width: 16),
                 Text(
                   'Active: ${_subjects.where((s) => (s['status'] as String? ?? 'ACTIVE') == 'ACTIVE').length}',
-                  style: TextStyle(fontSize: 13, color: AppTheme.success),
+                  style: const TextStyle(fontSize: 13, color: AppTheme.success),
                 ),
               ],
             ),
@@ -191,7 +240,7 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppTheme.slate200),
+        side: const BorderSide(color: AppTheme.slate200),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -213,7 +262,14 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppTheme.slate800)),
+                        child: Text(
+                          name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: AppTheme.slate800,
+                          ),
+                        ),
                       ),
                       _statusBadge(status),
                     ],
@@ -230,20 +286,51 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
                   ),
                   if (description != null && description.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(description, style: TextStyle(fontSize: 12, color: AppTheme.slate500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.slate500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ],
               ),
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'edit') _showEditSubject(context, subject);
-                if (value == 'delete') _confirmDelete(context, subject);
+                if (value == 'edit') {
+                  _showEditSubject(context, subject);
+                }
+                if (value == 'delete') {
+                  _confirmDelete(context, subject);
+                }
               },
-              itemBuilder: (context) => [
-                const PopupMenuItem(value: 'edit', child: Row(children: [Icon(Icons.edit, size: 18), SizedBox(width: 8), Text('Edit')])),
-                const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete, size: 18, color: Colors.red), SizedBox(width: 8), Text('Delete', style: TextStyle(color: Colors.red))])),
-              ],
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
             ),
           ],
         ),
@@ -257,7 +344,10 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
       color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(12),
     ),
-    child: Text(label, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500)),
+    child: Text(
+      label,
+      style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w500),
+    ),
   );
 
   Widget _statusBadge(String status) {
@@ -265,74 +355,105 @@ class _SubjectManagementScreenState extends State<SubjectManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.slate100,
+        color:
+            isActive
+                ? AppTheme.success.withValues(alpha: 0.1)
+                : AppTheme.slate100,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         status,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isActive ? AppTheme.success : AppTheme.slate500),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: isActive ? AppTheme.success : AppTheme.slate500,
+        ),
       ),
     );
   }
 
   Color _typeColor(String type) {
     switch (type) {
-      case 'CORE': return AppTheme.blue500;
-      case 'ELECTIVE': return const Color(0xFF8B5CF6);
-      case 'MAJOR': return AppTheme.success;
-      case 'MINOR': return AppTheme.warning;
-      default: return AppTheme.slate500;
+      case 'CORE':
+        return AppTheme.blue500;
+      case 'ELECTIVE':
+        return const Color(0xFF8B5CF6);
+      case 'MAJOR':
+        return AppTheme.success;
+      case 'MINOR':
+        return AppTheme.warning;
+      default:
+        return AppTheme.slate500;
     }
   }
 
-  void _showAddSubject(BuildContext context) async {
+  Future<void> _showAddSubject(BuildContext context) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => const AddSubjectDialog(),
     );
-    if (result == true) _loadSubjects();
+    if (result == true) {
+      await _loadSubjects();
+    }
   }
 
-  void _showEditSubject(BuildContext context, Map<String, dynamic> subject) async {
+  Future<void> _showEditSubject(
+    BuildContext context,
+    Map<String, dynamic> subject,
+  ) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => EditSubjectDialog(subject: subject),
     );
-    if (result == true) _loadSubjects();
+    if (result == true) {
+      _loadSubjects();
+    }
   }
 
   void _confirmDelete(BuildContext context, Map<String, dynamic> subject) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Subject'),
-        content: Text('Are you sure you want to delete "${subject['subjectName']}"? This will set it as inactive.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              try {
-                await _adminService.deleteSubject(subject['id'] as int);
-                _loadSubjects();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Subject deleted'), backgroundColor: Colors.green),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed: $e'), backgroundColor: Colors.red),
-                  );
-                }
-              }
-            },
-            child: const Text('Delete'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Delete Subject'),
+            content: Text(
+              'Are you sure you want to delete "${subject['subjectName']}"? This will set it as inactive.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  try {
+                    await _adminService.deleteSubject(subject['id'] as int);
+                    _loadSubjects();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Subject deleted'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  } on Exception catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

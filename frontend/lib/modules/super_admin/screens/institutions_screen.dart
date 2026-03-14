@@ -80,7 +80,11 @@ class _InstitutionsScreenState extends State<InstitutionsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.business_outlined, size: 64, color: Colors.grey[300]),
+                  Icon(
+                    Icons.business_outlined,
+                    size: 64,
+                    color: Colors.grey[300],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No institutions yet',
@@ -122,18 +126,22 @@ class _InstitutionCard extends StatelessWidget {
 
   final Map<String, dynamic> institution;
 
-  void _showAddAdminDialog(BuildContext context, Map<String, dynamic>? currentAdmin) {
+  void _showAddAdminDialog(
+    BuildContext context,
+    Map<String, dynamic>? currentAdmin,
+  ) {
     final id = institution['id'] as int?;
     final name = institution['name'] as String? ?? 'Unknown';
     if (id == null) return;
 
     showDialog<bool>(
       context: context,
-      builder: (_) => CreateInstitutionAdminDialog(
-        institutionId: id,
-        institutionName: name,
-        currentAdmin: currentAdmin,
-      ),
+      builder:
+          (_) => CreateInstitutionAdminDialog(
+            institutionId: id,
+            institutionName: name,
+            currentAdmin: currentAdmin,
+          ),
     );
   }
 
@@ -150,9 +158,14 @@ class _InstitutionCard extends StatelessWidget {
         type.isNotEmpty ? type[0] + type.substring(1).toLowerCase() : '';
 
     final users = institution['users'] as List<dynamic>? ?? [];
-    final Map<String, dynamic>? currentAdmin = users.isNotEmpty ? users.first as Map<String, dynamic> : null;
-    final adminName = currentAdmin != null ? '${currentAdmin['firstName']} ${currentAdmin['lastName']}' : null;
-    final adminEmail = currentAdmin != null ? currentAdmin['email'] as String? : null;
+    final currentAdmin =
+        users.isNotEmpty ? users.first as Map<String, dynamic> : null;
+    final adminName =
+        currentAdmin != null
+            ? '${currentAdmin['firstName']} ${currentAdmin['lastName']}'
+            : null;
+    final adminEmail =
+        currentAdmin != null ? currentAdmin['email'] as String? : null;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -227,7 +240,10 @@ class _InstitutionCard extends StatelessWidget {
                   if (currentAdmin != null) ...[
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: CustomAppColors.slate100,
                         borderRadius: BorderRadius.circular(4),
@@ -235,7 +251,11 @@ class _InstitutionCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.shield_outlined, size: 12, color: CustomAppColors.slate600),
+                          const Icon(
+                            Icons.shield_outlined,
+                            size: 12,
+                            color: CustomAppColors.slate600,
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
@@ -257,20 +277,24 @@ class _InstitutionCard extends StatelessWidget {
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'add_admin') _showAddAdminDialog(context, currentAdmin);
+                if (value == 'add_admin')
+                  _showAddAdminDialog(context, currentAdmin);
               },
-              itemBuilder: (ctx) => [
-                PopupMenuItem(
-                  value: 'add_admin',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.admin_panel_settings, size: 18),
-                      const SizedBox(width: 8),
-                      Text(currentAdmin != null ? 'Update Admin' : 'Add Admin'),
-                    ],
-                  ),
-                ),
-              ],
+              itemBuilder:
+                  (ctx) => [
+                    PopupMenuItem(
+                      value: 'add_admin',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.admin_panel_settings, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            currentAdmin != null ? 'Update Admin' : 'Add Admin',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
             ),
           ],
         ),

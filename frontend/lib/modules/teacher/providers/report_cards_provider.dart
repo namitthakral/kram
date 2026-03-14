@@ -34,10 +34,13 @@ class ReportCardsProvider with ChangeNotifier {
 
   /// Students in the selected section (loaded when section is selected).
   List<ReportCardStudentItem> _sectionStudents = [];
+
   /// Report card generated per student (studentId -> ReportCardData).
   final Map<int, ReportCardData> _reportCardByStudentId = {};
+
   /// Student IDs for which generate is in progress.
   final Set<int> _generatingStudentIds = {};
+
   /// True when generating report cards for all students in one go.
   bool _isGeneratingAll = false;
 
@@ -71,22 +74,25 @@ class ReportCardsProvider with ChangeNotifier {
         status: 'ACTIVE',
       );
 
-      _availableClasses = classesData.map((data) {
-        final subject = data['subject'] as Map<String, dynamic>?;
-        final course = data['course'] as Map<String, dynamic>?;
-        return ClassInfo(
-          id: data['id']?.toString() ?? '',
-          name:
-              '${subject?['name'] ?? ''} ${data['sectionName'] ?? ''}'.trim(),
-          totalStudents: data['currentEnrollment'] as int? ?? 0,
-          courseId: data['courseId'] as int? ?? course?['id'] as int? ?? 0,
-          sectionId: data['id'] as int?,
-          sectionName: data['sectionName'] as String? ?? 'A',
-          subjectName: subject?['name'] as String?,
-          className: course?['name']?.toString() ?? 'Class',
-          semesterId: (data['semester'] as Map<String, dynamic>?)?['id'] as int?,
-        );
-      }).toList();
+      _availableClasses =
+          classesData.map((data) {
+            final subject = data['subject'] as Map<String, dynamic>?;
+            final course = data['course'] as Map<String, dynamic>?;
+            return ClassInfo(
+              id: data['id']?.toString() ?? '',
+              name:
+                  '${subject?['name'] ?? ''} ${data['sectionName'] ?? ''}'
+                      .trim(),
+              totalStudents: data['currentEnrollment'] as int? ?? 0,
+              courseId: data['courseId'] as int? ?? course?['id'] as int? ?? 0,
+              sectionId: data['id'] as int?,
+              sectionName: data['sectionName'] as String? ?? 'A',
+              subjectName: subject?['name'] as String?,
+              className: course?['name']?.toString() ?? 'Class',
+              semesterId:
+                  (data['semester'] as Map<String, dynamic>?)?['id'] as int?,
+            );
+          }).toList();
       _error = null;
     } on Exception catch (e) {
       _error = 'Failed to load classes: $e';
@@ -105,10 +111,9 @@ class ReportCardsProvider with ChangeNotifier {
     if (className != null && sectionName != null) {
       try {
         _selectedClass = _availableClasses.firstWhere(
-          (c) =>
-              (c.className == className) && (c.sectionName == sectionName),
+          (c) => (c.className == className) && (c.sectionName == sectionName),
         );
-      } catch (_) {
+      } on Exception catch (_) {
         _selectedClass = null;
       }
     }
@@ -135,18 +140,25 @@ class ReportCardsProvider with ChangeNotifier {
       final response = await _classSectionService.getEnrolledStudents(
         sectionId: sectionId,
       );
-      final data = response.containsKey('data')
-          ? response['data'] as Map<String, dynamic>
-          : response;
+      final data =
+          response.containsKey('data')
+              ? response['data'] as Map<String, dynamic>
+              : response;
       final list = data['students'] as List<dynamic>? ?? [];
-      _sectionStudents = list.map((s) {
-        final name = s['name'] as String? ?? 'Unknown';
-        final id = s['id'] is int
-            ? s['id'] as int
-            : int.tryParse(s['id']?.toString() ?? '0') ?? 0;
-        final initials = s['initials'] as String? ?? _initials(name);
-        return ReportCardStudentItem(id: id, name: name, initials: initials);
-      }).toList();
+      _sectionStudents =
+          list.map((s) {
+            final name = s['name'] as String? ?? 'Unknown';
+            final id =
+                s['id'] is int
+                    ? s['id'] as int
+                    : int.tryParse(s['id']?.toString() ?? '0') ?? 0;
+            final initials = s['initials'] as String? ?? _initials(name);
+            return ReportCardStudentItem(
+              id: id,
+              name: name,
+              initials: initials,
+            );
+          }).toList();
       _error = null;
     } on Exception catch (e) {
       _error = 'Failed to load students: $e';
@@ -160,7 +172,8 @@ class ReportCardsProvider with ChangeNotifier {
   static String _initials(String name) {
     final parts = name.split(' ');
     if (parts.isEmpty) return '';
-    if (parts.length == 1) return parts[0].isNotEmpty ? parts[0][0].toUpperCase() : '';
+    if (parts.length == 1)
+      return parts[0].isNotEmpty ? parts[0][0].toUpperCase() : '';
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
@@ -244,7 +257,11 @@ class ReportCardsProvider with ChangeNotifier {
       );
       if (response.success && response.reportCards.isNotEmpty) {
         // API returns report cards in same order as studentIds
-        for (var i = 0; i < response.reportCards.length && i < studentIds.length; i++) {
+        for (
+          var i = 0;
+          i < response.reportCards.length && i < studentIds.length;
+          i++
+        ) {
           _reportCardByStudentId[studentIds[i]] = response.reportCards[i];
         }
         final successCount = response.reportCards.length;

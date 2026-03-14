@@ -35,141 +35,139 @@ class CustomFormDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: CustomAppColors.slate50,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Row(
-                  children: [
-                    if (headerIcon != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: (confirmColor ?? AppTheme.blue500)
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          headerIcon,
-                          color: confirmColor ?? AppTheme.blue500,
-                          size: 24,
-                        ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    child: Container(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: CustomAppColors.slate50,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                if (headerIcon != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (confirmColor ?? AppTheme.blue500).withValues(
+                        alpha: 0.1,
                       ),
-                      const SizedBox(width: 12),
-                    ],
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: AppTheme.fontSizeXl,
-                              fontWeight: AppTheme.fontWeightBold,
-                              color: AppTheme.slate800,
-                            ),
-                          ),
-                          if (subtitle != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              subtitle!,
-                              style: const TextStyle(
-                                fontSize: AppTheme.fontSizeSm,
-                                color: AppTheme.slate600,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.close, size: 20),
-                      color: AppTheme.slate600,
-                      onPressed: onCancel ?? () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    child: Icon(
+                      headerIcon,
+                      color: confirmColor ?? AppTheme.blue500,
+                      size: 24,
                     ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: content,
-                ),
-              ),
-
-              // Actions
-              if (showActions)
-                Container(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      OutlinedButton(
-                        onPressed: onCancel ?? () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: const BorderSide(color: AppTheme.slate500),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: AppTheme.fontSizeXl,
+                          fontWeight: AppTheme.fontWeightBold,
+                          color: AppTheme.slate800,
                         ),
-                        child: Text(
-                          cancelText,
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle!,
                           style: const TextStyle(
-                            fontSize: AppTheme.fontSizeBase,
-                            fontWeight: AppTheme.fontWeightMedium,
+                            fontSize: AppTheme.fontSizeSm,
                             color: AppTheme.slate600,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: onConfirm ?? () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          backgroundColor: confirmColor ?? AppTheme.blue500,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          confirmText,
-                          style: const TextStyle(
-                            fontSize: AppTheme.fontSizeBase,
-                            fontWeight: AppTheme.fontWeightMedium,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
-            ],
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  color: AppTheme.slate600,
+                  onPressed: onCancel ?? () => Navigator.pop(context),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+
+          // Content
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: content,
+            ),
+          ),
+
+          // Actions
+          if (showActions)
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: onCancel ?? () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: const BorderSide(color: AppTheme.slate500),
+                    ),
+                    child: Text(
+                      cancelText,
+                      style: const TextStyle(
+                        fontSize: AppTheme.fontSizeBase,
+                        fontWeight: AppTheme.fontWeightMedium,
+                        color: AppTheme.slate600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: onConfirm ?? () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      backgroundColor: confirmColor ?? AppTheme.blue500,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      confirmText,
+                      style: const TextStyle(
+                        fontSize: AppTheme.fontSizeBase,
+                        fontWeight: AppTheme.fontWeightMedium,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 
   /// Show a form dialog with custom content
   static Future<T?> show<T>({
@@ -185,10 +183,10 @@ class CustomFormDialog extends StatelessWidget {
     Color? confirmColor,
     double maxWidth = 600,
     bool showActions = true,
-  }) =>
-      showDialog<T>(
-        context: context,
-        builder: (context) => CustomFormDialog(
+  }) => showDialog<T>(
+    context: context,
+    builder:
+        (context) => CustomFormDialog(
           title: title,
           subtitle: subtitle,
           headerIcon: headerIcon,
@@ -201,44 +199,40 @@ class CustomFormDialog extends StatelessWidget {
           maxWidth: maxWidth,
           showActions: showActions,
         ),
-      );
+  );
 }
 
 /// Helper widget for form field labels with consistent styling
 class FormFieldLabel extends StatelessWidget {
-  const FormFieldLabel({
-    required this.label,
-    this.required = false,
-    super.key,
-  });
+  const FormFieldLabel({required this.label, this.required = false, super.key});
 
   final String label;
   final bool required;
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                fontWeight: AppTheme.fontWeightMedium,
-                color: AppTheme.slate800,
-              ),
-            ),
-            if (required)
-              const Text(
-                ' *',
-                style: TextStyle(
-                  fontSize: AppTheme.fontSizeBase,
-                  color: AppTheme.danger,
-                ),
-              ),
-          ],
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: AppTheme.fontSizeBase,
+            fontWeight: AppTheme.fontWeightMedium,
+            color: AppTheme.slate800,
+          ),
         ),
-      );
+        if (required)
+          const Text(
+            ' *',
+            style: TextStyle(
+              fontSize: AppTheme.fontSizeBase,
+              color: AppTheme.danger,
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 /// Helper widget for styled dropdown fields within forms
@@ -262,40 +256,41 @@ class FormDropdownField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FormFieldLabel(label: label, required: required),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: CustomAppColors.slate200),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.white,
-            ),
-            child: DropdownButton<T>(
-              isExpanded: true,
-              value: value,
-              underline: const SizedBox(),
-              hint: hint != null
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      FormFieldLabel(label: label, required: required),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: CustomAppColors.slate200),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+        ),
+        child: DropdownButton<T>(
+          isExpanded: true,
+          value: value,
+          underline: const SizedBox(),
+          hint:
+              hint != null
                   ? Text(
-                      hint!,
-                      style: const TextStyle(
-                        fontSize: AppTheme.fontSizeBase,
-                        color: AppTheme.slate500,
-                      ),
-                    )
+                    hint!,
+                    style: const TextStyle(
+                      fontSize: AppTheme.fontSizeBase,
+                      color: AppTheme.slate500,
+                    ),
+                  )
                   : null,
-              icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-              style: const TextStyle(
-                fontSize: AppTheme.fontSizeBase,
-                color: AppTheme.slate800,
-              ),
-              items: items,
-              onChanged: onChanged,
-            ),
+          icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+          style: const TextStyle(
+            fontSize: AppTheme.fontSizeBase,
+            color: AppTheme.slate800,
           ),
-        ],
-      );
+          items: items,
+          onChanged: onChanged,
+        ),
+      ),
+    ],
+  );
 }
 
 /// Helper widget for checkbox fields within forms
@@ -315,53 +310,53 @@ class FormCheckboxField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () => onChanged(!value),
+    onTap: () => onChanged(!value),
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: CustomAppColors.slate50,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: CustomAppColors.slate50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: value ? AppTheme.blue500 : CustomAppColors.slate200,
-              width: value ? 2 : 1,
+        border: Border.all(
+          color: value ? AppTheme.blue500 : CustomAppColors.slate200,
+          width: value ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppTheme.blue500,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: AppTheme.fontSizeBase,
+                    fontWeight: AppTheme.fontWeightMedium,
+                    color: AppTheme.slate800,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: const TextStyle(
+                      fontSize: AppTheme.fontSizeSm,
+                      color: AppTheme.slate600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              Checkbox(
-                value: value,
-                onChanged: onChanged,
-                activeColor: AppTheme.blue500,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        fontSize: AppTheme.fontSizeBase,
-                        fontWeight: AppTheme.fontWeightMedium,
-                        color: AppTheme.slate800,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        style: const TextStyle(
-                          fontSize: AppTheme.fontSizeSm,
-                          color: AppTheme.slate600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }

@@ -161,9 +161,7 @@ class _SecurityTabState extends State<SecurityTab> {
                 onPressed: () {
                   // TODO: Implement logout all sessions
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.danger,
-                ),
+                style: TextButton.styleFrom(foregroundColor: AppTheme.danger),
                 child: const Text('Logout from all other devices'),
               ),
             ],
@@ -229,10 +227,16 @@ class _SecurityTabState extends State<SecurityTab> {
         controller: controller,
         obscureText: obscureText,
         decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppTheme.slate500),
+          prefixIcon: const Icon(
+            Icons.lock_outline,
+            size: 20,
+            color: AppTheme.slate500,
+          ),
           suffixIcon: IconButton(
             icon: Icon(
-              obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              obscureText
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
               size: 20,
               color: AppTheme.slate500,
             ),
@@ -252,7 +256,10 @@ class _SecurityTabState extends State<SecurityTab> {
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.blue500, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     ],
@@ -271,7 +278,9 @@ class _SecurityTabState extends State<SecurityTab> {
       ),
       const SizedBox(height: 8),
       Row(
-        children: List.generate(4, (index) => Expanded(
+        children: List.generate(
+          4,
+          (index) => Expanded(
             child: Container(
               height: 4,
               margin: EdgeInsets.only(right: index < 3 ? 4 : 0),
@@ -280,15 +289,13 @@ class _SecurityTabState extends State<SecurityTab> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-          )),
+          ),
+        ),
       ),
       const SizedBox(height: 8),
       const Text(
         'Password must be at least 8 characters with a mix of letters, numbers & symbols',
-        style: TextStyle(
-          fontSize: 12,
-          color: AppTheme.slate500,
-        ),
+        style: TextStyle(fontSize: 12, color: AppTheme.slate500),
       ),
     ],
   );
@@ -321,10 +328,7 @@ class _SecurityTabState extends State<SecurityTab> {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.slate500,
-                ),
+                style: const TextStyle(fontSize: 12, color: AppTheme.slate500),
               ),
             ],
           ),
@@ -347,13 +351,12 @@ class _SecurityTabState extends State<SecurityTab> {
   }) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: isCurrent
-          ? AppTheme.blue50
-          : AppTheme.slate100,
+      color: isCurrent ? AppTheme.blue50 : AppTheme.slate100,
       borderRadius: BorderRadius.circular(8),
-      border: isCurrent
-          ? Border.all(color: AppTheme.blue500.withValues(alpha: 0.3))
-          : null,
+      border:
+          isCurrent
+              ? Border.all(color: AppTheme.blue500.withValues(alpha: 0.3))
+              : null,
     ),
     child: Row(
       children: [
@@ -363,11 +366,7 @@ class _SecurityTabState extends State<SecurityTab> {
             color: isCurrent ? AppTheme.blue500 : AppTheme.slate600,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            _getDeviceIcon(device),
-            color: Colors.white,
-            size: 20,
-          ),
+          child: Icon(_getDeviceIcon(device), color: Colors.white, size: 20),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -387,7 +386,10 @@ class _SecurityTabState extends State<SecurityTab> {
                   if (isCurrent) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.success,
                         borderRadius: BorderRadius.circular(4),
@@ -407,10 +409,7 @@ class _SecurityTabState extends State<SecurityTab> {
               const SizedBox(height: 4),
               Text(
                 '$location • $lastActive',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.slate500,
-                ),
+                style: const TextStyle(fontSize: 12, color: AppTheme.slate500),
               ),
             ],
           ),

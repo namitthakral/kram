@@ -62,50 +62,45 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
 
   @override
   Widget build(BuildContext context) => Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppTheme.slate100,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.slate100,
-          ),
+    height: 48,
+    decoration: BoxDecoration(
+      color: AppTheme.slate100,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppTheme.slate100),
+    ),
+    child: TextField(
+      controller: _controller,
+      autofocus: widget.autofocus,
+      onChanged: widget.onChanged,
+      onSubmitted: widget.onSubmitted,
+      style: context.textTheme.bodySm.copyWith(color: AppTheme.slate800),
+      decoration: InputDecoration(
+        hintText: widget.hintText ?? context.translate('search'),
+        hintStyle: context.textTheme.bodySm.copyWith(color: AppTheme.slate500),
+        prefixIcon: const Icon(
+          Icons.search,
+          color: AppTheme.slate500,
+          size: 20,
         ),
-        child: TextField(
-          controller: _controller,
-          autofocus: widget.autofocus,
-          onChanged: widget.onChanged,
-          onSubmitted: widget.onSubmitted,
-          style: context.textTheme.bodySm.copyWith(
-            color: AppTheme.slate800,
-          ),
-          decoration: InputDecoration(
-            hintText: widget.hintText ?? context.translate('search'),
-            hintStyle: context.textTheme.bodySm.copyWith(
-              color: AppTheme.slate500,
-            ),
-            prefixIcon: const Icon(
-              Icons.search,
-              color: AppTheme.slate500,
-              size: 20,
-            ),
-            suffixIcon: widget.showClearButton && _hasText
+        suffixIcon:
+            widget.showClearButton && _hasText
                 ? IconButton(
-                    icon: const Icon(
-                      Icons.clear,
-                      color: AppTheme.slate500,
-                      size: 20,
-                    ),
-                    onPressed: _clearSearch,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  )
+                  icon: const Icon(
+                    Icons.clear,
+                    color: AppTheme.slate500,
+                    size: 20,
+                  ),
+                  onPressed: _clearSearch,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                )
                 : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
         ),
-      );
+      ),
+    ),
+  );
 }

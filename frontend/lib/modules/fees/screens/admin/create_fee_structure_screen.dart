@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
+import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
-import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../widgets/custom_widgets/academic_year_dropdown.dart';
 import '../../providers/fees_provider.dart';
 
@@ -47,7 +48,6 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
     super.initState();
   }
 
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -59,7 +59,7 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate:
           _selectedDueDate ?? DateTime.now().add(const Duration(days: 30)),
@@ -126,213 +126,214 @@ class _CreateFeeStructureScreenState extends State<CreateFeeStructureScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Create Fee Structure'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: AppStyles.headlineSmall.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(
+      title: const Text('Create Fee Structure'),
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: AppStyles.headlineSmall.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.bold,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle('Basic Information'),
-              const SizedBox(height: 16),
-              AcademicYearDropdown(
-                value: _selectedAcademicYearId,
-                onChanged: (value) => setState(() => _selectedAcademicYearId = value),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: _inputDecoration(
-                  'Fee Name',
-                  'e.g. Tuition Fee 2024',
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Basic Information'),
+            const SizedBox(height: 16),
+            AcademicYearDropdown(
+              value: _selectedAcademicYearId,
+              onChanged:
+                  (value) => setState(() => _selectedAcademicYearId = value),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nameController,
+              decoration: _inputDecoration('Fee Name', 'e.g. Tuition Fee 2024'),
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Please enter fee name'
+                          : null,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedFeeType,
+              decoration: _inputDecoration('Fee Type', ''),
+              items:
+                  _feeTypes
+                      .map(
+                        (type) =>
+                            DropdownMenuItem(value: type, child: Text(type)),
+                      )
+                      .toList(),
+              onChanged: (value) => setState(() => _selectedFeeType = value!),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              decoration: _inputDecoration('Amount (₹)', '0.00'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter amount';
+                }
+                if (double.tryParse(value) == null) return 'Invalid amount';
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+
+            _buildSectionTitle('Schedule'),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _selectDate(context),
+              child: InputDecorator(
+                decoration: _inputDecoration('Due Date', ''),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _selectedDueDate != null
+                          ? DateFormat('MMM dd, yyyy').format(_selectedDueDate!)
+                          : 'Select Date',
+                      style:
+                          _selectedDueDate != null
+                              ? AppStyles.bodyMedium
+                              : AppStyles.bodyMedium.copyWith(
+                                color: Colors.grey,
+                              ),
+                    ),
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                  ],
                 ),
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? 'Please enter fee name'
-                            : null,
               ),
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Recurring Fee?'),
+              subtitle: const Text('Does this fee repeat periodically?'),
+              value: _isRecurring,
+              onChanged: (val) => setState(() => _isRecurring = val),
+              contentPadding: EdgeInsets.zero,
+            ),
+            if (_isRecurring) ...[
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedFeeType,
-                decoration: _inputDecoration('Fee Type', ''),
+                initialValue: _recurringFrequency,
+                decoration: _inputDecoration('Frequency', 'Select Frequency'),
                 items:
-                    _feeTypes.map((type) {
-                      return DropdownMenuItem(value: type, child: Text(type));
-                    }).toList(),
-                onChanged: (value) => setState(() => _selectedFeeType = value!),
+                    _frequencies
+                        .map(
+                          (freq) =>
+                              DropdownMenuItem(value: freq, child: Text(freq)),
+                        )
+                        .toList(),
+                onChanged:
+                    (value) => setState(() => _recurringFrequency = value),
+                validator:
+                    (value) =>
+                        _isRecurring && value == null
+                            ? 'Please select frequency'
+                            : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: _inputDecoration('Amount (₹)', '0.00'),
-                validator: (value) {
-                  if (value == null || value.isEmpty)
-                    return 'Please enter amount';
-                  if (double.tryParse(value) == null) return 'Invalid amount';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
+            ],
+            const SizedBox(height: 24),
 
-              _buildSectionTitle('Schedule'),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: () => _selectDate(context),
-                child: InputDecorator(
-                  decoration: _inputDecoration('Due Date', ''),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _selectedDueDate != null
-                            ? DateFormat(
-                              'MMM dd, yyyy',
-                            ).format(_selectedDueDate!)
-                            : 'Select Date',
-                        style:
-                            _selectedDueDate != null
-                                ? AppStyles.bodyMedium
-                                : AppStyles.bodyMedium.copyWith(
-                                  color: Colors.grey,
-                                ),
-                      ),
-                      const Icon(
-                        Icons.calendar_today,
-                        size: 20,
-                        color: Colors.grey,
-                      ),
-                    ],
+            _buildSectionTitle('Late Fees (Optional)'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _lateFeeAmountController,
+                    keyboardType: TextInputType.number,
+                    decoration: _inputDecoration('Late Fee Amount', '0.00'),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Recurring Fee?'),
-                subtitle: const Text('Does this fee repeat periodically?'),
-                value: _isRecurring,
-                onChanged: (val) => setState(() => _isRecurring = val),
-                contentPadding: EdgeInsets.zero,
-              ),
-              if (_isRecurring) ...[
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _recurringFrequency,
-                  decoration: _inputDecoration('Frequency', 'Select Frequency'),
-                  items:
-                      _frequencies.map((freq) {
-                        return DropdownMenuItem(value: freq, child: Text(freq));
-                      }).toList(),
-                  onChanged:
-                      (value) => setState(() => _recurringFrequency = value),
-                  validator:
-                      (value) =>
-                          _isRecurring && value == null
-                              ? 'Please select frequency'
-                              : null,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
+                    controller: _lateFeeDaysController,
+                    keyboardType: TextInputType.number,
+                    decoration: _inputDecoration(
+                      'Grace Days',
+                      'Days after due date',
+                    ),
+                  ),
                 ),
               ],
-              const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 24),
 
-              _buildSectionTitle('Late Fees (Optional)'),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lateFeeAmountController,
-                      keyboardType: TextInputType.number,
-                      decoration: _inputDecoration('Late Fee Amount', '0.00'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lateFeeDaysController,
-                      keyboardType: TextInputType.number,
-                      decoration: _inputDecoration(
-                        'Grace Days',
-                        'Days after due date',
-                      ),
-                    ),
-                  ),
-                ],
+            _buildSectionTitle('Description (Optional)'),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descriptionController,
+              maxLines: 3,
+              decoration: _inputDecoration(
+                'Description',
+                'Add details about this fee...',
               ),
-              const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 32),
 
-              _buildSectionTitle('Description (Optional)'),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: _inputDecoration(
-                  'Description',
-                  'Add details about this fee...',
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitForm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 32),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child:
-                      _isSubmitting
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                            'Create Fee Structure',
-                            style: AppStyles.titleMedium.copyWith(
-                              color: Colors.white,
-                            ),
+                child:
+                    _isSubmitting
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                          'Create Fee Structure',
+                          style: AppStyles.titleMedium.copyWith(
+                            color: Colors.white,
                           ),
-                ),
+                        ),
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppStyles.titleMedium.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
-    );
-  }
+  Widget _buildSectionTitle(String title) => Text(
+    title,
+    style: AppStyles.titleMedium.copyWith(
+      fontWeight: FontWeight.bold,
+      color: AppColors.textPrimary,
+    ),
+  );
 
-  InputDecoration _inputDecoration(String label, String hint) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    );
-  }
+  InputDecoration _inputDecoration(String label, String hint) =>
+      InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+      );
 }

@@ -97,9 +97,10 @@ class CustomTimePickerField extends StatelessWidget {
                       ? selectedTime!.format(context)
                       : hintText ?? 'Select time',
                   style: TextStyle(
-                    color: selectedTime != null
-                        ? textColor
-                        : const Color(0xFFA7AEC1),
+                    color:
+                        selectedTime != null
+                            ? textColor
+                            : const Color(0xFFA7AEC1),
                     fontSize: 14,
                   ),
                 ),
@@ -120,35 +121,44 @@ class CustomTimePickerField extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: selectedTime ?? TimeOfDay.now(),
-      builder: (context, child) => Theme(
-          data: Theme.of(context).copyWith(
-            timePickerTheme: TimePickerThemeData(
-              dayPeriodColor: WidgetStateColor.resolveWith((states) =>
-                  states.contains(WidgetState.selected)
-                      ? const Color(0xFF155dfc)
-                      : Colors.transparent),
-              dayPeriodTextColor: WidgetStateColor.resolveWith((states) =>
-                  states.contains(WidgetState.selected)
-                      ? Colors.white
-                      : const Color(0xFF155dfc)),
-              dialHandColor: const Color(0xFF155dfc),
-              hourMinuteColor: WidgetStateColor.resolveWith((states) =>
-                  states.contains(WidgetState.selected)
-                      ? const Color(0xFF155dfc)
-                      : const Color(0xFFF3F3F3)),
-              hourMinuteTextColor: WidgetStateColor.resolveWith((states) =>
-                  states.contains(WidgetState.selected)
-                      ? Colors.white
-                      : Colors.black),
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF155dfc),
+      builder:
+          (context, child) => Theme(
+            data: Theme.of(context).copyWith(
+              timePickerTheme: TimePickerThemeData(
+                dayPeriodColor: WidgetStateColor.resolveWith(
+                  (states) =>
+                      states.contains(WidgetState.selected)
+                          ? const Color(0xFF155dfc)
+                          : Colors.transparent,
+                ),
+                dayPeriodTextColor: WidgetStateColor.resolveWith(
+                  (states) =>
+                      states.contains(WidgetState.selected)
+                          ? Colors.white
+                          : const Color(0xFF155dfc),
+                ),
+                dialHandColor: const Color(0xFF155dfc),
+                hourMinuteColor: WidgetStateColor.resolveWith(
+                  (states) =>
+                      states.contains(WidgetState.selected)
+                          ? const Color(0xFF155dfc)
+                          : const Color(0xFFF3F3F3),
+                ),
+                hourMinuteTextColor: WidgetStateColor.resolveWith(
+                  (states) =>
+                      states.contains(WidgetState.selected)
+                          ? Colors.white
+                          : Colors.black,
+                ),
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF155dfc),
+                ),
               ),
             ),
+            child: child!,
           ),
-          child: child!,
-        ),
     );
 
     if (picked != null) {

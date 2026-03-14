@@ -82,7 +82,8 @@ class AuthService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         // Extract the actual error message from backend response
-        final errorMessage = e.response?.data['message'] ?? 'Invalid credentials';
+        final errorMessage =
+            e.response?.data['message'] ?? 'Invalid credentials';
         throw Exception(errorMessage);
       } else if (e.response?.statusCode == 403) {
         throw Exception('Account is not active');

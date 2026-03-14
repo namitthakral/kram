@@ -22,12 +22,10 @@ class GenerateReportCardsScreen extends StatefulWidget {
 
 class _GenerateReportCardsScreenState extends State<GenerateReportCardsScreen> {
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ReportCardsProvider(),
-      child: const _GenerateReportCardsContent(),
-    );
-  }
+  Widget build(BuildContext context) => ChangeNotifierProvider(
+    create: (_) => ReportCardsProvider(),
+    child: const _GenerateReportCardsContent(),
+  );
 }
 
 class _GenerateReportCardsContent extends StatefulWidget {
@@ -419,63 +417,61 @@ class _SelectorTile<T> extends StatelessWidget {
   final bool isDisabled;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: isDisabled ? null : onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: (isDisabled) ? Colors.grey.shade50 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.tune,
-              size: 18,
-              color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-                  ),
-                  Text(
-                    value != null ? itemLabel(value as T) : 'Select',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          value == null || isDisabled
-                              ? Colors.grey
-                              : Colors.black87,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
-          ],
-        ),
+  Widget build(BuildContext context) => InkWell(
+    onTap: isDisabled ? null : onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDisabled ? Colors.grey.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
       ),
-    );
-  }
+      child: Row(
+        children: [
+          Icon(
+            Icons.tune,
+            size: 18,
+            color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                ),
+                Text(
+                  value != null ? itemLabel(value as T) : 'Select',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        value == null || isDisabled
+                            ? Colors.grey
+                            : Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
+        ],
+      ),
+    ),
+  );
 }
 
 class _StudentReportCardRow extends StatelessWidget {
   const _StudentReportCardRow({
     required this.student,
-    this.reportCard,
     required this.isGenerating,
     required this.onGenerate,
+    this.reportCard,
     this.onView,
   });
 
@@ -486,98 +482,90 @@ class _StudentReportCardRow extends StatelessWidget {
   final VoidCallback? onView;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: CustomAppColors.primaryBlue.withValues(alpha: 0.1),
-            radius: 22,
-            child: Text(
-              student.initials.isNotEmpty
-                  ? student.initials
-                  : student.name.isNotEmpty
-                  ? student.name.substring(0, 1).toUpperCase()
-                  : '?',
-              style: const TextStyle(
-                color: CustomAppColors.primaryBlue,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey.shade200),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.04),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: CustomAppColors.primaryBlue.withValues(alpha: 0.1),
+          radius: 22,
+          child: Text(
+            student.initials.isNotEmpty
+                ? student.initials
+                : student.name.isNotEmpty
+                ? student.name.substring(0, 1).toUpperCase()
+                : '?',
+            style: const TextStyle(
+              color: CustomAppColors.primaryBlue,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  student.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                if (reportCard != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      'SGPA: ${reportCard!.performanceSummary.sgpa} • ${reportCard!.performanceSummary.overallGrade}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (onView != null)
-            OutlinedButton.icon(
-              onPressed: onView,
-              icon: const Icon(Icons.visibility, size: 18),
-              label: const Text('View'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                student.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Colors.black87,
                 ),
               ),
-            ),
-          if (onView != null) const SizedBox(width: 8),
+              if (reportCard != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'SGPA: ${reportCard!.performanceSummary.sgpa} • ${reportCard!.performanceSummary.overallGrade}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        if (onView != null)
           OutlinedButton.icon(
-            onPressed: isGenerating ? null : onGenerate,
-            icon:
-                isGenerating
-                    ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                    : const Icon(Icons.add_chart, size: 18),
-            label: Text(isGenerating ? 'Generating...' : 'Generate'),
+            onPressed: onView,
+            icon: const Icon(Icons.visibility, size: 18),
+            label: const Text('View'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           ),
-        ],
-      ),
-    );
-  }
+        if (onView != null) const SizedBox(width: 8),
+        OutlinedButton.icon(
+          onPressed: isGenerating ? null : onGenerate,
+          icon:
+              isGenerating
+                  ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : const Icon(Icons.add_chart, size: 18),
+          label: Text(isGenerating ? 'Generating...' : 'Generate'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+        ),
+      ],
+    ),
+  );
 }

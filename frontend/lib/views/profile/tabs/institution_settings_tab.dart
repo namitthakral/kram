@@ -15,7 +15,8 @@ class InstitutionSettingsTab extends StatelessWidget {
         _buildInfoCard(
           context,
           title: 'Academic Configuration',
-          subtitle: 'Configure grading systems, academic policies, and evaluation criteria',
+          subtitle:
+              'Configure grading systems, academic policies, and evaluation criteria',
           icon: Icons.school_outlined,
           iconColor: AppTheme.blue500,
           children: [
@@ -23,7 +24,8 @@ class InstitutionSettingsTab extends StatelessWidget {
               context,
               icon: Icons.grade_outlined,
               title: 'Grading Configuration',
-              subtitle: 'Configure grading formula, grade boundaries, and risk thresholds',
+              subtitle:
+                  'Configure grading formula, grade boundaries, and risk thresholds',
               onTap: () {
                 Navigator.push(
                   context,
@@ -227,10 +229,7 @@ class InstitutionSettingsTab extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppTheme.slate500,
-                ),
+                style: const TextStyle(fontSize: 13, color: AppTheme.slate500),
               ),
             ],
           ),

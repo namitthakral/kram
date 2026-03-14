@@ -62,7 +62,6 @@ class AdminAttendanceTrendsChart extends StatelessWidget {
                   if (index >= 0 && index < data.length) {
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
-                      space: 8,
                       child: Text(data[index].month, style: style),
                     );
                   }
@@ -475,7 +474,6 @@ class AdminFinancialOverviewChart extends StatelessWidget {
                   if (index >= 0 && index < data.length) {
                     return SideTitleWidget(
                       axisSide: meta.axisSide,
-                      space: 8,
                       child: Text(data[index].month, style: style),
                     );
                   }

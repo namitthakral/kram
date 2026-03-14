@@ -63,7 +63,7 @@ class _StudentQuestionPaperScreenState
         _questionPaper = QuestionPaperTemplate.fromJson(data);
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -123,7 +123,7 @@ class _StudentQuestionPaperScreenState
                       type: SnackbarType.success,
                     );
                   }
-                } catch (e) {
+                } on Exception catch (e) {
                   if (context.mounted) {
                     showCustomSnackbar(
                       message: 'Failed to generate PDF: $e',
@@ -224,9 +224,7 @@ class _StudentQuestionPaperScreenState
                       horizontal: 16,
                       vertical: 6,
                     ),
-                    decoration: BoxDecoration(
-                      border: Border.all(),
-                    ),
+                    decoration: BoxDecoration(border: Border.all()),
                     child: Text(
                       _questionPaper!.examName.toUpperCase(),
                       style: const TextStyle(
@@ -294,51 +292,51 @@ class _StudentQuestionPaperScreenState
   }
 
   Widget _buildDetailRow(String label, String value) => Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('$label ', style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(value),
-        ],
-      ),
-    );
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$label ', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(value),
+      ],
+    ),
+  );
 
   Widget _buildSection(QuestionSection section) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Center(
+        child: Text(
+          section.sectionName,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+      if (section.description != null) ...[
+        const SizedBox(height: 4),
         Center(
           child: Text(
-            section.sectionName,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              decoration: TextDecoration.underline,
+            section.description!,
+            style: TextStyle(
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+              color: Colors.grey[700],
             ),
           ),
         ),
-        if (section.description != null) ...[
-          const SizedBox(height: 4),
-          Center(
-            child: Text(
-              section.description!,
-              style: TextStyle(
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
-        ...section.questions.asMap().entries.map((entry) {
-          final index = entry.key;
-          final question = entry.value;
-          return _buildQuestion(question, index + 1, section.marksPerQuestion);
-        }),
-        const SizedBox(height: 24),
       ],
-    );
+      const SizedBox(height: 16),
+      ...section.questions.asMap().entries.map((entry) {
+        final index = entry.key;
+        final question = entry.value;
+        return _buildQuestion(question, index + 1, section.marksPerQuestion);
+      }),
+      const SizedBox(height: 24),
+    ],
+  );
 
   Widget _buildQuestion(Question question, int number, int defaultMarks) {
     final marks = question.customMarks ?? defaultMarks;

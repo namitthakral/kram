@@ -31,18 +31,18 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
       final loginProvider = context.read<LoginProvider>();
       final studentProvider = context.read<StudentProvider>();
 
-        if (loginProvider.currentUser?.uuid != null) {
-          // Default to current month
-          final now = DateTime.now();
-          final start = DateTime(now.year, now.month);
-          final end = DateTime(now.year, now.month + 1, 0);
-          await provider.fetchAttendance(
-            loginProvider.currentUser!.uuid!,
-            start: start,
-            end: end,
-          );
-          await studentProvider.loadStudentData(loginProvider.currentUser!.uuid!);
-        }
+      if (loginProvider.currentUser?.uuid != null) {
+        // Default to current month
+        final now = DateTime.now();
+        final start = DateTime(now.year, now.month);
+        final end = DateTime(now.year, now.month + 1, 0);
+        await provider.fetchAttendance(
+          loginProvider.currentUser!.uuid!,
+          start: start,
+          end: end,
+        );
+        await studentProvider.loadStudentData(loginProvider.currentUser!.uuid!);
+      }
     });
   }
 
@@ -95,188 +95,193 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           var tempEnd = selectedEnd;
 
           return StatefulBuilder(
-            builder: (context, setState) => Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Container(
-                  width: 500,
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Select Date Range',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.slate800,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Start Date
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: tempStart,
-                            firstDate: DateTime(2000),
-                            lastDate: tempEnd,
-                            builder: (context, child) => Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: const ColorScheme.light(
-                                    primary: AppTheme.blue500,
-                                    onSurface: AppTheme.slate800,
-                                  ),
-                                ),
-                                child: child!,
-                              ),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              tempStart = picked;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppTheme.slate200),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today,
-                                color: AppTheme.blue500,
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Start Date',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppTheme.slate600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    DateFormat('MMM d, yyyy').format(tempStart),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.slate800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+            builder:
+                (context, setState) => Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Container(
+                    width: 500,
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Select Date Range',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.slate800,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 24),
 
-                      const SizedBox(height: 16),
-
-                      // End Date
-                      InkWell(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: tempEnd,
-                            firstDate: tempStart,
-                            lastDate: now,
-                            builder: (context, child) => Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: const ColorScheme.light(
-                                    primary: AppTheme.blue500,
-                                    onSurface: AppTheme.slate800,
-                                  ),
-                                ),
-                                child: child!,
-                              ),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              tempEnd = picked;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppTheme.slate200),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today,
-                                color: AppTheme.blue500,
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'End Date',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppTheme.slate600,
+                        // Start Date
+                        InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: tempStart,
+                              firstDate: DateTime(2000),
+                              lastDate: tempEnd,
+                              builder:
+                                  (context, child) => Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: AppTheme.blue500,
+                                        onSurface: AppTheme.slate800,
+                                      ),
                                     ),
+                                    child: child!,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    DateFormat('MMM d, yyyy').format(tempEnd),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppTheme.slate800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Action Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(
-                                context,
-                              ).pop({'start': tempStart, 'end': tempEnd});
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.blue500,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                tempStart = picked;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppTheme.slate200),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text('Apply'),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: AppTheme.blue500,
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Start Date',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.slate600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat(
+                                        'MMM d, yyyy',
+                                      ).format(tempStart),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.slate800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // End Date
+                        InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: tempEnd,
+                              firstDate: tempStart,
+                              lastDate: now,
+                              builder:
+                                  (context, child) => Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: AppTheme.blue500,
+                                        onSurface: AppTheme.slate800,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  ),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                tempEnd = picked;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppTheme.slate200),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: AppTheme.blue500,
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'End Date',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.slate600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat('MMM d, yyyy').format(tempEnd),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.slate800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Action Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(
+                                  context,
+                                ).pop({'start': tempStart, 'end': tempEnd});
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.blue500,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: const Text('Apply'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
           );
         },
       );
@@ -292,7 +297,7 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
           );
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error loading attendance data: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -379,41 +384,33 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildSummaryCards(AttendanceStats stats) => Padding(
-      padding: const EdgeInsets.all(20),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 600;
+    padding: const EdgeInsets.all(20),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
 
-          if (isMobile) {
-            return Column(
-              children: [
-                SizedBox(
-                  height: 200,
-                  child: _buildPieChart(stats),
-                ),
-                const SizedBox(height: 24),
-                _buildStatsColumn(stats),
-              ],
-            );
-          }
-
-          return Row(
+        if (isMobile) {
+          return Column(
             children: [
-              Expanded(
-                child: SizedBox(
-                  height: 220,
-                  child: _buildPieChart(stats),
-                ),
-              ),
-              const SizedBox(width: 40),
-              Expanded(
-                child: _buildStatsColumn(stats),
-              ),
+              SizedBox(height: 200, child: _buildPieChart(stats)),
+              const SizedBox(height: 24),
+              _buildStatsColumn(stats),
             ],
           );
-        },
-      ),
-    );
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: SizedBox(height: 220, child: _buildPieChart(stats)),
+            ),
+            const SizedBox(width: 40),
+            Expanded(child: _buildStatsColumn(stats)),
+          ],
+        );
+      },
+    ),
+  );
 
   Widget _buildPieChart(AttendanceStats stats) {
     if (stats.totalClasses == 0) {
@@ -438,32 +435,33 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
         ),
         sectionsSpace: 4,
         centerSpaceRadius: 50,
-        sections: [
-          _buildPieSection(
-            index: 0,
-            value: stats.present.toDouble(),
-            total: stats.totalClasses.toDouble(),
-            color: AppTheme.success,
-          ),
-          _buildPieSection(
-            index: 1,
-            value: stats.absent.toDouble(),
-            total: stats.totalClasses.toDouble(),
-            color: AppTheme.danger,
-          ),
-          _buildPieSection(
-            index: 2,
-            value: stats.late.toDouble(),
-            total: stats.totalClasses.toDouble(),
-            color: AppTheme.warning,
-          ),
-          _buildPieSection(
-            index: 3,
-            value: stats.excused.toDouble(),
-            total: stats.totalClasses.toDouble(),
-            color: AppTheme.info,
-          ),
-        ].whereType<PieChartSectionData>().toList(),
+        sections:
+            [
+              _buildPieSection(
+                index: 0,
+                value: stats.present.toDouble(),
+                total: stats.totalClasses.toDouble(),
+                color: AppTheme.success,
+              ),
+              _buildPieSection(
+                index: 1,
+                value: stats.absent.toDouble(),
+                total: stats.totalClasses.toDouble(),
+                color: AppTheme.danger,
+              ),
+              _buildPieSection(
+                index: 2,
+                value: stats.late.toDouble(),
+                total: stats.totalClasses.toDouble(),
+                color: AppTheme.warning,
+              ),
+              _buildPieSection(
+                index: 3,
+                value: stats.excused.toDouble(),
+                total: stats.totalClasses.toDouble(),
+                color: AppTheme.info,
+              ),
+            ].whereType<PieChartSectionData>().toList(),
       ),
     );
   }
@@ -496,100 +494,102 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
   }
 
   Widget _buildStatsColumn(AttendanceStats stats) => Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStatItem(
-          label: 'Overall Attendance',
-          count: stats.attendancePercentage,
-          suffix: '%',
-          color: AppTheme.blue500,
-          icon: Icons.percent,
-        ),
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildStatItem(
+        label: 'Overall Attendance',
+        count: stats.attendancePercentage,
+        suffix: '%',
+        color: AppTheme.blue500,
+        icon: Icons.percent,
+      ),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Expanded(
+            child: _buildStatItem(
+              label: 'Present',
+              count: stats.present,
+              color: AppTheme.success,
+              icon: Icons.check_circle_outline,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildStatItem(
+              label: 'Absent',
+              count: stats.absent,
+              color: AppTheme.danger,
+              icon: Icons.highlight_off,
+            ),
+          ),
+        ],
+      ),
+      if (stats.late > 0 || stats.excused > 0) ...[
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(
-              child: _buildStatItem(
-                label: 'Present',
-                count: stats.present,
-                color: AppTheme.success,
-                icon: Icons.check_circle_outline,
+            if (stats.late > 0)
+              Expanded(
+                child: _buildStatItem(
+                  label: 'Late',
+                  count: stats.late,
+                  color: AppTheme.warning,
+                  icon: Icons.access_time,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatItem(
-                label: 'Absent',
-                count: stats.absent,
-                color: AppTheme.danger,
-                icon: Icons.highlight_off,
+            if (stats.late > 0 && stats.excused > 0) const SizedBox(width: 16),
+            if (stats.excused > 0)
+              Expanded(
+                child: _buildStatItem(
+                  label: 'Excused',
+                  count: stats.excused,
+                  color: AppTheme.info,
+                  icon: Icons.verified_user_outlined,
+                ),
               ),
-            ),
           ],
         ),
-        if (stats.late > 0 || stats.excused > 0) ...[
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              if (stats.late > 0)
-                Expanded(
-                  child: _buildStatItem(
-                    label: 'Late',
-                    count: stats.late,
-                    color: AppTheme.warning,
-                    icon: Icons.access_time,
-                  ),
-                ),
-              if (stats.late > 0 && stats.excused > 0) const SizedBox(width: 16),
-              if (stats.excused > 0)
-                Expanded(
-                  child: _buildStatItem(
-                    label: 'Excused',
-                    count: stats.excused,
-                    color: AppTheme.info,
-                    icon: Icons.verified_user_outlined,
-                  ),
-                ),
-            ],
-          ),
-        ],
       ],
-    );
+    ],
+  );
 
   Widget _buildStatItem({
     required String label,
     required num count,
-    required Color color, required IconData icon, String suffix = '',
+    required Color color,
+    required IconData icon,
+    String suffix = '',
   }) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
             ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        _AnimatedCount(
-          count: count,
-          suffix: suffix,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.slate800,
           ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      _AnimatedCount(
+        count: count,
+        suffix: suffix,
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.slate800,
         ),
-      ],
-    );
+      ),
+    ],
+  );
 
   // Helper _buildInfoCard is no longer needed
 
@@ -657,10 +657,12 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
                         const DropdownMenuItem<String>(
                           child: Text('All Subjects'),
                         ),
-                        ...provider.availableSubjects.map((subject) => DropdownMenuItem<String>(
+                        ...provider.availableSubjects.map(
+                          (subject) => DropdownMenuItem<String>(
                             value: subject,
                             child: Text(subject),
-                          )),
+                          ),
+                        ),
                       ],
                       onChanged: (value) {
                         provider.setSubjectFilter(value);
@@ -864,7 +866,6 @@ class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
 }
 
 class _AnimatedCount extends StatefulWidget {
-
   const _AnimatedCount({
     required this.count,
     required this.style,
@@ -891,13 +892,9 @@ class _AnimatedCountState extends State<_AnimatedCount>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    _animation = Tween<double>(
-      begin: 0,
-      end: widget.count.toDouble(),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.fastOutSlowIn,
-    ));
+    _animation = Tween<double>(begin: 0, end: widget.count.toDouble()).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+    );
     _controller.forward();
   }
 
@@ -908,10 +905,9 @@ class _AnimatedCountState extends State<_AnimatedCount>
       _animation = Tween<double>(
         begin: _animation.value,
         end: widget.count.toDouble(),
-      ).animate(CurvedAnimation(
-        parent: _controller,
-        curve: Curves.fastOutSlowIn,
-      ));
+      ).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn),
+      );
       _controller.reset();
       _controller.forward();
     }
@@ -925,15 +921,13 @@ class _AnimatedCountState extends State<_AnimatedCount>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        final value = widget.count is int
-            ? _animation.value.toInt().toString()
-            : _animation.value.toStringAsFixed(1);
-        return Text(
-          '$value${widget.suffix}',
-          style: widget.style,
-        );
-      },
-    );
+    animation: _animation,
+    builder: (context, child) {
+      final value =
+          widget.count is int
+              ? _animation.value.toInt().toString()
+              : _animation.value.toStringAsFixed(1);
+      return Text('$value${widget.suffix}', style: widget.style);
+    },
+  );
 }

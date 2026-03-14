@@ -32,7 +32,7 @@ class _DraggableFloatingOverlayState extends State<DraggableFloatingOverlay> {
       }
 
       final currentSize = Size(constraints.maxWidth, constraints.maxHeight);
-      
+
       // Initialize position to bottom-right if not set
       if (_position == null) {
         _position = Offset(
@@ -45,17 +45,17 @@ class _DraggableFloatingOverlayState extends State<DraggableFloatingOverlay> {
         final oldMaxH = _lastConstraints!.height - 56.0;
         final newMaxW = constraints.maxWidth - 56.0;
         final newMaxH = constraints.maxHeight - 56.0;
-        
+
         // Keep the same relative position if possible
         final relativeX = oldMaxW > 0 ? _position!.dx / oldMaxW : 1.0;
         final relativeY = oldMaxH > 0 ? _position!.dy / oldMaxH : 1.0;
-        
+
         _position = Offset(
           (relativeX * newMaxW).clamp(0.0, newMaxW),
           (relativeY * newMaxH).clamp(0.0, newMaxH),
         );
       }
-      
+
       _lastConstraints = currentSize;
 
       return Stack(

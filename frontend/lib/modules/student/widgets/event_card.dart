@@ -4,10 +4,7 @@ import '../models/student_dashboard_models.dart';
 
 /// Event Card Widget
 class EventCard extends StatelessWidget {
-  const EventCard({
-    required this.event,
-    super.key,
-  });
+  const EventCard({required this.event, super.key});
 
   final UpcomingEvent event;
 

@@ -20,7 +20,7 @@ class RoleDefinition {
 /// 1 = super_admin, 2 = admin, 3 = student, 4 = parent, 5 = teacher, 6 = librarian, 7 = staff
 class RoleConstants {
   // Role Definitions (in order of ID: 1-7)
-  
+
   // ID 1: Super Admin
   static const RoleDefinition superAdmin = RoleDefinition(
     id: 1,
@@ -116,11 +116,7 @@ class RoleConstants {
     id: 7,
     name: 'staff',
     description: 'Support Staff',
-    permissions: [
-      'canViewOwnData',
-      'canMarkAttendance',
-      'canViewNotices',
-    ],
+    permissions: ['canViewOwnData', 'canMarkAttendance', 'canViewNotices'],
   );
 
   // All roles list for easy iteration (in order of ID: 1-7)

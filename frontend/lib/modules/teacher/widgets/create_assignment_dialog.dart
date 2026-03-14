@@ -31,7 +31,6 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
   Subject? _selectedSubject;
   Course? _selectedCourse;
 
-
   DateTime? _dueDate;
   bool _isLoading = false;
 
@@ -290,8 +289,6 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
       ],
     );
   }
-
-
 
   Widget _buildSubjectDropdown() {
     final provider = context.watch<AssignmentProvider>();
@@ -706,8 +703,6 @@ class _CreateAssignmentDialogState extends State<CreateAssignmentDialog> {
       );
       return;
     }
-
-
 
     if (_selectedSubject == null) {
       showCustomSnackbar(

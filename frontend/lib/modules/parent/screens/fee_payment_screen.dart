@@ -131,9 +131,7 @@ class FeePaymentScreen extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: CustomAppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           visualDensity: VisualDensity.compact,
                         ),
                         child: const Text('Pay Now'),

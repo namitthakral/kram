@@ -166,18 +166,18 @@ class AdminDashboardProvider extends ChangeNotifier {
 
     try {
       await Future.wait([
-        _adminService
-            .getAttendanceTrends()
-            .then((value) => _attendanceTrends = value),
-        _adminService
-            .getGradeDistribution()
-            .then((value) => _gradeDistribution = value),
-        _adminService
-            .getClassPerformance()
-            .then((value) => _classPerformance = value),
-        _adminService
-            .getFinancialOverview()
-            .then((value) => _financialOverview = value),
+        _adminService.getAttendanceTrends().then(
+          (value) => _attendanceTrends = value,
+        ),
+        _adminService.getGradeDistribution().then(
+          (value) => _gradeDistribution = value,
+        ),
+        _adminService.getClassPerformance().then(
+          (value) => _classPerformance = value,
+        ),
+        _adminService.getFinancialOverview().then(
+          (value) => _financialOverview = value,
+        ),
       ]);
       _chartsError = null;
     } on Exception catch (e) {
@@ -194,10 +194,7 @@ class AdminDashboardProvider extends ChangeNotifier {
   }
 
   Future<void> refreshAll() async {
-    await Future.wait([
-      fetchDashboardStats(),
-      fetchAllChartData(),
-    ]);
+    await Future.wait([fetchDashboardStats(), fetchAllChartData()]);
   }
 
   void clearData() {

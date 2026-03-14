@@ -4,10 +4,7 @@ import '../models/student_dashboard_models.dart';
 
 /// Subject Performance Card Widget
 class SubjectPerformanceCard extends StatelessWidget {
-  const SubjectPerformanceCard({
-    required this.subject,
-    super.key,
-  });
+  const SubjectPerformanceCard({required this.subject, super.key});
 
   final SubjectPerformance subject;
 

@@ -87,10 +87,7 @@ class PerformanceTrendPoint {
 
 /// Attendance Trend Data Point
 class AttendanceTrendPoint {
-  const AttendanceTrendPoint({
-    required this.month,
-    required this.percentage,
-  });
+  const AttendanceTrendPoint({required this.month, required this.percentage});
 
   final String month;
   final double percentage;
@@ -119,4 +116,3 @@ enum ParentDashboardTab {
   attendanceHistory,
   subjectBreakdown,
 }
-

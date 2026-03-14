@@ -152,7 +152,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             builder: (context, snapshot) {
               final isSchool = snapshot.data?['type'] == 'SCHOOL';
               return FeatureActionCard(
-                title: context.translate(isSchool ? 'manage_terms' : 'manage_semesters'),
+                title: context.translate(
+                  isSchool ? 'manage_terms' : 'manage_semesters',
+                ),
                 icon: Icons.calendar_month_rounded,
                 color: const Color(0xFFa855f7),
                 onTap: () => context.router.router.push('/academic-management'),

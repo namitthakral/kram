@@ -139,7 +139,10 @@ class UserManagementProvider extends ChangeNotifier {
   }
 
   /// Update user
-  Future<bool> updateUser(String userUuid, Map<String, dynamic> updateData) async {
+  Future<bool> updateUser(
+    String userUuid,
+    Map<String, dynamic> updateData,
+  ) async {
     try {
       setLoading(value: true);
       setError(null);

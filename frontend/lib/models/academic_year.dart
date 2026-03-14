@@ -10,16 +10,15 @@ class AcademicYear {
   });
 
   factory AcademicYear.fromJson(Map<String, dynamic> json) => AcademicYear(
-        id: json['id'],
-        institutionId: json['institutionId'],
-        yearName: json['yearName'],
-        startDate: DateTime.parse(json['startDate']),
-        endDate: DateTime.parse(json['endDate']),
-        status: json['status'],
-        createdAt: json['createdAt'] != null
-            ? DateTime.parse(json['createdAt'])
-            : null,
-      );
+    id: json['id'],
+    institutionId: json['institutionId'],
+    yearName: json['yearName'],
+    startDate: DateTime.parse(json['startDate']),
+    endDate: DateTime.parse(json['endDate']),
+    status: json['status'],
+    createdAt:
+        json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+  );
 
   final int id;
   final int institutionId;
@@ -30,12 +29,12 @@ class AcademicYear {
   final DateTime? createdAt;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'institutionId': institutionId,
-        'yearName': yearName,
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate.toIso8601String(),
-        'status': status,
-        'createdAt': createdAt?.toIso8601String(),
-      };
+    'id': id,
+    'institutionId': institutionId,
+    'yearName': yearName,
+    'startDate': startDate.toIso8601String(),
+    'endDate': endDate.toIso8601String(),
+    'status': status,
+    'createdAt': createdAt?.toIso8601String(),
+  };
 }

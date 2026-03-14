@@ -1,4 +1,3 @@
-
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -8,7 +7,8 @@ import '../../models/communication_model.dart';
 
 class CommunicationsProvider extends ChangeNotifier {
   final CommunicationsService _communicationsService = CommunicationsService();
-  final LocalNotificationService _localNotificationService = LocalNotificationService();
+  final LocalNotificationService _localNotificationService =
+      LocalNotificationService();
 
   List<Communication> _unreadCommunications = [];
   List<Communication> _allCommunications = [];
@@ -67,7 +67,8 @@ class CommunicationsProvider extends ChangeNotifier {
         messages.sort((a, b) => b.id.compareTo(a.id));
         final latestMessage = messages.first;
 
-        if (_lastKnownMessageId != null && latestMessage.id > _lastKnownMessageId!) {
+        if (_lastKnownMessageId != null &&
+            latestMessage.id > _lastKnownMessageId!) {
           // New message detected
           _localNotificationService.showNotification(
             id: latestMessage.id,
@@ -80,7 +81,7 @@ class CommunicationsProvider extends ChangeNotifier {
         }
         _lastKnownMessageId = latestMessage.id;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error in polling unread communications: $e');
     }
   }
@@ -107,11 +108,11 @@ class CommunicationsProvider extends ChangeNotifier {
       );
 
       if (response['data'] != null) {
-         _allCommunications = response['data'] as List<Communication>;
+        _allCommunications = response['data'] as List<Communication>;
       } else {
-         _allCommunications = [];
+        _allCommunications = [];
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;

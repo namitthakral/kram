@@ -180,14 +180,16 @@ export class SubjectsService {
    */
   async create(createSubjectDto: CreateSubjectDto) {
     // Check if subject code already exists
-    const existingSubject = await this.prisma.subject.findUnique({
-      where: { subjectCode: createSubjectDto.subjectCode },
-    })
+    if (createSubjectDto.subjectCode) {
+      const existingSubject = await this.prisma.subject.findUnique({
+        where: { subjectCode: createSubjectDto.subjectCode },
+      })
 
-    if (existingSubject) {
-      throw new ConflictException(
-        `Subject with code ${createSubjectDto.subjectCode} already exists`
-      )
+      if (existingSubject) {
+        throw new ConflictException(
+          `Subject with code ${createSubjectDto.subjectCode} already exists`
+        )
+      }
     }
 
     // Verify course exists if provided

@@ -67,6 +67,7 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     return CustomMainScreenWithAppbar(
       title: context.translate('course_management'),
       appBarConfig: AppBarConfig.admin(
+        showBackButton: true,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -165,15 +166,19 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                 }
 
                 // Filter courses based on search query
-                final filteredCourses = provider.courses.where((course) {
-                  if (_searchQuery.isEmpty) return true;
-                  final name = (course['name'] ?? '').toString().toLowerCase();
-                  final code = (course['code'] ?? '').toString().toLowerCase();
-                  final degreeType = (course['degreeType'] ?? '').toString().toLowerCase();
-                  return name.contains(_searchQuery) ||
-                      code.contains(_searchQuery) ||
-                      degreeType.contains(_searchQuery);
-                }).toList();
+                final filteredCourses =
+                    provider.courses.where((course) {
+                      if (_searchQuery.isEmpty) return true;
+                      final name =
+                          (course['name'] ?? '').toString().toLowerCase();
+                      final code =
+                          (course['code'] ?? '').toString().toLowerCase();
+                      final degreeType =
+                          (course['degreeType'] ?? '').toString().toLowerCase();
+                      return name.contains(_searchQuery) ||
+                          code.contains(_searchQuery) ||
+                          degreeType.contains(_searchQuery);
+                    }).toList();
 
                 if (filteredCourses.isEmpty) {
                   return Center(
@@ -185,7 +190,8 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                   itemCount: filteredCourses.length,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemBuilder: (context, index) {
-                    final course = filteredCourses[index] as Map<String, dynamic>;
+                    final course =
+                        filteredCourses[index] as Map<String, dynamic>;
                     return _buildCourseCard(context, course, provider);
                   },
                 );
@@ -197,7 +203,11 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     );
   }
 
-  Widget _buildCourseCard(BuildContext context, Map<String, dynamic> course, CourseManagementProvider provider) {
+  Widget _buildCourseCard(
+    BuildContext context,
+    Map<String, dynamic> course,
+    CourseManagementProvider provider,
+  ) {
     final name = course['name'] ?? 'Unknown Course';
     final code = course['code'] ?? '';
     final degreeType = course['degreeType'] ?? '';
@@ -243,7 +253,7 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                               ),
                               child: Text(
                                 code,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.blue600,
@@ -266,14 +276,15 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                             ),
                             child: Text(
                               degreeType,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: AppTheme.success,
                               ),
                             ),
                           ),
-                          if (duration.isNotEmpty && durationUnit.isNotEmpty) ...[
+                          if (duration.isNotEmpty &&
+                              durationUnit.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             Text(
                               '$duration $durationUnit',
@@ -319,31 +330,36 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                         break;
                     }
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.edit, size: 20),
-                          const SizedBox(width: 8),
-                          Text(context.translate('edit')),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete, size: 20, color: Colors.red),
-                          const SizedBox(width: 8),
-                          Text(
-                            context.translate('delete'),
-                            style: const TextStyle(color: Colors.red),
+                  itemBuilder:
+                      (context) => [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit, size: 20),
+                              const SizedBox(width: 8),
+                              Text(context.translate('edit')),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete,
+                                size: 20,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                context.translate('delete'),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -352,7 +368,10 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -390,7 +409,10 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
     builder: (context) => const CreateCourseDialog(),
   );
 
-  void _showEditCourseDialog(BuildContext context, Map<String, dynamic> course) => showDialog(
+  void _showEditCourseDialog(
+    BuildContext context,
+    Map<String, dynamic> course,
+  ) => showDialog(
     context: context,
     builder: (context) => EditCourseDialog(course: course),
   );
@@ -402,44 +424,48 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.translate('delete_course')),
-        content: Text(
-          context.translate('delete_course_confirmation').replaceAll(
-            '{courseName}',
-            course['name'] ?? 'this course',
+      builder:
+          (context) => AlertDialog(
+            title: Text(context.translate('delete_course')),
+            content: Text(
+              context
+                  .translate('delete_course_confirmation')
+                  .replaceAll('{courseName}', course['name'] ?? 'this course'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(context.translate('cancel')),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  final success = await provider.deleteCourse(
+                    course['id'] as int,
+                  );
+                  if (success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          context.translate('course_deleted_successfully'),
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else if (mounted && provider.error != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(provider.error!),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: Text(context.translate('delete')),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.translate('cancel')),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              final success = await provider.deleteCourse(course['id'] as int);
-              if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.translate('course_deleted_successfully')),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else if (mounted && provider.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(provider.error!),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(context.translate('delete')),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -231,14 +231,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.all(16.0),
                   margin: const EdgeInsets.only(bottom: 16.0),
                   decoration: BoxDecoration(
-                    color: provider.errorMessage!.contains('Account Locked')
-                        ? CustomAppColors.amber50
-                        : CustomAppColors.red50,
+                    color:
+                        provider.errorMessage!.contains('Account Locked')
+                            ? CustomAppColors.amber50
+                            : CustomAppColors.red50,
                     borderRadius: BorderRadius.circular(12.0),
                     border: Border.all(
-                      color: provider.errorMessage!.contains('Account Locked')
-                          ? CustomAppColors.amber200
-                          : CustomAppColors.red200,
+                      color:
+                          provider.errorMessage!.contains('Account Locked')
+                              ? CustomAppColors.amber200
+                              : CustomAppColors.red200,
                       width: 1.5,
                     ),
                   ),
@@ -252,9 +254,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             provider.errorMessage!.contains('Account Locked')
                                 ? Icons.lock_outline
                                 : Icons.error_outline,
-                            color: provider.errorMessage!.contains('Account Locked')
-                                ? CustomAppColors.amber600
-                                : CustomAppColors.red500,
+                            color:
+                                provider.errorMessage!.contains(
+                                      'Account Locked',
+                                    )
+                                    ? CustomAppColors.amber600
+                                    : CustomAppColors.red500,
                             size: 24,
                           ),
                           const SizedBox(width: 12),
@@ -262,9 +267,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               provider.errorMessage!,
                               style: context.textTheme.bodySm.copyWith(
-                                color: provider.errorMessage!.contains('Account Locked')
-                                    ? CustomAppColors.amber800
-                                    : CustomAppColors.red700,
+                                color:
+                                    provider.errorMessage!.contains(
+                                          'Account Locked',
+                                        )
+                                        ? CustomAppColors.amber800
+                                        : CustomAppColors.red700,
                                 height: 1.4,
                               ),
                             ),
@@ -273,16 +281,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: provider.clearError,
                             icon: Icon(
                               Icons.close,
-                              color: provider.errorMessage!.contains('Account Locked')
-                                  ? CustomAppColors.amber600
-                                  : CustomAppColors.red500,
+                              color:
+                                  provider.errorMessage!.contains(
+                                        'Account Locked',
+                                      )
+                                      ? CustomAppColors.amber600
+                                      : CustomAppColors.red500,
                               size: 20,
                             ),
                           ),
                         ],
                       ),
                       // Add contact support button for locked accounts
-                      if (provider.errorMessage!.contains('Account Locked')) ...[
+                      if (provider.errorMessage!.contains(
+                        'Account Locked',
+                      )) ...[
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
@@ -292,21 +305,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               // This could open email, phone dialer, or support chat
                               showDialog(
                                 context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Contact Support'),
-                                  content: const Text(
-                                    'Please contact your system administrator to unlock your account:\n\n'
-                                    '📧 Email: admin@yourschool.edu\n'
-                                    '📞 Phone: +1 (555) 123-4567\n'
-                                    '💬 Support Portal: support.yourschool.edu'
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('OK'),
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: const Text('Contact Support'),
+                                      content: const Text(
+                                        'Please contact your system administrator to unlock your account:\n\n'
+                                        '📧 Email: admin@yourschool.edu\n'
+                                        '📞 Phone: +1 (555) 123-4567\n'
+                                        '💬 Support Portal: support.yourschool.edu',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
                               );
                             },
                             style: ElevatedButton.styleFrom(
@@ -430,7 +445,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               return;
                             }
 
-                            final navProvider = context.read<BottomNavProvider>();
+                            final navProvider =
+                                context.read<BottomNavProvider>();
                             if (user.role?.id != null) {
                               navProvider.initializeForRole(user.role!.id);
                             }

@@ -8,10 +8,7 @@ import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../providers/admin_students_provider.dart';
 
 class EditStudentDialog extends StatefulWidget {
-
-  const EditStudentDialog({
-    required this.student, super.key,
-  });
+  const EditStudentDialog({required this.student, super.key});
   final Map<String, dynamic> student;
 
   @override
@@ -20,21 +17,21 @@ class EditStudentDialog extends StatefulWidget {
 
 class _EditStudentDialogState extends State<EditStudentDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _rollNumberController;
   late TextEditingController _sectionController;
   late TextEditingController _bloodGroupController;
   late TextEditingController _medicalConditionsController;
-  
+
   // Parent/Guardian Controllers
   late TextEditingController _fatherNameController;
   late TextEditingController _fatherEmailController;
   late TextEditingController _fatherMobileController;
-  
+
   late TextEditingController _motherNameController;
   late TextEditingController _motherEmailController;
   late TextEditingController _motherMobileController;
-  
+
   late TextEditingController _guardianNameController;
   late TextEditingController _guardianEmailController;
   late TextEditingController _guardianMobileController;
@@ -42,7 +39,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
   String? _selectedStudentType;
   String? _selectedResidentialStatus;
   bool _transportRequired = false;
-  
+
   // Course selection
   int? _selectedCourseId;
   List<Map<String, dynamic>> _courses = [];
@@ -67,14 +64,14 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
         _courses = courses.cast<Map<String, dynamic>>();
         _loadingCourses = false;
       });
-    } catch (e) {
+    } on Exception catch (e) {
       setState(() => _loadingCourses = false);
     }
   }
 
   void _initializeControllers() {
     final student = widget.student;
-    
+
     _rollNumberController = TextEditingController(
       text: student['rollNumber'] as String? ?? '',
     );
@@ -89,42 +86,43 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     );
 
     _selectedStudentType = student['studentType'] as String? ?? 'REGULAR';
-    _selectedResidentialStatus = student['residentialStatus'] as String? ?? 'DAY_SCHOLAR';
+    _selectedResidentialStatus =
+        student['residentialStatus'] as String? ?? 'DAY_SCHOLAR';
     _transportRequired = student['transportRequired'] as bool? ?? false;
-    
+
     // Initialize course selection
     final course = student['course'] as Map<String, dynamic>?;
     _selectedCourseId = course?['id'] as int?;
-    
+
     // Initialize parent controllers
     _initializeParentControllers();
   }
-  
+
   void _initializeParentControllers() {
     final parents = widget.student['parents'] as List<dynamic>? ?? [];
-    
+
     // Initialize all controllers with empty values
     _fatherNameController = TextEditingController();
     _fatherEmailController = TextEditingController();
     _fatherMobileController = TextEditingController();
-    
+
     _motherNameController = TextEditingController();
     _motherEmailController = TextEditingController();
     _motherMobileController = TextEditingController();
-    
+
     _guardianNameController = TextEditingController();
     _guardianEmailController = TextEditingController();
     _guardianMobileController = TextEditingController();
-    
+
     // Find and populate parent data
     Map<String, dynamic>? father;
     Map<String, dynamic>? mother;
     Map<String, dynamic>? guardian;
-    
+
     for (final parent in parents) {
       final parentMap = parent as Map<String, dynamic>;
       final relation = parentMap['relation'] as String?;
-      
+
       switch (relation) {
         case 'FATHER':
           father = parentMap;
@@ -137,7 +135,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
           break;
       }
     }
-    
+
     // Populate father info
     if (father != null) {
       final fatherUser = father['user'] as Map<String, dynamic>?;
@@ -145,7 +143,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
       _fatherEmailController.text = fatherUser?['email'] as String? ?? '';
       _fatherMobileController.text = fatherUser?['phone'] as String? ?? '';
     }
-    
+
     // Populate mother info
     if (mother != null) {
       final motherUser = mother['user'] as Map<String, dynamic>?;
@@ -153,7 +151,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
       _motherEmailController.text = motherUser?['email'] as String? ?? '';
       _motherMobileController.text = motherUser?['phone'] as String? ?? '';
     }
-    
+
     // Initialize guardian controllers (for potential future use)
     if (guardian != null) {
       final guardianUser = guardian['user'] as Map<String, dynamic>?;
@@ -169,7 +167,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     _sectionController.dispose();
     _bloodGroupController.dispose();
     _medicalConditionsController.dispose();
-    
+
     // Parent/Guardian controllers
     _fatherNameController.dispose();
     _fatherEmailController.dispose();
@@ -180,7 +178,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     _guardianNameController.dispose();
     _guardianEmailController.dispose();
     _guardianMobileController.dispose();
-    
+
     super.dispose();
   }
 
@@ -199,7 +197,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     }
 
     final studentData = <String, dynamic>{};
-    
+
     // Only include fields that have values
     if (_rollNumberController.text.isNotEmpty) {
       studentData['rollNumber'] = _rollNumberController.text;
@@ -218,24 +216,29 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
     if (_medicalConditionsController.text.isNotEmpty) {
       studentData['medicalConditions'] = _medicalConditionsController.text;
     }
-    
+
     studentData['studentType'] = _selectedStudentType;
     studentData['residentialStatus'] = _selectedResidentialStatus;
     studentData['transportRequired'] = _transportRequired;
 
     final response = await provider.updateStudent(userUuid, studentData);
-    
+
     if (response != null && mounted) {
       Navigator.of(context).pop();
-      
+
       // Check if roll number was auto-generated
       final updatedStudent = response['data'];
       final newRollNumber = updatedStudent?['rollNumber'] as String?;
-      final hadRollNumber = widget.student['rollNumber'] != null && 
-                           (widget.student['rollNumber'] as String).isNotEmpty;
-      
-      if (newRollNumber != null && !hadRollNumber && _rollNumberController.text.isEmpty) {
-        _showSuccessSnackBar('Student updated successfully. Roll number $newRollNumber was automatically generated.');
+      final hadRollNumber =
+          widget.student['rollNumber'] != null &&
+          (widget.student['rollNumber'] as String).isNotEmpty;
+
+      if (newRollNumber != null &&
+          !hadRollNumber &&
+          _rollNumberController.text.isEmpty) {
+        _showSuccessSnackBar(
+          'Student updated successfully. Roll number $newRollNumber was automatically generated.',
+        );
       } else {
         _showSuccessSnackBar('Student updated successfully');
       }
@@ -246,19 +249,13 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -308,32 +305,38 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
                         border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: _loadingCourses
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                      child:
+                          _loadingCourses
+                              ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                              : DropdownButton<int>(
+                                value: _selectedCourseId,
+                                isExpanded: true,
+                                underline: const SizedBox(),
+                                hint: const Text('Select Course'),
+                                items:
+                                    _courses
+                                        .map(
+                                          (course) => DropdownMenuItem<int>(
+                                            value: course['id'] as int,
+                                            child: Text(
+                                              course['name'] as String,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                onChanged: (v) {
+                                  setState(() => _selectedCourseId = v);
+                                },
                               ),
-                            )
-                          : DropdownButton<int>(
-                              value: _selectedCourseId,
-                              isExpanded: true,
-                              underline: const SizedBox(),
-                              hint: const Text('Select Course'),
-                              items: _courses
-                                  .map(
-                                    (course) => DropdownMenuItem<int>(
-                                      value: course['id'] as int,
-                                      child: Text(course['name'] as String),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (v) {
-                                setState(() => _selectedCourseId = v);
-                              },
-                            ),
                     ),
                   ],
                 ),
@@ -350,11 +353,17 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
                     labelText: 'Student Type',
                     border: OutlineInputBorder(),
                   ),
-                  items: _studentTypes.map((type) => DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    )).toList(),
-                  onChanged: (value) => setState(() => _selectedStudentType = value),
+                  items:
+                      _studentTypes
+                          .map(
+                            (type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type),
+                            ),
+                          )
+                          .toList(),
+                  onChanged:
+                      (value) => setState(() => _selectedStudentType = value),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -363,21 +372,30 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
                     labelText: 'Residential Status',
                     border: OutlineInputBorder(),
                   ),
-                  items: _residentialStatuses.map((status) => DropdownMenuItem(
-                      value: status,
-                      child: Text(status.replaceAll('_', ' ')),
-                    )).toList(),
-                  onChanged: (value) => setState(() => _selectedResidentialStatus = value),
+                  items:
+                      _residentialStatuses
+                          .map(
+                            (status) => DropdownMenuItem(
+                              value: status,
+                              child: Text(status.replaceAll('_', ' ')),
+                            ),
+                          )
+                          .toList(),
+                  onChanged:
+                      (value) =>
+                          setState(() => _selectedResidentialStatus = value),
                 ),
                 const SizedBox(height: 16),
                 CheckboxListTile(
                   title: const Text('Transport Required'),
                   value: _transportRequired,
-                  onChanged: (value) => setState(() => _transportRequired = value ?? false),
+                  onChanged:
+                      (value) =>
+                          setState(() => _transportRequired = value ?? false),
                   controlAffinity: ListTileControlAffinity.leading,
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Parent/Guardian Information (Read-only)
                 _buildParentInformationSection(),
                 const SizedBox(height: 16),
@@ -404,33 +422,35 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
           child: Text(context.translate('cancel')),
         ),
         Consumer<AdminStudentsProvider>(
-          builder: (context, provider, child) => ElevatedButton(
-            onPressed: provider.isLoading ? null : _updateStudent,
-            child: provider.isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(context.translate('update')),
-          ),
+          builder:
+              (context, provider, child) => ElevatedButton(
+                onPressed: provider.isLoading ? null : _updateStudent,
+                child:
+                    provider.isLoading
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : Text(context.translate('update')),
+              ),
         ),
       ],
     );
   }
-  
+
   Widget _buildParentInformationSection() {
     final parents = widget.student['parents'] as List<dynamic>? ?? [];
-    
+
     if (parents.isEmpty) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Parent/Guardian Information',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Container(
@@ -443,40 +463,37 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
             ),
             child: const Text(
               'No parent/guardian information available',
-              style: TextStyle(
-                color: Colors.grey,
-                fontStyle: FontStyle.italic,
-              ),
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
             ),
           ),
           const SizedBox(height: 16),
         ],
       );
     }
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Parent/Guardian Information',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        
+
         ...parents.map((parent) {
           final parentMap = parent as Map<String, dynamic>;
           final relation = parentMap['relation'] as String? ?? '';
           final isPrimary = parentMap['isPrimaryContact'] as bool? ?? false;
           final user = parentMap['user'] as Map<String, dynamic>?;
-          
+
           if (user == null) return const SizedBox.shrink();
-          
+
           final name = user['name'] as String? ?? '';
           final email = user['email'] as String? ?? '';
           final phone = user['phone'] as String? ?? '';
-          
+
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
@@ -555,8 +572,8 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
               ],
             ),
           );
-        }).toList(),
-        
+        }),
+
         const SizedBox(height: 8),
         Text(
           'Note: Parent information is read-only. Contact administrator to update parent details.',
@@ -570,7 +587,7 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
       ],
     );
   }
-  
+
   String _formatRelation(String relation) {
     switch (relation.toUpperCase()) {
       case 'FATHER':

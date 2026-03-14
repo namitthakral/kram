@@ -284,7 +284,9 @@ class CoursesService {
   /// Create a new course
   ///
   /// Endpoint: POST /courses
-  Future<Map<String, dynamic>> createCourse(Map<String, dynamic> courseData) async {
+  Future<Map<String, dynamic>> createCourse(
+    Map<String, dynamic> courseData,
+  ) async {
     try {
       final response = await _apiService.dio.post('/courses', data: courseData);
 
@@ -314,9 +316,15 @@ class CoursesService {
   /// Update an existing course
   ///
   /// Endpoint: PUT /courses/:id
-  Future<Map<String, dynamic>> updateCourse(int id, Map<String, dynamic> courseData) async {
+  Future<Map<String, dynamic>> updateCourse(
+    int id,
+    Map<String, dynamic> courseData,
+  ) async {
     try {
-      final response = await _apiService.dio.put('/courses/$id', data: courseData);
+      final response = await _apiService.dio.put(
+        '/courses/$id',
+        data: courseData,
+      );
 
       if (response.statusCode == 200) {
         return response.data as Map<String, dynamic>;
@@ -415,10 +423,10 @@ class CoursesService {
       // First, get course details to determine the appropriate API
       final courseResponse = await _apiService.dio.get('/courses/$courseId');
       final course = courseResponse.data['data'] as Map<String, dynamic>;
-      
+
       // Determine which API to use based on course characteristics
       final shouldUseSimpleAPI = _shouldUseSimpleDivisions(course);
-      
+
       if (shouldUseSimpleAPI) {
         // Use simple class divisions API
         return await _getSimpleClassDivisions(courseId);
@@ -426,14 +434,14 @@ class CoursesService {
         // Use complex class sections API (subject-based)
         return await _getComplexClassSections(courseId);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       // Fallback: try simple API first, then complex
       try {
         return await _getSimpleClassDivisions(courseId);
-      } catch (_) {
+      } on Exception catch (_) {
         try {
           return await _getComplexClassSections(courseId);
-        } catch (_) {
+        } on Exception catch (_) {
           return []; // Return empty if both fail
         }
       }
@@ -444,17 +452,21 @@ class CoursesService {
   bool _shouldUseSimpleDivisions(Map<String, dynamic> course) {
     final degreeType = course['degreeType'] as String?;
     final courseName = course['name'] as String? ?? '';
-    
+
     // Use simple divisions for:
     // 1. School-level courses (CERTIFICATE degree type mapped from SCHOOL)
     // 2. Courses with "Class" in the name (e.g., "Class I", "Class X")
     // 3. Basic educational levels
-    
+
     if (degreeType == 'CERTIFICATE') return true;
     if (courseName.toLowerCase().contains('class')) return true;
     if (courseName.toLowerCase().contains('grade')) return true;
-    if (RegExp(r'(class|std|standard)\s*[ivx\d]', caseSensitive: false).hasMatch(courseName)) return true;
-    
+    if (RegExp(
+      r'(class|std|standard)\s*[ivx\d]',
+      caseSensitive: false,
+    ).hasMatch(courseName))
+      return true;
+
     // Use complex sections for:
     // - BACHELORS, MASTERS, PHD (university level)
     // - Courses with specific subject structure
@@ -463,11 +475,15 @@ class CoursesService {
 
   /// Get simple class divisions (basic school organization)
   Future<List<String>> _getSimpleClassDivisions(int courseId) async {
-    final response = await _apiService.dio.get('/class-divisions/course/$courseId');
+    final response = await _apiService.dio.get(
+      '/class-divisions/course/$courseId',
+    );
     if (response.statusCode == 200) {
       final data = response.data as Map<String, dynamic>;
       final divisions = data['data'] as List<dynamic>;
-      return divisions.map((division) => division['sectionName'] as String).toList();
+      return divisions
+          .map((division) => division['sectionName'] as String)
+          .toList();
     }
     throw Exception('Failed to get class divisions');
   }
@@ -493,7 +509,9 @@ class CoursesService {
   /// Get class divisions for a course (direct API call for advanced usage)
   Future<List<dynamic>> getClassDivisions(int courseId) async {
     try {
-      final response = await _apiService.dio.get('/class-divisions/course/$courseId');
+      final response = await _apiService.dio.get(
+        '/class-divisions/course/$courseId',
+      );
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
@@ -587,24 +605,26 @@ class CoursesService {
   ) async {
     try {
       final courseId = sectionData['courseId'] as int;
-      
+
       // Get course details to determine the appropriate API
       final courseResponse = await _apiService.dio.get('/courses/$courseId');
       final course = courseResponse.data['data'] as Map<String, dynamic>;
-      
+
       // Determine which API to use based on course characteristics
       final shouldUseSimpleAPI = _shouldUseSimpleDivisions(course);
-      
+
       if (shouldUseSimpleAPI) {
         // Use simple class divisions API
         return await createClassDivision(sectionData);
       } else {
         // Use complex class sections API (would need to be implemented)
-        throw UnimplementedError('Complex class sections creation not yet implemented. Use simple divisions for now.');
+        throw UnimplementedError(
+          'Complex class sections creation not yet implemented. Use simple divisions for now.',
+        );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       // Fallback to simple API
-      return await createClassDivision(sectionData);
+      return createClassDivision(sectionData);
     }
   }
 }

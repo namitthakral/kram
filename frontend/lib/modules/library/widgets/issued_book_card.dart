@@ -21,9 +21,10 @@ class IssuedBookCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isOverdue
-              ? const Color(0xFFef4444).withValues(alpha: 0.3)
-              : const Color(0xFFe2e8f0),
+          color:
+              isOverdue
+                  ? const Color(0xFFef4444).withValues(alpha: 0.3)
+                  : const Color(0xFFe2e8f0),
         ),
         boxShadow: [
           BoxShadow(
@@ -103,9 +104,10 @@ class IssuedBookCard extends StatelessWidget {
                   vertical: isDesktop ? 6 : 5,
                 ),
                 decoration: BoxDecoration(
-                  color: isOverdue
-                      ? const Color(0xFFef4444).withValues(alpha: 0.1)
-                      : const Color(0xFF10b981).withValues(alpha: 0.1),
+                  color:
+                      isOverdue
+                          ? const Color(0xFFef4444).withValues(alpha: 0.1)
+                          : const Color(0xFF10b981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -113,9 +115,10 @@ class IssuedBookCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: isDesktop ? 12 : 11,
                     fontWeight: FontWeight.w600,
-                    color: isOverdue
-                        ? const Color(0xFFef4444)
-                        : const Color(0xFF10b981),
+                    color:
+                        isOverdue
+                            ? const Color(0xFFef4444)
+                            : const Color(0xFF10b981),
                   ),
                 ),
               ),
@@ -124,9 +127,10 @@ class IssuedBookCard extends StatelessWidget {
                 'Due: ${bookIssue.dueDate}',
                 style: TextStyle(
                   fontSize: isDesktop ? 13 : 12,
-                  color: isOverdue
-                      ? const Color(0xFFef4444)
-                      : const Color(0xFF64748b),
+                  color:
+                      isOverdue
+                          ? const Color(0xFFef4444)
+                          : const Color(0xFF64748b),
                   fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
@@ -161,5 +165,3 @@ class IssuedBookCard extends StatelessWidget {
     );
   }
 }
-
-

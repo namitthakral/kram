@@ -402,7 +402,6 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
         ),
         items: [
           DropdownMenuItem<String?>(
-            value: null,
             child: Text(context.translate('all_courses')),
           ),
           ...provider.courses.map(
@@ -424,7 +423,6 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
         ),
         items: [
           DropdownMenuItem<String?>(
-            value: null,
             child: Text(context.translate('all_statuses')),
           ),
           DropdownMenuItem(

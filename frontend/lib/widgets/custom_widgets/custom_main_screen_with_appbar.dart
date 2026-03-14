@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/route_constants.dart';
+import '../../provider/bottom_nav_provider.dart';
 import '../../provider/communications_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/enum.dart';
@@ -105,14 +106,14 @@ class AppBarConfig {
     required String this.userInitials,
     required String this.userName,
     required String institutionName,
+    this.showBackButton = false,
+    this.onBackButtonTapped,
     this.onNotificationIconPressed,
     this.elevation = 5.0,
   }) : type = AppBarType.profile,
        profileIcon = null,
        iconBackgroundColor = CustomAppColors.primary,
-       showBackButton = false,
        showCircularBackButton = false,
-       onBackButtonTapped = null,
        actions = const [],
        userDetails = 'Administrator • $institutionName',
        subtitle = null,
@@ -310,23 +311,34 @@ bool _shouldShowBackButton(
   AppBarConfig config,
   bool isProfileType,
 ) {
-  // Use GoRouter.of(context) and path comparison for a more stable check
-  // that doesn't depend on GoRouterState inherited widget which can be
-  // sensitive during navigation transitions.
-  bool isDashboard = false;
-  try {
-    final router = GoRouter.of(context);
-    final String location = router.routeInformationProvider.value.uri.path;
-    isDashboard = location == '/dashboard';
-  } catch (_) {
-    // If not under GoRouter, assume not dashboard
+  // If explicitly requested to show, always show it without doing location checks
+  // which might delay or bounce during GoRouter transitions.
+  if (config.showBackButton) {
+    return true;
   }
 
-  if (isDashboard) return false;
+  // Use GoRouterState.of(context) for a stable check
+  try {
+    final location = GoRouterState.of(context).uri.path;
+    final normalizedLocation = location.split('?').first;
 
-  return config.showBackButton ||
-      (isProfileType && context.canPop()) ||
-      context.canPop();
+    // Always hide back button on the dashboard
+    if (normalizedLocation == '/dashboard') {
+      return false;
+    }
+
+    // Never show back button on any root sidebar tab (fixes GoRouter transition blinking)
+    final bottomNav = Provider.of<BottomNavProvider>(context, listen: false);
+    for (int i = 0; i < bottomNav.navigationItems.length; i++) {
+      if (bottomNav.getRoutePath(i) == normalizedLocation) {
+        return false;
+      }
+    }
+  } on Exception catch (_) {
+    // If not under GoRouter or Provider not found, fall through
+  }
+
+  return (isProfileType && context.canPop()) || context.canPop();
 }
 
 class _CustomAppBar extends StatelessWidget {
@@ -356,7 +368,8 @@ class _CustomAppBar extends StatelessWidget {
               )
               : null,
       // Leading (back button): never on dashboard; elsewhere show if config wants it, or when user can pop (e.g. from report cards back to dashboard)
-      leading: _shouldShowBackButton(context, config, isProfileType)
+      leading:
+          _shouldShowBackButton(context, config, isProfileType)
               ? IconButton(
                 icon: SvgPicture.asset(
                   'assets/images/icons/ic_back_arrow.svg',

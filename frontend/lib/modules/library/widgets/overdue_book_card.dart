@@ -18,7 +18,9 @@ class OverdueBookCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFef2f2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFef4444).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFFef4444).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -149,4 +151,3 @@ class OverdueBookCard extends StatelessWidget {
     );
   }
 }
-

@@ -211,7 +211,8 @@ class RoleNavigationConfig {
     const AdminStudentManagementScreen(),
     const AdminTeachersScreen(),
     const Center(
-      child: Text('Fees Screen Placeholder'), ), // Will be replaced by router
+      child: Text('Fees Screen Placeholder'),
+    ), // Will be replaced by router
     const ProfileScreen(),
   ];
 

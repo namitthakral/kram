@@ -4,10 +4,7 @@ import '../../../utils/responsive_utils.dart';
 import '../models/parent_dashboard_models.dart';
 
 class AcademicActivityCard extends StatelessWidget {
-  const AcademicActivityCard({
-    required this.activity,
-    super.key,
-  });
+  const AcademicActivityCard({required this.activity, super.key});
 
   final AcademicActivity activity;
 
@@ -132,4 +129,3 @@ class AcademicActivityCard extends StatelessWidget {
     );
   }
 }
-

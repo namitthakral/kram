@@ -77,9 +77,7 @@ class _UnifiedLoaderState extends State<UnifiedLoader>
         Positioned.fill(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.3),
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.3)),
           ),
         ),
         // Centered Loader
@@ -102,20 +100,19 @@ class _UnifiedLoaderState extends State<UnifiedLoader>
               children: [
                 AnimatedBuilder(
                   animation: _controller,
-                  builder:
-                      (context, child) {
-                        // Extra safety check
-                        if (_isDisposed || !mounted) {
-                          return child ?? const SizedBox.shrink();
-                        }
-                        return Transform.scale(
-                          scale: _scaleAnimation.value,
-                          child: Opacity(
-                            opacity: _opacityAnimation.value,
-                            child: child,
-                          ),
-                        );
-                      },
+                  builder: (context, child) {
+                    // Extra safety check
+                    if (_isDisposed || !mounted) {
+                      return child ?? const SizedBox.shrink();
+                    }
+                    return Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: Opacity(
+                        opacity: _opacityAnimation.value,
+                        child: child,
+                      ),
+                    );
+                  },
                   child: Image.asset(
                     'assets/images/app_logo.png',
                     width: 80,

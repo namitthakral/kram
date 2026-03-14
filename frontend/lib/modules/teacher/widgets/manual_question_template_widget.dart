@@ -33,9 +33,10 @@ class _ManualQuestionTemplateWidgetState
   @override
   void initState() {
     super.initState();
-    sections = widget.existingSections != null
-        ? List<QuestionSection>.from(widget.existingSections!)
-        : [];
+    sections =
+        widget.existingSections != null
+            ? List<QuestionSection>.from(widget.existingSections!)
+            : [];
 
     if (sections.isEmpty) {
       sections.add(
@@ -53,34 +54,32 @@ class _ManualQuestionTemplateWidgetState
   }
 
   Widget _buildFloatingSaveButton() => DecoratedBox(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: CustomAppColors.primaryBlue.withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
-            ),
-          ],
+    decoration: BoxDecoration(
+      boxShadow: [
+        BoxShadow(
+          color: CustomAppColors.primaryBlue.withValues(alpha: 0.3),
+          blurRadius: 16,
+          offset: const Offset(0, 8),
         ),
-        child: FloatingActionButton.extended(
-          onPressed: _saveAndPop,
-          backgroundColor: CustomAppColors.primaryBlue,
-          elevation: 0,
-          highlightElevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-          label: const Text(
-            'Save',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
+      ],
+    ),
+    child: FloatingActionButton.extended(
+      onPressed: _saveAndPop,
+      backgroundColor: CustomAppColors.primaryBlue,
+      elevation: 0,
+      highlightElevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+      label: const Text(
+        'Save',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
         ),
-      );
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +150,6 @@ class _ManualQuestionTemplateWidgetState
             QuestionSectionsBuilder(
               sections: sections,
               onSectionsChanged: (_) => setState(() {}),
-              showStats: true,
             ),
           ],
         ),

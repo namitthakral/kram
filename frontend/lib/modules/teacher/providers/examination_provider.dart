@@ -55,7 +55,9 @@ class ExaminationProvider with ChangeNotifier {
   /// Load institution information
   Future<void> loadInstitutionInfo(String userUuid) async {
     try {
-      final institutionInfo = await _teacherService.getInstitutionInfo(userUuid);
+      final institutionInfo = await _teacherService.getInstitutionInfo(
+        userUuid,
+      );
       _institutionType = institutionInfo['type'];
       notifyListeners();
     } on Exception catch (e) {
@@ -201,7 +203,7 @@ class ExaminationProvider with ChangeNotifier {
     try {
       final existing = _examinations.firstWhere((e) => e.id == examId);
       return existing;
-    } catch (_) {
+    } on Exception catch (_) {
       // 2. If not found, fetch from API
       _isLoading = true;
       _error = null;

@@ -24,15 +24,13 @@ class ApiErrorHandler {
 
     // Check for 403 (Forbidden) errors
     if (error.response?.statusCode == 403) {
-      final errorMsg =
-          error.response?.data['message'] ?? 'Access forbidden';
+      final errorMsg = error.response?.data['message'] ?? 'Access forbidden';
       return Exception(errorMsg);
     }
 
     // Check for 404 (Not Found) errors
     if (error.response?.statusCode == 404) {
-      final errorMsg =
-          error.response?.data['message'] ?? 'Resource not found';
+      final errorMsg = error.response?.data['message'] ?? 'Resource not found';
       return Exception(errorMsg);
     }
 
@@ -61,10 +59,7 @@ class ApiErrorHandler {
   }
 
   /// Handle any exception and convert to appropriate Exception
-  static Exception handleException(
-    Object error, {
-    String? defaultMessage,
-  }) {
+  static Exception handleException(Object error, {String? defaultMessage}) {
     if (error is DioException) {
       return handleDioException(error, defaultMessage: defaultMessage);
     }

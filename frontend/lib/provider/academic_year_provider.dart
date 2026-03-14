@@ -19,7 +19,7 @@ class AcademicYearProvider extends ChangeNotifier {
     if (_selectedAcademicYearId == null) return null;
     try {
       return _academicYears.firstWhere((y) => y.id == _selectedAcademicYearId);
-    } catch (_) {
+    } on Exception catch (_) {
       return null;
     }
   }
@@ -34,7 +34,7 @@ class AcademicYearProvider extends ChangeNotifier {
     try {
       final years = await AdminService().getAcademicYears();
       _academicYears = years;
-      
+
       // Auto-select active year if none selected
       if (_selectedAcademicYearId == null && _academicYears.isNotEmpty) {
         final activeYear = _academicYears.firstWhere(
@@ -43,7 +43,7 @@ class AcademicYearProvider extends ChangeNotifier {
         );
         _selectedAcademicYearId = activeYear.id;
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
     } finally {
       _isLoading = false;

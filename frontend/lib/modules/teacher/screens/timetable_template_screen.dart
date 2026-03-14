@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/services/timetable_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../provider/academic_year_provider.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../provider/teachers_provider.dart';
 import '../../../utils/custom_snackbar.dart';
@@ -16,7 +17,6 @@ import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../models/template_models.dart';
 import '../providers/timetable_provider.dart';
-import '../../../provider/academic_year_provider.dart';
 import '../services/pdf_template_service.dart';
 import '../services/teacher_service.dart';
 
@@ -169,7 +169,6 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
       });
     }
   }
-
 
   void _initializeTimetableData() {
     // Initialize empty timetable based on current time slots

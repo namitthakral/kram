@@ -97,7 +97,11 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.assignment_turned_in,
                   backgroundColor: const Color(0xFF10B981),
                   iconColor: const Color(0xFF10B981),
-                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_grades')),
+                  onTap:
+                      () => _navigateAfterFrame(
+                        context,
+                        () => context.pushNamed('student_grades'),
+                      ),
                 ),
                 DashboardStatCard(
                   title: 'Timetable',
@@ -107,7 +111,11 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.calendar_today,
                   backgroundColor: const Color(0xFF4F7CFF),
                   iconColor: const Color(0xFF4F7CFF),
-                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_timetable')),
+                  onTap:
+                      () => _navigateAfterFrame(
+                        context,
+                        () => context.pushNamed('student_timetable'),
+                      ),
                 ),
                 DashboardStatCard(
                   title: 'Assignments',
@@ -116,7 +124,11 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.assignment,
                   backgroundColor: const Color(0xFF6366F1),
                   iconColor: const Color(0xFF6366F1),
-                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_assignments')),
+                  onTap:
+                      () => _navigateAfterFrame(
+                        context,
+                        () => context.pushNamed('student_assignments'),
+                      ),
                 ),
                 DashboardStatCard(
                   title: 'Exams',
@@ -125,7 +137,11 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.quiz,
                   backgroundColor: const Color(0xFFF59E0B),
                   iconColor: const Color(0xFFF59E0B),
-                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_exams')),
+                  onTap:
+                      () => _navigateAfterFrame(
+                        context,
+                        () => context.pushNamed('student_exams'),
+                      ),
                 ),
                 DashboardStatCard(
                   title: 'Events',
@@ -134,7 +150,11 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.event,
                   backgroundColor: const Color(0xFFEC4899),
                   iconColor: const Color(0xFFEC4899),
-                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_events')),
+                  onTap:
+                      () => _navigateAfterFrame(
+                        context,
+                        () => context.pushNamed('student_events'),
+                      ),
                 ),
                 DashboardStatCard(
                   title: context.translate('attendance'),
@@ -143,7 +163,11 @@ class StudentAcademicScreen extends StatelessWidget {
                   icon: Icons.check_circle_rounded,
                   backgroundColor: AppTheme.info,
                   iconColor: AppTheme.info,
-                  onTap: () => _navigateAfterFrame(context, () => context.pushNamed('student_attendance')),
+                  onTap:
+                      () => _navigateAfterFrame(
+                        context,
+                        () => context.pushNamed('student_attendance'),
+                      ),
                 ),
               ],
             ),

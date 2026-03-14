@@ -110,7 +110,7 @@ class StudentAttendanceProvider with ChangeNotifier {
       final List<dynamic> data = response['data'] ?? [];
       _attendanceRecords =
           data.map((json) => StudentAttendanceRecord.fromJson(json)).toList();
-    } catch (e) {
+    } on Exception catch (e) {
       _error = e.toString();
       _attendanceRecords = [];
     } finally {
