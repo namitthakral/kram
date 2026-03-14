@@ -21,12 +21,21 @@ class CourseManagementScreen extends StatefulWidget {
 class _CourseManagementScreenState extends State<CourseManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool _isSchool = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkInstitutionType();
       _loadCourses();
+    });
+  }
+
+  void _checkInstitutionType() {
+    final loginProvider = context.read<LoginProvider>();
+    setState(() {
+      _isSchool = loginProvider.currentUser?.institution?.type == 'SCHOOL';
     });
   }
 
@@ -277,7 +286,7 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                           if (totalSemesters.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             Text(
-                              '$totalSemesters semesters',
+                              '$totalSemesters ${context.translate(_isSchool ? 'terms' : 'semesters')}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,

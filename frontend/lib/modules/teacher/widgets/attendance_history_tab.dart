@@ -16,8 +16,6 @@ class AttendanceHistoryTab extends StatefulWidget {
 }
 
 class _AttendanceHistoryTabState extends State<AttendanceHistoryTab> {
-
-
   @override
   void initState() {
     super.initState();
@@ -112,52 +110,48 @@ class _AttendanceHistoryTabState extends State<AttendanceHistoryTab> {
     required VoidCallback onTap,
     bool isSelected = false,
   }) => InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? CustomAppColors.primary.withOpacity(0.1)
-                  : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? CustomAppColors.primary : Colors.grey.shade300,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color:
-                  isSelected ? CustomAppColors.primary : Colors.grey.shade600,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color:
-                      isSelected
-                          ? CustomAppColors.primary
-                          : Colors.grey.shade800,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 18,
-              color:
-                  isSelected ? CustomAppColors.primary : Colors.grey.shade600,
-            ),
-          ],
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color:
+            isSelected
+                ? CustomAppColors.primary.withValues(alpha: 0.1)
+                : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected ? CustomAppColors.primary : Colors.grey.shade300,
         ),
       ),
-    );
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: isSelected ? CustomAppColors.primary : Colors.grey.shade600,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color:
+                    isSelected ? CustomAppColors.primary : Colors.grey.shade800,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 13,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Icon(
+            Icons.arrow_drop_down,
+            size: 18,
+            color: isSelected ? CustomAppColors.primary : Colors.grey.shade600,
+          ),
+        ],
+      ),
+    ),
+  );
 
   Widget _buildHistoryCard(Map<String, dynamic> record) {
     final student = record['student'] ?? {};
@@ -207,7 +201,7 @@ class _AttendanceHistoryTabState extends State<AttendanceHistoryTab> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

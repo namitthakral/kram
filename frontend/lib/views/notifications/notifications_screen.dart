@@ -115,16 +115,16 @@ class _NotificationItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: communication.isRead ? AppTheme.slate200 : CustomAppColors.primary.withOpacity(0.3),
+          color: communication.isRead ? AppTheme.slate200 : CustomAppColors.primary.withValues(alpha: 0.3),
           width: communication.isRead ? 1 : 1.5,
         ),
       ),
-      color: communication.isRead ? Colors.white : CustomAppColors.primary.withOpacity(0.02),
+      color: communication.isRead ? Colors.white : CustomAppColors.primary.withValues(alpha: 0.02),
       child: ExpansionTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(iconData, color: iconColor, size: 24),

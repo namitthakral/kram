@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../utils/extensions.dart';
 import '../../../models/academic_year.dart';
 import '../../../models/semester.dart';
 import '../../../provider/login_signup/login_provider.dart';
@@ -26,6 +27,7 @@ class _AcademicYearManagementScreenState
   final Map<int, List<Semester>> _semesters = {};
   final Map<int, bool> _loadingSemesters = {};
   bool _isLoadingYears = true;
+  bool _isSchool = false;
   String? _error;
 
   @override
@@ -42,6 +44,9 @@ class _AcademicYearManagementScreenState
     });
 
     try {
+      final loginProvider = context.read<LoginProvider>();
+      _isSchool = loginProvider.currentUser?.institution?.type == 'SCHOOL';
+      
       final years = await _adminService.getAcademicYears();
       if (!mounted) return;
       setState(() {
@@ -179,9 +184,9 @@ class _AcademicYearManagementScreenState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Semesters',
-                      style: TextStyle(
+                    Text(
+                      _isSchool ? 'Terms' : 'Semesters',
+                      style: const TextStyle(
                         fontWeight: AppTheme.fontWeightSemibold,
                         color: AppTheme.slate700,
                         fontSize: AppTheme.fontSizeBase,
@@ -190,7 +195,7 @@ class _AcademicYearManagementScreenState
                     TextButton.icon(
                       onPressed: () => _showAddSemesterDialog(year),
                       icon: const Icon(Icons.add_rounded, size: 20),
-                      label: const Text('Add Semester'),
+                      label: Text(context.translate(_isSchool ? 'add_term' : 'add_semester')),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.blue600,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -255,7 +260,7 @@ class _AcademicYearManagementScreenState
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              'S${semester.semesterNumber}',
+              _isSchool ? 'T${semester.semesterNumber}' : 'S${semester.semesterNumber}',
               style: const TextStyle(
                 fontWeight: AppTheme.fontWeightBold,
                 color: AppTheme.blue600,

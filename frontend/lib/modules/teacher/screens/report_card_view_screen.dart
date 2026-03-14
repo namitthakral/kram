@@ -19,7 +19,8 @@ class ReportCardViewScreen extends StatelessWidget {
     final perf = reportCard.performanceSummary;
     final att = reportCard.attendanceSummary;
     final courseSection =
-        '${student.courseName ?? ''}${student.section != null ? ' / ${student.section}' : ''}'.trim();
+        '${student.courseName ?? ''}${student.section != null ? ' / ${student.section}' : ''}'
+            .trim();
 
     return CustomMainScreenWithAppbar(
       title: 'Report Card - ${student.name}',
@@ -63,7 +64,10 @@ class ReportCardViewScreen extends StatelessWidget {
                   _InfoRow('Admission No', student.admissionNumber),
                   if (student.rollNumber != null)
                     _InfoRow('Roll No', student.rollNumber!),
-                  _InfoRow('Class / Section', courseSection.isEmpty ? '-' : courseSection),
+                  _InfoRow(
+                    'Class / Section',
+                    courseSection.isEmpty ? '-' : courseSection,
+                  ),
                   _InfoRow('School Year', semester.academicYear),
                   _InfoRow('Semester', semester.semesterName),
                 ],
@@ -85,10 +89,10 @@ class ReportCardViewScreen extends StatelessWidget {
                   TableRow(
                     decoration: BoxDecoration(color: Colors.grey.shade200),
                     children: [
-                    _tableHeader('Subject'),
-                    _tableHeader('Marks'),
-                    _tableHeader('Max'),
-                    _tableHeader('Grade'),
+                      _tableHeader('Subject'),
+                      _tableHeader('Marks'),
+                      _tableHeader('Max'),
+                      _tableHeader('Grade'),
                     ],
                   ),
                   for (final sub in reportCard.subjectRecords)
@@ -130,7 +134,10 @@ class ReportCardViewScreen extends StatelessWidget {
                     _InfoRow('Class rank', '${perf.classRank}'),
                   const Divider(height: 24),
                   _InfoRow('Total school days', '${att.totalClasses}'),
-                  _InfoRow('Attendance', '${(att.percentage).toStringAsFixed(1)}%'),
+                  _InfoRow(
+                    'Attendance',
+                    '${(att.percentage).toStringAsFixed(1)}%',
+                  ),
                 ],
               ),
             ),
@@ -172,11 +179,7 @@ class ReportCardViewScreen extends StatelessWidget {
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.child,
-    this.subtitle,
-  });
+  const _SectionCard({required this.title, required this.child, this.subtitle});
 
   final String title;
   final String? subtitle;
@@ -193,7 +196,7 @@ class _SectionCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -214,10 +217,7 @@ class _SectionCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle!,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ],
           const SizedBox(height: 12),
@@ -269,17 +269,14 @@ class _InfoRow extends StatelessWidget {
 }
 
 Widget _tableHeader(String text) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-        ),
-      ),
-    );
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  child: Text(
+    text,
+    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+  ),
+);
 
 Widget _tableCell(String text) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      child: Text(text, style: const TextStyle(fontSize: 13)),
-    );
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  child: Text(text, style: const TextStyle(fontSize: 13)),
+);

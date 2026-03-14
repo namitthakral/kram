@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../provider/login_signup/login_provider.dart';
 import '../../provider/communications_provider.dart';
+import '../../provider/login_signup/login_provider.dart';
 import 'auth_service.dart';
 
 /// Service to handle app lifecycle events
@@ -33,7 +33,7 @@ class AppLifecycleService extends WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     if (_context != null && _context!.mounted) {
-       _context!.read<CommunicationsProvider>().stopPolling();
+      _context!.read<CommunicationsProvider>().stopPolling();
     }
     _context = null;
     log('AppLifecycleService disposed');
@@ -57,7 +57,7 @@ class AppLifecycleService extends WidgetsBindingObserver {
       _startPollingIfLoggedIn();
     } else if (state == AppLifecycleState.paused) {
       if (_context != null && _context!.mounted) {
-         _context!.read<CommunicationsProvider>().stopPolling();
+        _context!.read<CommunicationsProvider>().stopPolling();
       }
     }
   }
@@ -120,8 +120,11 @@ class AppLifecycleService extends WidgetsBindingObserver {
     if (_context != null && _context!.mounted) {
       final isLoggedIn = await _authService.isLoggedIn();
       if (isLoggedIn && _context!.mounted) {
-        final institutionId = _context!.read<LoginProvider>().currentUser?.institutionId;
-        _context!.read<CommunicationsProvider>().startPolling(institutionId: institutionId);
+        final institutionId =
+            _context!.read<LoginProvider>().currentUser?.institutionId;
+        _context!.read<CommunicationsProvider>().startPolling(
+          institutionId: institutionId,
+        );
       }
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../providers/course_management_provider.dart';
@@ -25,6 +26,7 @@ class _EditCourseDialogState extends State<EditCourseDialog> {
   late final TextEditingController _descriptionController;
   late final TextEditingController _durationController;
   late final TextEditingController _totalSemestersController;
+  bool _isSchool = false;
 
   late String _selectedDegreeType;
   late String _selectedDurationUnit;
@@ -46,7 +48,15 @@ class _EditCourseDialogState extends State<EditCourseDialog> {
   @override
   void initState() {
     super.initState();
+    _checkInstitutionType();
     _initializeControllers();
+  }
+
+  void _checkInstitutionType() {
+    final loginProvider = context.read<LoginProvider>();
+    setState(() {
+      _isSchool = loginProvider.currentUser?.institution?.type == 'SCHOOL';
+    });
   }
 
   void _initializeControllers() {
@@ -172,8 +182,8 @@ class _EditCourseDialogState extends State<EditCourseDialog> {
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _totalSemestersController,
-                        label: context.translate('total_semesters'),
-                        hintText: context.translate('enter_total_semesters'),
+                        label: context.translate(_isSchool ? 'total_terms' : 'total_semesters'),
+                        hintText: context.translate(_isSchool ? 'enter_total_terms' : 'enter_total_semesters'),
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 16),

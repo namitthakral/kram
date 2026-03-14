@@ -380,6 +380,11 @@ export class UpdateUserDto {
   roleId?: number
 
   @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => Number(value))
+  institutionId?: number
+
+  @IsOptional()
   @IsString()
   phoneNumber?: string
 

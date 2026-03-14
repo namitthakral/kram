@@ -125,19 +125,28 @@ export class AuthService {
   /**
    * Resolve institution (id + name) for a user.
    */
-  private async resolveInstitution(user: {
-    institutionId?: number | null
-    student?: { institutionId: number } | null
-    teacher?: { institutionId: number } | null
-    staff?: { institutionId: number } | null
-  }): Promise<{ id: number; name: string } | null> {
-    const id = this.resolveInstitutionId(user)
+  private async resolveInstitution(user: UserWithRelations) {
+    let id = this.resolveInstitutionId(user)
+
+    // Fallback for admins who don't have an institutionId set
+    if (id == null && (user.role?.roleName === 'super_admin' || user.role?.roleName === 'admin')) {
+      const firstInstitution = await this.prisma.institution.findFirst({
+        orderBy: { id: 'asc' },
+        select: { id: true }
+      })
+      id = firstInstitution?.id ?? null
+    }
+
     if (id == null) return null
+
     const institution = await this.prisma.institution.findUnique({
       where: { id },
-      select: { id: true, name: true },
+      select: { id: true, name: true, type: true },
     })
-    return institution ?? null
+
+    return institution
+      ? { ...institution, type: institution.type.toString() }
+      : null
   }
 
   /**

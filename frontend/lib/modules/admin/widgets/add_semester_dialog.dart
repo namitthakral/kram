@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '../../../provider/login_signup/login_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../utils/custom_snackbar.dart';
 import '../../../utils/extensions.dart';
@@ -33,6 +35,20 @@ class _AddSemesterDialogState extends State<AddSemesterDialog> {
   DateTime? _regEndDate;
 
   bool _isSaving = false;
+  bool _isSchool = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInstitutionType();
+  }
+
+  void _checkInstitutionType() {
+    final loginProvider = context.read<LoginProvider>();
+    setState(() {
+      _isSchool = loginProvider.currentUser?.institution?.type == 'SCHOOL';
+    });
+  }
 
   @override
   void dispose() {
@@ -83,10 +99,10 @@ class _AddSemesterDialogState extends State<AddSemesterDialog> {
   @override
   Widget build(BuildContext context) {
     return CustomFormDialog(
-      title: 'Add Semester',
-      subtitle: 'Create a new semester for ${widget.academicYearName}',
+      title: context.translate(_isSchool ? 'add_term' : 'add_semester'),
+      subtitle: '${context.translate('create_new_semester_for')} ${widget.academicYearName}',
       headerIcon: Icons.calendar_today_rounded,
-      confirmText: 'Create',
+      confirmText: context.translate('create'),
       cancelText: context.translate('cancel'),
       confirmColor: AppTheme.blue500,
       onConfirm: _isSaving ? null : _handleCreate,
@@ -95,13 +111,13 @@ class _AddSemesterDialogState extends State<AddSemesterDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CustomTextField(
-            label: 'Semester Name',
-            hintText: 'e.g. Fall 2024',
+            label: context.translate(_isSchool ? 'term_name' : 'semester_name'),
+            hintText: _isSchool ? 'e.g. Term 1' : 'e.g. Fall 2024',
             controller: _nameController,
           ),
           const SizedBox(height: 16),
           CustomTextField(
-            label: 'Semester Number',
+            label: context.translate(_isSchool ? 'term_number' : 'semester_number'),
             hintText: 'e.g. 1',
             controller: _numberController,
             keyboardType: TextInputType.number,
@@ -220,14 +236,14 @@ class _AddSemesterDialogState extends State<AddSemesterDialog> {
   Future<void> _handleCreate() async {
     if (_nameController.text.isEmpty) {
       showCustomSnackbar(
-        message: 'Please enter semester name',
+        message: context.translate(_isSchool ? 'enter_term_name' : 'enter_semester_name'),
         type: SnackbarType.warning,
       );
       return;
     }
     if (_numberController.text.isEmpty) {
       showCustomSnackbar(
-        message: 'Please enter semester number',
+        message: context.translate(_isSchool ? 'enter_term_number' : 'enter_semester_number'),
         type: SnackbarType.warning,
       );
       return;
@@ -236,7 +252,7 @@ class _AddSemesterDialogState extends State<AddSemesterDialog> {
     final semesterNumber = int.tryParse(_numberController.text);
     if (semesterNumber == null) {
       showCustomSnackbar(
-        message: 'Invalid semester number',
+        message: context.translate(_isSchool ? 'invalid_term_number' : 'invalid_semester_number'),
         type: SnackbarType.warning,
       );
       return;
@@ -258,7 +274,7 @@ class _AddSemesterDialogState extends State<AddSemesterDialog> {
       if (mounted) {
         Navigator.pop(context, true);
         showCustomSnackbar(
-          message: 'Semester created successfully',
+          message: context.translate(_isSchool ? 'term_created' : 'semester_created'),
           type: SnackbarType.success,
         );
       }

@@ -397,7 +397,7 @@ class _EventsScreenContentState extends State<_EventsScreenContent> {
           Container(
             width: 80,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 bottomLeft: Radius.circular(16),

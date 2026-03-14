@@ -27,8 +27,9 @@ class CustomTextField extends StatefulWidget {
     this.validator,
     this.maxLines = 1,
     this.prefixIcon,
+    this.suffixIcon,
   });
-  final String? label /* ,prefixIcon, suffixIcon */;
+  final String? label;
   final TextEditingController? controller;
   final bool obscureText;
   final TextInputType keyboardType;
@@ -41,7 +42,7 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final int? maxLines;
   final ButtonIcon? prefixButtonIcon, suffixButtonIcon;
-  final Widget? prefixIcon;
+  final Widget? prefixIcon, suffixIcon;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -128,7 +129,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     )
                     : null),
             suffixIcon:
-                widget.suffixButtonIcon?.icon != null
+                widget.suffixIcon ??
+                (widget.suffixButtonIcon?.icon != null
                     ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       child: InkWell(
@@ -142,7 +144,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         ),
                       ),
                     )
-                    : null,
+                    : null),
             hintText: widget.hintText,
             hintStyle: const TextStyle(color: CustomAppColors.grey01),
             border:

@@ -441,8 +441,12 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
           // Tab Content (teachers only see Weekly Schedule)
           Expanded(
             child:
-                (_selectedTab == TimetableTab.weeklySchedule || !canEditTimetable)
-                    ? _buildWeeklyScheduleTab(timetableProvider, canEditTimetable)
+                (_selectedTab == TimetableTab.weeklySchedule ||
+                        !canEditTimetable)
+                    ? _buildWeeklyScheduleTab(
+                      timetableProvider,
+                      canEditTimetable,
+                    )
                     : _buildTimeSlotsTab(timetableProvider, canEditTimetable),
           ),
         ],
@@ -630,10 +634,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
     return '$startTime - $endTime';
   }
 
-  Widget _buildTimeSlotsTab(
-    TimetableProvider provider,
-    bool canEditTimetable,
-  ) {
+  Widget _buildTimeSlotsTab(TimetableProvider provider, bool canEditTimetable) {
     if (provider.isLoadingTimeSlots) {
       return const UnifiedLoader();
     }
@@ -679,7 +680,7 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -693,21 +694,30 @@ class _TimetableManagementScreenState extends State<TimetableManagementScreen> {
         subtitle: Text(
           '$startTime - $endTime • ${isMerged ? 'Merged (${slot['slotType']})' : 'Lecture'}',
         ),
-        trailing: canEditTimetable
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                    onPressed: () => _showEditTimeSlotDialog(slot),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                    onPressed: () => _confirmDeleteTimeSlot(slot),
-                  ),
-                ],
-              )
-            : null,
+        trailing:
+            canEditTimetable
+                ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.edit,
+                        size: 20,
+                        color: Colors.blue,
+                      ),
+                      onPressed: () => _showEditTimeSlotDialog(slot),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete,
+                        size: 20,
+                        color: Colors.red,
+                      ),
+                      onPressed: () => _confirmDeleteTimeSlot(slot),
+                    ),
+                  ],
+                )
+                : null,
       ),
     );
   }

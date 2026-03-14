@@ -33,6 +33,7 @@ class LoginProvider extends ChangeNotifier {
   bool get isLoggingOut => _isLoggingOut;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
+  bool get isSchool => _currentUser?.institution?.type == 'SCHOOL';
 
   final AuthService _authService = AuthService();
 

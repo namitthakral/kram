@@ -38,7 +38,8 @@ class _GenerateReportCardsContent extends StatefulWidget {
       _GenerateReportCardsContentState();
 }
 
-class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent> {
+class _GenerateReportCardsContentState
+    extends State<_GenerateReportCardsContent> {
   @override
   void initState() {
     super.initState();
@@ -48,7 +49,9 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
   Future<void> _loadData() async {
     final loginProvider = context.read<LoginProvider>();
     final teacherId = loginProvider.currentUser?.teacher?.id;
-    await context.read<ReportCardsProvider>().loadInitialData(teacherId: teacherId);
+    await context.read<ReportCardsProvider>().loadInitialData(
+      teacherId: teacherId,
+    );
   }
 
   @override
@@ -58,20 +61,23 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
     final user = loginProvider.currentUser;
     final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
 
-    final classNames = provider.availableClasses
-        .map((c) => c.className ?? 'Class')
-        .toSet()
-        .toList()
-      ..sort();
-    final sections = provider.selectedClassName == null
-        ? <String>[]
-        : provider.availableClasses
-            .where(
-                (c) => (c.className ?? 'Class') == provider.selectedClassName,
-            )
-            .map((c) => c.sectionName)
+    final classNames =
+        provider.availableClasses
+            .map((c) => c.className ?? 'Class')
             .toSet()
             .toList()
+          ..sort();
+    final sections =
+        provider.selectedClassName == null
+              ? <String>[]
+              : provider.availableClasses
+                  .where(
+                    (c) =>
+                        (c.className ?? 'Class') == provider.selectedClassName,
+                  )
+                  .map((c) => c.sectionName)
+                  .toSet()
+                  .toList()
           ..sort();
 
     return CustomMainScreenWithAppbar(
@@ -104,16 +110,17 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
                         value: provider.selectedClassName,
                         items: classNames,
                         itemLabel: (s) => 'Class $s',
-                        onTap: () => _showPicker<String>(
-                          context,
-                          'Class',
-                          classNames,
-                          (s) => 'Class $s',
-                          provider.selectedClassName,
-                          (val) {
-                            provider.setSelectedClassAndSection(val, null);
-                          },
-                        ),
+                        onTap:
+                            () => _showPicker<String>(
+                              context,
+                              'Class',
+                              classNames,
+                              (s) => 'Class $s',
+                              provider.selectedClassName,
+                              (val) {
+                                provider.setSelectedClassAndSection(val, null);
+                              },
+                            ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -125,20 +132,21 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
                         items: sections,
                         itemLabel: (s) => 'Sec $s',
                         isDisabled: provider.selectedClassName == null,
-                        onTap: () => _showPicker<String>(
-                          context,
-                          'Section',
-                          sections,
-                          (s) => 'Sec $s',
-                          provider.selectedSectionName,
-                          (val) async {
-                            provider.setSelectedClassAndSection(
-                              provider.selectedClassName,
-                              val,
-                            );
-                            await provider.loadStudentsForSection();
-                          },
-                        ),
+                        onTap:
+                            () => _showPicker<String>(
+                              context,
+                              'Section',
+                              sections,
+                              (s) => 'Sec $s',
+                              provider.selectedSectionName,
+                              (val) async {
+                                provider.setSelectedClassAndSection(
+                                  provider.selectedClassName,
+                                  val,
+                                );
+                                await provider.loadStudentsForSection();
+                              },
+                            ),
                       ),
                     ),
                   ],
@@ -146,8 +154,7 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
                 const SizedBox(height: 8),
                 CheckboxListTile(
                   value: provider.includeExamDetails,
-                  onChanged: (v) =>
-                      provider.setIncludeExamDetails(v ?? true),
+                  onChanged: (v) => provider.setIncludeExamDetails(v ?? true),
                   title: const Text(
                     'Include exam details in report card',
                     style: TextStyle(fontSize: 14),
@@ -177,7 +184,10 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
                     Expanded(
                       child: Text(
                         provider.error!,
-                        style: TextStyle(color: Colors.red.shade700, fontSize: 14),
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ],
@@ -186,9 +196,7 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
             ),
 
           // Report Cards header + student list
-          Expanded(
-            child: _buildStudentList(provider),
-          ),
+          Expanded(child: _buildStudentList(provider)),
         ],
       ),
     );
@@ -209,10 +217,7 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
             Text(
               'Select Class & Section to see students',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -227,18 +232,11 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.people_outline,
-              size: 64,
-              color: Colors.grey.shade300,
-            ),
+            Icon(Icons.people_outline, size: 64, color: Colors.grey.shade300),
             const SizedBox(height: 16),
             Text(
               'No students in this section',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -262,52 +260,58 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
               ),
               const Spacer(),
               FilledButton.icon(
-                onPressed: isGeneratingAll
-                    ? null
-                    : () async {
-                        final result =
-                            await provider.generateForAll();
-                        if (!mounted) return;
-                        if (result.successCount > 0 || result.failCount > 0) {
-                          final total = result.successCount + result.failCount;
-                          if (result.failCount == 0) {
+                onPressed:
+                    isGeneratingAll
+                        ? null
+                        : () async {
+                          final result = await provider.generateForAll();
+                          if (!mounted) return;
+                          if (result.successCount > 0 || result.failCount > 0) {
+                            final total =
+                                result.successCount + result.failCount;
+                            if (result.failCount == 0) {
+                              showCustomSnackbar(
+                                message:
+                                    'Report cards generated for all $total students',
+                                type: SnackbarType.success,
+                              );
+                            } else {
+                              showCustomSnackbar(
+                                message:
+                                    'Generated ${result.successCount} of $total report cards. ${result.failCount} failed.',
+                                type:
+                                    result.successCount > 0
+                                        ? SnackbarType.success
+                                        : SnackbarType.error,
+                              );
+                            }
+                          }
+                          if (provider.error != null && mounted) {
                             showCustomSnackbar(
-                              message:
-                                  'Report cards generated for all $total students',
-                              type: SnackbarType.success,
-                            );
-                          } else {
-                            showCustomSnackbar(
-                              message:
-                                  'Generated ${result.successCount} of $total report cards. ${result.failCount} failed.',
-                              type: result.successCount > 0
-                                  ? SnackbarType.success
-                                  : SnackbarType.error,
+                              message: provider.error!,
+                              type: SnackbarType.error,
                             );
                           }
-                        }
-                        if (provider.error != null && mounted) {
-                          showCustomSnackbar(
-                            message: provider.error!,
-                            type: SnackbarType.error,
-                          );
-                        }
-                      },
-                icon: isGeneratingAll
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.batch_prediction, size: 20),
+                        },
+                icon:
+                    isGeneratingAll
+                        ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Icon(Icons.batch_prediction, size: 20),
                 label: Text(
                   isGeneratingAll ? 'Generating all...' : 'Generate All',
                 ),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ],
@@ -321,15 +325,15 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
             itemBuilder: (context, index) {
               final student = students[index];
               final card = provider.reportCardForStudent(student.id);
-              final isGenerating = provider.isGeneratingForStudent(student.id) ||
+              final isGenerating =
+                  provider.isGeneratingForStudent(student.id) ||
                   provider.isGeneratingAll;
               return _StudentReportCardRow(
                 student: student,
                 reportCard: card,
                 isGenerating: isGenerating,
                 onGenerate: () async {
-                  final success =
-                      await provider.generateForStudent(student.id);
+                  final success = await provider.generateForStudent(student.id);
                   if (mounted) {
                     if (success) {
                       final newCard = provider.reportCardForStudent(student.id);
@@ -346,19 +350,19 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
                       }
                     } else {
                       showCustomSnackbar(
-                        message:
-                            provider.error ?? 'Failed to generate',
+                        message: provider.error ?? 'Failed to generate',
                         type: SnackbarType.error,
                       );
                     }
                   }
                 },
-                onView: card != null
-                    ? () => context.push(
+                onView:
+                    card != null
+                        ? () => context.push(
                           '/academic/report-cards/view',
                           extra: card,
                         )
-                    : null,
+                        : null,
               );
             },
           ),
@@ -379,15 +383,16 @@ class _GenerateReportCardsContentState extends State<_GenerateReportCardsContent
       context: context,
       title: 'Select $title',
       subtitle: 'Choose $title',
-      items: items
-          .map(
-            (item) => SelectionItem<T>(
-              value: item,
-              label: itemLabel(item),
-              icon: Icons.check_circle_outline,
-            ),
-          )
-          .toList(),
+      items:
+          items
+              .map(
+                (item) => SelectionItem<T>(
+                  value: item,
+                  label: itemLabel(item),
+                  icon: Icons.check_circle_outline,
+                ),
+              )
+              .toList(),
       selectedValue: currentValue,
     );
     if (context.mounted && selected != null) {
@@ -440,30 +445,24 @@ class _SelectorTile<T> extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
                   ),
                   Text(
                     value != null ? itemLabel(value as T) : 'Select',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: value == null || isDisabled
-                          ? Colors.grey
-                          : Colors.black87,
+                      color:
+                          value == null || isDisabled
+                              ? Colors.grey
+                              : Colors.black87,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              color: Colors.grey,
-              size: 20,
-            ),
+            Icon(Icons.arrow_drop_down, color: Colors.grey, size: 20),
           ],
         ),
       ),
@@ -496,7 +495,7 @@ class _StudentReportCardRow extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -505,14 +504,14 @@ class _StudentReportCardRow extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: CustomAppColors.primaryBlue.withOpacity(0.1),
+            backgroundColor: CustomAppColors.primaryBlue.withValues(alpha: 0.1),
             radius: 22,
             child: Text(
               student.initials.isNotEmpty
                   ? student.initials
                   : student.name.isNotEmpty
-                      ? student.name.substring(0, 1).toUpperCase()
-                      : '?',
+                  ? student.name.substring(0, 1).toUpperCase()
+                  : '?',
               style: const TextStyle(
                 color: CustomAppColors.primaryBlue,
                 fontWeight: FontWeight.bold,
@@ -555,19 +554,23 @@ class _StudentReportCardRow extends StatelessWidget {
               icon: const Icon(Icons.visibility, size: 18),
               label: const Text('View'),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
             ),
           if (onView != null) const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: isGenerating ? null : onGenerate,
-            icon: isGenerating
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.add_chart, size: 18),
+            icon:
+                isGenerating
+                    ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Icon(Icons.add_chart, size: 18),
             label: Text(isGenerating ? 'Generating...' : 'Generate'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

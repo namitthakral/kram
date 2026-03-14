@@ -176,7 +176,7 @@ class _MarksListContentState extends State<_MarksListContent> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -440,41 +440,37 @@ class _MarksListContentState extends State<_MarksListContent> {
   }
 
   Widget _buildSummaryMetric(String label, String value, Color color) => Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey.shade600,
-            fontWeight: FontWeight.w500,
-          ),
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: Colors.grey.shade600,
+          fontWeight: FontWeight.w500,
         ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+      ),
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: color,
         ),
-      ],
-    );
+      ),
+    ],
+  );
 
   Widget _buildEmptyState(String message) => Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.assignment_outlined,
-            size: 48,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 16),
-          Text(message, style: TextStyle(color: Colors.grey.shade500)),
-        ],
-      ),
-    );
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade300),
+        const SizedBox(height: 16),
+        Text(message, style: TextStyle(color: Colors.grey.shade500)),
+      ],
+    ),
+  );
 }
 
 // Student Marks List
@@ -493,142 +489,140 @@ class _StudentMarksList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: students.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final student = students[index];
-        final marks = student.marks;
-        final hasMarks = marks != null;
+    padding: const EdgeInsets.all(16),
+    itemCount: students.length,
+    separatorBuilder: (_, __) => const SizedBox(height: 12),
+    itemBuilder: (context, index) {
+      final student = students[index];
+      final marks = student.marks;
+      final hasMarks = marks != null;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            border: Border.all(
-              color: hasMarks ? Colors.transparent : Colors.grey.shade200,
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
+          ],
+          border: Border.all(
+            color: hasMarks ? Colors.transparent : Colors.grey.shade200,
           ),
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Avatar
-              CircleAvatar(
-                backgroundColor:
-                    hasMarks
-                        ? CustomAppColors.primaryBlue.withOpacity(0.1)
-                        : Colors.grey.shade100,
-                radius: 22,
-                child: Text(
-                  student.initials,
-                  style: TextStyle(
-                    color:
-                        hasMarks
-                            ? CustomAppColors.primaryBlue
-                            : Colors.grey.shade600,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Avatar
+            CircleAvatar(
+              backgroundColor:
+                  hasMarks
+                      ? CustomAppColors.primaryBlue.withValues(alpha: 0.1)
+                      : Colors.grey.shade100,
+              radius: 22,
+              child: Text(
+                student.initials,
+                style: TextStyle(
+                  color:
+                      hasMarks
+                          ? CustomAppColors.primaryBlue
+                          : Colors.grey.shade600,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
-              const SizedBox(width: 16),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      student.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.black87,
-                      ),
+            ),
+            const SizedBox(width: 16),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    student.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.black87,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'ID: ${student.id}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'ID: ${student.id}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
               ),
-              // Marks Input
-              Container(
-                width: 70,
-                padding: const EdgeInsets.symmetric(),
-                child: TextField(
-                  key: ValueKey('student_marks_${student.id}'),
-                  enabled: !readOnly,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(3),
-                  ],
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color:
-                        hasMarks ? CustomAppColors.primaryBlue : Colors.black87,
-                  ),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor:
-                        readOnly
-                            ? Colors.grey.shade100
-                            : (hasMarks
-                                ? CustomAppColors.primaryBlue.withOpacity(0.05)
-                                : Colors.grey.shade50),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 8,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: CustomAppColors.primaryBlue,
-                        width: 2,
-                      ),
-                    ),
-                    hintText:
-                        readOnly ? '-' : (marks?.toStringAsFixed(0) ?? '-'),
-                    hintStyle: TextStyle(color: Colors.grey.shade400),
-                  ),
-                  controller: TextEditingController.fromValue(
-                    TextEditingValue(
-                      text: marks?.toStringAsFixed(0) ?? '',
-                      selection: TextSelection.collapsed(
-                        offset: marks?.toStringAsFixed(0).length ?? 0,
-                      ),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    final marks = double.tryParse(value);
-                    // Optional: Add validation against totalMarks
-                    onMarksChanged(student.id, marks);
-                  },
+            ),
+            // Marks Input
+            Container(
+              width: 70,
+              padding: const EdgeInsets.symmetric(),
+              child: TextField(
+                key: ValueKey('student_marks_${student.id}'),
+                enabled: !readOnly,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3),
+                ],
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color:
+                      hasMarks ? CustomAppColors.primaryBlue : Colors.black87,
                 ),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor:
+                      readOnly
+                          ? Colors.grey.shade100
+                          : (hasMarks
+                              ? CustomAppColors.primaryBlue.withValues(
+                                alpha: 0.05,
+                              )
+                              : Colors.grey.shade50),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 8,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: CustomAppColors.primaryBlue,
+                      width: 2,
+                    ),
+                  ),
+                  hintText: readOnly ? '-' : (marks?.toStringAsFixed(0) ?? '-'),
+                  hintStyle: TextStyle(color: Colors.grey.shade400),
+                ),
+                controller: TextEditingController.fromValue(
+                  TextEditingValue(
+                    text: marks?.toStringAsFixed(0) ?? '',
+                    selection: TextSelection.collapsed(
+                      offset: marks?.toStringAsFixed(0).length ?? 0,
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
+                  final marks = double.tryParse(value);
+                  // Optional: Add validation against totalMarks
+                  onMarksChanged(student.id, marks);
+                },
               ),
-            ],
-          ),
-        );
-      },
-    );
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 // Generic Selector Widget (Copied and adapted)
@@ -659,77 +653,75 @@ class _GenericSelector<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-      onTap:
-          (isLoading || isDisabled)
-              ? null
-              : () => _showSelectionDialog(context),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 8 : 12,
-          vertical: compact ? 8 : 12,
-        ),
-        decoration: BoxDecoration(
-          color: (isDisabled || isLoading) ? Colors.grey.shade50 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              iconData,
-              color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
-              size: compact ? 16 : 18,
-            ),
-            SizedBox(width: compact ? 6 : 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+    onTap:
+        (isLoading || isDisabled) ? null : () => _showSelectionDialog(context),
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 12,
+        vertical: compact ? 8 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: (isDisabled || isLoading) ? Colors.grey.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            iconData,
+            color: isDisabled ? Colors.grey : CustomAppColors.primaryBlue,
+            size: compact ? 16 : 18,
+          ),
+          SizedBox(width: compact ? 6 : 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: compact ? 9 : 10,
+                    color: Colors.grey,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (isLoading)
+                  const SizedBox(
+                    height: 14,
+                    width: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
                   Text(
-                    label,
+                    selectedValue != null
+                        ? itemLabelBuilder(selectedValue as T)
+                        : placeholder,
                     style: TextStyle(
-                      fontSize: compact ? 9 : 10,
-                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: compact ? 11 : 13,
+                      color:
+                          selectedValue == null || isDisabled
+                              ? Colors.grey
+                              : Colors.black,
                     ),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
-                  if (isLoading)
-                    const SizedBox(
-                      height: 14,
-                      width: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    Text(
-                      selectedValue != null
-                          ? itemLabelBuilder(selectedValue as T)
-                          : placeholder,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: compact ? 11 : 13,
-                        color:
-                            selectedValue == null || isDisabled
-                                ? Colors.grey
-                                : Colors.black,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                ],
-              ),
+              ],
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              color: Colors.grey,
-              size: compact ? 16 : 18,
-            ),
-          ],
-        ),
+          ),
+          Icon(
+            Icons.arrow_drop_down,
+            color: Colors.grey,
+            size: compact ? 16 : 18,
+          ),
+        ],
       ),
-    );
+    ),
+  );
 
   Future<void> _showSelectionDialog(BuildContext context) async {
     final selected = await CustomDialog.showSelection<T>(

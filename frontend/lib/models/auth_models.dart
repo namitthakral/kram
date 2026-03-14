@@ -161,15 +161,24 @@ class AuthTokens {
 }
 
 class Institution {
-  Institution({required this.id, required this.name});
+  Institution({required this.id, required this.name, this.type});
 
   factory Institution.fromJson(Map<String, dynamic> json) =>
-      Institution(id: json['id'], name: json['name']);
+      Institution(
+        id: json['id'],
+        name: json['name'],
+        type: json['type'],
+      );
 
   final int id;
   final String name;
+  final String? type;
 
-  Map<String, dynamic> toJson() => {'id': id, 'name': name};
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'type': type,
+  };
 }
 
 int? _institutionIdFromRelations(Map<String, dynamic> json) {

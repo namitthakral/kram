@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../models/auth_models.dart';
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/extensions.dart';
 import '../../../utils/responsive_utils.dart';
@@ -13,6 +14,7 @@ import '../../../widgets/custom_widgets/custom_sliding_segmented_control.dart';
 import '../../../widgets/custom_widgets/dashboard_widgets.dart';
 import '../providers/admin_analytics_tab_provider.dart';
 import '../providers/admin_dashboard_provider.dart';
+import '../services/admin_service.dart';
 import '../widgets/add_student_dialog.dart';
 import '../widgets/admin_chart_widgets.dart';
 
@@ -76,7 +78,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 24),
 
             // Quick actions (relative admin links)
-            _buildQuickActionsSection(isMobile),
+            _buildQuickActionsSection(isMobile, user),
             const SizedBox(height: 24),
 
             // Main Content
@@ -92,7 +94,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildQuickActionsSection(bool isMobile) => LayoutBuilder(
+  Widget _buildQuickActionsSection(bool isMobile, User user) => LayoutBuilder(
     builder: (context, constraints) {
       final crossCount = isMobile ? 3 : 4;
       return GridView.count(
@@ -145,11 +147,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             color: const Color(0xFF3b82f6),
             onTap: () => context.router.router.push('/subjects'),
           ),
-          FeatureActionCard(
-            title: 'Manage Semesters',
-            icon: Icons.calendar_month_rounded,
-            color: const Color(0xFFa855f7),
-            onTap: () => context.router.router.push('/academic-management'),
+          FutureBuilder<Map<String, dynamic>>(
+            future: AdminService().getInstitutionInfo(user.institutionId ?? 1),
+            builder: (context, snapshot) {
+              final isSchool = snapshot.data?['type'] == 'SCHOOL';
+              return FeatureActionCard(
+                title: context.translate(isSchool ? 'manage_terms' : 'manage_semesters'),
+                icon: Icons.calendar_month_rounded,
+                color: const Color(0xFFa855f7),
+                onTap: () => context.router.router.push('/academic-management'),
+              );
+            },
           ),
         ],
       );

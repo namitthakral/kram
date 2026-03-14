@@ -246,8 +246,8 @@ class _MarkAttendanceTab extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor:
               isPresent
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
           child: Text(
             student.initials,
             style: TextStyle(
@@ -262,7 +262,7 @@ class _MarkAttendanceTab extends StatelessWidget {
           value: isPresent,
           activeThumbColor: Colors.green,
           inactiveThumbColor: Colors.red,
-          inactiveTrackColor: Colors.red.withOpacity(0.3),
+          inactiveTrackColor: Colors.red.withValues(alpha: 0.3),
           onChanged: (val) => provider.toggleStudentAttendance(student.id),
         ),
       ),

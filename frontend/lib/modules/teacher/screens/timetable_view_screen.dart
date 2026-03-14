@@ -81,7 +81,8 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
 
     // Timetable editing is admin-only; teachers get view-only
     final roleId = user?.role?.id;
-    final canEditTimetable = roleId == RoleConstants.superAdmin.id ||
+    final canEditTimetable =
+        roleId == RoleConstants.superAdmin.id ||
         roleId == RoleConstants.admin.id;
 
     return CustomMainScreenWithAppbar(
@@ -93,35 +94,39 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
         employeeId: user?.teacher?.employeeId ?? 'EMP',
         onNotificationIconPressed: () {},
       ),
-      bottomWidget: canEditTimetable
-          ? Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    context.pushNamed('create_timetable');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: CustomAppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+      bottomWidget:
+          canEditTimetable
+              ? Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      context.pushNamed('create_timetable');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CustomAppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.edit_calendar_rounded, color: Colors.white),
-                  label: const Text(
-                    'Manage Timetable',
-                    style: TextStyle(
+                    icon: const Icon(
+                      Icons.edit_calendar_rounded,
                       color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: AppTheme.fontWeightBold,
+                    ),
+                    label: const Text(
+                      'Manage Timetable',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: AppTheme.fontWeightBold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            )
-          : null,
+              )
+              : null,
       child:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -140,69 +145,65 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
   }
 
   Widget _buildLegend() => Row(
-      children: [
-        _legendItem(
-          'Lecture',
-          CustomAppColors.blue500.withOpacity(0.1),
-          CustomAppColors.blue500,
-        ),
-        const SizedBox(width: 12),
-        _legendItem('Break', Colors.orange.withOpacity(0.1), Colors.orange),
-      ],
-    );
+    children: [
+      _legendItem(
+        'Lecture',
+        CustomAppColors.blue500.withValues(alpha: 0.1),
+        CustomAppColors.blue500,
+      ),
+      const SizedBox(width: 12),
+      _legendItem('Break', Colors.orange.withValues(alpha: 0.1), Colors.orange),
+    ],
+  );
 
   Widget _legendItem(String label, Color bg, Color text) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: text,
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    decoration: BoxDecoration(
+      color: bg,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: text, fontSize: 12, fontWeight: FontWeight.bold),
+    ),
+  );
 
   Widget _buildDaySchedule(String day) => Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              day,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: CustomAppColors.slate800,
-              ),
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            day,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: CustomAppColors.slate800,
             ),
           ),
-          const Divider(height: 1),
-          // Mock Slots for Visualization
-          _buildSlot('09:00 - 10:00', 'Mathematics', 'Class 10-A'),
-          _buildSlot('10:00 - 11:00', 'Physics', 'Class 10-A'),
-          _buildSlot('11:00 - 11:30', 'Break', '', isBreak: true),
-          _buildSlot('11:30 - 12:30', 'Chemistry', 'Class 10-A'),
-        ],
-      ),
-    );
+        ),
+        const Divider(height: 1),
+        // Mock Slots for Visualization
+        _buildSlot('09:00 - 10:00', 'Mathematics', 'Class 10-A'),
+        _buildSlot('10:00 - 11:00', 'Physics', 'Class 10-A'),
+        _buildSlot('11:00 - 11:30', 'Break', '', isBreak: true),
+        _buildSlot('11:30 - 12:30', 'Chemistry', 'Class 10-A'),
+      ],
+    ),
+  );
 
   Widget _buildSlot(
     String time,
@@ -210,58 +211,58 @@ class _TimetableViewScreenState extends State<TimetableViewScreen> {
     String subtext, {
     bool isBreak = false,
   }) => Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        ),
-        color: isBreak ? Colors.orange.withOpacity(0.05) : null,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      border: Border(
+        bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color:
-                  isBreak
-                      ? Colors.orange.withOpacity(0.1)
-                      : CustomAppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              time,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isBreak ? Colors.orange : CustomAppColors.primary,
-              ),
+      color: isBreak ? Colors.orange.withValues(alpha: 0.05) : null,
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color:
+                isBreak
+                    ? Colors.orange.withValues(alpha: 0.1)
+                    : CustomAppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            time,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isBreak ? Colors.orange : CustomAppColors.primary,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                subject,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isBreak ? Colors.orange : CustomAppColors.slate800,
+                ),
+              ),
+              if (subtext.isNotEmpty)
                 Text(
-                  subject,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isBreak ? Colors.orange : CustomAppColors.slate800,
+                  subtext,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: CustomAppColors.slate500,
                   ),
                 ),
-                if (subtext.isNotEmpty)
-                  Text(
-                    subtext,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: CustomAppColors.slate500,
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 }

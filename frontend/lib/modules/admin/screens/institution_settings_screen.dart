@@ -133,7 +133,7 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
                       const SizedBox(height: 32),
                       _buildSectionHeader(context.translate('academic_settings')),
                       const SizedBox(height: 12),
-                      _buildAcademicSection(context),
+                      _buildAcademicSection(context, loginProvider),
                       const SizedBox(height: 32),
                       _buildSectionHeader(context.translate('system')),
                       const SizedBox(height: 12),
@@ -274,7 +274,7 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
     );
   }
 
-  Widget _buildAcademicSection(BuildContext context) {
+  Widget _buildAcademicSection(BuildContext context, LoginProvider loginProvider) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -306,7 +306,9 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
               onPressed: () =>
                   context.router.router.push('/academic-management'),
               icon: const Icon(Icons.calendar_month_rounded, size: 20),
-              label: const Text('Academic Years & Semesters'),
+              label: Text(context.translate(loginProvider.isSchool
+                  ? 'years_and_terms'
+                  : 'years_and_semesters')),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.blue500,
                 foregroundColor: Colors.white,

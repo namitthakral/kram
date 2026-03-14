@@ -452,7 +452,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen> {
     decoration: BoxDecoration(
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF155dfc).withOpacity(0.3),
+          color: const Color(0xFF155dfc).withValues(alpha: 0.3),
           blurRadius: 16,
           offset: const Offset(0, 8),
         ),

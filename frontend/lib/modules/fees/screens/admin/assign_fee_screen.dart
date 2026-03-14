@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../utils/app_colors.dart';
 import '../../../../utils/app_styles.dart';
 import '../../providers/fees_provider.dart';
-import '../../models/fee_structure.dart';
 
 // Using DropdownSearch or simple Dropdown for now.
 // Real app would likely need a searchable student picker.
@@ -74,123 +74,122 @@ class _AssignFeeScreenState extends State<AssignFeeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Assign Fee'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: AppStyles.headlineSmall.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(
+      title: const Text('Assign Fee'),
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: AppStyles.headlineSmall.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.bold,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Assign Fee to Student',
-                style: AppStyles.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
+      iconTheme: const IconThemeData(color: AppColors.textPrimary),
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Assign Fee to Student',
+              style: AppStyles.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Placeholder for Student Picker
+            // Real implementation: Searchable dropdown/modal
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Student ID (Placeholder)',
+                hintText: 'Enter Student ID',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
                 ),
               ),
-              const SizedBox(height: 24),
+              keyboardType: TextInputType.number,
+              validator:
+                  (value) => value == null || value.isEmpty ? 'Required' : null,
+              onChanged: (value) => _selectedStudentId = int.tryParse(value),
+            ),
+            const SizedBox(height: 16),
 
-              // Placeholder for Student Picker
-              // Real implementation: Searchable dropdown/modal
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Student ID (Placeholder)',
-                  hintText: 'Enter Student ID',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty ? 'Required' : null,
-                onChanged: (value) => _selectedStudentId = int.tryParse(value),
-              ),
-              const SizedBox(height: 16),
+            Consumer<FeesProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading && provider.feeStructures.isEmpty) {
+                  return const LinearProgressIndicator();
+                }
 
-              Consumer<FeesProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading && provider.feeStructures.isEmpty) {
-                    return const LinearProgressIndicator();
-                  }
-
-                  return DropdownButtonFormField<int>(
-                    value: _selectedFeeStructureId,
-                    decoration: InputDecoration(
-                      labelText: 'Select Fee Structure',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                    items:
-                        provider.feeStructures.map((structure) {
-                          return DropdownMenuItem(
-                            value: structure.id,
-                            child: Text(
-                              '${structure.feeName} (₹${structure.amount})',
-                            ),
-                          );
-                        }).toList(),
-                    onChanged:
-                        (value) =>
-                            setState(() => _selectedFeeStructureId = value),
-                    validator:
-                        (value) =>
-                            value == null
-                                ? 'Please select a fee structure'
-                                : null,
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submitForm,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
+                return DropdownButtonFormField<int>(
+                  initialValue: _selectedFeeStructureId,
+                  decoration: InputDecoration(
+                    labelText: 'Select Fee Structure',
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                   ),
-                  child:
-                      _isSubmitting
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                            'Assign Fee',
-                            style: AppStyles.titleMedium.copyWith(
-                              color: Colors.white,
+                  items:
+                      provider.feeStructures
+                          .map(
+                            (structure) => DropdownMenuItem(
+                              value: structure.id,
+                              child: Text(
+                                '${structure.feeName} (₹${structure.amount})',
+                              ),
                             ),
-                          ),
+                          )
+                          .toList(),
+                  onChanged:
+                      (value) =>
+                          setState(() => _selectedFeeStructureId = value),
+                  validator:
+                      (value) =>
+                          value == null
+                              ? 'Please select a fee structure'
+                              : null,
+                );
+              },
+            ),
+            const SizedBox(height: 32),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitForm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
+                child:
+                    _isSubmitting
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                          'Assign Fee',
+                          style: AppStyles.titleMedium.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
 }

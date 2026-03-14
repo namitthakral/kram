@@ -122,7 +122,7 @@ class _InstitutionCard extends StatelessWidget {
 
   final Map<String, dynamic> institution;
 
-  void _showAddAdminDialog(BuildContext context) {
+  void _showAddAdminDialog(BuildContext context, Map<String, dynamic>? currentAdmin) {
     final id = institution['id'] as int?;
     final name = institution['name'] as String? ?? 'Unknown';
     if (id == null) return;
@@ -132,6 +132,7 @@ class _InstitutionCard extends StatelessWidget {
       builder: (_) => CreateInstitutionAdminDialog(
         institutionId: id,
         institutionName: name,
+        currentAdmin: currentAdmin,
       ),
     );
   }
@@ -147,6 +148,11 @@ class _InstitutionCard extends StatelessWidget {
     final location = [city, state].where((s) => s.isNotEmpty).join(', ');
     final typeLabel =
         type.isNotEmpty ? type[0] + type.substring(1).toLowerCase() : '';
+
+    final users = institution['users'] as List<dynamic>? ?? [];
+    final Map<String, dynamic>? currentAdmin = users.isNotEmpty ? users.first as Map<String, dynamic> : null;
+    final adminName = currentAdmin != null ? '${currentAdmin['firstName']} ${currentAdmin['lastName']}' : null;
+    final adminEmail = currentAdmin != null ? currentAdmin['email'] as String? : null;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -218,21 +224,49 @@ class _InstitutionCard extends StatelessWidget {
                       ],
                     ),
                   ],
+                  if (currentAdmin != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: CustomAppColors.slate100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.shield_outlined, size: 12, color: CustomAppColors.slate600),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              '$adminName (${adminEmail ?? ''})',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: CustomAppColors.slate700,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'add_admin') _showAddAdminDialog(context);
+                if (value == 'add_admin') _showAddAdminDialog(context, currentAdmin);
               },
-              itemBuilder: (ctx) => const [
+              itemBuilder: (ctx) => [
                 PopupMenuItem(
                   value: 'add_admin',
                   child: Row(
                     children: [
-                      Icon(Icons.admin_panel_settings, size: 18),
-                      SizedBox(width: 8),
-                      Text('Add Admin'),
+                      const Icon(Icons.admin_panel_settings, size: 18),
+                      const SizedBox(width: 8),
+                      Text(currentAdmin != null ? 'Update Admin' : 'Add Admin'),
                     ],
                   ),
                 ),

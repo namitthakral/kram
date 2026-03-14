@@ -83,6 +83,23 @@ export class InstitutionsService {
         city: true,
         state: true,
         country: true,
+        users: {
+          where: {
+            role: {
+              roleName: 'admin',
+            },
+            status: { in: ['ACTIVE', 'INACTIVE'] },
+          },
+          select: {
+            id: true,
+            uuid: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            status: true,
+          },
+        },
       },
       orderBy: {
         name: 'asc',
@@ -97,6 +114,23 @@ export class InstitutionsService {
         id: true,
         code: true,
         name: true,
+        users: {
+          where: {
+            role: {
+              roleName: 'admin',
+            },
+            status: { in: ['ACTIVE', 'INACTIVE'] },
+          },
+          select: {
+            id: true,
+            uuid: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            status: true,
+          },
+        },
       },
     })
   }

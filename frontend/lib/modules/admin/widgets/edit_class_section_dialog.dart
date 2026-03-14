@@ -6,6 +6,7 @@ import '../../../utils/extensions.dart';
 import '../../../widgets/custom_widgets/custom_text_field.dart';
 import '../../teacher/services/teacher_service.dart';
 import '../providers/class_section_management_provider.dart';
+import '../../../provider/login_signup/login_provider.dart';
 
 class EditClassSectionDialog extends StatefulWidget {
   final Map<String, dynamic> section;
@@ -165,7 +166,9 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              context.translate('semester'),
+                                context.translate(context.read<LoginProvider>().isSchool
+                                    ? 'term'
+                                    : 'semester'),
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,

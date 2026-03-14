@@ -81,32 +81,30 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       ),
       child: SingleChildScrollView(
         child: Consumer<TeacherDashboardProvider>(
-          builder: (context, dashboardProvider, child) {
-            final stats = dashboardProvider.dashboardStats;
-            final hasAttendanceAccess = stats?.hasAttendanceAccess ?? true;
+          builder:
+              (context, dashboardProvider, child) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // final hasAttendanceAccess = stats?.hasAttendanceAccess ?? true;
+                  // final stats = dashboardProvider.dashboardStats;
+                  // Header (hide on mobile to save space)
+                  // if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header (hide on mobile to save space)
-                // if (!isMobile) ...[_buildHeader(), const SizedBox(height: 24)],
-
-                // Statistics Cards - only show if teacher has access
-                if (hasAttendanceAccess) ...[
+                  // Statistics Cards - only show if teacher has access
+                  // if (hasAttendanceAccess) ...[
                   _buildStatsSection(isMobile),
                   const SizedBox(height: 24),
+                  // ],
+
+                  // Main Content - Responsive Layout
+                  if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
+
+                  const SizedBox(height: 24),
+
+                  // Charts Section with Tabs
+                  _buildChartsSection(isMobile),
                 ],
-
-                // Main Content - Responsive Layout
-                if (isMobile) _buildMobileLayout() else _buildDesktopLayout(),
-
-                const SizedBox(height: 24),
-
-                // Charts Section with Tabs
-                _buildChartsSection(isMobile),
-              ],
-            );
-          },
+              ),
         ),
       ),
     );
@@ -427,10 +425,12 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
                   child: KeyedSubtree(
                     key: ValueKey<PerformanceTab>(provider.selectedValue),
                     child: switch (provider.selectedValue) {
-                      PerformanceTab.attendance =>
-                        _buildAttendanceTrendsTab(400),
-                      PerformanceTab.subject =>
-                        _buildSubjectPerformanceTab(400),
+                      PerformanceTab.attendance => _buildAttendanceTrendsTab(
+                        400,
+                      ),
+                      PerformanceTab.subject => _buildSubjectPerformanceTab(
+                        400,
+                      ),
                       PerformanceTab.grade => _buildGradeDistributionTab(400),
                     },
                   ),

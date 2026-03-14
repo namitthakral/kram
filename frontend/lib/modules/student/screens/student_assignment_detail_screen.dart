@@ -53,7 +53,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Divider(color: CustomAppColors.primary.withOpacity(0.2)),
+                Divider(color: CustomAppColors.primary.withValues(alpha: 0.2)),
               ],
             ),
           ),
@@ -105,7 +105,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
       border: Border.all(color: Colors.grey.shade200),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -159,7 +159,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: CustomAppColors.primary.withOpacity(0.08),
+                    color: CustomAppColors.primary.withValues(alpha: 0.08),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -174,7 +174,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [statusColor, statusColor.withOpacity(0.5)],
+                          colors: [statusColor, statusColor.withValues(alpha: 0.5)],
                         ),
                       ),
                     ),
@@ -191,7 +191,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: CustomAppColors.primary.withOpacity(
+                                  color: CustomAppColors.primary.withValues(alpha:
                                     0.08,
                                   ),
                                   borderRadius: BorderRadius.circular(8),
@@ -212,7 +212,7 @@ class StudentAssignmentDetailScreen extends StatelessWidget {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
+                                  color: statusColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(

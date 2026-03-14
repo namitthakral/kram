@@ -21,6 +21,7 @@ class _CreateCourseDialogState extends State<CreateCourseDialog> {
   final _descriptionController = TextEditingController();
   final _durationController = TextEditingController();
   final _totalSemestersController = TextEditingController();
+  bool _isSchool = false;
 
   String _selectedDegreeType = 'BACHELORS';
   String _selectedDurationUnit = 'Years';
@@ -38,6 +39,19 @@ class _CreateCourseDialogState extends State<CreateCourseDialog> {
 
   final List<String> _durationUnits = ['Years', 'Months'];
   final List<String> _statusOptions = ['ACTIVE', 'INACTIVE'];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInstitutionType();
+  }
+
+  void _checkInstitutionType() {
+    final loginProvider = context.read<LoginProvider>();
+    setState(() {
+      _isSchool = loginProvider.currentUser?.institution?.type == 'SCHOOL';
+    });
+  }
 
   @override
   void dispose() {
@@ -150,8 +164,8 @@ class _CreateCourseDialogState extends State<CreateCourseDialog> {
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _totalSemestersController,
-                        label: context.translate('total_semesters'),
-                        hintText: context.translate('enter_total_semesters'),
+                        label: context.translate(_isSchool ? 'total_terms' : 'total_semesters'),
+                        hintText: context.translate(_isSchool ? 'enter_total_terms' : 'enter_total_semesters'),
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 16),

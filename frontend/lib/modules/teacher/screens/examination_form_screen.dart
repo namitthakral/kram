@@ -68,7 +68,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     await assignmentProvider.loadClassSectionsForTeacher(user!.teacher!.id);
 
     if (mounted) {
-      _checkAutoSelection(assignmentProvider);
+      await _checkAutoSelection(assignmentProvider);
     }
     await Future.wait([
       examProvider.loadSemesters(uuid),
@@ -255,19 +255,29 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
             const SizedBox(height: 24),
 
             // Course & Semester Section
-            CustomFormSection(
-              title: context.translate('course_semester'),
-              subtitle: context.translate('select_course_semester'),
-              icon: Icons.school_outlined,
-              children: [
-                _buildCourseDropdown(),
-                const SizedBox(height: 20),
-
-                const SizedBox(height: 20),
-                _buildSubjectDropdown(),
-                const SizedBox(height: 20),
-                _buildSemesterDropdown(),
-              ],
+            Consumer<ExaminationProvider>(
+              builder: (context, examProvider, child) {
+                final isSchool = examProvider.institutionType == 'SCHOOL';
+                return CustomFormSection(
+                  title:
+                      isSchool
+                          ? context.translate('course_terms')
+                          : context.translate('course_semester'),
+                  subtitle:
+                      isSchool
+                          ? context.translate('select_course_terms')
+                          : context.translate('select_course_semester'),
+                  icon: Icons.school_outlined,
+                  children: [
+                    _buildCourseDropdown(),
+                    const SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                    _buildSubjectDropdown(),
+                    const SizedBox(height: 20),
+                    _buildSemesterDropdown(),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -397,7 +407,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
             if (course != null) {
               await provider.loadDetailsForCourse(course.id);
               if (context.mounted) {
-                _checkAutoSelection(provider);
+                await _checkAutoSelection(provider);
               }
             }
           },
@@ -647,7 +657,7 @@ class _ExaminationFormScreenState extends State<ExaminationFormScreen> {
     decoration: BoxDecoration(
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF155dfc).withOpacity(0.3),
+          color: const Color(0xFF155dfc).withValues(alpha: 0.3),
           blurRadius: 16,
           offset: const Offset(0, 8),
         ),
