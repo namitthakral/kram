@@ -633,7 +633,7 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true },
+              select: { firstName: true, lastName: true, email: true },
             },
           },
         },
@@ -802,7 +802,8 @@ export class FeesService {
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                   kramid: true,
                 },
@@ -863,7 +864,12 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true, kramid: true },
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                kramid: true,
+              },
             },
           },
         },
@@ -925,7 +931,7 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true },
+              select: { firstName: true, lastName: true, email: true },
             },
           },
         },
@@ -1086,7 +1092,12 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true, kramid: true },
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                kramid: true,
+              },
             },
           },
         },
@@ -1096,7 +1107,7 @@ export class FeesService {
           },
         },
         processor: {
-          select: { id: true, name: true, email: true },
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
       },
     })
@@ -1198,7 +1209,8 @@ export class FeesService {
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                   kramid: true,
                 },
@@ -1222,7 +1234,7 @@ export class FeesService {
             },
           },
           processor: {
-            select: { id: true, name: true, email: true },
+            select: { id: true, firstName: true, lastName: true, email: true },
           },
         },
         orderBy: { paymentDate: 'desc' },
@@ -1253,7 +1265,12 @@ export class FeesService {
             id: true,
             institutionId: true,
             user: {
-              select: { name: true, email: true, kramid: true },
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                kramid: true,
+              },
             },
           },
         },
@@ -1263,7 +1280,7 @@ export class FeesService {
           },
         },
         processor: {
-          select: { id: true, name: true, email: true },
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
       },
     })
@@ -1301,7 +1318,7 @@ export class FeesService {
           select: {
             id: true,
             user: {
-              select: { name: true, email: true },
+              select: { firstName: true, lastName: true, email: true },
             },
           },
         },

@@ -27,6 +27,14 @@
 
 **Remember: It's better to ask twice than to make unwanted changes once!**
 
+### CRITICAL: Prisma Schema Files
+**NEVER edit `/backend/prisma/schema.prisma` - it's auto-generated!**
+
+- ✅ **DO**: Edit individual schema files in `/backend/prisma/schema/` directory
+- ❌ **DON'T**: Edit the main `schema.prisma` file (auto-generated from individual files)
+- 🔄 **After changes**: Run `npm run build:schema` to regenerate main schema file
+- 📝 **Individual schema files**: `core.prisma`, `users.prisma`, `academic.prisma`, etc.
+
 ---
 
 ## Performance Optimization (MANDATORY)

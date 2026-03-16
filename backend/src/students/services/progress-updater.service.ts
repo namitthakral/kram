@@ -14,7 +14,11 @@ export class ProgressUpdaterService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
+  
+  private getFullName(firstName: string, lastName: string): string {
+    return `${firstName} ${lastName}`.trim()
+  }
+/**
    * Trigger a progress recalculation (fire-and-forget)
    * This emits an event that will be handled asynchronously
    */
@@ -318,7 +322,7 @@ export class ProgressUpdaterService {
           student: {
             select: {
               user: {
-                select: { name: true, email: true },
+                select: { firstName: true, lastName: true, email: true },
               },
             },
           },
@@ -353,7 +357,7 @@ export class ProgressUpdaterService {
         )
         if (studentRecord) {
           this.logger.warn(
-            `At-risk student: ${studentRecord.student.user.name} (${studentRecord.student.user.email}) - ${subjects.length} subjects need attention`
+            `At-risk student: ${studentRecord.student.user.firstName} ${studentRecord.student.user.lastName} (${studentRecord.student.user.email}) - ${subjects.length} subjects need attention`
           )
         }
       })

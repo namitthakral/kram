@@ -317,14 +317,6 @@ export class CreateUserDto {
   profilePicture?: string
 
   @IsOptional()
-  @IsBoolean()
-  isVerified?: boolean
-
-  @IsOptional()
-  @IsBoolean()
-  accountLocked?: boolean
-
-  @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus
 
@@ -419,14 +411,6 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   profilePicture?: string
-
-  @IsOptional()
-  @IsBoolean()
-  isVerified?: boolean
-
-  @IsOptional()
-  @IsBoolean()
-  accountLocked?: boolean
 
   @IsOptional()
   @IsEnum(UserStatus)

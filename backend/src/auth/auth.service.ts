@@ -5,9 +5,11 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
+import { UserStatus } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import { PrismaService } from '../prisma/prisma.service'
 import { UserWithRelations } from '../types/auth.types'
+import { UserHelpers } from '../types/user.types'
 import { generateTemporaryPassword } from '../utils/kramid.util'
 import {
   ActivateAccountDto,
@@ -46,7 +48,7 @@ export class AuthService {
       })
     } else if (loginDto.email) {
       user = await this.prisma.user.findUnique({
-        where: { email: loginDto.email },
+        where: { email: loginDto.email.toLowerCase() },
         include: {
           role: true,
           student: true,
@@ -73,7 +75,7 @@ export class AuthService {
       console.log('User found:', {
         id: user.id,
         email: user.email,
-        accountLocked: user.accountLocked,
+        status: user.status,
         loginAttempts: user.loginAttempts,
         student: user.student?.id,
         teacher: user.teacher?.id,
@@ -129,10 +131,13 @@ export class AuthService {
     let id = this.resolveInstitutionId(user)
 
     // Fallback for admins who don't have an institutionId set
-    if (id == null && (user.role?.roleName === 'super_admin' || user.role?.roleName === 'admin')) {
+    if (
+      id == null &&
+      (user.role?.roleName === 'super_admin' || user.role?.roleName === 'admin')
+    ) {
       const firstInstitution = await this.prisma.institution.findFirst({
         orderBy: { id: 'asc' },
-        select: { id: true }
+        select: { id: true },
       })
       id = firstInstitution?.id ?? null
     }
@@ -141,7 +146,7 @@ export class AuthService {
 
     const institution = await this.prisma.institution.findUnique({
       where: { id },
-      select: { id: true, name: true, type: true },
+      select: { id: true, type: true },
     })
 
     return institution
@@ -186,10 +191,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials')
     }
 
-    // Check if account is locked BEFORE password validation
-    if (user.accountLocked) {
+    // Check if account is blocked from login
+    if (UserHelpers.isBlocked(user.status)) {
+      const statusDescription = UserHelpers.getStatusDescription(user.status)
       throw new UnauthorizedException(
-        'Account is locked due to too many failed login attempts. Please contact support to unlock your account.'
+        `Login denied: ${statusDescription}. Please contact support.`
       )
     }
 
@@ -205,12 +211,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials')
     }
 
-    // Allow login even if INACTIVE (for users with temporary passwords)
-    // Frontend will handle forcing password change based on requiresPasswordChange flag
-    // Only block SUSPENDED accounts
-    if (user.status === 'SUSPENDED') {
+    // Allow login for ACTIVE and PENDING_ACTIVATION users
+    // Frontend will handle password change requirement for PENDING_ACTIVATION
+    if (!UserHelpers.canLogin(user.status)) {
+      const statusDescription = UserHelpers.getStatusDescription(user.status)
       throw new UnauthorizedException(
-        'Account has been suspended. Please contact support.'
+        `Login denied: ${statusDescription}. Please contact support.`
       )
     }
 
@@ -232,7 +238,12 @@ export class AuthService {
       data: {
         lastLogin: new Date(),
         loginAttempts: 0, // Reset failed attempts counter
-        accountLocked: false, // Unlock account on successful login
+        // If user was locked, set to active (unless they need password change)
+        ...(user.status === ('LOCKED' as UserStatus) && {
+          status: UserHelpers.needsPasswordChange(user.status)
+            ? ('PENDING_ACTIVATION' as UserStatus)
+            : ('ACTIVE' as UserStatus),
+        }),
       },
     })
 
@@ -243,7 +254,8 @@ export class AuthService {
         id: user.id,
         uuid: user.uuid,
         kramid: user.kramid,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         phone: user.phone,
         role: user.role,
@@ -254,8 +266,8 @@ export class AuthService {
         institutionId: institution?.id ?? null,
         institution,
         status: user.status,
-        mustChangePassword: user.mustChangePassword, // Frontend checks this flag
-        isTemporaryPassword: user.isTemporaryPassword, // For context/audit
+        mustChangePassword: UserHelpers.needsPasswordChange(user.status), // Frontend checks this flag
+        statusDescription: UserHelpers.getStatusDescription(user.status),
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -278,7 +290,7 @@ export class AuthService {
 
     if (loginDto.email) {
       userToUpdate = await this.prisma.user.findUnique({
-        where: { email: loginDto.email },
+        where: { email: loginDto.email.toLowerCase() },
       })
     } else if (loginDto.phone) {
       userToUpdate = await this.prisma.user.findFirst({
@@ -299,7 +311,11 @@ export class AuthService {
         where: { id: userToUpdate.id },
         data: {
           loginAttempts: newAttempts,
-          accountLocked: shouldLock,
+          // Lock account if max attempts reached (unless already suspended)
+          ...(shouldLock &&
+            userToUpdate.status !== ('SUSPENDED' as UserStatus) && {
+              status: 'LOCKED' as UserStatus,
+            }),
         },
       })
 
@@ -358,7 +374,7 @@ export class AuthService {
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [
-          { email: selfRegistrationDto.email },
+          { email: selfRegistrationDto.email.toLowerCase() },
           { phone: selfRegistrationDto.phoneNumber },
         ],
       },
@@ -432,24 +448,17 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(selfRegistrationDto.password, 12)
 
-    // Combine firstName and lastName into name
-    const fullName =
-      `${selfRegistrationDto.firstName} ${selfRegistrationDto.lastName}`.trim()
-
     // Create user with ACTIVE status (self-registered users are active immediately)
     const user = await this.prisma.user.create({
       data: {
         firstName: selfRegistrationDto.firstName,
         lastName: selfRegistrationDto.lastName,
-        name: fullName,
-        email: selfRegistrationDto.email,
+        email: selfRegistrationDto.email.toLowerCase(),
         phone: selfRegistrationDto.phoneNumber,
         passwordHash: hashedPassword,
         roleId: role.id,
         // kramid is auto-generated by database trigger
         status: 'ACTIVE', // Self-registered users are active immediately
-        isTemporaryPassword: false, // Self-registered users set their own password
-        mustChangePassword: false,
       },
       include: {
         role: true,
@@ -473,7 +482,6 @@ export class AuthService {
         kramid: user.kramid,
         firstName: user.firstName,
         lastName: user.lastName,
-        name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
@@ -494,10 +502,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Kram ID')
     }
 
-    // Check if user has a temporary password
-    if (!user.isTemporaryPassword) {
+    // Check if user needs password change
+    if (!UserHelpers.needsPasswordChange(user.status)) {
       throw new UnauthorizedException(
-        'This account does not have a temporary password. Please use the regular login.'
+        'This account does not require password change. Please use the regular login.'
       )
     }
 
@@ -523,8 +531,6 @@ export class AuthService {
       data: {
         passwordHash: hashedNewPassword,
         status: 'ACTIVE', // Activate the account
-        isTemporaryPassword: false,
-        mustChangePassword: false,
       },
       include: { role: true },
     })
@@ -573,8 +579,6 @@ export class AuthService {
       where: { id: userId },
       data: {
         passwordHash: hashedNewPassword,
-        isTemporaryPassword: false,
-        mustChangePassword: false,
         status: 'ACTIVE', // Also activate if they were inactive
       },
     })
@@ -724,14 +728,12 @@ export class AuthService {
       data: {
         firstName: userData.firstName,
         lastName: userData.lastName,
-        name: `${userData.firstName} ${userData.lastName}`.trim(),
-        email: userData.email,
+        email: userData.email?.toLowerCase(),
         phone: userData.phone,
         passwordHash: hashedPassword,
         roleId: userData.roleId,
         // kramid is auto-generated by database trigger
-        isTemporaryPassword: true,
-        mustChangePassword: true,
+        status: 'PENDING_ACTIVATION' as UserStatus, // User must change password before becoming active
       },
       include: {
         role: true,

@@ -16,6 +16,7 @@ import { InstitutionsModule } from './institutions/institutions.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { QuestionPaperModule } from './question-paper/question-paper.module'
 import { StudentsModule } from './students/students.module'
+import { SuperAdminModule } from './super-admin/super-admin.module'
 import { TeachersModule } from './teachers/teachers.module'
 import { TimetableModule } from './timetable/timetable.module'
 import { UsersModule } from './users/users.module'
@@ -73,6 +74,7 @@ import { UsersModule } from './users/users.module'
     // Feature modules
     AuthModule,
     AdminModule,
+    SuperAdminModule,
     UsersModule,
     StudentsModule,
     TeachersModule,

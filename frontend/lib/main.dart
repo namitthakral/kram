@@ -52,6 +52,7 @@ import 'provider/profile/change_password_provider.dart';
 import 'provider/profile/edit_profile_provider.dart';
 import 'provider/profile/security/security_provider.dart';
 import 'provider/segmented_control_provider.dart';
+import 'provider/super_admin/super_admin_provider.dart';
 import 'provider/teachers_provider.dart';
 import 'provider/theme_provider.dart';
 import 'utils/global_constants.dart';
@@ -197,6 +198,9 @@ void main() async {
         ),
         ChangeNotifierProvider<AcademicYearProvider>(
           create: (_) => AcademicYearProvider(),
+        ),
+        ChangeNotifierProvider<SuperAdminProvider>(
+          create: (_) => SuperAdminProvider(),
         ),
       ],
       child: const KramApp(),

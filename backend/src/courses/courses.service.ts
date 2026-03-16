@@ -39,6 +39,13 @@ export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Helper function to get full name from firstName and lastName
+   */
+  private getFullName(firstName: string, lastName: string): string {
+    return `${firstName} ${lastName}`.trim()
+  }
+
+  /**
    * Get all courses/programs
    * Optionally filter by institution, status, or degree type
    * @param institutionId - When provided (admin), scope to this institution. When null (super_admin), no scope.
@@ -189,7 +196,8 @@ export class CoursesService {
               include: {
                 user: {
                   select: {
-                    name: true,
+                    firstName: true,
+                    lastName: true,
                   },
                 },
               },
@@ -220,7 +228,12 @@ export class CoursesService {
         sections.push({
           sectionName,
           studentCount: count,
-          classTeacher: classTeacher?.teacher?.user?.name,
+          classTeacher: classTeacher?.teacher?.user
+            ? this.getFullName(
+                classTeacher.teacher.user.firstName,
+                classTeacher.teacher.user.lastName
+              )
+            : undefined,
         })
       })
 
@@ -270,7 +283,8 @@ export class CoursesService {
               include: {
                 user: {
                   select: {
-                    name: true,
+                    firstName: true,
+                    lastName: true,
                   },
                 },
               },
@@ -333,7 +347,12 @@ export class CoursesService {
         return {
           sectionName,
           studentCount: data.students,
-          classTeacher: classTeacher?.teacher?.user?.name || null,
+          classTeacher: classTeacher?.teacher?.user
+            ? this.getFullName(
+                classTeacher.teacher.user.firstName,
+                classTeacher.teacher.user.lastName
+              )
+            : null,
           yearBreakdown: Object.fromEntries(data.years),
           semesterBreakdown: Object.fromEntries(data.semesters),
         }
@@ -412,7 +431,8 @@ export class CoursesService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 uuid: true,
               },
             },
@@ -454,7 +474,10 @@ export class CoursesService {
           ? {
               id: cs.teacher.id,
               uuid: cs.teacher.user.uuid,
-              name: cs.teacher.user.name,
+              name: this.getFullName(
+                cs.teacher.user.firstName,
+                cs.teacher.user.lastName
+              ),
             }
           : null,
       })),
@@ -506,7 +529,8 @@ export class CoursesService {
               select: {
                 id: true,
                 uuid: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -548,7 +572,10 @@ export class CoursesService {
           id: enrollment.student.id,
           userId: enrollment.student.userId,
           uuid: enrollment.student.user.uuid,
-          name: enrollment.student.user.name,
+          name: this.getFullName(
+            enrollment.student.user.firstName,
+            enrollment.student.user.lastName
+          ),
           email: enrollment.student.user.email,
           rollNumber: enrollment.student.rollNumber,
           admissionNumber: enrollment.student.admissionNumber,
@@ -602,7 +629,8 @@ export class CoursesService {
               select: {
                 id: true,
                 uuid: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -648,7 +676,10 @@ export class CoursesService {
             id: record.student.id,
             userId: record.student.userId,
             uuid: record.student.user.uuid,
-            name: record.student.user.name,
+            name: this.getFullName(
+              record.student.user.firstName,
+              record.student.user.lastName
+            ),
             email: record.student.user.email,
             rollNumber: record.student.rollNumber,
             admissionNumber: record.student.admissionNumber,
@@ -717,7 +748,7 @@ export class CoursesService {
         name: createCourseDto.name,
         code: createCourseDto.code,
         description: createCourseDto.description,
-        degreeType: degreeType as any,
+        degreeType: degreeType as Prisma.CourseCreateInput['degreeType'],
         durationYears: createCourseDto.duration,
         totalCredits: createCourseDto.totalSemesters,
         institutionId: createCourseDto.institutionId,
@@ -795,7 +826,7 @@ export class CoursesService {
         name: updateCourseDto.name,
         code: updateCourseDto.code,
         description: updateCourseDto.description,
-        degreeType: degreeType as any,
+        degreeType: degreeType as Prisma.CourseCreateInput['degreeType'],
         durationYears: updateCourseDto.duration,
         totalCredits: updateCourseDto.totalSemesters,
         status: updateCourseDto.status,
@@ -975,7 +1006,8 @@ export class CoursesService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -1089,7 +1121,8 @@ export class CoursesService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -1179,8 +1212,8 @@ export class CoursesService {
       where: { id: courseId },
       select: {
         id: true,
-        institutionId: true,
         name: true,
+        institutionId: true,
         code: true,
       },
     })
@@ -1218,7 +1251,8 @@ export class CoursesService {
               id: true,
               user: {
                 select: {
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                 },
               },
@@ -1264,7 +1298,10 @@ export class CoursesService {
         teacher: division.teacher
           ? {
               id: division.teacher.id,
-              name: division.teacher.user.name,
+              name: this.getFullName(
+                division.teacher.user.firstName,
+                division.teacher.user.lastName
+              ),
               email: division.teacher.user.email,
             }
           : null,
@@ -1359,7 +1396,8 @@ export class CoursesService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -1380,7 +1418,10 @@ export class CoursesService {
         teacher: classDivision.teacher
           ? {
               id: classDivision.teacher.id,
-              name: classDivision.teacher.user.name,
+              name: this.getFullName(
+                classDivision.teacher.user.firstName,
+                classDivision.teacher.user.lastName
+              ),
               email: classDivision.teacher.user.email,
             }
           : null,
@@ -1480,7 +1521,8 @@ export class CoursesService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -1501,7 +1543,10 @@ export class CoursesService {
         teacher: updatedDivision.teacher
           ? {
               id: updatedDivision.teacher.id,
-              name: updatedDivision.teacher.user.name,
+              name: this.getFullName(
+                updatedDivision.teacher.user.firstName,
+                updatedDivision.teacher.user.lastName
+              ),
               email: updatedDivision.teacher.user.email,
             }
           : null,

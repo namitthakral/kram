@@ -215,7 +215,7 @@ class User {
     id: json['id'],
     uuid: json['uuid'],
     kramid: json['kramid'],
-    name: json['name'],
+    name: '${json['firstName'] ?? ''} ${json['lastName'] ?? ''}'.trim(),
     email: json['email'],
     phone: json['phone'],
     role: json['role'] != null ? Role.fromJson(json['role']) : null,

@@ -2,7 +2,7 @@
 CREATE TYPE "SequenceResetPolicy" AS ENUM ('YEARLY', 'NEVER', 'MONTHLY');
 
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'SUSPENDED');
+CREATE TYPE "UserStatus" AS ENUM ('PENDING_ACTIVATION', 'ACTIVE', 'SUSPENDED', 'LOCKED', 'INACTIVE');
 
 -- CreateEnum
 CREATE TYPE "InstitutionType" AS ENUM ('SCHOOL', 'COLLEGE', 'UNIVERSITY', 'INSTITUTE');
@@ -62,6 +62,9 @@ CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT', 'LATE', 'EXCUSED');
 CREATE TYPE "ClassSectionStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'CANCELLED');
 
 -- CreateEnum
+CREATE TYPE "ClassDivisionStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+
+-- CreateEnum
 CREATE TYPE "EnrollmentStatus" AS ENUM ('ENROLLED', 'DROPPED', 'COMPLETED', 'FAILED');
 
 -- CreateEnum
@@ -98,13 +101,10 @@ CREATE TYPE "PaymentMode" AS ENUM ('OFFLINE', 'ONLINE');
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REFUNDED');
 
 -- CreateEnum
-CREATE TYPE "NoticeType" AS ENUM ('GENERAL', 'ACADEMIC', 'EXAMINATION', 'ADMISSION', 'EVENT', 'HOLIDAY', 'EMERGENCY', 'MAINTENANCE');
+CREATE TYPE "CommunicationType" AS ENUM ('GENERAL', 'ACADEMIC', 'EXAMINATION', 'ADMISSION', 'EVENT', 'HOLIDAY', 'EMERGENCY', 'MAINTENANCE', 'ACHIEVEMENT', 'ALERT');
 
 -- CreateEnum
-CREATE TYPE "AnnouncementType" AS ENUM ('GENERAL', 'ACADEMIC', 'EVENT', 'ACHIEVEMENT', 'ALERT', 'EMERGENCY');
-
--- CreateEnum
-CREATE TYPE "NoticePriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+CREATE TYPE "CommunicationPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
 
 -- CreateEnum
 CREATE TYPE "MessageType" AS ENUM ('PERSONAL', 'GROUP', 'BROADCAST', 'SYSTEM');
@@ -173,9 +173,6 @@ CREATE TYPE "SubstitutionStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CO
 CREATE TYPE "ProgressStatus" AS ENUM ('EXCELLENT', 'GOOD', 'ON_TRACK', 'NEEDS_IMPROVEMENT', 'AT_RISK', 'FAILING');
 
 -- CreateEnum
-CREATE TYPE "MetricType" AS ENUM ('COUNT', 'PERCENTAGE', 'AVERAGE', 'SUM', 'RATIO', 'TREND');
-
--- CreateEnum
 CREATE TYPE "AlertSeverity" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 
 -- CreateEnum
@@ -185,22 +182,16 @@ CREATE TYPE "ApplicationStatus" AS ENUM ('PENDING', 'UNDER_REVIEW', 'APPROVED', 
 CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
     "uuid" UUID,
-    "edverse_id" VARCHAR(20),
-    "firstName" VARCHAR(50) NOT NULL,
-    "lastName" VARCHAR(50) NOT NULL,
-    "name" VARCHAR(100) NOT NULL,
+    "kram_id" VARCHAR(20),
+    "first_name" VARCHAR(50) NOT NULL,
+    "last_name" VARCHAR(50) NOT NULL,
     "email" VARCHAR(100),
     "phone" VARCHAR(15),
     "password_hash" VARCHAR(255) NOT NULL,
     "role_id" INTEGER NOT NULL,
-    "email_verified" BOOLEAN NOT NULL DEFAULT false,
-    "phone_verified" BOOLEAN NOT NULL DEFAULT false,
-    "two_factor_enabled" BOOLEAN NOT NULL DEFAULT false,
-    "is_temporary_password" BOOLEAN NOT NULL DEFAULT false,
-    "must_change_password" BOOLEAN NOT NULL DEFAULT false,
+    "institution_id" INTEGER,
     "last_login" TIMESTAMP(3),
     "login_attempts" INTEGER NOT NULL DEFAULT 0,
-    "account_locked" BOOLEAN NOT NULL DEFAULT false,
     "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -213,7 +204,6 @@ CREATE TABLE "roles" (
     "id" SERIAL NOT NULL,
     "role_name" VARCHAR(50) NOT NULL,
     "description" TEXT,
-    "permissions" TEXT[],
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
@@ -360,8 +350,8 @@ CREATE TABLE "subjects" (
     "id" SERIAL NOT NULL,
     "course_id" INTEGER,
     "subject_name" VARCHAR(200) NOT NULL,
-    "subject_code" VARCHAR(20) NOT NULL,
-    "credits" INTEGER NOT NULL,
+    "subject_code" VARCHAR(20),
+    "credits" INTEGER,
     "theory_hours" INTEGER NOT NULL DEFAULT 0,
     "practical_hours" INTEGER NOT NULL DEFAULT 0,
     "tutorial_hours" INTEGER NOT NULL DEFAULT 0,
@@ -382,19 +372,20 @@ CREATE TABLE "students" (
     "user_id" INTEGER NOT NULL,
     "institution_id" INTEGER NOT NULL,
     "course_id" INTEGER,
+    "class_division_id" INTEGER,
     "admission_number" VARCHAR(50) NOT NULL,
     "roll_number" VARCHAR(50),
     "admission_date" DATE,
     "graduation_date" DATE,
     "current_semester" INTEGER,
     "current_year" INTEGER,
-    "grade_level" VARCHAR(20),
     "section" VARCHAR(10),
     "student_type" "StudentType" NOT NULL DEFAULT 'REGULAR',
     "residential_status" "ResidentialStatus" NOT NULL DEFAULT 'DAY_SCHOLAR',
     "transport_required" BOOLEAN NOT NULL DEFAULT false,
     "emergency_contact_name" VARCHAR(100),
     "emergency_contact_phone" VARCHAR(15),
+    "emergency_contact_email" VARCHAR(100),
     "blood_group" VARCHAR(5),
     "medical_conditions" TEXT,
     "status" "StudentStatus" NOT NULL DEFAULT 'ACTIVE',
@@ -519,6 +510,22 @@ CREATE TABLE "class_sections" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "class_sections_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "class_divisions" (
+    "id" SERIAL NOT NULL,
+    "course_id" INTEGER NOT NULL,
+    "section_name" VARCHAR(10) NOT NULL,
+    "teacher_id" INTEGER,
+    "max_capacity" INTEGER NOT NULL DEFAULT 50,
+    "room_number" VARCHAR(50),
+    "schedule" VARCHAR(200),
+    "status" "ClassDivisionStatus" NOT NULL DEFAULT 'ACTIVE',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "class_divisions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -690,58 +697,38 @@ CREATE TABLE "payments" (
 );
 
 -- CreateTable
-CREATE TABLE "notices" (
+CREATE TABLE "communications" (
     "id" SERIAL NOT NULL,
     "institution_id" INTEGER NOT NULL,
     "title" VARCHAR(200) NOT NULL,
     "content" TEXT NOT NULL,
-    "notice_type" "NoticeType" NOT NULL,
-    "priority" "NoticePriority" NOT NULL DEFAULT 'MEDIUM',
+    "communication_type" "CommunicationType" NOT NULL,
+    "priority" "CommunicationPriority" NOT NULL DEFAULT 'MEDIUM',
     "targetAudience" TEXT[],
     "department_ids" INTEGER[],
     "program_ids" INTEGER[],
     "class_ids" INTEGER[],
+    "is_emergency" BOOLEAN NOT NULL DEFAULT false,
+    "is_pinned" BOOLEAN NOT NULL DEFAULT false,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
     "attachment_url" VARCHAR(500),
     "publish_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expiry_date" TIMESTAMP(3),
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
-    "is_pinned" BOOLEAN NOT NULL DEFAULT false,
     "created_by" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "notices_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "communications_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "notice_read_receipts" (
+CREATE TABLE "communication_read_receipts" (
     "id" SERIAL NOT NULL,
-    "notice_id" INTEGER NOT NULL,
+    "communication_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
     "read_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "notice_read_receipts_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "announcements" (
-    "id" SERIAL NOT NULL,
-    "institution_id" INTEGER NOT NULL,
-    "title" VARCHAR(200) NOT NULL,
-    "content" TEXT NOT NULL,
-    "announcement_type" "AnnouncementType" NOT NULL,
-    "priority" "NoticePriority" NOT NULL DEFAULT 'MEDIUM',
-    "targetAudience" TEXT[],
-    "is_emergency" BOOLEAN NOT NULL DEFAULT false,
-    "attachment_url" VARCHAR(500),
-    "publish_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiry_date" TIMESTAMP(3),
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
-    "created_by" INTEGER NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "announcements_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "communication_read_receipts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -865,21 +852,6 @@ CREATE TABLE "book_reservations" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "book_reservations_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "library_transactions" (
-    "id" SERIAL NOT NULL,
-    "student_id" INTEGER NOT NULL,
-    "transaction_type" "TransactionType" NOT NULL,
-    "book_id" INTEGER,
-    "amount" DECIMAL(8,2),
-    "description" VARCHAR(200) NOT NULL,
-    "transaction_date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "processed_by" INTEGER NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "library_transactions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -1170,65 +1142,6 @@ CREATE TABLE "student_progress" (
 );
 
 -- CreateTable
-CREATE TABLE "dashboard_stats" (
-    "id" SERIAL NOT NULL,
-    "institution_id" INTEGER NOT NULL,
-    "user_id" INTEGER,
-    "stat_type" VARCHAR(50) NOT NULL,
-    "stat_name" VARCHAR(100) NOT NULL,
-    "stat_value" DECIMAL(15,2) NOT NULL,
-    "stat_unit" VARCHAR(20),
-    "period" VARCHAR(20),
-    "period_start" TIMESTAMP(3),
-    "period_end" TIMESTAMP(3),
-    "metadata" JSONB,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "dashboard_stats_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "performance_metrics" (
-    "id" SERIAL NOT NULL,
-    "institution_id" INTEGER NOT NULL,
-    "metric_type" "MetricType" NOT NULL,
-    "metric_name" VARCHAR(100) NOT NULL,
-    "value" DECIMAL(15,4) NOT NULL,
-    "target_value" DECIMAL(15,4),
-    "unit" VARCHAR(20),
-    "period" VARCHAR(20) NOT NULL,
-    "period_start" TIMESTAMP(3) NOT NULL,
-    "period_end" TIMESTAMP(3) NOT NULL,
-    "category" VARCHAR(50),
-    "subcategory" VARCHAR(50),
-    "metadata" JSONB,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "performance_metrics_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "attendance_summary" (
-    "id" SERIAL NOT NULL,
-    "student_id" INTEGER NOT NULL,
-    "subject_id" INTEGER NOT NULL,
-    "semester_id" INTEGER NOT NULL,
-    "total_classes" INTEGER NOT NULL,
-    "attended_classes" INTEGER NOT NULL,
-    "absent_classes" INTEGER NOT NULL,
-    "late_classes" INTEGER NOT NULL,
-    "excused_absences" INTEGER NOT NULL,
-    "attendance_percentage" DECIMAL(5,2) NOT NULL,
-    "period_start" TIMESTAMP(3) NOT NULL,
-    "period_end" TIMESTAMP(3) NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "attendance_summary_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "career_guidance" (
     "id" SERIAL NOT NULL,
     "student_id" INTEGER NOT NULL,
@@ -1294,11 +1207,61 @@ CREATE TABLE "system_alerts" (
     CONSTRAINT "system_alerts_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "question_papers" (
+    "id" SERIAL NOT NULL,
+    "examination_id" INTEGER NOT NULL,
+    "title" VARCHAR(200) NOT NULL,
+    "instructions" TEXT,
+    "total_marks" INTEGER NOT NULL,
+    "total_questions" INTEGER NOT NULL DEFAULT 0,
+    "created_by" INTEGER NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'DRAFT',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "question_papers_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "question_paper_sections" (
+    "id" SERIAL NOT NULL,
+    "question_paper_id" INTEGER NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    "sort_order" INTEGER NOT NULL,
+
+    CONSTRAINT "question_paper_sections_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "questions" (
+    "id" SERIAL NOT NULL,
+    "section_id" INTEGER NOT NULL,
+    "text" TEXT NOT NULL,
+    "marks" INTEGER NOT NULL,
+    "question_type" TEXT NOT NULL,
+    "sort_order" INTEGER NOT NULL,
+
+    CONSTRAINT "questions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "question_options" (
+    "id" SERIAL NOT NULL,
+    "question_id" INTEGER NOT NULL,
+    "text" TEXT NOT NULL,
+    "is_correct" BOOLEAN NOT NULL DEFAULT false,
+    "sort_order" INTEGER NOT NULL,
+
+    CONSTRAINT "question_options_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_uuid_key" ON "users"("uuid");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_edverse_id_key" ON "users"("edverse_id");
+CREATE UNIQUE INDEX "users_kram_id_key" ON "users"("kram_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
@@ -1349,6 +1312,9 @@ CREATE UNIQUE INDEX "academic_records_student_id_semester_id_subject_id_key" ON 
 CREATE UNIQUE INDEX "attendance_student_id_section_id_date_key" ON "attendance"("student_id", "section_id", "date");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "class_divisions_course_id_section_name_key" ON "class_divisions"("course_id", "section_name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "enrollments_student_id_subject_id_semester_id_key" ON "enrollments"("student_id", "subject_id", "semester_id");
 
 -- CreateIndex
@@ -1364,7 +1330,7 @@ CREATE UNIQUE INDEX "student_fees_student_id_fee_structure_id_semester_id_key" O
 CREATE UNIQUE INDEX "payments_receipt_number_key" ON "payments"("receipt_number");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "notice_read_receipts_notice_id_user_id_key" ON "notice_read_receipts"("notice_id", "user_id");
+CREATE UNIQUE INDEX "communication_read_receipts_communication_id_user_id_key" ON "communication_read_receipts"("communication_id", "user_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "group_members_group_id_user_id_key" ON "group_members"("group_id", "user_id");
@@ -1400,10 +1366,13 @@ CREATE UNIQUE INDEX "class_teachers_course_id_class_level_section_academic_year_
 CREATE UNIQUE INDEX "student_progress_student_id_subject_id_semester_id_key" ON "student_progress"("student_id", "subject_id", "semester_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "attendance_summary_student_id_subject_id_semester_id_period_key" ON "attendance_summary"("student_id", "subject_id", "semester_id", "period_start");
+CREATE UNIQUE INDEX "question_papers_examination_id_key" ON "question_papers"("examination_id");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "institution_grading_configs" ADD CONSTRAINT "institution_grading_configs_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1431,6 +1400,9 @@ ALTER TABLE "students" ADD CONSTRAINT "students_institution_id_fkey" FOREIGN KEY
 
 -- AddForeignKey
 ALTER TABLE "students" ADD CONSTRAINT "students_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "students" ADD CONSTRAINT "students_class_division_id_fkey" FOREIGN KEY ("class_division_id") REFERENCES "class_divisions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "teachers" ADD CONSTRAINT "teachers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1476,6 +1448,12 @@ ALTER TABLE "class_sections" ADD CONSTRAINT "class_sections_semester_id_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "class_sections" ADD CONSTRAINT "class_sections_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "class_divisions" ADD CONSTRAINT "class_divisions_course_id_fkey" FOREIGN KEY ("course_id") REFERENCES "courses"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "class_divisions" ADD CONSTRAINT "class_divisions_teacher_id_fkey" FOREIGN KEY ("teacher_id") REFERENCES "teachers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1550,22 +1528,16 @@ ALTER TABLE "payments" ADD CONSTRAINT "payments_student_fee_id_fkey" FOREIGN KEY
 ALTER TABLE "payments" ADD CONSTRAINT "payments_processed_by_fkey" FOREIGN KEY ("processed_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notices" ADD CONSTRAINT "notices_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "communications" ADD CONSTRAINT "communications_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notices" ADD CONSTRAINT "notices_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "communications" ADD CONSTRAINT "communications_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notice_read_receipts" ADD CONSTRAINT "notice_read_receipts_notice_id_fkey" FOREIGN KEY ("notice_id") REFERENCES "notices"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "communication_read_receipts" ADD CONSTRAINT "communication_read_receipts_communication_id_fkey" FOREIGN KEY ("communication_id") REFERENCES "communications"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "notice_read_receipts" ADD CONSTRAINT "notice_read_receipts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "announcements" ADD CONSTRAINT "announcements_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "announcements" ADD CONSTRAINT "announcements_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "communication_read_receipts" ADD CONSTRAINT "communication_read_receipts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "messages" ADD CONSTRAINT "messages_sender_id_fkey" FOREIGN KEY ("sender_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1617,15 +1589,6 @@ ALTER TABLE "book_reservations" ADD CONSTRAINT "book_reservations_book_id_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "book_reservations" ADD CONSTRAINT "book_reservations_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "library_transactions" ADD CONSTRAINT "library_transactions_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "library_transactions" ADD CONSTRAINT "library_transactions_book_id_fkey" FOREIGN KEY ("book_id") REFERENCES "books"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "library_transactions" ADD CONSTRAINT "library_transactions_processed_by_fkey" FOREIGN KEY ("processed_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "library_settings" ADD CONSTRAINT "library_settings_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1745,24 +1708,6 @@ ALTER TABLE "student_progress" ADD CONSTRAINT "student_progress_subject_id_fkey"
 ALTER TABLE "student_progress" ADD CONSTRAINT "student_progress_semester_id_fkey" FOREIGN KEY ("semester_id") REFERENCES "semesters"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "dashboard_stats" ADD CONSTRAINT "dashboard_stats_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "dashboard_stats" ADD CONSTRAINT "dashboard_stats_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "performance_metrics" ADD CONSTRAINT "performance_metrics_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "attendance_summary" ADD CONSTRAINT "attendance_summary_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "attendance_summary" ADD CONSTRAINT "attendance_summary_subject_id_fkey" FOREIGN KEY ("subject_id") REFERENCES "subjects"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "attendance_summary" ADD CONSTRAINT "attendance_summary_semester_id_fkey" FOREIGN KEY ("semester_id") REFERENCES "semesters"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "career_guidance" ADD CONSTRAINT "career_guidance_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1780,3 +1725,17 @@ ALTER TABLE "system_alerts" ADD CONSTRAINT "system_alerts_institution_id_fkey" F
 -- AddForeignKey
 ALTER TABLE "system_alerts" ADD CONSTRAINT "system_alerts_resolved_by_fkey" FOREIGN KEY ("resolved_by") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "question_papers" ADD CONSTRAINT "question_papers_examination_id_fkey" FOREIGN KEY ("examination_id") REFERENCES "examinations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "question_papers" ADD CONSTRAINT "question_papers_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "teachers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "question_paper_sections" ADD CONSTRAINT "question_paper_sections_question_paper_id_fkey" FOREIGN KEY ("question_paper_id") REFERENCES "question_papers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "questions" ADD CONSTRAINT "questions_section_id_fkey" FOREIGN KEY ("section_id") REFERENCES "question_paper_sections"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "question_options" ADD CONSTRAINT "question_options_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -55,7 +55,11 @@ export class TeachersService {
     private progressUpdater: ProgressUpdaterService
   ) {}
 
-  /**
+  
+  private getFullName(firstName: string, lastName: string): string {
+    return `${firstName} ${lastName}`.trim()
+  }
+/**
    * Helper method to get UTC date at midnight to avoid timezone issues
    * when comparing with database DATE columns
    */
@@ -109,13 +113,11 @@ export class TeachersService {
         data: {
           firstName,
           lastName,
-          name: `${firstName} ${lastName}`,
+          
           email,
           phone,
           passwordHash: hashedPassword,
           roleId: teacherRole.id,
-          emailVerified: false,
-          phoneVerified: false,
           status: 'ACTIVE',
         },
       })
@@ -135,7 +137,6 @@ export class TeachersService {
               id: true,
               firstName: true,
               lastName: true,
-              name: true,
               email: true,
               phone: true,
               status: true,
@@ -144,8 +145,7 @@ export class TeachersService {
           institution: {
             select: {
               id: true,
-              name: true,
-              type: true,
+              name: true, type: true,
             },
           },
         },
@@ -194,7 +194,8 @@ export class TeachersService {
           { employeeId: { contains: search, mode: 'insensitive' } },
           { designation: { contains: search, mode: 'insensitive' } },
           { specialization: { contains: search, mode: 'insensitive' } },
-          { user: { name: { contains: search, mode: 'insensitive' } } },
+          { user: { firstName: { contains: search, mode: 'insensitive' } } },
+          { user: { lastName: { contains: search, mode: 'insensitive' } } },
           { user: { email: { contains: search, mode: 'insensitive' } } },
         ],
       }),
@@ -221,7 +222,7 @@ export class TeachersService {
               id: true,
               uuid: true,
               kramid: true,
-              name: true,
+              firstName: true, lastName: true,
               email: true,
               phone: true,
               status: true,
@@ -230,8 +231,7 @@ export class TeachersService {
           institution: {
             select: {
               id: true,
-              name: true,
-              type: true,
+              name: true, type: true,
             },
           },
           teacherSubjects: {
@@ -268,7 +268,7 @@ export class TeachersService {
             id: true,
             uuid: true,
             kramid: true,
-            name: true,
+            firstName: true, lastName: true,
             email: true,
             phone: true,
             status: true,
@@ -324,7 +324,7 @@ export class TeachersService {
             id: true,
             uuid: true,
             kramid: true,
-            name: true,
+            firstName: true, lastName: true,
             email: true,
             phone: true,
             status: true,
@@ -510,7 +510,7 @@ export class TeachersService {
             select: {
               id: true,
               uuid: true,
-              name: true,
+              firstName: true, lastName: true,
               email: true,
               phone: true,
               status: true,
@@ -519,8 +519,7 @@ export class TeachersService {
           institution: {
             select: {
               id: true,
-              name: true,
-              type: true,
+              name: true, type: true,
             },
           },
         },
@@ -560,7 +559,7 @@ export class TeachersService {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true, lastName: true,
             email: true,
           },
         },
@@ -950,9 +949,7 @@ export class TeachersService {
         user: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            name: true,
+            firstName: true, lastName: true,
             lastLogin: true,
           },
         },
@@ -1083,7 +1080,7 @@ export class TeachersService {
 
       return {
         id: student.id,
-        name: student.user.name,
+        name: this.getFullName(student.user.firstName, student.user.lastName),
         firstName: student.user.firstName,
         lastName: student.user.lastName,
         initials: `${student.user.firstName[0]}${student.user.lastName[0]}`,
@@ -2127,7 +2124,7 @@ export class TeachersService {
         section: { select: { sectionName: true } },
         teacher: {
           select: {
-            user: { select: { name: true, email: true } },
+            user: { select: { firstName: true, lastName: true, email: true } },
           },
         },
       },
@@ -2219,14 +2216,14 @@ export class TeachersService {
         section: { select: { sectionName: true } },
         teacher: {
           select: {
-            user: { select: { name: true, email: true } },
+            user: { select: { firstName: true, lastName: true, email: true } },
           },
         },
         submissions: {
           include: {
             student: {
               select: {
-                user: { select: { name: true, email: true } },
+                user: { select: { firstName: true, lastName: true, email: true } },
                 admissionNumber: true,
               },
             },
@@ -2511,7 +2508,7 @@ export class TeachersService {
           include: {
             student: {
               select: {
-                user: { select: { name: true, email: true } },
+                user: { select: { firstName: true, lastName: true, email: true } },
                 admissionNumber: true,
               },
             },
@@ -2672,7 +2669,7 @@ export class TeachersService {
       include: {
         student: {
           select: {
-            user: { select: { name: true, uuid: true } },
+            user: { select: { firstName: true, lastName: true, uuid: true } },
             admissionNumber: true,
           },
         },
@@ -2700,9 +2697,9 @@ export class TeachersService {
         submissions: submissions.map(s => ({
           id: s.id,
           student: {
-            name: s.student.user.name,
+            name: this.getFullName(s.student.user.firstName, s.student.user.lastName),
             uuid: s.student.user.uuid,
-            avatar: this.getInitials(s.student.user.name),
+            avatar: this.getInitials(this.getFullName(s.student.user.firstName, s.student.user.lastName)),
             admissionNumber: s.student.admissionNumber,
           },
           assignment: {
@@ -2772,7 +2769,7 @@ export class TeachersService {
         admissionNumber: true,
         user: {
           select: {
-            name: true,
+            firstName: true, lastName: true,
             uuid: true,
             lastLogin: true,
           },
@@ -2825,9 +2822,9 @@ export class TeachersService {
 
         return {
           id: student.id,
-          name: student.user.name,
+          name: this.getFullName(student.user.firstName, student.user.lastName),
           uuid: student.user.uuid,
-          avatar: this.getInitials(student.user.name),
+          avatar: this.getInitials(this.getFullName(student.user.firstName, student.user.lastName)),
           admissionNumber: student.admissionNumber,
           riskLevel: analysis.riskLevel,
           riskScore: analysis.riskScore,
@@ -3192,7 +3189,7 @@ export class TeachersService {
             include: {
               user: {
                 select: {
-                  name: true,
+                  firstName: true, lastName: true,
                   email: true,
                 },
               },
@@ -3245,7 +3242,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
                 email: true,
               },
             },
@@ -3380,7 +3377,7 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      name: true,
+                      firstName: true, lastName: true,
                     },
                   },
                 },
@@ -3408,7 +3405,7 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      name: true,
+                      firstName: true, lastName: true,
                     },
                   },
                 },
@@ -3505,7 +3502,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
                 email: true,
               },
             },
@@ -3640,7 +3637,7 @@ export class TeachersService {
         orderBy = { date: query.sortOrder || 'desc' }
         break
       case 'student':
-        orderBy = { student: { user: { name: query.sortOrder || 'asc' } } }
+        orderBy = { student: { user: { firstName: query.sortOrder || 'asc' } } }
         break
       case 'section':
         orderBy = { section: { sectionName: query.sortOrder || 'asc' } }
@@ -3666,7 +3663,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
                 uuid: true,
               },
             },
@@ -3704,7 +3701,7 @@ export class TeachersService {
         markedAt: record.markedAt,
         student: {
           id: record.student.id,
-          name: record.student.user.name,
+          name: this.getFullName(record.student.user.firstName, record.student.user.lastName),
           uuid: record.student.user.uuid,
           admissionNumber: record.student.admissionNumber,
           rollNumber: record.student.rollNumber,
@@ -3831,7 +3828,7 @@ export class TeachersService {
             include: {
               user: {
                 select: {
-                  name: true,
+                  firstName: true, lastName: true,
                   email: true,
                 },
               },
@@ -3871,7 +3868,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
                 email: true,
               },
             },
@@ -4004,7 +4001,7 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      name: true,
+                      firstName: true, lastName: true,
                     },
                   },
                 },
@@ -4038,7 +4035,7 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      name: true,
+                      firstName: true, lastName: true,
                     },
                   },
                 },
@@ -4125,7 +4122,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
                 email: true,
               },
             },
@@ -4135,7 +4132,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
               },
             },
           },
@@ -4213,13 +4210,13 @@ export class TeachersService {
         results: results.map(r => ({
           id: r.id,
           studentId: r.studentId,
-          studentName: r.student.user.name,
+          studentName: this.getFullName(r.student.user.firstName, r.student.user.lastName),
           studentEmail: r.student.user.email,
           marksObtained: r.marksObtained?.toNumber() || null,
           grade: r.grade,
           isAbsent: r.isAbsent,
           remarks: r.remarks,
-          evaluatedBy: r.evaluator?.user.name || null,
+          evaluatedBy: r.evaluator?.user ? this.getFullName(r.evaluator.user.firstName, r.evaluator.user.lastName) : null,
           evaluatedAt: r.evaluatedAt,
         })),
       },
@@ -4323,7 +4320,7 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                name: true,
+                firstName: true, lastName: true,
                 email: true,
               },
             },
@@ -4562,7 +4559,7 @@ export class TeachersService {
             id: true,
             uuid: true,
             kramid: true,
-            name: true,
+            firstName: true, lastName: true,
             email: true,
           },
         },
@@ -4618,7 +4615,7 @@ export class TeachersService {
         // Create summary
         studentSummaries.push({
           studentId: student.id,
-          studentName: student.user.name,
+          studentName: student.user ? this.getFullName(student.user.firstName, student.user.lastName) : 'Unknown Student',
           admissionNumber: student.admissionNumber,
           rollNumber: student.rollNumber,
           sgpa: reportCard.performanceSummary.sgpa,
@@ -4731,7 +4728,8 @@ export class TeachersService {
         id: number
         uuid: string
         kramid: string | null
-        name: string
+        firstName: string
+        lastName: string
         email: string
       }
       institution: {
@@ -4810,7 +4808,7 @@ export class TeachersService {
 
     // Build student info
     const studentInfo: ReportCardStudentInfo = {
-      name: student.user.name,
+      name: this.getFullName(student.user.firstName, student.user.lastName),
       kramid: student.user.kramid,
       admissionNumber: student.admissionNumber,
       rollNumber: student.rollNumber,
@@ -5045,8 +5043,7 @@ export class TeachersService {
         institution: {
           select: {
             id: true,
-            name: true,
-            type: true,
+            name: true, type: true,
             code: true
           }
         }

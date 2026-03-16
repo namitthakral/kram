@@ -24,7 +24,11 @@ import {
 export class TimetableService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // ============ TimeSlot Methods ============
+  
+  private getFullName(firstName: string, lastName: string): string {
+    return `${firstName} ${lastName}`.trim()
+  }
+// ============ TimeSlot Methods ============
 
   async createTimeSlot(dto: CreateTimeSlotDto) {
     // Parse time strings to Date objects (time only)
@@ -77,8 +81,7 @@ export class TimetableService {
       where,
       orderBy: { sortOrder: 'asc' },
       include: {
-        institution: {
-          select: { id: true, name: true, code: true },
+        institution: { select: { id: true, name: true, code: true },
         },
       },
     })
@@ -104,8 +107,7 @@ export class TimetableService {
         sortOrder: true,
         isActive: true,
         createdAt: true,
-        institution: {
-          select: { id: true, name: true, code: true },
+        institution: { select: { id: true, name: true, code: true },
         },
       },
     })
@@ -239,8 +241,7 @@ export class TimetableService {
       where,
       orderBy: [{ building: 'asc' }, { roomNumber: 'asc' }],
       include: {
-        institution: {
-          select: { id: true, name: true, code: true },
+        institution: { select: { id: true, name: true, code: true },
         },
       },
     })
@@ -267,8 +268,7 @@ export class TimetableService {
         facilities: true,
         isActive: true,
         createdAt: true,
-        institution: {
-          select: { id: true, name: true, code: true },
+        institution: { select: { id: true, name: true, code: true },
         },
       },
     })
@@ -486,7 +486,7 @@ export class TimetableService {
         user: { 
           select: { 
             id: true,
-            name: true, 
+            firstName: true, lastName: true, 
             email: true,
             phone: true,
           } 
@@ -515,7 +515,7 @@ export class TimetableService {
       data: {
         teacher: {
           id: teacher.id,
-          name: teacher.user.name,
+          name: this.getFullName(teacher.user.firstName, teacher.user.lastName),
           email: teacher.user.email,
           employeeId: teacher.employeeId,
         },
@@ -679,8 +679,7 @@ export class TimetableService {
       isActive: true,
       createdAt: true,
       updatedAt: true,
-      institution: { 
-        select: { id: true, name: true, code: true } 
+      institution: { select: { id: true, name: true, code: true } 
       },
       academicYear: { 
         select: { id: true, yearName: true } 
@@ -688,8 +687,7 @@ export class TimetableService {
       semester: {
         select: { id: true, semesterName: true, semesterNumber: true },
       },
-      course: { 
-        select: { id: true, name: true, code: true } 
+      course: { select: { id: true, name: true, code: true } 
       },
       subject: { 
         select: { id: true, subjectName: true, subjectCode: true } 
@@ -699,7 +697,7 @@ export class TimetableService {
           id: true,
           employeeId: true,
           user: { 
-            select: { id: true, name: true, email: true } 
+            select: { id: true, firstName: true, lastName: true, email: true } 
           },
         },
       },
@@ -880,7 +878,7 @@ export class TimetableService {
 
     if (teacherConflict) {
       throw new ConflictException(
-        `Teacher already has a class at this time: ${teacherConflict.subject?.subjectName} for ${teacherConflict.course?.name || 'Unknown'}`
+        `Teacher already has a class at this time: ${(teacherConflict as any).subject?.subjectName || 'Unknown Subject'} for ${(teacherConflict as any).course?.name || 'Unknown Course'}`
       )
     }
 
@@ -903,7 +901,7 @@ export class TimetableService {
 
       if (roomConflict) {
         throw new ConflictException(
-          `Room is already booked at this time for: ${roomConflict.subject?.subjectName}`
+          `Room is already booked at this time for: ${(roomConflict as any).subject?.subjectName || 'Unknown Subject'}`
         )
       }
     }

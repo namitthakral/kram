@@ -1,20 +1,17 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { CommunicationQueryDto } from './dto/communication-query.dto';
-import {
-  CreateCommunicationDto
-} from './dto/create-communication.dto';
-import { UpdateCommunicationDto } from './dto/update-communication.dto';
+} from '@nestjs/common'
+import { Prisma } from '@prisma/client'
+import { PrismaService } from '../prisma/prisma.service'
+import { CommunicationQueryDto } from './dto/communication-query.dto'
+import { CreateCommunicationDto } from './dto/create-communication.dto'
+import { UpdateCommunicationDto } from './dto/update-communication.dto'
 
 @Injectable()
 export class CommunicationsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   // ==================== OPTIMIZED HELPER METHODS ====================
 
@@ -23,25 +20,25 @@ export class CommunicationsService {
    * Uses communication_statistics view for better performance
    */
   private async getCommunicationStatisticsFromView(filters?: {
-    institutionId?: number;
-    communicationType?: string;
-    isActive?: boolean;
+    institutionId?: number
+    communicationType?: string
+    isActive?: boolean
   }) {
-    let query = 'SELECT * FROM communication_statistics WHERE 1=1';
+    let query = 'SELECT * FROM communication_statistics WHERE 1=1'
 
     if (filters?.institutionId) {
-      query += ` AND institution_id = ${filters.institutionId}`;
+      query += ` AND institution_id = ${filters.institutionId}`
     }
     if (filters?.communicationType) {
-      query += ` AND communication_type = '${filters.communicationType}'`;
+      query += ` AND communication_type = '${filters.communicationType}'`
     }
     if (filters?.isActive !== undefined) {
-      query += ` AND is_active = ${filters.isActive}`;
+      query += ` AND is_active = ${filters.isActive}`
     }
 
-    query += ' ORDER BY is_emergency DESC, is_pinned DESC, publish_date DESC';
+    query += ' ORDER BY is_emergency DESC, is_pinned DESC, publish_date DESC'
 
-    return this.prisma.$queryRawUnsafe(query);
+    return this.prisma.$queryRawUnsafe(query)
   }
 
   /**
@@ -53,7 +50,7 @@ export class CommunicationsService {
       SELECT * FROM unread_communications_summary
       WHERE institution_id = ${institutionId}
       ORDER BY is_emergency DESC, is_pinned DESC, publish_date DESC
-    `);
+    `)
   }
 
   /**
@@ -63,23 +60,23 @@ export class CommunicationsService {
   private async getCommunicationAnalyticsFromView(
     institutionId: number,
     startMonth?: Date,
-    endMonth?: Date,
+    endMonth?: Date
   ) {
     let query = `
       SELECT * FROM communication_analytics
       WHERE institution_id = ${institutionId}
-    `;
+    `
 
     if (startMonth) {
-      query += ` AND publish_month >= '${startMonth.toISOString()}'`;
+      query += ` AND publish_month >= '${startMonth.toISOString()}'`
     }
     if (endMonth) {
-      query += ` AND publish_month <= '${endMonth.toISOString()}'`;
+      query += ` AND publish_month <= '${endMonth.toISOString()}'`
     }
 
-    query += ' ORDER BY publish_month DESC';
+    query += ' ORDER BY publish_month DESC'
 
-    return this.prisma.$queryRawUnsafe(query);
+    return this.prisma.$queryRawUnsafe(query)
   }
 
   // ==================== CRUD METHODS ====================
@@ -88,7 +85,7 @@ export class CommunicationsService {
    * Create a new communication
    */
   async create(createDto: CreateCommunicationDto) {
-    const { publishDate, expiryDate, ...rest } = createDto;
+    const { publishDate, expiryDate, ...rest } = createDto
 
     return this.prisma.communication.create({
       data: {
@@ -107,12 +104,13 @@ export class CommunicationsService {
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
       },
-    });
+    })
   }
 
   /**
@@ -137,11 +135,11 @@ export class CommunicationsService {
       limit = 10,
       startDate,
       endDate,
-    } = query;
+    } = query
 
     // Get user details if userId is provided (for non-admin role filtering)
-    let userRole = '';
-    let userInstitutionId: number | null = null;
+    let userRole = ''
+    let userInstitutionId: number | null = null
 
     if (userId) {
       const user = await this.prisma.user.findUnique({
@@ -162,64 +160,64 @@ export class CommunicationsService {
           },
           roleId: true,
         },
-      });
+      })
 
       if (user) {
-        userRole = user.role.roleName;
+        userRole = user.role.roleName
         userInstitutionId =
           user.student?.institutionId ??
           user.teacher?.institutionId ??
           user.staff?.institutionId ??
           user.parent?.student?.institutionId ??
-          null;
+          null
       }
     }
 
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit
 
     // Build where clause
-    const where: Prisma.CommunicationWhereInput = {};
+    const where: Prisma.CommunicationWhereInput = {}
 
     if (type) {
-      where.communicationType = type;
+      where.communicationType = type
     }
 
     if (priority) {
-      where.priority = priority;
+      where.priority = priority
     }
 
     if (targetAudience) {
       where.targetAudience = {
         has: targetAudience,
-      };
+      }
     }
 
     if (isEmergency !== undefined) {
-      where.isEmergency = isEmergency;
+      where.isEmergency = isEmergency
     }
 
     if (isPinned !== undefined) {
-      where.isPinned = isPinned;
+      where.isPinned = isPinned
     }
 
     if (isActive !== undefined) {
-      where.isActive = isActive;
+      where.isActive = isActive
     } else {
-      where.isActive = true;
+      where.isActive = true
     }
 
     // Institution scoping: admin's institutionId takes precedence
     if (institutionId) {
-      where.institutionId = institutionId;
+      where.institutionId = institutionId
     } else if (queryInstitutionId) {
-      where.institutionId = queryInstitutionId;
+      where.institutionId = queryInstitutionId
     }
 
     // Role-based filtering for non-admins (students, teachers, etc.)
-    const isAdmin = ['super_admin', 'admin'].includes(userRole);
+    const isAdmin = ['super_admin', 'admin'].includes(userRole)
 
     if (!isAdmin && userInstitutionId) {
-      where.institutionId = userInstitutionId;
+      where.institutionId = userInstitutionId
 
       if (!targetAudience) {
         where.OR = [
@@ -228,19 +226,20 @@ export class CommunicationsService {
               hasSome: [
                 userRole,
                 userRole.toLowerCase(),
-                userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase(),
+                userRole.charAt(0).toUpperCase() +
+                  userRole.slice(1).toLowerCase(),
               ],
             },
           },
-        ];
+        ]
       } else if (targetAudience) {
-        const roleLower = userRole.toLowerCase();
+        const roleLower = userRole.toLowerCase()
         const roleCapitalized =
-          userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase();
+          userRole.charAt(0).toUpperCase() + userRole.slice(1).toLowerCase()
 
         where.targetAudience = {
           hasSome: [userRole, roleLower, roleCapitalized],
-        };
+        }
       }
     }
 
@@ -248,21 +247,21 @@ export class CommunicationsService {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { content: { contains: search, mode: 'insensitive' } },
-      ];
+      ]
     }
 
     if (startDate || endDate) {
-      where.publishDate = {};
+      where.publishDate = {}
       if (startDate) {
-        where.publishDate.gte = new Date(startDate);
+        where.publishDate.gte = new Date(startDate)
       }
       if (endDate) {
-        where.publishDate.lte = new Date(endDate);
+        where.publishDate.lte = new Date(endDate)
       }
     }
 
     // Get total count
-    const total = await this.prisma.communication.count({ where });
+    const total = await this.prisma.communication.count({ where })
 
     // Get communications with selective loading (OPTIMIZED)
     const communications = await this.prisma.communication.findMany({
@@ -296,7 +295,8 @@ export class CommunicationsService {
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -311,7 +311,7 @@ export class CommunicationsService {
         { isEmergency: 'desc' }, // Emergency next
         { publishDate: 'desc' }, // Most recent
       ],
-    });
+    })
 
     return {
       data: communications,
@@ -321,7 +321,7 @@ export class CommunicationsService {
         limit,
         totalPages: Math.ceil(total / limit),
       },
-    };
+    }
   }
 
   /**
@@ -365,25 +365,27 @@ export class CommunicationsService {
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
         readReceipts: userId
           ? {
-            where: { userId },
-            select: {
-              id: true,
-              readAt: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true,
+              where: { userId },
+              select: {
+                id: true,
+                readAt: true,
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
                 },
               },
-            },
-            take: 1,
-          }
+              take: 1,
+            }
           : false,
         _count: {
           select: {
@@ -391,10 +393,10 @@ export class CommunicationsService {
           },
         },
       },
-    });
+    })
 
     if (!communication) {
-      throw new NotFoundException(`Communication with ID ${id} not found`);
+      throw new NotFoundException(`Communication with ID ${id} not found`)
     }
 
     if (
@@ -403,10 +405,10 @@ export class CommunicationsService {
     ) {
       throw new ForbiddenException(
         'You do not have access to this communication'
-      );
+      )
     }
 
-    return communication;
+    return communication
   }
 
   /**
@@ -417,35 +419,39 @@ export class CommunicationsService {
     const existing = await this.prisma.communication.findUnique({
       where: { id },
       select: { createdBy: true },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException(`Communication with ID ${id} not found`);
+      throw new NotFoundException(`Communication with ID ${id} not found`)
     }
 
     // Only creator can update (or add role-based check here)
     if (existing.createdBy !== userId) {
       throw new ForbiddenException(
-        'You do not have permission to update this communication',
-      );
+        'You do not have permission to update this communication'
+      )
     }
 
     // Build update data object with proper typing
-    const updateData: Prisma.CommunicationUpdateInput = {};
+    const updateData: Prisma.CommunicationUpdateInput = {}
 
     // Copy all properties from updateDto
     Object.entries(updateDto).forEach(([key, value]) => {
-      if (value !== undefined && key !== 'publishDate' && key !== 'expiryDate') {
-        (updateData as Record<string, unknown>)[key] = value;
+      if (
+        value !== undefined &&
+        key !== 'publishDate' &&
+        key !== 'expiryDate'
+      ) {
+        (updateData as Record<string, unknown>)[key] = value
       }
-    });
+    })
 
     // Handle date conversions if present
     if ('publishDate' in updateDto && updateDto.publishDate) {
-      updateData.publishDate = new Date(updateDto.publishDate as string);
+      updateData.publishDate = new Date(updateDto.publishDate as string)
     }
     if ('expiryDate' in updateDto && updateDto.expiryDate) {
-      updateData.expiryDate = new Date(updateDto.expiryDate as string);
+      updateData.expiryDate = new Date(updateDto.expiryDate as string)
     }
 
     return this.prisma.communication.update({
@@ -477,12 +483,13 @@ export class CommunicationsService {
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
       },
-    });
+    })
   }
 
   /**
@@ -493,22 +500,22 @@ export class CommunicationsService {
     const existing = await this.prisma.communication.findUnique({
       where: { id },
       select: { createdBy: true },
-    });
+    })
 
     if (!existing) {
-      throw new NotFoundException(`Communication with ID ${id} not found`);
+      throw new NotFoundException(`Communication with ID ${id} not found`)
     }
 
     // Only creator can delete (or add role-based check here)
     if (existing.createdBy !== userId) {
       throw new ForbiddenException(
-        'You do not have permission to delete this communication',
-      );
+        'You do not have permission to delete this communication'
+      )
     }
 
     return this.prisma.communication.delete({
       where: { id },
-    });
+    })
   }
 
   /**
@@ -518,12 +525,12 @@ export class CommunicationsService {
     // Check if communication exists
     const communication = await this.prisma.communication.findUnique({
       where: { id: communicationId },
-    });
+    })
 
     if (!communication) {
       throw new NotFoundException(
-        `Communication with ID ${communicationId} not found`,
-      );
+        `Communication with ID ${communicationId} not found`
+      )
     }
 
     // Check if already read
@@ -534,13 +541,13 @@ export class CommunicationsService {
           userId,
         },
       },
-    });
+    })
 
     if (existing) {
       return {
         message: 'Already marked as read',
         readReceipt: existing,
-      };
+      }
     }
 
     // Create read receipt
@@ -559,16 +566,17 @@ export class CommunicationsService {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
-    });
+    })
 
     return {
       message: 'Marked as read',
       readReceipt,
-    };
+    }
   }
 
   /**
@@ -602,10 +610,10 @@ export class CommunicationsService {
           },
         },
       },
-    });
+    })
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User not found')
     }
 
     // Determine institution if not provided
@@ -613,14 +621,14 @@ export class CommunicationsService {
       institutionId ??
       user.student?.institutionId ??
       user.teacher?.institutionId ??
-      user.staff?.institutionId;
+      user.staff?.institutionId
 
     // When user has no institution (e.g. some admin accounts), return empty list instead of 400
     if (!userInstitutionId) {
-      return { count: 0, data: [] };
+      return { count: 0, data: [] }
     }
 
-    const roleName = user.role.roleName;
+    const roleName = user.role.roleName
 
     // Get all communications for this user's role (selective loading)
     const communications = await this.prisma.communication.findMany({
@@ -655,7 +663,8 @@ export class CommunicationsService {
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -664,12 +673,12 @@ export class CommunicationsService {
         { isEmergency: 'desc' },
         { publishDate: 'desc' },
       ],
-    });
+    })
 
     return {
       count: communications.length,
       data: communications,
-    };
+    }
   }
 
   /**
@@ -700,7 +709,8 @@ export class CommunicationsService {
             user: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 kramid: true,
               },
@@ -711,12 +721,12 @@ export class CommunicationsService {
           },
         },
       },
-    });
+    })
 
     if (!communication) {
       throw new NotFoundException(
-        `Communication with ID ${communicationId} not found`,
-      );
+        `Communication with ID ${communicationId} not found`
+      )
     }
 
     if (
@@ -724,8 +734,8 @@ export class CommunicationsService {
       communication.institutionId !== adminInstitutionId
     ) {
       throw new ForbiddenException(
-        'You do not have access to this communication',
-      );
+        'You do not have access to this communication'
+      )
     }
 
     return {
@@ -735,7 +745,7 @@ export class CommunicationsService {
       readBy: communication.readReceipts,
       publishDate: communication.publishDate,
       targetAudience: communication.targetAudience,
-    };
+    }
   }
 
   /**
@@ -745,16 +755,16 @@ export class CommunicationsService {
   async getCommunicationAnalytics(
     institutionId: number,
     startMonth?: string,
-    endMonth?: string,
+    endMonth?: string
   ) {
-    const start = startMonth ? new Date(startMonth) : undefined;
-    const end = endMonth ? new Date(endMonth) : undefined;
+    const start = startMonth ? new Date(startMonth) : undefined
+    const end = endMonth ? new Date(endMonth) : undefined
 
     const analytics = await this.getCommunicationAnalyticsFromView(
       institutionId,
       start,
-      end,
-    );
+      end
+    )
 
     return {
       institutionId,
@@ -764,7 +774,7 @@ export class CommunicationsService {
         endMonth: end?.toISOString().slice(0, 7),
         generatedAt: new Date(),
       },
-    };
+    }
   }
 
   /**
@@ -772,11 +782,10 @@ export class CommunicationsService {
    * Uses communication_statistics view for better performance
    */
   async getCommunicationStatistics(filters?: {
-    institutionId?: number;
-    communicationType?: string;
-    isActive?: boolean;
+    institutionId?: number
+    communicationType?: string
+    isActive?: boolean
   }) {
-    return this.getCommunicationStatisticsFromView(filters);
+    return this.getCommunicationStatisticsFromView(filters)
   }
 }
-

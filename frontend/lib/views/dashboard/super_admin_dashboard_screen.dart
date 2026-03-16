@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/login_signup/login_provider.dart';
+import '../../provider/super_admin/super_admin_provider.dart';
 import '../../utils/custom_colors.dart';
 import '../../utils/extensions.dart';
 import '../../utils/responsive_utils.dart';
@@ -11,12 +12,29 @@ import '../../utils/user_utils.dart';
 import '../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../../widgets/custom_widgets/dashboard_widgets.dart';
 
-class SuperAdminDashboardScreen extends StatelessWidget {
+class SuperAdminDashboardScreen extends StatefulWidget {
   const SuperAdminDashboardScreen({super.key});
+
+  @override
+  State<SuperAdminDashboardScreen> createState() => _SuperAdminDashboardScreenState();
+}
+
+class _SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final superAdminProvider = context.read<SuperAdminProvider>();
+      if (!superAdminProvider.hasData || superAdminProvider.isDataStale) {
+        superAdminProvider.loadDashboardData();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final loginProvider = context.watch<LoginProvider>();
+    final superAdminProvider = context.watch<SuperAdminProvider>();
     final user = loginProvider.currentUser;
 
     if (user == null) {
@@ -39,25 +57,42 @@ class SuperAdminDashboardScreen extends StatelessWidget {
         systemName: 'Kram Platform',
         onNotificationIconPressed: () {},
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SystemHealthWidget(healthPercentage: 99.9),
-            const SizedBox(height: 24),
-            _buildStatsSection(context),
-            const SizedBox(height: 24),
-            _buildSystemOverviewSection(context),
-            const SizedBox(height: 24),
-            _buildRecentInstitutionsSection(context),
-          ],
+      child: RefreshIndicator(
+        onRefresh: () => superAdminProvider.refreshDashboard(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Error handling
+              if (superAdminProvider.hasError)
+                _buildErrorWidget(context, superAdminProvider),
+              
+              // System health
+              _buildSystemHealthWidget(context, superAdminProvider),
+              const SizedBox(height: 24),
+              
+              // Stats section
+              _buildStatsSection(context, superAdminProvider),
+              const SizedBox(height: 24),
+              
+              // System overview
+              _buildSystemOverviewSection(context),
+              const SizedBox(height: 24),
+              
+              // Recent institutions
+              _buildRecentInstitutionsSection(context, superAdminProvider),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildStatsSection(BuildContext context) {
+  Widget _buildStatsSection(BuildContext context, SuperAdminProvider provider) {
     final isMobile = context.isMobile;
+    final stats = provider.formattedStats;
+    final isLoading = provider.isLoadingDashboard || provider.isLoadingStats;
 
     return GridView.count(
       crossAxisCount: isMobile ? 2 : 4,
@@ -66,10 +101,10 @@ class SuperAdminDashboardScreen extends StatelessWidget {
       crossAxisSpacing: isMobile ? 12 : 16,
       mainAxisSpacing: isMobile ? 12 : 16,
       childAspectRatio: isMobile ? 1.3 : 1.5,
-      children: const [
+      children: [
         DashboardStatCard(
           title: 'Total Institutions',
-          value: '48',
+          value: isLoading ? '...' : stats['institutions']!,
           subtitle: 'Active institutions',
           icon: Icons.business,
           backgroundColor: CustomAppColors.primary,
@@ -77,27 +112,27 @@ class SuperAdminDashboardScreen extends StatelessWidget {
         ),
         DashboardStatCard(
           title: 'Total Users',
-          value: '12.5K',
+          value: isLoading ? '...' : stats['users']!,
           subtitle: 'Across all institutions',
           icon: Icons.people,
-          backgroundColor: Color(0xFF10b981),
-          iconColor: Color(0xFF10b981),
+          backgroundColor: const Color(0xFF10b981),
+          iconColor: const Color(0xFF10b981),
         ),
         DashboardStatCard(
-          title: 'Active Sessions',
-          value: '1,234',
-          subtitle: 'Currently online',
+          title: 'Active Users',
+          value: isLoading ? '...' : stats['users']!,
+          subtitle: 'Currently active',
           icon: Icons.online_prediction,
-          backgroundColor: Color(0xFF8B5CF6),
-          iconColor: Color(0xFF8B5CF6),
+          backgroundColor: const Color(0xFF8B5CF6),
+          iconColor: const Color(0xFF8B5CF6),
         ),
         DashboardStatCard(
-          title: 'Storage Used',
-          value: '45.2 GB',
-          subtitle: 'of 100 GB (45%)',
-          icon: Icons.storage,
-          backgroundColor: Color(0xFFf59e0b),
-          iconColor: Color(0xFFf59e0b),
+          title: 'System Health',
+          value: isLoading ? '...' : stats['health']!,
+          subtitle: 'Overall health',
+          icon: Icons.health_and_safety,
+          backgroundColor: const Color(0xFFf59e0b),
+          iconColor: const Color(0xFFf59e0b),
         ),
       ],
     );
@@ -183,51 +218,54 @@ class SuperAdminDashboardScreen extends StatelessWidget {
         ),
       );
 
-  Widget _buildRecentInstitutionsSection(BuildContext context) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Institutions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1e293b),
+  Widget _buildRecentInstitutionsSection(BuildContext context, SuperAdminProvider provider) {
+    final isLoading = provider.isLoadingDashboard;
+    final institutions = provider.recentInstitutions;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recent Institutions',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1e293b),
+                ),
+              ),
+              if (provider.institutionsMeta != null && provider.institutionsMeta!.total > 5)
+                TextButton(
+                  onPressed: () => context.go('/institutions'),
+                  child: const Text('View All'),
+                ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
-        _buildInstitutionItem(
-          'Springfield High School',
-          '1,234 students • 56 teachers',
-          'Active',
-          true,
-        ),
-        _buildInstitutionItem(
-          'Tech Valley Academy',
-          '890 students • 42 teachers',
-          'Active',
-          true,
-        ),
-        _buildInstitutionItem(
-          'Riverside College',
-          '2,145 students • 98 teachers',
-          'Active',
-          true,
-        ),
-        _buildInstitutionItem(
-          'Sunset Elementary',
-          '456 students • 23 teachers',
-          'Inactive',
-          false,
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 16),
+          
+          if (isLoading)
+            ...List.generate(4, (index) => _buildInstitutionItemSkeleton())
+          else if (institutions.isEmpty)
+            _buildEmptyInstitutions()
+          else
+            ...institutions.map((institution) => _buildInstitutionItem(
+              institution.name,
+              institution.userSummary,
+              institution.status,
+              institution.isActive,
+            )),
+        ],
+      ),
+    );
+  }
 
   Widget _buildInstitutionItem(
     String name,
@@ -295,4 +333,152 @@ class SuperAdminDashboardScreen extends StatelessWidget {
       ],
     ),
   );
+
+  /// Build error widget
+  Widget _buildErrorWidget(BuildContext context, SuperAdminProvider provider) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red.shade600),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Error loading dashboard',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+                Text(
+                  provider.error ?? 'Unknown error occurred',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.red.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              provider.clearError();
+              provider.loadDashboardData(forceRefresh: true);
+            },
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build system health widget
+  Widget _buildSystemHealthWidget(BuildContext context, SuperAdminProvider provider) {
+    final stats = provider.systemStats;
+    final isLoading = provider.isLoadingDashboard || provider.isLoadingStats;
+    
+    double healthPercentage = 99.9; // Default
+    if (!isLoading && stats != null) {
+      healthPercentage = stats.userHealthPercentage;
+    }
+
+    return SystemHealthWidget(healthPercentage: healthPercentage);
+  }
+
+  /// Build institution item skeleton for loading state
+  Widget _buildInstitutionItemSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: 200,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 60,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build empty institutions widget
+  Widget _buildEmptyInstitutions() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              Icons.business_outlined,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No institutions found',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Institutions will appear here once they are created',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

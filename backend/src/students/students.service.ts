@@ -41,6 +41,13 @@ export class StudentsService {
   ) {}
 
   /**
+   * Helper function to get full name from firstName and lastName
+   */
+  private getFullName(firstName: string, lastName: string): string {
+    return `${firstName} ${lastName}`.trim()
+  }
+
+  /**
    * Helper: Get attendance summary from database view
    * Uses student_attendance_summary view for optimized performance
    */
@@ -162,7 +169,8 @@ export class StudentsService {
             select: {
               id: true,
               uuid: true,
-              name: true,
+              firstName: true,
+              lastName: true,
               email: true,
               phone: true,
               status: true,
@@ -187,7 +195,8 @@ export class StudentsService {
               user: {
                 select: {
                   id: true,
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                   phone: true,
                 },
@@ -226,7 +235,8 @@ export class StudentsService {
             id: true,
             uuid: true,
             kramid: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true,
             status: true,
@@ -242,7 +252,8 @@ export class StudentsService {
                 id: true,
                 uuid: true,
                 kramid: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 phone: true,
               },
@@ -297,7 +308,8 @@ export class StudentsService {
             id: true,
             uuid: true,
             kramid: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true,
             status: true,
@@ -313,7 +325,8 @@ export class StudentsService {
                 id: true,
                 uuid: true,
                 kramid: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 phone: true,
               },
@@ -398,13 +411,10 @@ export class StudentsService {
         data: {
           firstName,
           lastName,
-          name: `${firstName} ${lastName}`,
           email,
           phone,
           passwordHash: hashedPassword,
           roleId: studentRole.id,
-          emailVerified: false,
-          phoneVerified: false,
           status: 'ACTIVE',
         },
       })
@@ -425,7 +435,6 @@ export class StudentsService {
               uuid: true,
               firstName: true,
               lastName: true,
-              name: true,
               email: true,
               phone: true,
               status: true,
@@ -483,7 +492,8 @@ export class StudentsService {
           select: {
             id: true,
             uuid: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true,
             status: true,
@@ -522,7 +532,6 @@ export class StudentsService {
             id: true,
             firstName: true,
             lastName: true,
-            name: true,
             email: true,
           },
         },
@@ -544,7 +553,6 @@ export class StudentsService {
             id: true,
             firstName: true,
             lastName: true,
-            name: true,
             email: true,
             status: true,
           },
@@ -1531,7 +1539,7 @@ export class StudentsService {
             classSections: {
               include: {
                 teacher: {
-                  include: { user: { select: { name: true } } },
+                  include: { user: { select: { firstName: true, lastName: true } } },
                 },
               },
             },
@@ -1560,7 +1568,8 @@ export class StudentsService {
           .includes(progress.subject.subjectName.toLowerCase())
       )
       const teacher =
-        enrollment?.subject.classSections[0]?.teacher?.user?.name || 'TBD'
+        enrollment?.subject.classSections[0]?.teacher?.user ? 
+          this.getFullName(enrollment.subject.classSections[0].teacher.user.firstName, enrollment.subject.classSections[0].teacher.user.lastName) : 'TBD'
 
       // Find next test
       const nextExam = upcomingExams.find(exam =>
@@ -1765,7 +1774,8 @@ export class StudentsService {
             id: true,
             uuid: true,
             kramid: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -1917,7 +1927,7 @@ export class StudentsService {
 
     // Build student info
     const studentInfo: ReportCardStudentInfo = {
-      name: student.user.name,
+      name: this.getFullName(student.user.firstName, student.user.lastName),
       kramid: student.user.kramid,
       admissionNumber: student.admissionNumber,
       rollNumber: student.rollNumber,

@@ -5,26 +5,19 @@ import { Teacher } from './teacher.types'
 // Re-export Prisma enums for convenience
 export { ParentRelation, UserStatus }
 
-// Core User Types
+// Core User Types (using Prisma camelCase field names)
 export interface User {
   id: number
   uuid?: string
   kramid?: string
   firstName: string
   lastName: string
-  name: string
   email?: string
   phone?: string
   passwordHash: string
   roleId: number
-  emailVerified: boolean
-  phoneVerified: boolean
-  twoFactorEnabled: boolean
-  isTemporaryPassword: boolean
-  mustChangePassword: boolean
   lastLogin?: Date
   loginAttempts: number
-  accountLocked: boolean
   status: UserStatus
   institutionId?: number | null
   createdAt: Date
@@ -37,11 +30,15 @@ export interface User {
   staff?: Staff
 }
 
+// Helper interface for backward compatibility with full name
+export interface UserWithFullName extends User {
+  name: string // Computed from firstName + lastName
+}
+
 export interface Role {
   id: number
   roleName: string
   description?: string
-  permissions?: string[]
   createdAt: Date
 }
 
@@ -99,4 +96,65 @@ export interface AuthResponse {
   user: Omit<User, 'passwordHash'>
   token: string
   refreshToken: string
+}
+
+// Helper functions for user status and name handling
+export class UserHelpers {
+  /**
+   * Generate full name from first and last name
+   */
+  static getFullName(firstName: string, lastName: string): string {
+    return `${firstName} ${lastName}`.trim()
+  }
+
+  /**
+   * Add computed full name to user object
+   */
+  static withFullName<T extends User>(user: T): T & { name: string } {
+    return {
+      ...user,
+      name: this.getFullName(user.firstName, user.lastName)
+    }
+  }
+
+  /**
+   * Check if user needs password change (has temporary password)
+   */
+  static needsPasswordChange(status: UserStatus): boolean {
+    return status === 'PENDING_ACTIVATION'
+  }
+
+  /**
+   * Check if user account is blocked from login
+   */
+  static isBlocked(status: UserStatus): boolean {
+    return status === 'SUSPENDED' || status === 'LOCKED'
+  }
+
+  /**
+   * Check if user can login (not blocked, but may need password change)
+   */
+  static canLogin(status: UserStatus): boolean {
+    return status === 'ACTIVE' || status === 'PENDING_ACTIVATION'
+  }
+
+  /**
+   * Get user-friendly status description
+   */
+  static getStatusDescription(status: UserStatus): string {
+    switch (status) {
+      case 'PENDING_ACTIVATION':
+        return 'Account requires password change'
+      case 'ACTIVE':
+        return 'Active'
+      case 'SUSPENDED':
+        return 'Account suspended by administrator'
+      case 'LOCKED':
+        return 'Account locked due to failed login attempts'
+      case 'INACTIVE':
+        return 'Account deactivated'
+      default:
+        return 'Unknown status'
+    }
+  }
 }
