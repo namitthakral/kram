@@ -154,36 +154,19 @@ DATABASE_URL="$PROD_DATABASE_URL" npx prisma migrate status
 echo ""
 
 # ============================================================================
-# PHASE 4: OPTIONAL DATABASE SEEDING
+# SEEDING DISABLED FOR PRODUCTION
 # ============================================================================
-echo -e "${BOLD}${BLUE}Phase 4: Database Seeding (Optional)${NC}"
-echo -e "${BLUE}──────────────────────────────────────${NC}"
-echo ""
-
-echo -e "${YELLOW}⚠️  WARNING: Seeding will add test data to production!${NC}"
-echo -e "${YELLOW}   This should typically only be done once during initial setup.${NC}"
-echo ""
-read -p "$(echo -e ${CYAN}Do you want to seed the production database? [y/N]: ${NC})" -n 1 -r
-echo ""
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo ""
-    echo -e "${YELLOW}🌱 Seeding production database...${NC}"
-    if DATABASE_URL="$PROD_DATABASE_URL" npm run db:seed; then
-        echo -e "${GREEN}✅ Database seeded successfully${NC}"
-    else
-        echo -e "${RED}❌ Database seeding failed${NC}"
-        echo -e "${YELLOW}⚠️  Continuing with deployment anyway...${NC}"
-    fi
-else
-    echo -e "${BLUE}⏭️  Skipping database seed${NC}"
-fi
+# Database seeding is intentionally disabled for production deployments
+# to prevent test data from being added to the production database.
+# Only migrations are applied to ensure schema updates without test data.
+echo -e "${BLUE}ℹ️  Database seeding is disabled for production deployments${NC}"
+echo -e "${BLUE}   Only migrations will be applied to update the schema${NC}"
 echo ""
 
 # ============================================================================
-# PHASE 5: DEPLOY TO LIGHTSAIL
+# PHASE 4: DEPLOY TO LIGHTSAIL
 # ============================================================================
-echo -e "${BOLD}${BLUE}Phase 5: Deploying to AWS Lightsail${NC}"
+echo -e "${BOLD}${BLUE}Phase 4: Deploying to AWS Lightsail${NC}"
 echo -e "${BLUE}─────────────────────────────────────${NC}"
 echo ""
 
@@ -202,9 +185,9 @@ fi
 echo ""
 
 # ============================================================================
-# PHASE 6: VERIFICATION
+# PHASE 5: VERIFICATION
 # ============================================================================
-echo -e "${BOLD}${BLUE}Phase 6: Deployment Verification${NC}"
+echo -e "${BOLD}${BLUE}Phase 5: Deployment Verification${NC}"
 echo -e "${BLUE}────────────────────────────────${NC}"
 echo ""
 
@@ -237,9 +220,9 @@ fi
 echo ""
 
 # ============================================================================
-# PHASE 7: INVALIDATE CLOUDFRONT CACHE
+# PHASE 6: INVALIDATE CLOUDFRONT CACHE
 # ============================================================================
-echo -e "${BOLD}${BLUE}Phase 7: CloudFront Cache Invalidation${NC}"
+echo -e "${BOLD}${BLUE}Phase 6: CloudFront Cache Invalidation${NC}"
 echo -e "${BLUE}────────────────────────────────────────${NC}"
 echo ""
 
