@@ -505,7 +505,7 @@ class AdminService {
   Future<Map<String, dynamic>> getIdConfig(int institutionId) async {
     try {
       final response = await _apiService.dio.get(
-        '/institutions/$institutionId/id-config',
+        '/admin/institutions/$institutionId/id-config',
       );
 
       if (response.statusCode == 200) {
@@ -531,8 +531,8 @@ class AdminService {
     Map<String, dynamic> config,
   ) async {
     try {
-      final response = await _apiService.dio.patch(
-        '/institutions/$institutionId/id-config',
+      final response = await _apiService.dio.put(
+        '/admin/institutions/$institutionId/id-config',
         data: config,
       );
 
@@ -560,7 +560,7 @@ class AdminService {
   ) async {
     try {
       final response = await _apiService.dio.post(
-        '/institutions/$institutionId/id-config/preview',
+        '/admin/institutions/$institutionId/id-config/preview',
         data: previewData,
       );
 

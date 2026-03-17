@@ -314,7 +314,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           onTap: () {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
-                context.pushNamed('assignments_list');
+                context.push('/academic/assignments');
               }
             });
           },
@@ -327,7 +327,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           onTap: () {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
-                context.pushNamed('examinations_list');
+                context.push('/academic/exams');
               }
             });
           },
@@ -340,7 +340,7 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           onTap: () {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
-                context.pushNamed('attendance_view');
+                context.push('/academic/attendance');
               }
             });
           },

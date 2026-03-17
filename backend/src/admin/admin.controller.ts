@@ -251,6 +251,44 @@ export class AdminController {
     )
   }
 
+  // ID Configuration Endpoints
+  @Get('institutions/:institutionId/id-config')
+  getIdConfig(
+    @Param('institutionId') institutionId: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.getIdConfig(
+      +institutionId,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Put('institutions/:institutionId/id-config')
+  updateIdConfig(
+    @Param('institutionId') institutionId: string,
+    @Body() updates: any,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.updateIdConfig(
+      +institutionId,
+      updates,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Post('institutions/:institutionId/id-config/preview')
+  previewId(
+    @Param('institutionId') institutionId: string,
+    @Body() dto: { template: string; context: any },
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.previewId(
+      +institutionId,
+      dto,
+      this.resolveInstitutionId(user)
+    )
+  }
+
   @Get('institutions/:institutionId/grading-restriction')
   checkGradingRestriction(
     @Param('institutionId') institutionId: string,

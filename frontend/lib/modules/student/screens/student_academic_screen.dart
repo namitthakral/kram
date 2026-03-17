@@ -91,82 +91,81 @@ class StudentAcademicScreen extends StatelessWidget {
                   isMobile ? 1.3 : 1.5, // Adjusted aspect ratio for stat cards
               children: [
                 DashboardStatCard(
-                  title: 'My Grades',
+                  title: context.translate('my_grades'),
                   value: gpa.toString(),
-                  subtitle: 'Current GPA',
+                  subtitle: context.translate('current_gpa'),
                   icon: Icons.assignment_turned_in,
                   backgroundColor: const Color(0xFF10B981),
                   iconColor: const Color(0xFF10B981),
                   onTap:
                       () => _navigateAfterFrame(
                         context,
-                        () => context.pushNamed('student_grades'),
+                         () => context.push('/grades'),
                       ),
                 ),
                 DashboardStatCard(
-                  title: 'Timetable',
-                  value:
-                      'View', // Placeholder as we don't have "classes today" count easily yet
-                  subtitle: 'Weekly Schedule',
+                  title: context.translate('timetable'),
+                  value: context.translate('view'),
+                  subtitle: context.translate('weekly_schedule'),
                   icon: Icons.calendar_today,
                   backgroundColor: const Color(0xFF4F7CFF),
                   iconColor: const Color(0xFF4F7CFF),
                   onTap:
                       () => _navigateAfterFrame(
                         context,
-                        () => context.pushNamed('student_timetable'),
+                         () => context.push('/timetable'),
                       ),
                 ),
                 DashboardStatCard(
-                  title: 'Assignments',
+                  title: context.translate('assignments'),
                   value: '$pendingAssignments',
-                  subtitle: 'Pending Submission',
+                  subtitle: context.translate('pending_submission'),
                   icon: Icons.assignment,
                   backgroundColor: const Color(0xFF6366F1),
                   iconColor: const Color(0xFF6366F1),
                   onTap:
                       () => _navigateAfterFrame(
                         context,
-                        () => context.pushNamed('student_assignments'),
+                         () => context.push('/assignments'),
                       ),
                 ),
                 DashboardStatCard(
-                  title: 'Exams',
-                  value: 'Check',
-                  subtitle: 'Examination Schedule',
+                  title: context.translate('examinations'),
+                  value: context.translate('check'),
+                  subtitle: context.translate('examination_schedule'),
                   icon: Icons.quiz,
                   backgroundColor: const Color(0xFFF59E0B),
                   iconColor: const Color(0xFFF59E0B),
                   onTap:
                       () => _navigateAfterFrame(
                         context,
-                        () => context.pushNamed('student_exams'),
+                         () => context.push('/exams'),
                       ),
                 ),
                 DashboardStatCard(
-                  title: 'Events',
+                  title: context.translate('events'),
                   value: '$upcomingEvents',
-                  subtitle: 'Upcoming Events',
+                  subtitle: context.translate('upcoming_events'),
                   icon: Icons.event,
                   backgroundColor: const Color(0xFFEC4899),
                   iconColor: const Color(0xFFEC4899),
                   onTap:
                       () => _navigateAfterFrame(
                         context,
-                        () => context.pushNamed('student_events'),
+                         () => context.push('/events'),
                       ),
                 ),
                 DashboardStatCard(
                   title: context.translate('attendance'),
-                  value: 'View',
-                  subtitle: 'Monthly Trends',
+                  value: context.translate('view'),
+                  subtitle: context.translate('monthly_trends'),
                   icon: Icons.check_circle_rounded,
                   backgroundColor: AppTheme.info,
                   iconColor: AppTheme.info,
                   onTap:
                       () => _navigateAfterFrame(
                         context,
-                        () => context.pushNamed('student_attendance'),
+                         () => context.push('/attendance'),
                       ),
                 ),
               ],

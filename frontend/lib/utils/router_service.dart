@@ -682,11 +682,7 @@ class RouterService {
         GoRoute(
           path: '/admin-dashboard',
           name: 'admin_dashboard',
-          pageBuilder:
-              (context, state) => NoTransitionPage(
-                key: state.pageKey,
-                child: const AdminDashboardScreen(),
-              ),
+          redirect: (context, state) => '/dashboard',
         ),
         GoRoute(
           path: '/admin-main',

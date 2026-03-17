@@ -384,34 +384,84 @@ class RoleNavigationConfig {
       return exactIndex;
     }
 
-    // Check if it's a nested route under /academic
-    if (normalizedRoute.startsWith('/academic/') ||
-        normalizedRoute.startsWith('/student-academic/')) {
-      return routes.indexOf(
-        normalizedRoute.startsWith('/student-academic/')
-            ? '/student-academic'
-            : '/academic',
-      );
+    // Role-specific sub-route mapping for navigation syncing
+    switch (roleId) {
+      case 1: // Super Admin
+        if (normalizedRoute.startsWith('/institutions/')) return 1;
+        if (normalizedRoute.startsWith('/analytics/')) return 2;
+        if (normalizedRoute.startsWith('/system-settings/')) return 3;
+        break;
+
+      case 2: // Admin
+        // In the new unified list, many features are appended after the main 5 tabs
+        // If it's a known admin feature, map it to Home (index 0) if it doesn't have its own tab
+        final adminHomeSubRoutes = [
+          '/admin-main',
+          '/admin-users',
+          '/staff',
+          '/academic-management',
+          '/books',
+          '/courses',
+          '/class-sections',
+          '/transport',
+          '/reports',
+          '/grading-config',
+          '/institution-settings',
+        ];
+        if (adminHomeSubRoutes.any(normalizedRoute.startsWith)) {
+          return 0;
+        }
+        break;
+
+      case 3: // Student
+        // Tab 1 (Academic) sub-routes
+        const studentAcademicSubRoutes = [
+          '/student-academic',
+          '/grades',
+          '/timetable',
+          '/assignments',
+          '/exams',
+          '/events',
+          '/attendance',
+        ];
+        if (studentAcademicSubRoutes.any(normalizedRoute.startsWith)) {
+          return 1;
+        }
+        // Tab 2 (Fees) sub-routes
+        if (normalizedRoute.startsWith('/my-fees')) {
+          return 2;
+        }
+        break;
+
+      case 4: // Parent
+        // Tab 1 (Progress) sub-routes
+        if (normalizedRoute.startsWith('/child-progress') ||
+            normalizedRoute.startsWith('/announcements')) {
+          return 1;
+        }
+        // If /fee-payment is added later, it should map here as well
+        if (normalizedRoute.startsWith('/fee-payment')) {
+          return 1; // Map to Progress for now or specific tab if added
+        }
+        break;
+
+      case 5: // Teacher
+        // Tab 1 (My Classes) sub-routes
+        if (normalizedRoute.startsWith('/classes/')) return 1;
+        // Tab 2 (Academic) sub-routes
+        if (normalizedRoute.startsWith('/academic/')) return 2;
+        break;
+
+      case 6: // Librarian
+        if (normalizedRoute.startsWith('/issued-books')) return 2;
+        break;
     }
 
-    // Check for Student Academic sub-routes
-    // These are top-level routes but belong to the 'Academic' tab (index 1)
-    if (roleId == 3) {
-      const studentAcademicRoutes = [
-        '/grades',
-        '/timetable',
-        '/assignments',
-        '/exams',
-        '/events',
-      ];
-      if (studentAcademicRoutes.any(normalizedRoute.startsWith)) {
-        return routes.indexOf('/student-academic');
-      }
-    }
-
-    // Check if it's a nested route under /classes
-    if (normalizedRoute.startsWith('/classes/')) {
-      return routes.indexOf('/classes');
+    // Fallback for nested routes
+    if (normalizedRoute.contains('/', 1)) {
+      final parentPath = normalizedRoute.substring(0, normalizedRoute.indexOf('/', 1));
+      final parentIndex = routes.indexOf(parentPath);
+      if (parentIndex != -1) return parentIndex;
     }
 
     // Default to dashboard
@@ -430,7 +480,24 @@ class RoleNavigationConfig {
       '/profile',
     ],
     // Admin routes (index 0 = dashboard so /dashboard highlights first tab)
-    2 => ['/dashboard', '/students', '/teachers', '/fees', '/profile'],
+    2 => [
+      '/dashboard',
+      '/students',
+      '/teachers',
+      '/fees',
+      '/profile',
+      '/admin-users',
+      '/staff',
+      '/academic-management',
+      '/books',
+      '/courses',
+      '/class-sections',
+      '/transport',
+      '/reports',
+      '/grading-config',
+      '/institution-settings',
+      '/admin-main',
+    ],
     // Student routes
     3 => ['/dashboard', '/student-academic', '/my-fees', '/profile'],
     // Parent routes
