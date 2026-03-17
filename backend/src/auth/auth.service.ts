@@ -146,7 +146,7 @@ export class AuthService {
 
     const institution = await this.prisma.institution.findUnique({
       where: { id },
-      select: { id: true, type: true },
+      select: { id: true, name: true, type: true },
     })
 
     return institution

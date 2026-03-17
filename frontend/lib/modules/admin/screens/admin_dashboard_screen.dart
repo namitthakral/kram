@@ -67,6 +67,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         userInitials: userInitials,
         userName: userName,
         institutionName: user.institution?.name ?? '',
+        showBackButton: false,
         onNotificationIconPressed: () {},
       ),
       child: SingleChildScrollView(

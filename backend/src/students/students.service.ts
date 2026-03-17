@@ -176,6 +176,13 @@ export class StudentsService {
               },
             },
           },
+          course: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
           // Get current academic year information
           academicYears: {
             where: {

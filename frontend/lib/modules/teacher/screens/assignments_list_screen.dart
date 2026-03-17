@@ -73,6 +73,7 @@ class _AssignmentsListScreenState extends State<AssignmentsListScreen> {
         userName: userName,
         designation: designation,
         employeeId: employeeId,
+        showBackButton: true,
         onNotificationIconPressed: () {
           // Notification handler to be implemented
         },

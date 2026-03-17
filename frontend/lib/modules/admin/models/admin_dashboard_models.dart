@@ -13,15 +13,15 @@ class AdminDashboardStats {
 
   factory AdminDashboardStats.fromJson(Map<String, dynamic> json) =>
       AdminDashboardStats(
-        totalStudents: json['total_students'] as int? ?? 0,
-        activeStudents: json['active_students'] as int? ?? 0,
-        inactiveStudents: json['inactive_students'] as int? ?? 0,
-        totalTeachers: json['total_teachers'] as int? ?? 0,
-        totalStaff: json['total_staff'] as int? ?? 0,
-        totalClasses: json['total_classes'] as int? ?? 0,
-        attendanceRate: _parseDouble(json['attendance_rate']),
-        feeCollection: _parseDouble(json['fee_collection']),
-        pendingFees: _parseDouble(json['pending_fees']),
+        totalStudents: (json['totalStudents'] ?? json['total_students']) as int? ?? 0,
+        activeStudents: (json['activeStudents'] ?? json['active_students']) as int? ?? 0,
+        inactiveStudents: (json['inactiveStudents'] ?? json['inactive_students']) as int? ?? 0,
+        totalTeachers: (json['totalTeachers'] ?? json['total_teachers']) as int? ?? 0,
+        totalStaff: (json['totalStaff'] ?? json['total_staff']) as int? ?? 0,
+        totalClasses: (json['totalClasses'] ?? json['total_classes']) as int? ?? 0,
+        attendanceRate: _parseDouble(json['attendanceRate'] ?? json['attendance_rate']),
+        feeCollection: _parseDouble(json['feeCollection'] ?? json['fee_collection']),
+        pendingFees: _parseDouble(json['pendingFees'] ?? json['pending_fees']),
       );
 
   static double _parseDouble(value) {
@@ -53,10 +53,10 @@ class TeacherPerformance {
 
   factory TeacherPerformance.fromJson(Map<String, dynamic> json) =>
       TeacherPerformance(
-        teacherName: json['teacher_name']?.toString() ?? '',
+        teacherName: (json['teacher'] ?? json['teacher_name'])?.toString() ?? '',
         subject: json['subject']?.toString() ?? '',
-        students: json['students'] as int? ?? 0,
-        avgGrade: _parseDouble(json['avg_grade']),
+        students: (json['student'] ?? json['students'] ?? json['student_count']) as int? ?? 0,
+        avgGrade: _parseDouble(json['avgGrade'] ?? json['avg_grade']),
         rating: _parseDouble(json['rating']),
       );
 
@@ -84,11 +84,11 @@ class AttendanceTrend {
   factory AttendanceTrend.fromJson(Map<String, dynamic> json) =>
       AttendanceTrend(
         month: json['month']?.toString() ?? '',
-        actualAttendance: _parseDouble(json['actual_attendance']),
+        actualAttendance: _parseDouble(json['actualAttendance'] ?? json['actual_attendance']),
         targetAttendance:
-            _parseDouble(json['target_attendance']) == 0.0
+            _parseDouble(json['targetAttendance'] ?? json['target_attendance']) == 0.0
                 ? 95.0
-                : _parseDouble(json['target_attendance']),
+                : _parseDouble(json['targetAttendance'] ?? json['target_attendance']),
       );
 
   static double _parseDouble(value) {
@@ -125,10 +125,10 @@ class ClassPerformance {
 
   factory ClassPerformance.fromJson(Map<String, dynamic> json) =>
       ClassPerformance(
-        className: json['class_name']?.toString() ?? '',
-        studentCount: json['student_count'] as int? ?? 0,
-        avgGrade: _parseDouble(json['avg_grade']),
-        attendanceRate: _parseDouble(json['attendance_rate']),
+        className: (json['class'] ?? json['class_name'])?.toString() ?? '',
+        studentCount: (json['studentCount'] ?? json['student_count']) as int? ?? 0,
+        avgGrade: _parseDouble(json['avgGrade'] ?? json['avg_grade']),
+        attendanceRate: _parseDouble(json['attendanceRate'] ?? json['attendance_rate']),
       );
 
   static double _parseDouble(value) {
@@ -156,7 +156,7 @@ class FinancialOverview {
       FinancialOverview(
         month: json['month']?.toString() ?? '',
         expenses: _parseDouble(json['expenses']),
-        feeCollection: _parseDouble(json['fee_collection']),
+        feeCollection: _parseDouble(json['feeCollection'] ?? json['fee_collection']),
         profit: _parseDouble(json['profit']),
       );
 
@@ -211,32 +211,32 @@ class AdminDashboardResponse {
       AdminDashboardResponse(
         stats: AdminDashboardStats.fromJson(json['stats'] ?? {}),
         teacherPerformance:
-            (json['teacher_performance'] as List<dynamic>?)
+            ((json['teacherPerformance'] ?? json['teacher_performance']) as List<dynamic>?)
                 ?.map((item) => TeacherPerformance.fromJson(item))
                 .toList() ??
             [],
         attendanceTrends:
-            (json['attendance_trends'] as List<dynamic>?)
+            ((json['attendanceTrends'] ?? json['attendance_trends']) as List<dynamic>?)
                 ?.map((item) => AttendanceTrend.fromJson(item))
                 .toList() ??
             [],
         gradeDistribution:
-            (json['grade_distribution'] as List<dynamic>?)
+            ((json['gradeDistribution'] ?? json['grade_distribution']) as List<dynamic>?)
                 ?.map((item) => GradeDistribution.fromJson(item))
                 .toList() ??
             [],
         classPerformance:
-            (json['class_performance'] as List<dynamic>?)
+            ((json['classPerformance'] ?? json['class_performance']) as List<dynamic>?)
                 ?.map((item) => ClassPerformance.fromJson(item))
                 .toList() ??
             [],
         financialOverview:
-            (json['financial_overview'] as List<dynamic>?)
+            ((json['financialOverview'] ?? json['financial_overview']) as List<dynamic>?)
                 ?.map((item) => FinancialOverview.fromJson(item))
                 .toList() ??
             [],
         systemAlerts:
-            (json['system_alerts'] as List<dynamic>?)
+            ((json['systemAlerts'] ?? json['system_alerts']) as List<dynamic>?)
                 ?.map((item) => SystemAlert.fromJson(item))
                 .toList() ??
             [],

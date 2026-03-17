@@ -101,6 +101,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
+        showBackButton: true,
         onNotificationIconPressed: () {},
       ),
       child: Column(

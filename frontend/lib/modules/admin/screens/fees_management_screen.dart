@@ -19,6 +19,7 @@ class FeesManagementScreen extends StatelessWidget {
         userInitials: userInitials,
         userName: userName,
         institutionName: institutionName,
+        showBackButton: true,
         onNotificationIconPressed: () {},
       ),
       child: Padding(

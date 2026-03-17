@@ -269,8 +269,12 @@ class _CreateClassSectionDialogState extends State<CreateClassSectionDialog> {
                                   (teacher) => DropdownMenuItem<int>(
                                     value: teacher['id'] as int,
                                     child: Text(
-                                      teacher['user']?['name'] ??
-                                          'Unknown Teacher',
+                                      '${teacher['user']?['firstName'] ?? ''} ${teacher['user']?['lastName'] ?? ''}'
+                                              .trim()
+                                              .isEmpty
+                                          ? 'Unknown Teacher'
+                                          : '${teacher['user']?['firstName'] ?? ''} ${teacher['user']?['lastName'] ?? ''}'
+                                              .trim(),
                                     ),
                                   ),
                                 ),

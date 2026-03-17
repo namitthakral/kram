@@ -63,6 +63,7 @@ class _MyClassesScreenState extends State<MyClassesScreen> {
         userName: userName,
         designation: designation,
         employeeId: employeeId,
+        showBackButton: true,
         onNotificationIconPressed: () {},
       ),
       child: Column(

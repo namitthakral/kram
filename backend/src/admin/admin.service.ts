@@ -1169,18 +1169,8 @@ export class AdminService {
       }),
       this.prisma.teacher.count({ where: instFilter }),
       this.prisma.staff.count({ where: instFilter }),
-      // Count both complex class sections and simple class divisions
-      Promise.all([
-        this.prisma.classSection.count({
-          where: institutionId ? { teacher: { institutionId } } : {},
-        }),
-        this.prisma.classDivision.count({
-          where: institutionId ? { course: { institutionId } } : {},
-        }),
-      ]).then(
-        ([complexSections, simpleDivisions]) =>
-          complexSections + simpleDivisions
-      ),
+      // Count courses (classes/programs)
+      this.prisma.course.count({ where: instFilter }),
       this.prisma.attendance.groupBy({
         by: ['status'],
         _count: { id: true },
@@ -1257,7 +1247,7 @@ export class AdminService {
     >`
       SELECT
         t.id as teacher_id,
-        u as teacher_name,
+        CONCAT(u.first_name, ' ', u.last_name) as teacher_name,
         COALESCE(s.subject_name, 'Multiple Subjects') as subject_name,
         COUNT(DISTINCT cs.id) as student_count,
         COALESCE(
@@ -1274,14 +1264,14 @@ export class AdminService {
           0
         ) as avg_grade
       FROM teachers t
-      JOIN users u ON t.userId = u.id
+      JOIN users u ON t.user_id = u.id
       LEFT JOIN teacher_subjects ts ON t.id = ts.teacher_id
       LEFT JOIN subjects s ON ts.subject_id = s.id
       LEFT JOIN class_sections cs ON t.id = cs.teacher_id
       LEFT JOIN exam_results er ON t.id = er.evaluated_by
       LEFT JOIN examinations e ON er.exam_id = e.id
-      WHERE (${institutionId}::int IS NULL OR t.institutionId = ${institutionId})
-      GROUP BY t.id, u, s.subject_name
+      WHERE (${institutionId}::int IS NULL OR t.institution_id = ${institutionId})
+      GROUP BY t.id, u.first_name, u.last_name, s.subject_name
       ORDER BY t.id DESC
       LIMIT ${limit}
     `
@@ -1407,7 +1397,7 @@ export class AdminService {
     >`
       SELECT
         CONCAT(s.subject_name, ' (', cs.section_name, ')') as class_name,
-        COUNT(DISTINCT e.studentId) as student_count,
+        COUNT(DISTINCT e.student_id) as student_count,
         COALESCE(
           ROUND(
             AVG(
@@ -1431,11 +1421,11 @@ export class AdminService {
       FROM class_sections cs
       JOIN subjects s ON cs.subject_id = s.id
       JOIN teachers t ON cs.teacher_id = t.id
-      LEFT JOIN enrollments e ON cs.subject_id = e.subject_id AND cs.semesterId = e.semesterId
-      LEFT JOIN academic_records ar ON cs.subject_id = ar.subject_id AND cs.semesterId = ar.semesterId
+      LEFT JOIN enrollments e ON cs.subject_id = e.subject_id AND cs.semester_id = e.semester_id
+      LEFT JOIN academic_records ar ON cs.subject_id = ar.subject_id AND cs.semester_id = ar.semester_id
       LEFT JOIN attendance a ON cs.id = a.section_id
       WHERE cs.status = 'ACTIVE'
-        AND (${institutionId}::int IS NULL OR t.institutionId = ${institutionId})
+        AND (${institutionId}::int IS NULL OR t.institution_id = ${institutionId})
       GROUP BY cs.id, s.subject_name, cs.section_name
       ORDER BY cs.id DESC
       LIMIT 20
@@ -1547,7 +1537,7 @@ export class AdminService {
       LEFT JOIN attendance a ON cs.id = a.section_id
       WHERE cs.status = 'ACTIVE'
         AND a.date >= CURRENT_DATE - INTERVAL '7 days'
-        AND (${institutionId}::int IS NULL OR t.institutionId = ${institutionId})
+        AND (${institutionId}::int IS NULL OR t.institution_id = ${institutionId})
       GROUP BY cs.id, s.subject_name, cs.section_name
       HAVING
         COUNT(a.id) > 0

@@ -165,6 +165,7 @@ class _MarksListContentState extends State<_MarksListContent> {
         userName: user?.name ?? 'Teacher',
         designation: user?.teacher?.designation ?? 'Faculty',
         employeeId: user?.teacher?.employeeId ?? 'N/A',
+        showBackButton: true,
         onNotificationIconPressed: () {},
       ),
       isLoading: provider.isLoading,

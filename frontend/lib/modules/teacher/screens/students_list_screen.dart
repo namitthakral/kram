@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/services/class_section_service.dart';
+import '../../../../provider/login_signup/login_provider.dart';
 import '../../../../utils/custom_colors.dart';
 import '../../../../utils/user_utils.dart';
 import '../../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
@@ -35,15 +37,26 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => CustomMainScreenWithAppbar(
-    title: 'Students - ${widget.className}',
-    appBarConfig: AppBarConfig.teacher(
-      userInitials: 'T',
-      userName: 'Teacher',
-      designation: 'Faculty',
-      employeeId: 'EMP-001',
-      onNotificationIconPressed: () {},
-    ),
+  Widget build(BuildContext context) {
+    final loginProvider = context.watch<LoginProvider>();
+    final user = loginProvider.currentUser;
+    final teacher = user?.teacher;
+
+    final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
+    final userName = user?.name ?? 'Teacher';
+    final designation = teacher?.designation ?? 'Faculty';
+    final employeeId = teacher?.employeeId ?? 'N/A';
+
+    return CustomMainScreenWithAppbar(
+      title: 'Students - ${widget.className}',
+      appBarConfig: AppBarConfig.teacher(
+        userInitials: userInitials,
+        userName: userName,
+        designation: designation,
+        employeeId: employeeId,
+        showBackButton: true,
+        onNotificationIconPressed: () {},
+      ),
     child: FutureBuilder<Map<String, dynamic>>(
       future: _studentsFuture,
       builder: (context, snapshot) {
@@ -147,4 +160,5 @@ class _StudentsListScreenState extends State<StudentsListScreen> {
       },
     ),
   );
+  }
 }

@@ -85,6 +85,7 @@ class _AttendanceScreenContentState extends State<_AttendanceScreenContent> {
           userName: userName,
           designation: designation,
           employeeId: employeeId,
+          showBackButton: true,
           onNotificationIconPressed: () {},
         ),
         child: const Column(

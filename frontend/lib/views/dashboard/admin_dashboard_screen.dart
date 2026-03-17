@@ -46,6 +46,7 @@ class AdminDashboardScreen extends StatelessWidget {
             userInitials: userInitials,
             userName: userName,
             institutionName: institutionName,
+            showBackButton: false,
             onNotificationIconPressed: () {},
           ),
           child: SingleChildScrollView(

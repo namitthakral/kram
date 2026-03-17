@@ -64,7 +64,13 @@ class TeachersProvider extends ChangeNotifier {
 
               return {
                 'uuid': user?['uuid'] ?? '',
-                'name': user?['name'] ?? 'Unknown Teacher',
+                'name':
+                    '${user?['firstName'] ?? ''} ${user?['lastName'] ?? ''}'
+                            .trim()
+                            .isEmpty
+                        ? 'Unknown Teacher'
+                        : '${user?['firstName'] ?? ''} ${user?['lastName'] ?? ''}'
+                            .trim(),
                 'employeeId': teacher['employeeId'],
                 'designation': teacher['designation'],
                 'email': user?['email'],
