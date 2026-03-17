@@ -28,7 +28,6 @@ import 'modules/student/providers/report_card_provider.dart';
 import 'modules/student/providers/student_attendance_provider.dart';
 import 'modules/student/providers/student_dashboard_provider.dart';
 import 'modules/student/providers/student_provider.dart';
-import 'modules/super_admin/providers/institutions_provider.dart';
 import 'modules/teacher/providers/assignment_provider.dart';
 import 'modules/teacher/providers/attendance_provider.dart';
 import 'modules/teacher/providers/examination_provider.dart';
@@ -192,9 +191,6 @@ void main() async {
         ),
         ChangeNotifierProvider<ClassSectionManagementProvider>(
           create: (_) => ClassSectionManagementProvider(),
-        ),
-        ChangeNotifierProvider<InstitutionsProvider>(
-          create: (_) => InstitutionsProvider(),
         ),
         ChangeNotifierProvider<AcademicYearProvider>(
           create: (_) => AcademicYearProvider(),

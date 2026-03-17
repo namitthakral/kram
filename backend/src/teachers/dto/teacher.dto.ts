@@ -23,6 +23,7 @@ export class CreateTeacherDto {
   lastName: string
 
   @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email: string
 
   @IsString()

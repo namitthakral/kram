@@ -22,6 +22,8 @@ class SuperAdminProvider extends ChangeNotifier {
   List<UserGrowthTrend> _userGrowthTrends = [];
   List<RecentActivity> _recentActivity = [];
   PaginationMeta? _institutionsMeta;
+  Map<String, dynamic>? _storageStats;
+  int? _activeSessionsCount;
 
   // Error handling
   String? _error;
@@ -41,6 +43,8 @@ class SuperAdminProvider extends ChangeNotifier {
   List<UserGrowthTrend> get userGrowthTrends => _userGrowthTrends;
   List<RecentActivity> get recentActivity => _recentActivity;
   PaginationMeta? get institutionsMeta => _institutionsMeta;
+  Map<String, dynamic>? get storageStats => _storageStats;
+  int? get activeSessionsCount => _activeSessionsCount;
 
   // Computed getters
   bool get hasData => _systemStats != null;
@@ -62,12 +66,17 @@ class SuperAdminProvider extends ChangeNotifier {
         institutionLimit: 5, // Show top 5 institutions on dashboard
       );
 
+      log('🔍 Dashboard data received: ${dashboardData.stats.totalInstitutions} institutions');
       _systemStats = dashboardData.stats;
       _institutions = dashboardData.institutions.data;
       _institutionsMeta = dashboardData.institutions.meta;
       _userGrowthTrends = dashboardData.userGrowth;
       _recentActivity = dashboardData.recentActivity;
       _lastUpdated = DateTime.now();
+
+      // Load additional data in parallel
+      loadActiveSessionsCount();
+      loadStorageStats();
 
       log('✅ Dashboard data loaded successfully');
     } catch (e) {
@@ -207,6 +216,7 @@ class SuperAdminProvider extends ChangeNotifier {
   /// Get formatted stats for display
   Map<String, String> get formattedStats {
     if (_systemStats == null) {
+      log('⚠️ SystemStats is null, returning default values');
       return {
         'institutions': '0',
         'users': '0',
@@ -215,10 +225,11 @@ class SuperAdminProvider extends ChangeNotifier {
       };
     }
 
+    log('✅ SystemStats available: ${_systemStats!.totalInstitutions} institutions, ${_systemStats!.totalActiveUsers} users');
     return {
       'institutions': _systemStats!.totalInstitutions.toString(),
       'users': _formatNumber(_systemStats!.totalActiveUsers),
-      'sessions': _formatNumber(_systemStats!.totalActiveUsers), // Placeholder
+      'sessions': _activeSessionsCount != null ? _formatNumber(_activeSessionsCount!) : '0',
       'health': _systemStats!.formattedHealthPercentage,
     };
   }
@@ -243,5 +254,56 @@ class SuperAdminProvider extends ChangeNotifier {
   bool get canLoadMoreInstitutions {
     if (_institutionsMeta == null) return false;
     return _institutionsMeta!.page < _institutionsMeta!.totalPages;
+  }
+
+  /// Load storage statistics
+  Future<void> loadStorageStats() async {
+    try {
+      log('💾 Loading storage statistics...');
+      
+      final stats = await _superAdminService.getStorageStats();
+      _storageStats = stats;
+      
+      log('✅ Storage stats loaded successfully');
+      notifyListeners();
+    } catch (e) {
+      log('❌ Error loading storage stats: $e');
+    }
+  }
+
+  /// Load active sessions count
+  Future<void> loadActiveSessionsCount() async {
+    try {
+      log('👥 Loading active sessions count...');
+      
+      final count = await _superAdminService.getActiveSessionsCount();
+      _activeSessionsCount = count;
+      
+      log('✅ Active sessions count loaded successfully');
+      notifyListeners();
+    } catch (e) {
+      log('❌ Error loading active sessions count: $e');
+    }
+  }
+
+  /// Create a new institution
+  /// Returns true on success, false on failure
+  Future<bool> createInstitution(Map<String, dynamic> data) async {
+    try {
+      log('🏢 Creating institution: ${data['name']}...');
+      
+      final response = await _superAdminService.createInstitution(data);
+      
+      // Refresh institutions list after creation
+      await loadInstitutions(page: 1, limit: 20);
+      
+      log('✅ Institution created successfully');
+      return true;
+    } catch (e) {
+      log('❌ Error creating institution: $e');
+      _error = _getErrorMessage(e);
+      notifyListeners();
+      return false;
+    }
   }
 }

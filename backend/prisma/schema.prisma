@@ -269,12 +269,13 @@ model AcademicYear {
   createdAt    DateTime        @default(now()) @map("created_at")
 
   // Relations
-  institution  Institution     @relation(fields: [institutionId], references: [id])
-  semesters    Semester[]
-  feeStructures FeeStructure[]
-  teacherSubjects TeacherSubject[]
-  classTeachers ClassTeacher[]
-  timeTables   TimeTable[]
+  institution         Institution     @relation(fields: [institutionId], references: [id])
+  semesters           Semester[]
+  feeStructures       FeeStructure[]
+  teacherSubjects     TeacherSubject[]
+  classTeachers       ClassTeacher[]
+  timeTables          TimeTable[]
+  studentAcademicYears StudentAcademicYear[] // Students enrolled in this academic year
 
   @@map("academic_years")
 }
@@ -429,23 +430,35 @@ model Student {
   id                    Int              @id @default(autoincrement())
   userId                Int              @unique @map("user_id")
   institutionId         Int              @map("institution_id")
-  courseId              Int?             @map("course_id") // Course (program/stream) student is enrolled in
-  classDivisionId       Int?             @map("class_division_id") // Simple class division (e.g., "Class I - Section A")
+
+  // Legacy fields - will be removed in migration
+  courseId              Int?             @map("course_id") // Legacy - will be removed
+  classDivisionId       Int?             @map("class_division_id") // Legacy - will be removed
+  rollNumber            String?          @map("roll_number") @db.VarChar(50) // Legacy - will be removed
+  currentSemester       Int?             @map("current_semester") // Legacy - will be removed
+  currentYear           Int?             @map("current_year") // Legacy - will be removed
+  section               String?          @db.VarChar(10) // Legacy - will be removed
+
+  // Permanent student information
   admissionNumber       String           @unique @map("admission_number") @db.VarChar(50)
-  rollNumber            String?          @map("roll_number") @db.VarChar(50)
   admissionDate         DateTime?        @map("admission_date") @db.Date
   graduationDate        DateTime?        @map("graduation_date") @db.Date
-  currentSemester       Int?             @map("current_semester")
-  currentYear           Int?             @map("current_year")
-  section               String?          @db.VarChar(10)
   studentType           StudentType      @default(REGULAR) @map("student_type")
   residentialStatus     ResidentialStatus @default(DAY_SCHOLAR) @map("residential_status")
   transportRequired     Boolean          @default(false) @map("transport_required")
+
+  // Board examination roll numbers (permanent)
+  class10BoardRollNo    String?          @map("class10_board_roll_no") @db.VarChar(50)
+  class12BoardRollNo    String?          @map("class12_board_roll_no") @db.VarChar(50)
+  collegeRollNumber     String?          @map("college_roll_number") @db.VarChar(50)
+
+  // Personal information
   emergencyContactName  String?          @map("emergency_contact_name") @db.VarChar(100)
   emergencyContactPhone String?          @map("emergency_contact_phone") @db.VarChar(15)
   emergencyContactEmail String?          @map("emergency_contact_email") @db.VarChar(100)
   bloodGroup            String?          @map("blood_group") @db.VarChar(5)
   medicalConditions     String?          @map("medical_conditions")
+
   status                StudentStatus    @default(ACTIVE)
   createdAt             DateTime         @default(now()) @map("created_at")
   updatedAt             DateTime         @updatedAt @map("updated_at")
@@ -453,9 +466,12 @@ model Student {
   // Relations
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
+  academicYears         StudentAcademicYear[] // Academic progression history
+  parents               Parent[]
+  
+  // Legacy relations - will be removed in migration
   course                Course?          @relation(fields: [courseId], references: [id])
   classDivision         ClassDivision?   @relation(fields: [classDivisionId], references: [id])
-  parents               Parent[]
   academicRecords       AcademicRecord[]
   attendance            Attendance[]
   enrollments           Enrollment[]
@@ -471,6 +487,57 @@ model Student {
   applications          Application[]
 
   @@map("students")
+}
+
+// New StudentAcademicYear model - Central academic progression tracking
+model StudentAcademicYear {
+  id                    Int              @id @default(autoincrement())
+  studentId             Int              @map("student_id")
+  academicYearId        Int              @map("academic_year_id")
+
+  // Academic context for this year
+  classLevel            Int              @map("class_level") // 1, 2, 3, 4, 5, etc.
+  section               String?          @db.VarChar(10) // A, B, C
+  rollNumber            String           @map("roll_number") @db.VarChar(50)
+  classDivisionId       Int?             @map("class_division_id")
+  classTeacherId        Int?             @map("class_teacher_id")
+
+  // Roll number variants for this year
+  currentRollNumber     String?          @map("current_roll_number") @db.VarChar(50)
+  boardRollNumber       String?          @map("board_roll_number") @db.VarChar(50)
+
+  // Academic performance summary
+  promotionStatus       PromotionStatus  @default(IN_PROGRESS) @map("promotion_status")
+  finalGrade            String?          @db.VarChar(5) @map("final_grade")
+  finalPercentage       Decimal?         @db.Decimal(5,2) @map("final_percentage")
+  attendancePercentage  Decimal?         @db.Decimal(5,2) @map("attendance_percentage")
+  totalWorkingDays      Int?             @default(0) @map("total_working_days")
+  totalDaysPresent      Int?             @default(0) @map("total_days_present")
+
+  // Dates
+  enrollmentDate        DateTime         @map("enrollment_date") @db.Date
+  completionDate        DateTime?        @map("completion_date") @db.Date
+  
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  // Relations - Link ALL academic activities to specific academic year
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear          AcademicYear     @relation(fields: [academicYearId], references: [id])
+  classDivision         ClassDivision?   @relation(fields: [classDivisionId], references: [id])
+  classTeacher          Teacher?         @relation("StudentAcademicYearClassTeacher", fields: [classTeacherId], references: [id])
+
+  // Academic activities for this year - will be added in migration
+  examResults           ExamResult[]     @relation("StudentAcademicYearExamResults")
+  submissions           Submission[]     @relation("StudentAcademicYearSubmissions")
+  academicRecords       AcademicRecord[] @relation("StudentAcademicYearRecords")
+  attendance            Attendance[]     @relation("StudentAcademicYearAttendance")
+  enrollments           Enrollment[]     @relation("StudentAcademicYearEnrollments")
+  studentFees           StudentFee[]     @relation("StudentAcademicYearFees")
+
+  @@unique([studentId, academicYearId])
+  @@unique([academicYearId, classDivisionId, rollNumber])
+  @@map("student_academic_years")
 }
 
 model Teacher {
@@ -509,6 +576,7 @@ model Teacher {
   substitutions     TeacherSubstitution[] @relation("TeacherSubstitute")
   classTeacher      ClassTeacher[]
   questionPapers    QuestionPaper[]
+  studentAcademicYears StudentAcademicYear[] @relation("StudentAcademicYearClassTeacher")
 
   @@map("teachers")
 }
@@ -571,6 +639,15 @@ enum StudentType {
   EXCHANGE
 }
 
+enum PromotionStatus {
+  IN_PROGRESS    // Currently studying
+  PROMOTED       // Promoted to next class
+  REPEATED       // Repeating same class
+  FAILED         // Failed, needs to repeat
+  TRANSFERRED    // Transferred to another school
+  COMPLETED      // Completed final year
+}
+
 enum ResidentialStatus {
   DAY_SCHOLAR
   HOSTELER
@@ -629,43 +706,48 @@ enum StaffStatus {
 
 
 model AcademicRecord {
-  id          Int      @id @default(autoincrement())
-  studentId   Int      @map("student_id")
-  semesterId  Int      @map("semester_id")
-  subjectId   Int      @map("subject_id") // Subject (individual paper/subject)
-  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
-  maxMarks    Decimal? @map("max_marks") @db.Decimal(6, 2)
-  grade       String?  @db.VarChar(5)
-  gradePoints Decimal? @map("grade_points") @db.Decimal(4, 2)
-  creditsEarned Int?   @map("credits_earned")
-  status      AcademicRecordStatus @default(PASSED)
-  remarks     String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                    Int      @id @default(autoincrement())
+  studentId             Int      @map("student_id")
+  semesterId            Int      @map("semester_id")
+  subjectId             Int      @map("subject_id") // Subject (individual paper/subject)
+  studentAcademicYearId Int?     @map("student_academic_year_id") // NEW! Links to academic year
+  marksObtained         Decimal? @map("marks_obtained") @db.Decimal(6, 2)
+  maxMarks              Decimal? @map("max_marks") @db.Decimal(6, 2)
+  grade                 String?  @db.VarChar(5)
+  gradePoints           Decimal? @map("grade_points") @db.Decimal(4, 2)
+  creditsEarned         Int?     @map("credits_earned")
+  status                AcademicRecordStatus @default(PASSED)
+  remarks               String?
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
   // Relations
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  semester    Semester @relation(fields: [semesterId], references: [id])
-  subject     Subject  @relation(fields: [subjectId], references: [id])
+  student               Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  semester              Semester @relation(fields: [semesterId], references: [id])
+  subject               Subject  @relation(fields: [subjectId], references: [id])
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearRecords", fields: [studentAcademicYearId], references: [id])
 
   @@unique([studentId, semesterId, subjectId], name: "unique_record")
   @@map("academic_records")
 }
 
 model Attendance {
-  id          Int            @id @default(autoincrement())
-  studentId   Int            @map("student_id")
-  sectionId   Int            @map("section_id")
-  date        DateTime       @db.Date
-  status      AttendanceStatus
-  remarks     String?
-  markedBy    Int            @map("marked_by")
-  markedAt    DateTime       @default(now()) @map("marked_at")
+  id                    Int            @id @default(autoincrement())
+  studentId             Int            @map("student_id")
+  sectionId             Int?           @map("section_id") // Optional for subject-specific attendance
+  studentAcademicYearId Int?           @map("student_academic_year_id") // NEW! Links to academic year
+  date                  DateTime       @db.Date
+  status                AttendanceStatus
+  attendanceType        AttendanceType @default(DAILY) @map("attendance_type") // Type of attendance
+  remarks               String?
+  markedBy              Int            @map("marked_by")
+  markedAt              DateTime       @default(now()) @map("marked_at")
 
   // Relations
-  student     Student        @relation(fields: [studentId], references: [id])
-  section     ClassSection   @relation(fields: [sectionId], references: [id])
-  marker      Teacher        @relation("AttendanceMarker", fields: [markedBy], references: [id], onDelete: Cascade)
+  student               Student        @relation(fields: [studentId], references: [id])
+  section               ClassSection?  @relation(fields: [sectionId], references: [id])
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearAttendance", fields: [studentAcademicYearId], references: [id])
+  marker                Teacher        @relation("AttendanceMarker", fields: [markedBy], references: [id], onDelete: Cascade)
 
   @@unique([studentId, sectionId, date], name: "unique_attendance")
   @@map("attendance")
@@ -710,31 +792,34 @@ model ClassDivision {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // Relations
-  course      Course   @relation(fields: [courseId], references: [id])
-  teacher     Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
-  students    Student[] // Students assigned to this division
+  course              Course   @relation(fields: [courseId], references: [id])
+  teacher             Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  students            Student[] // Students assigned to this division - legacy
+  studentAcademicYears StudentAcademicYear[] // Students in this division per academic year
 
   @@unique([courseId, sectionName], name: "unique_course_section")
   @@map("class_divisions")
 }
 
 model Enrollment {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  subjectId         Int              @map("subject_id") // Subject student is enrolled in
-  semesterId        Int              @map("semester_id")
-  enrollmentDate    DateTime         @default(now()) @map("enrollment_date") @db.Date
-  enrollmentStatus  EnrollmentStatus @default(ENROLLED) @map("enrollment_status")
-  grade             String?          @db.VarChar(5)
-  creditsEarned     Int              @default(0) @map("credits_earned")
-  attendancePercentage Decimal?      @map("attendance_percentage") @db.Decimal(5, 2)
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  id                    Int              @id @default(autoincrement())
+  studentId             Int              @map("student_id")
+  subjectId             Int              @map("subject_id") // Subject student is enrolled in
+  semesterId            Int              @map("semester_id")
+  studentAcademicYearId Int?             @map("student_academic_year_id") // NEW! Links to academic year
+  enrollmentDate        DateTime         @default(now()) @map("enrollment_date") @db.Date
+  enrollmentStatus      EnrollmentStatus @default(ENROLLED) @map("enrollment_status")
+  grade                 String?          @db.VarChar(5)
+  creditsEarned         Int              @default(0) @map("credits_earned")
+  attendancePercentage  Decimal?         @map("attendance_percentage") @db.Decimal(5, 2)
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject           Subject          @relation(fields: [subjectId], references: [id])
-  semester          Semester         @relation(fields: [semesterId], references: [id])
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject               Subject          @relation(fields: [subjectId], references: [id])
+  semester              Semester         @relation(fields: [semesterId], references: [id])
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearEnrollments", fields: [studentAcademicYearId], references: [id])
 
   @@unique([studentId, subjectId, semesterId], name: "unique_enrollment")
   @@map("enrollments")
@@ -753,6 +838,13 @@ enum AttendanceStatus {
   ABSENT
   LATE
   EXCUSED
+}
+
+enum AttendanceType {
+  DAILY           // Overall daily attendance
+  SUBJECT_WISE    // Subject-specific attendance
+  EVENT           // Special events, field trips
+  EXAM            // Exam attendance
 }
 
 enum ClassSectionStatus {
@@ -804,23 +896,26 @@ model Examination {
 }
 
 model ExamResult {
-  id          Int      @id @default(autoincrement())
-  examId      Int      @map("exam_id")
-  studentId   Int      @map("student_id")
-  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
-  grade       String?  @db.VarChar(5)
-  rankInClass Int?     @map("rank_in_class")
-  remarks     String?
-  isAbsent    Boolean  @default(false) @map("is_absent")
-  evaluatedBy Int?     @map("evaluated_by")
-  evaluatedAt DateTime? @map("evaluated_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                    Int      @id @default(autoincrement())
+  examId                Int      @map("exam_id")
+  studentId             Int      @map("student_id")
+  studentAcademicYearId Int?     @map("student_academic_year_id") // NEW! Links to academic year
+  marksObtained         Decimal? @map("marks_obtained") @db.Decimal(6, 2)
+  grade                 String?  @db.VarChar(5)
+  gradePoints           Decimal? @map("grade_points") @db.Decimal(4, 2)
+  rankInClass           Int?     @map("rank_in_class")
+  remarks               String?
+  isAbsent              Boolean  @default(false) @map("is_absent")
+  evaluatedBy           Int?     @map("evaluated_by")
+  evaluatedAt           DateTime? @map("evaluated_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
   // Relations
-  exam        Examination @relation(fields: [examId], references: [id])
-  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id], onDelete: Cascade)
+  exam                  Examination @relation(fields: [examId], references: [id])
+  student               Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearExamResults", fields: [studentAcademicYearId], references: [id])
+  evaluator             Teacher?    @relation(fields: [evaluatedBy], references: [id], onDelete: Cascade)
 
   @@unique([examId, studentId], name: "unique_result")
   @@map("exam_results")
@@ -855,26 +950,28 @@ model Assignment {
 }
 
 model Submission {
-  id            Int              @id @default(autoincrement())
-  assignmentId  Int              @map("assignment_id")
-  studentId     Int              @map("student_id")
-  fileUrl       String?          @map("file_url") @db.VarChar(500)
-  fileName      String?          @map("file_name") @db.VarChar(255)
-  fileSize      Int?             @map("file_size")
-  submissionText String?
-  submittedAt   DateTime         @default(now()) @map("submitted_at")
-  isLate        Boolean          @default(false) @map("is_late")
-  marksObtained Decimal?         @map("marks_obtained") @db.Decimal(6, 2)
-  feedback      String?
-  gradedBy      Int?             @map("graded_by")
-  gradedAt      DateTime?        @map("graded_at")
-  status        SubmissionStatus @default(SUBMITTED)
-  version       Int              @default(1)
+  id                    Int              @id @default(autoincrement())
+  assignmentId          Int              @map("assignment_id")
+  studentId             Int              @map("student_id")
+  studentAcademicYearId Int?             @map("student_academic_year_id") // NEW! Links to academic year
+  fileUrl               String?          @map("file_url") @db.VarChar(500)
+  fileName              String?          @map("file_name") @db.VarChar(255)
+  fileSize              Int?             @map("file_size")
+  submissionText        String?          @map("submission_text")
+  submittedAt           DateTime         @default(now()) @map("submitted_at")
+  isLate                Boolean          @default(false) @map("is_late")
+  marksObtained         Decimal?         @map("marks_obtained") @db.Decimal(6, 2)
+  feedback              String?
+  gradedBy              Int?             @map("graded_by")
+  gradedAt              DateTime?        @map("graded_at")
+  status                SubmissionStatus @default(SUBMITTED)
+  version               Int              @default(1)
 
   // Relations
-  assignment    Assignment       @relation(fields: [assignmentId], references: [id])
-  student       Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  grader        Teacher?         @relation(fields: [gradedBy], references: [id], onDelete: Cascade)
+  assignment            Assignment       @relation(fields: [assignmentId], references: [id])
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearSubmissions", fields: [studentAcademicYearId], references: [id])
+  grader                Teacher?         @relation(fields: [gradedBy], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId, version], name: "unique_submission")
   @@map("submissions")
@@ -939,25 +1036,27 @@ model FeeStructure {
 }
 
 model StudentFee {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  feeStructureId    Int              @map("fee_structure_id")
-  semesterId        Int?             @map("semester_id")
-  amountDue         Decimal          @map("amount_due") @db.Decimal(10, 2)
-  amountPaid        Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
-  lateFeeApplied    Decimal          @default(0) @map("late_fee_applied") @db.Decimal(10, 2)
-  discount          Decimal          @default(0) @db.Decimal(10, 2)
-  dueDate           DateTime         @map("due_date") @db.Date
-  status            FeeStatus        @default(PENDING)
-  remarks           String?
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  id                    Int              @id @default(autoincrement())
+  studentId             Int              @map("student_id")
+  feeStructureId        Int              @map("fee_structure_id")
+  semesterId            Int?             @map("semester_id")
+  studentAcademicYearId Int?             @map("student_academic_year_id") // NEW! Links to academic year
+  amountDue             Decimal          @map("amount_due") @db.Decimal(10, 2)
+  amountPaid            Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  lateFeeApplied        Decimal          @default(0) @map("late_fee_applied") @db.Decimal(10, 2)
+  discount              Decimal          @default(0) @db.Decimal(10, 2)
+  dueDate               DateTime         @map("due_date") @db.Date
+  status                FeeStatus        @default(PENDING)
+  remarks               String?
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  feeStructure      FeeStructure     @relation(fields: [feeStructureId], references: [id])
-  semester          Semester?        @relation(fields: [semesterId], references: [id])
-  payments          Payment[]
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructure          FeeStructure     @relation(fields: [feeStructureId], references: [id])
+  semester              Semester?        @relation(fields: [semesterId], references: [id])
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearFees", fields: [studentAcademicYearId], references: [id])
+  payments              Payment[]
 
   @@unique([studentId, feeStructureId, semesterId], name: "unique_student_fee")
   @@map("student_fees")
@@ -1057,7 +1156,7 @@ model Communication {
   content           String
   communicationType CommunicationType        @map("communication_type")
   priority          CommunicationPriority    @default(MEDIUM)
-  targetAudience    String[]                 // Array of roles: ["student", "teacher", "parent"]
+  targetAudience    String[]                 @map("target_audience") // Array of roles: ["student", "teacher", "parent"]
   
   // Optional targeting fields (for granular control)
   departmentIds     Int[]                    @map("department_ids") // Specific departments

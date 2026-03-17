@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Query,
   UseGuards,
@@ -66,9 +67,22 @@ export class StudentsController {
   @Get(':user_uuid/academic-records')
   async getAcademicRecords(
     @Param('user_uuid') userUuid: string,
-    @CurrentUser() user: UserWithRelations
+    @CurrentUser() user: UserWithRelations,
+    @Query('academicYearId') academicYearId?: string,
+    @Query('semesterId') semesterId?: string
   ) {
-    return this.studentsService.getAcademicRecordsByUuid(userUuid, user)
+    // First find the student by UUID
+    const student = await this.studentsService.findByUuid(userUuid, user)
+    if (!student.success) {
+      return student
+    }
+
+    return this.studentsService.getAcademicRecords(
+      student.data.id,
+      user,
+      academicYearId ? parseInt(academicYearId) : undefined,
+      semesterId ? parseInt(semesterId) : undefined
+    )
   }
 
   @Get(':user_uuid/attendance')
@@ -76,6 +90,7 @@ export class StudentsController {
     @Param('user_uuid') userUuid: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('academicYearId') academicYearId?: string,
     @CurrentUser() user?: UserWithRelations
   ) {
     return this.studentsService.getAttendanceByUuid(
@@ -166,7 +181,8 @@ export class StudentsController {
   async getExaminations(
     @Param('user_uuid') userUuid: string,
     @CurrentUser() user: UserWithRelations,
-    @Query('status') status?: string
+    @Query('status')
+    status?: 'SCHEDULED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED'
   ) {
     return this.studentsService.getExaminationsByUuid(userUuid, status, user)
   }
@@ -199,6 +215,115 @@ export class StudentsController {
         academicYearId: queryDto.academicYearId,
         includeExamDetails: queryDto.includeExamDetails,
       },
+      user
+    )
+  }
+
+  // ==================== Academic Progression Endpoints ====================
+
+  /**
+   * Get academic history for a student by UUID
+   * GET /students/:user_uuid/academic-history
+   */
+  @Get(':user_uuid/academic-history')
+  async getAcademicHistory(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    // First find the student by UUID
+    const student = await this.studentsService.findByUuid(userUuid, user)
+    if (!student.success) {
+      return student
+    }
+
+    return this.studentsService.getAcademicHistory(student.data.id, user)
+  }
+
+  /**
+   * Get current academic year for a student by UUID
+   * GET /students/:user_uuid/current-academic-year
+   */
+  @Get(':user_uuid/current-academic-year')
+  async getCurrentAcademicYear(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    // First find the student by UUID
+    const student = await this.studentsService.findByUuid(userUuid, user)
+    if (!student.success) {
+      return student
+    }
+
+    return this.studentsService.getCurrentAcademicYear(student.data.id, user)
+  }
+
+  /**
+   * Get attendance summary for a student by UUID
+   * GET /students/:user_uuid/attendance-summary
+   */
+  @Get(':user_uuid/attendance-summary')
+  async getAttendanceSummary(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('academicYearId') academicYearId?: string
+  ) {
+    // First find the student by UUID
+    const student = await this.studentsService.findByUuid(userUuid, user)
+    if (!student.success) {
+      return student
+    }
+
+    return this.studentsService.getAttendanceSummary(
+      student.data.id,
+      academicYearId ? parseInt(academicYearId) : undefined,
+      user
+    )
+  }
+
+  /**
+   * Get attendance trends for a student by UUID
+   * GET /students/:user_uuid/attendance-trends
+   */
+  @Get(':user_uuid/attendance-trends')
+  async getAttendanceTrends(
+    @Param('user_uuid') userUuid: string,
+    @CurrentUser() user: UserWithRelations,
+    @Query('startAcademicYear') startAcademicYear?: string,
+    @Query('endAcademicYear') endAcademicYear?: string
+  ) {
+    // First find the student by UUID
+    const student = await this.studentsService.findByUuid(userUuid, user)
+    if (!student.success) {
+      return student
+    }
+
+    return this.studentsService.getAttendanceTrends(
+      student.data.id,
+      startAcademicYear ? parseInt(startAcademicYear) : undefined,
+      endAcademicYear ? parseInt(endAcademicYear) : undefined,
+      user
+    )
+  }
+
+  // ==================== Student Search and Filtering ====================
+
+  /**
+   * Search students by academic year and class
+   * GET /students/search/by-academic-year/:academicYearId
+   */
+  @Get('search/by-academic-year/:academicYearId')
+  @UseGuards(RolesGuard)
+  @Roles('super_admin', 'admin', 'teacher', 'staff')
+  async searchByAcademicYear(
+    @Param('academicYearId', ParseIntPipe) academicYearId: number,
+    @CurrentUser() user: UserWithRelations,
+    @Query('classLevel') classLevel?: string,
+    @Query('classDivisionId') classDivisionId?: string
+  ) {
+    return this.studentsService.getStudentsByAcademicYear(
+      academicYearId,
+      classLevel ? parseInt(classLevel) : undefined,
+      classDivisionId ? parseInt(classDivisionId) : undefined,
       user
     )
   }

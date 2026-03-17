@@ -25,9 +25,8 @@ class _SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final superAdminProvider = context.read<SuperAdminProvider>();
-      if (!superAdminProvider.hasData || superAdminProvider.isDataStale) {
-        superAdminProvider.loadDashboardData();
-      }
+      // Force refresh to test the new camelCase API
+      superAdminProvider.loadDashboardData(forceRefresh: true);
     });
   }
 

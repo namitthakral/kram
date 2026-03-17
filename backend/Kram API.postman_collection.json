@@ -289,6 +289,272 @@
       ]
     },
     {
+      "name": "Super Admin",
+      "item": [
+        {
+          "name": "Get Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/dashboard",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "dashboard"]
+            }
+          },
+          "response": [
+            {
+              "name": "Dashboard Data Retrieved",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/dashboard",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "dashboard"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"stats\": {\n    \"total_institutions\": 5,\n    \"inactive_institutions\": 1,\n    \"total_students\": 1250,\n    \"total_teachers\": 85,\n    \"total_admins\": 12,\n    \"total_staff\": 8,\n    \"total_parents\": 980,\n    \"total_active_users\": 2335,\n    \"pending_users\": 15,\n    \"suspended_users\": 3,\n    \"locked_users\": 2,\n    \"new_users_30d\": 45,\n    \"new_institutions_30d\": 1,\n    \"user_health_percentage\": 98.5\n  },\n  \"institutions\": {\n    \"data\": [\n      {\n        \"id\": 1,\n        \"code\": \"ABCI\",\n        \"name\": \"ABC International School\",\n        \"type\": \"SCHOOL\",\n        \"status\": \"ACTIVE\",\n        \"created_at\": \"2026-01-15T10:30:00Z\",\n        \"total_users\": 450,\n        \"active_users\": 445,\n        \"students\": 380,\n        \"teachers\": 25,\n        \"staff\": 15,\n        \"parents\": 30,\n        \"health_percentage\": 98.9\n      }\n    ],\n    \"meta\": {\n      \"total\": 5,\n      \"page\": 1,\n      \"limit\": 5,\n      \"totalPages\": 1\n    }\n  },\n  \"userGrowth\": [\n    {\n      \"month\": \"2026-03-01T00:00:00Z\",\n      \"new_users\": 45,\n      \"active_new_users\": 42,\n      \"cumulative_users\": 2350\n    }\n  ],\n  \"recentActivity\": [\n    {\n      \"activity_type\": \"USER_CREATED\",\n      \"description\": \"New student John Doe joined ABC International School\",\n      \"institution_name\": \"ABC International School\",\n      \"role\": \"student\",\n      \"timestamp\": \"2026-03-16T14:30:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get System Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/stats",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Institutions List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/institutions?limit=20&offset=0",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "institutions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of institutions per page (1-100)"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of institutions to skip"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by status (ACTIVE/INACTIVE)",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "SCHOOL",
+                  "description": "Filter by type (SCHOOL/COLLEGE/UNIVERSITY/INSTITUTE)",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "Mumbai",
+                  "description": "Search in name and code",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Institutions List Retrieved",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{super_admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/institutions?limit=20&offset=0",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "institutions"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"code\": \"ABCI\",\n      \"name\": \"ABC International School\",\n      \"type\": \"SCHOOL\",\n      \"status\": \"ACTIVE\",\n      \"created_at\": \"2026-01-15T10:30:00Z\",\n      \"total_users\": 450,\n      \"active_users\": 445,\n      \"students\": 380,\n      \"teachers\": 25,\n      \"staff\": 15,\n      \"parents\": 30,\n      \"health_percentage\": 98.9\n    },\n    {\n      \"id\": 2,\n      \"code\": \"XYZC\",\n      \"name\": \"XYZ College\",\n      \"type\": \"COLLEGE\",\n      \"status\": \"ACTIVE\",\n      \"created_at\": \"2026-02-01T09:00:00Z\",\n      \"total_users\": 850,\n      \"active_users\": 840,\n      \"students\": 750,\n      \"teachers\": 45,\n      \"staff\": 25,\n      \"parents\": 30,\n      \"health_percentage\": 98.8\n    }\n  ],\n  \"meta\": {\n    \"total\": 5,\n    \"page\": 1,\n    \"limit\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Institution Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/institutions/1",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "institutions", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Growth Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/user-growth?months=12",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "user-growth"],
+              "query": [
+                {
+                  "key": "months",
+                  "value": "12",
+                  "description": "Number of months to retrieve (1-24)"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recent Activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/recent-activity?limit=20&days=7",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "recent-activity"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Number of activities to retrieve (1-100)"
+                },
+                {
+                  "key": "days",
+                  "value": "7",
+                  "description": "Number of days to look back (1-30)"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Storage Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/storage-stats",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "storage-stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Sessions Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{api_url}}/super-admin/active-sessions",
+              "host": ["{{api_url}}"],
+              "path": ["super-admin", "active-sessions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Institution Settings",
       "item": [
         {
@@ -3906,10 +4172,20 @@
               "host": ["{{api_url}}"],
               "path": ["class-divisions", "course", ":courseId"],
               "query": [
-                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
-                { "key": "limit", "value": "50", "description": "Items per page (max: 100, default: 50)" }
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Items per page (max: 100, default: 50)"
+                }
               ],
-              "variable": [{ "key": "courseId", "value": "1", "description": "Course ID" }]
+              "variable": [
+                { "key": "courseId", "value": "1", "description": "Course ID" }
+              ]
             },
             "description": "Get all class divisions for a course (simple class organization).\n\nPerformance optimized with pagination and selective field loading. Target response time < 50ms.\n\nExample response:\n```json\n{\n  \"message\": \"Class divisions retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"sectionName\": \"A\",\n      \"maxCapacity\": 50,\n      \"currentEnrollment\": 25,\n      \"roomNumber\": \"101\",\n      \"status\": \"ACTIVE\",\n      \"course\": { \"id\": 1, \"name\": \"Class I\", \"code\": \"CLS1\" },\n      \"teacher\": { \"id\": 1, \"name\": \"Ms. Smith\", \"email\": \"smith@school.edu\" },\n      \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n  ],\n  \"meta\": { \"total\": 3, \"page\": 1, \"limit\": 50, \"totalPages\": 1 }\n}\n```"
           },
@@ -3918,7 +4194,9 @@
               "name": "Success Response",
               "originalRequest": {
                 "method": "GET",
-                "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
                 "url": {
                   "raw": "{{api_url}}/class-divisions/course/1?page=1&limit=50",
                   "host": ["{{api_url}}"],
@@ -3932,7 +4210,9 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
               "cookie": [],
               "body": "{\n  \"message\": \"Class divisions retrieved successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"sectionName\": \"A\",\n      \"maxCapacity\": 50,\n      \"currentEnrollment\": 25,\n      \"roomNumber\": \"101\",\n      \"status\": \"ACTIVE\",\n      \"course\": {\n        \"id\": 1,\n        \"name\": \"Class I\",\n        \"code\": \"CLS1\"\n      },\n      \"teacher\": {\n        \"id\": 1,\n        \"name\": \"Ms. Smith\",\n        \"email\": \"smith@school.edu\"\n      },\n      \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n    }\n  ],\n  \"meta\": {\n    \"total\": 3,\n    \"page\": 1,\n    \"limit\": 50,\n    \"totalPages\": 1\n  }\n}"
             }
@@ -3980,7 +4260,9 @@
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
               "cookie": [],
               "body": "{\n  \"message\": \"Class division created successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"sectionName\": \"A\",\n    \"maxCapacity\": 50,\n    \"roomNumber\": \"101\",\n    \"status\": \"ACTIVE\",\n    \"course\": {\n      \"id\": 1,\n      \"name\": \"Class I\",\n      \"code\": \"CLS1\"\n    },\n    \"teacher\": {\n      \"id\": 1,\n      \"name\": \"Ms. Smith\",\n      \"email\": \"smith@school.edu\"\n    },\n    \"createdAt\": \"2024-01-01T00:00:00.000Z\"\n  }\n}"
             }
@@ -4003,7 +4285,13 @@
               "raw": "{{api_url}}/class-divisions/:id",
               "host": ["{{api_url}}"],
               "path": ["class-divisions", ":id"],
-              "variable": [{ "key": "id", "value": "1", "description": "Class Division ID" }]
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Class Division ID"
+                }
+              ]
             },
             "description": "Update an existing class division.\n\n**All fields are optional:**\n- sectionName: Update section name\n- teacherId: Change class teacher\n- maxCapacity: Update capacity\n- roomNumber: Change room assignment\n- status: Change status (ACTIVE/INACTIVE)\n\n**Validation:**\n- Prevents duplicate section names within same course\n- Validates new teacher assignment\n- Institution-based access control"
           },
@@ -4029,7 +4317,9 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
               "cookie": [],
               "body": "{\n  \"message\": \"Class division updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"sectionName\": \"Alpha\",\n    \"maxCapacity\": 45,\n    \"roomNumber\": \"102\",\n    \"status\": \"ACTIVE\",\n    \"course\": {\n      \"id\": 1,\n      \"name\": \"Class I\",\n      \"code\": \"CLS1\"\n    },\n    \"teacher\": {\n      \"id\": 2,\n      \"name\": \"Mr. Jones\",\n      \"email\": \"jones@school.edu\"\n    },\n    \"updatedAt\": \"2024-01-01T12:00:00.000Z\"\n  }\n}"
             }
@@ -4044,7 +4334,13 @@
               "raw": "{{api_url}}/class-divisions/:id",
               "host": ["{{api_url}}"],
               "path": ["class-divisions", ":id"],
-              "variable": [{ "key": "id", "value": "1", "description": "Class Division ID" }]
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "description": "Class Division ID"
+                }
+              ]
             },
             "description": "Delete (soft delete) a class division.\n\n**Behavior:**\n- Sets status to INACTIVE (soft delete)\n- Cannot delete divisions with assigned students\n- Preserves data for historical records\n\n**Access Control:**\n- Institution-based access control\n- Admin/Super Admin roles required"
           },
@@ -4053,7 +4349,9 @@
               "name": "Success Response",
               "originalRequest": {
                 "method": "DELETE",
-                "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
                 "url": {
                   "raw": "{{api_url}}/class-divisions/1",
                   "host": ["{{api_url}}"],
@@ -4063,7 +4361,9 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
               "cookie": [],
               "body": "{\n  \"message\": \"Class division deleted successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"status\": \"INACTIVE\"\n  }\n}"
             }
@@ -5861,6 +6161,2104 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Students Management",
+      "item": [
+        {
+          "name": "Student CRUD Operations",
+          "item": [
+            {
+              "name": "Get All Students",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students?page=1&limit=10&search=&courseId=&status=ACTIVE",
+                  "host": ["{{api_url}}"],
+                  "path": ["students"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "search",
+                      "value": ""
+                    },
+                    {
+                      "key": "courseId",
+                      "value": ""
+                    },
+                    {
+                      "key": "status",
+                      "value": "ACTIVE"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Student by UUID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}"]
+                }
+              }
+            },
+            {
+              "name": "Update Student",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"Updated Name\",\n  \"lastName\": \"Updated Last Name\",\n  \"email\": \"updated@example.com\",\n  \"phoneNumber\": \"9876543210\",\n  \"emergencyContactEmail\": \"emergency@example.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}"]
+                }
+              }
+            },
+            {
+              "name": "Delete Student",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Academic Records",
+          "item": [
+            {
+              "name": "Get Student Academic Records",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/academic-records?academicYearId=&semesterId=",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "academic-records"],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": ""
+                    },
+                    {
+                      "key": "semesterId",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Academic History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/academic-history",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "academic-history"]
+                }
+              }
+            },
+            {
+              "name": "Get Current Academic Year",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/current-academic-year",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "{{student_uuid}}",
+                    "current-academic-year"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Attendance Management",
+          "item": [
+            {
+              "name": "Get Student Attendance",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/attendance?startDate=2024-01-01&endDate=2024-12-31&academicYearId=",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "attendance"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31"
+                    },
+                    {
+                      "key": "academicYearId",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Attendance Summary",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/attendance-summary?academicYearId=&month=&year=",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "{{student_uuid}}",
+                    "attendance-summary"
+                  ],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": ""
+                    },
+                    {
+                      "key": "month",
+                      "value": ""
+                    },
+                    {
+                      "key": "year",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Attendance Trends",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/attendance-trends?academicYearId=&period=monthly",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "attendance-trends"],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": ""
+                    },
+                    {
+                      "key": "period",
+                      "value": "monthly"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Attendance History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/attendance-history?semesterId=&subjectId=&limit=50",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "{{student_uuid}}",
+                    "attendance-history"
+                  ],
+                  "query": [
+                    {
+                      "key": "semesterId",
+                      "value": ""
+                    },
+                    {
+                      "key": "subjectId",
+                      "value": ""
+                    },
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Performance & Analytics",
+          "item": [
+            {
+              "name": "Get Dashboard Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/dashboard-stats",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "dashboard-stats"]
+                }
+              }
+            },
+            {
+              "name": "Get Performance Trends",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/performance-trends?period=semester&limit=5",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "{{student_uuid}}",
+                    "performance-trends"
+                  ],
+                  "query": [
+                    {
+                      "key": "period",
+                      "value": "semester"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "5"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Subject Performance",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/subject-performance?semesterId=",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "{{student_uuid}}",
+                    "subject-performance"
+                  ],
+                  "query": [
+                    {
+                      "key": "semesterId",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Report Card",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/report-card?academicYearId={{academic_year_id}}&semesterId={{semester_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "report-card"],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": "{{academic_year_id}}"
+                    },
+                    {
+                      "key": "semesterId",
+                      "value": "{{semester_id}}"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assignments & Examinations",
+          "item": [
+            {
+              "name": "Get Student Assignments",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/assignments?status=ASSIGNED&subjectId=&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "assignments"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "ASSIGNED"
+                    },
+                    {
+                      "key": "subjectId",
+                      "value": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Student Examinations",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/examinations?status=SCHEDULED",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "examinations"],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "SCHEDULED"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Exam Question Paper",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/examinations/{{exam_id}}/question-paper",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "{{student_uuid}}",
+                    "examinations",
+                    "{{exam_id}}",
+                    "question-paper"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search & Filters",
+          "item": [
+            {
+              "name": "Search Students by Academic Year",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/search/by-academic-year/{{academic_year_id}}?classLevel=&section=&promotionStatus=&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "search",
+                    "by-academic-year",
+                    "{{academic_year_id}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "classLevel",
+                      "value": ""
+                    },
+                    {
+                      "key": "section",
+                      "value": ""
+                    },
+                    {
+                      "key": "promotionStatus",
+                      "value": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Upcoming Events",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/{{student_uuid}}/upcoming-events?limit=10&days=30",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "{{student_uuid}}", "upcoming-events"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "days",
+                      "value": "30"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Academic Progression Management",
+      "item": [
+        {
+          "name": "Student Academic Year Management",
+          "item": [
+            {
+              "name": "Enroll Student in Academic Year",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"studentId\": 1,\n  \"academicYearId\": 1,\n  \"classLevel\": 10,\n  \"section\": \"A\",\n  \"rollNumber\": \"2024-10A-001\",\n  \"classDivisionId\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/enroll",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "academic-progression", "enroll"]
+                }
+              }
+            },
+            {
+              "name": "Update Student Academic Year",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"section\": \"B\",\n  \"rollNumber\": \"2024-10B-001\",\n  \"classDivisionId\": 2,\n  \"finalGrade\": \"A\",\n  \"finalPercentage\": 85.5,\n  \"attendancePercentage\": 92.0\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/{{student_academic_year_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "{{student_academic_year_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Student Academic Year",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/{{student_academic_year_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "{{student_academic_year_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Student Progression & History",
+          "item": [
+            {
+              "name": "Get Student Academic History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/student/{{student_id}}/history?includeInProgress=true",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "student",
+                    "{{student_id}}",
+                    "history"
+                  ],
+                  "query": [
+                    {
+                      "key": "includeInProgress",
+                      "value": "true"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Current Academic Year",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/student/{{student_id}}/current",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "student",
+                    "{{student_id}}",
+                    "current"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Student Promotion",
+          "item": [
+            {
+              "name": "Promote Single Student",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"newAcademicYearId\": 2,\n  \"newClassLevel\": 11,\n  \"newSection\": \"A\",\n  \"newRollNumber\": \"2025-11A-001\",\n  \"newClassDivisionId\": 3,\n  \"finalGrade\": \"A\",\n  \"finalPercentage\": 87.5,\n  \"attendancePercentage\": 94.0,\n  \"remarks\": \"Excellent performance, promoted to next class\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/student/{{student_id}}/promote",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "student",
+                    "{{student_id}}",
+                    "promote"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Bulk Promote Students",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"studentIds\": [1, 2, 3, 4, 5],\n  \"newAcademicYearId\": 2,\n  \"newClassLevel\": 11,\n  \"autoGenerateRollNumbers\": true,\n  \"rollNumberPrefix\": \"2025-11A\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/bulk-promote",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "academic-progression", "bulk-promote"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Academic Year Analytics",
+          "item": [
+            {
+              "name": "Get Students by Academic Year",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/academic-year/{{academic_year_id}}/students?classLevel=&classDivisionId=&promotionStatus=&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "academic-year",
+                    "{{academic_year_id}}",
+                    "students"
+                  ],
+                  "query": [
+                    {
+                      "key": "classLevel",
+                      "value": ""
+                    },
+                    {
+                      "key": "classDivisionId",
+                      "value": ""
+                    },
+                    {
+                      "key": "promotionStatus",
+                      "value": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Promotion Eligible Students",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/academic-year/{{academic_year_id}}/promotion-eligible?classLevel=&minAttendance=75&minPercentage=40",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "academic-year",
+                    "{{academic_year_id}}",
+                    "promotion-eligible"
+                  ],
+                  "query": [
+                    {
+                      "key": "classLevel",
+                      "value": ""
+                    },
+                    {
+                      "key": "minAttendance",
+                      "value": "75"
+                    },
+                    {
+                      "key": "minPercentage",
+                      "value": "40"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Academic Year Statistics",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/academic-year/{{academic_year_id}}/stats",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "academic-year",
+                    "{{academic_year_id}}",
+                    "stats"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Additional Enrollment",
+          "item": [
+            {
+              "name": "Enroll Student (Alternative)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"academicYearId\": 1,\n  \"classLevel\": 10,\n  \"section\": \"A\",\n  \"rollNumber\": \"2024-10A-002\",\n  \"classDivisionId\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/academic-progression/student/{{student_id}}/enroll",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "academic-progression",
+                    "student",
+                    "{{student_id}}",
+                    "enroll"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Attendance Management",
+      "item": [
+        {
+          "name": "Attendance Recording",
+          "item": [
+            {
+              "name": "Record Single Attendance",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"studentId\": 1,\n  \"date\": \"2024-03-16\",\n  \"status\": \"PRESENT\",\n  \"attendanceType\": \"DAILY\",\n  \"sectionId\": 1,\n  \"remarks\": \"On time\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/record",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "attendance", "record"]
+                }
+              }
+            },
+            {
+              "name": "Record Bulk Attendance",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"date\": \"2024-03-16\",\n  \"attendanceType\": \"DAILY\",\n  \"sectionId\": 1,\n  \"records\": [\n    {\n      \"studentId\": 1,\n      \"status\": \"PRESENT\"\n    },\n    {\n      \"studentId\": 2,\n      \"status\": \"ABSENT\",\n      \"remarks\": \"Sick leave\"\n    },\n    {\n      \"studentId\": 3,\n      \"status\": \"LATE\",\n      \"remarks\": \"Traffic delay\"\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/bulk-record",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "attendance", "bulk-record"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Attendance Retrieval",
+          "item": [
+            {
+              "name": "Get Attendance Records",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/records?studentId=&sectionId=&startDate=2024-03-01&endDate=2024-03-31&status=&attendanceType=&page=1&limit=10",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "attendance", "records"],
+                  "query": [
+                    {
+                      "key": "studentId",
+                      "value": ""
+                    },
+                    {
+                      "key": "sectionId",
+                      "value": ""
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2024-03-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-03-31"
+                    },
+                    {
+                      "key": "status",
+                      "value": ""
+                    },
+                    {
+                      "key": "attendanceType",
+                      "value": ""
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Student Attendance Analytics",
+          "item": [
+            {
+              "name": "Get Student Attendance Summary",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/student/{{student_id}}/summary?academicYearId=&startDate=2024-01-01&endDate=2024-12-31",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "attendance",
+                    "student",
+                    "{{student_id}}",
+                    "summary"
+                  ],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": ""
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Student Attendance Trends",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/student/{{student_id}}/trends?academicYearId=&period=monthly&months=6",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "attendance",
+                    "student",
+                    "{{student_id}}",
+                    "trends"
+                  ],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": ""
+                    },
+                    {
+                      "key": "period",
+                      "value": "monthly"
+                    },
+                    {
+                      "key": "months",
+                      "value": "6"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Class Attendance Analytics",
+          "item": [
+            {
+              "name": "Get Class Attendance Summary",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/class/summary?academicYearId={{academic_year_id}}&classLevel=10&classDivisionId=&startDate=2024-03-01&endDate=2024-03-31",
+                  "host": ["{{api_url}}"],
+                  "path": ["students", "attendance", "class", "summary"],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": "{{academic_year_id}}"
+                    },
+                    {
+                      "key": "classLevel",
+                      "value": "10"
+                    },
+                    {
+                      "key": "classDivisionId",
+                      "value": ""
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2024-03-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-03-31"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Class Attendance by Date",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/class/date/2024-03-16?academicYearId={{academic_year_id}}&classLevel=10&classDivisionId=&sectionId=",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "attendance",
+                    "class",
+                    "date",
+                    "2024-03-16"
+                  ],
+                  "query": [
+                    {
+                      "key": "academicYearId",
+                      "value": "{{academic_year_id}}"
+                    },
+                    {
+                      "key": "classLevel",
+                      "value": "10"
+                    },
+                    {
+                      "key": "classDivisionId",
+                      "value": ""
+                    },
+                    {
+                      "key": "sectionId",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Academic Year Attendance Stats",
+          "item": [
+            {
+              "name": "Get Academic Year Attendance Statistics",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/students/attendance/academic-year/{{academic_year_id}}/stats?classLevel=&classDivisionId=",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "students",
+                    "attendance",
+                    "academic-year",
+                    "{{academic_year_id}}",
+                    "stats"
+                  ],
+                  "query": [
+                    {
+                      "key": "classLevel",
+                      "value": ""
+                    },
+                    {
+                      "key": "classDivisionId",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Super Admin Management",
+      "item": [
+        {
+          "name": "Dashboard & Stats",
+          "item": [
+            {
+              "name": "Get Super Admin Dashboard",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/dashboard",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "dashboard"]
+                }
+              }
+            },
+            {
+              "name": "Get System Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/stats",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "stats"]
+                }
+              }
+            },
+            {
+              "name": "Get User Growth",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/user-growth?period=monthly&months=12",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "user-growth"],
+                  "query": [
+                    {
+                      "key": "period",
+                      "value": "monthly"
+                    },
+                    {
+                      "key": "months",
+                      "value": "12"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Recent Activity",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/recent-activity?limit=50&days=7",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "recent-activity"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "50"
+                    },
+                    {
+                      "key": "days",
+                      "value": "7"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Storage Stats",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/storage-stats",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "storage-stats"]
+                }
+              }
+            },
+            {
+              "name": "Get Active Sessions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/active-sessions?limit=100",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "active-sessions"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "100"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Institution Management",
+          "item": [
+            {
+              "name": "Get All Institutions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/institutions?page=1&limit=10&status=&type=&search=",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "institutions"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    },
+                    {
+                      "key": "status",
+                      "value": ""
+                    },
+                    {
+                      "key": "type",
+                      "value": ""
+                    },
+                    {
+                      "key": "search",
+                      "value": ""
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Institution Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/super-admin/institutions/{{institution_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": ["super-admin", "institutions", "{{institution_id}}"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Question Paper Management",
+      "item": [
+        {
+          "name": "Teacher Question Paper Operations",
+          "item": [
+            {
+              "name": "Create Question Paper for Exam",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Mathematics Final Exam\",\n  \"instructions\": \"Answer all questions. Time: 3 hours\",\n  \"totalMarks\": 100,\n  \"duration\": 180,\n  \"isPublished\": false\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/examinations/{{exam_id}}/question-paper",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "examinations",
+                    "{{exam_id}}",
+                    "question-paper"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create Full Question Paper",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Complete Question Paper\",\n  \"instructions\": \"Read all instructions carefully\",\n  \"totalMarks\": 100,\n  \"duration\": 180,\n  \"sections\": [\n    {\n      \"title\": \"Section A - Multiple Choice\",\n      \"instructions\": \"Choose the correct answer\",\n      \"marks\": 40,\n      \"questions\": [\n        {\n          \"questionText\": \"What is 2+2?\",\n          \"questionType\": \"MULTIPLE_CHOICE\",\n          \"marks\": 2,\n          \"options\": [\n            {\n              \"optionText\": \"3\",\n              \"isCorrect\": false\n            },\n            {\n              \"optionText\": \"4\",\n              \"isCorrect\": true\n            }\n          ]\n        }\n      ]\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers/full",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers",
+                    "full"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get All Question Papers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Question Paper for Exam",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/examinations/{{exam_id}}/question-paper",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "examinations",
+                    "{{exam_id}}",
+                    "question-paper"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Question Paper by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers/{{paper_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers",
+                    "{{paper_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Question Paper",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Question Paper Title\",\n  \"instructions\": \"Updated instructions\",\n  \"totalMarks\": 120,\n  \"duration\": 200\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers/{{paper_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers",
+                    "{{paper_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Publish Question Paper",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers/{{paper_id}}/publish",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers",
+                    "{{paper_id}}",
+                    "publish"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Question Paper",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers/{{paper_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers",
+                    "{{paper_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Section Management",
+          "item": [
+            {
+              "name": "Create Section",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Section A - Multiple Choice\",\n  \"instructions\": \"Choose the best answer\",\n  \"marks\": 40,\n  \"orderIndex\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/question-papers/{{paper_id}}/sections",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "question-papers",
+                    "{{paper_id}}",
+                    "sections"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Section",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Section Title\",\n  \"instructions\": \"Updated instructions\",\n  \"marks\": 50\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/sections/{{section_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "sections",
+                    "{{section_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Section",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/sections/{{section_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "sections",
+                    "{{section_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Question Management",
+          "item": [
+            {
+              "name": "Create Question",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"questionText\": \"What is the capital of France?\",\n  \"questionType\": \"MULTIPLE_CHOICE\",\n  \"marks\": 2,\n  \"orderIndex\": 1,\n  \"explanation\": \"Paris is the capital and largest city of France\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/sections/{{section_id}}/questions",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "sections",
+                    "{{section_id}}",
+                    "questions"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create Bulk Questions",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"questions\": [\n    {\n      \"questionText\": \"What is 2+2?\",\n      \"questionType\": \"MULTIPLE_CHOICE\",\n      \"marks\": 2,\n      \"orderIndex\": 1\n    },\n    {\n      \"questionText\": \"Explain photosynthesis\",\n      \"questionType\": \"ESSAY\",\n      \"marks\": 10,\n      \"orderIndex\": 2\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/sections/{{section_id}}/questions/bulk",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "sections",
+                    "{{section_id}}",
+                    "questions",
+                    "bulk"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Question",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"questionText\": \"Updated question text\",\n  \"marks\": 3,\n  \"explanation\": \"Updated explanation\"\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/questions/{{question_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "questions",
+                    "{{question_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Question",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/questions/{{question_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "questions",
+                    "{{question_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Answer Options Management",
+          "item": [
+            {
+              "name": "Create Answer Option",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"optionText\": \"Paris\",\n  \"isCorrect\": true,\n  \"orderIndex\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/questions/{{question_id}}/options",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "questions",
+                    "{{question_id}}",
+                    "options"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Answer Option",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"optionText\": \"Updated option text\",\n  \"isCorrect\": false\n}"
+                },
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/options/{{option_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "options",
+                    "{{option_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Answer Option",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/teachers/{{teacher_uuid}}/options/{{option_id}}",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "teachers",
+                    "{{teacher_uuid}}",
+                    "options",
+                    "{{option_id}}"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Student Question Paper Access",
+          "item": [
+            {
+              "name": "Get Question Paper for Student",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{api_url}}/question-paper/students/{{student_uuid}}/examinations/{{exam_id}}/question-paper",
+                  "host": ["{{api_url}}"],
+                  "path": [
+                    "question-paper",
+                    "students",
+                    "{{student_uuid}}",
+                    "examinations",
+                    "{{exam_id}}",
+                    "question-paper"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AI Assistant",
+      "item": [
+        {
+          "name": "Chat with AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Help me understand quadratic equations\",\n  \"conversationHistory\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"I need help with math\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": \"I'd be happy to help you with math! What specific topic would you like to work on?\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{api_url}}/ai/chat",
+              "host": ["{{api_url}}"],
+              "path": ["ai", "chat"]
+            }
+          }
+        }
+      ]
     }
   ],
   "auth": {
@@ -5903,6 +8301,66 @@
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student_uuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "academic_year_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "semester_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exam_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "student_academic_year_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "institution_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teacher_uuid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "paper_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "section_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "question_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "option_id",
       "value": "",
       "type": "string"
     }

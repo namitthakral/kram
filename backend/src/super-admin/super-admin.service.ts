@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import {
-  SystemStats,
+  InstitutionOverviewQueryDto,
+  RecentActivityQueryDto,
+  UserGrowthQueryDto,
+} from './dto/super-admin.dto'
+import {
+  InstitutionListResponse,
   InstitutionOverview,
-  UserGrowthTrend,
   RecentActivity,
   SuperAdminDashboardResponse,
-  InstitutionListResponse,
+  SystemStats,
+  UserGrowthTrend,
 } from './interfaces/super-admin.interfaces'
-import {
-  InstitutionOverviewQueryDto,
-  UserGrowthQueryDto,
-  RecentActivityQueryDto,
-} from './dto/super-admin.dto'
 
 @Injectable()
 export class SuperAdminService {
@@ -29,12 +29,13 @@ export class SuperAdminService {
 
     try {
       // Execute all queries in parallel for optimal performance
-      const [stats, institutions, userGrowth, recentActivity] = await Promise.all([
-        this.getSystemStats(),
-        this.getInstitutionOverview({ limit: 5 }), // Top 5 institutions for dashboard
-        this.getUserGrowthTrends({ months: 6 }), // Last 6 months for dashboard
-        this.getRecentActivity({ limit: 10, days: 7 }), // Last 10 activities
-      ])
+      const [stats, institutions, userGrowth, recentActivity] =
+        await Promise.all([
+          this.getSystemStats(),
+          this.getInstitutionOverview({ limit: 5 }), // Top 5 institutions for dashboard
+          this.getUserGrowthTrends({ months: 6 }), // Last 6 months for dashboard
+          this.getRecentActivity({ limit: 10, days: 7 }), // Last 10 activities
+        ])
 
       const executionTime = Date.now() - startTime
       this.logger.log(`Dashboard data retrieved in ${executionTime}ms`)
@@ -59,7 +60,9 @@ export class SuperAdminService {
     const startTime = Date.now()
 
     try {
-      const result = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+      const result = await this.prisma.$queryRaw<
+        Array<Record<string, unknown>>
+      >`
         SELECT * FROM super_admin_system_stats LIMIT 1
       `
 
@@ -73,20 +76,20 @@ export class SuperAdminService {
       // Convert BigInt values to numbers for JSON serialization
       const rawStats = result[0]
       const stats: SystemStats = {
-        total_institutions: Number(rawStats.total_institutions || 0),
-        inactive_institutions: Number(rawStats.inactive_institutions || 0),
-        total_students: Number(rawStats.total_students || 0),
-        total_teachers: Number(rawStats.total_teachers || 0),
-        total_admins: Number(rawStats.total_admins || 0),
-        total_staff: Number(rawStats.total_staff || 0),
-        total_parents: Number(rawStats.total_parents || 0),
-        total_active_users: Number(rawStats.total_active_users || 0),
-        pending_users: Number(rawStats.pending_users || 0),
-        suspended_users: Number(rawStats.suspended_users || 0),
-        locked_users: Number(rawStats.locked_users || 0),
-        new_users_30d: Number(rawStats.new_users_30d || 0),
-        new_institutions_30d: Number(rawStats.new_institutions_30d || 0),
-        user_health_percentage: Number(rawStats.user_health_percentage || 0),
+        totalInstitutions: Number(rawStats.totalInstitutions || 0),
+        inactiveInstitutions: Number(rawStats.inactiveInstitutions || 0),
+        totalStudents: Number(rawStats.totalStudents || 0),
+        totalTeachers: Number(rawStats.totalTeachers || 0),
+        totalAdmins: Number(rawStats.totalAdmins || 0),
+        totalStaff: Number(rawStats.totalStaff || 0),
+        totalParents: Number(rawStats.totalParents || 0),
+        totalActiveUsers: Number(rawStats.totalActiveUsers || 0),
+        pendingUsers: Number(rawStats.pendingUsers || 0),
+        suspendedUsers: Number(rawStats.suspendedUsers || 0),
+        lockedUsers: Number(rawStats.lockedUsers || 0),
+        newUsers30d: Number(rawStats.newUsers30d || 0),
+        newInstitutions30d: Number(rawStats.newInstitutions30d || 0),
+        userHealthPercentage: Number(rawStats.userHealthPercentage || 0),
       }
 
       return stats
@@ -125,12 +128,15 @@ export class SuperAdminService {
       }
 
       if (search) {
-        conditions.push(`(name ILIKE $${paramIndex} OR code ILIKE $${paramIndex})`)
+        conditions.push(
+          `(name ILIKE $${paramIndex} OR code ILIKE $${paramIndex})`
+        )
         params.push(`%${search}%`)
         paramIndex++
       }
 
-      const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+      const whereClause =
+        conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
       // Get total count and data in parallel
       const [totalResult, rawData] = await Promise.all([
@@ -140,7 +146,7 @@ export class SuperAdminService {
         ),
         this.prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(
           `SELECT * FROM super_admin_institution_overview ${whereClause} 
-           ORDER BY created_at DESC 
+           ORDER BY "createdAt" DESC 
            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
           ...params,
           limit,
@@ -155,14 +161,14 @@ export class SuperAdminService {
         name: String(item.name),
         type: item.type as 'SCHOOL' | 'COLLEGE' | 'UNIVERSITY' | 'INSTITUTE',
         status: item.status as 'ACTIVE' | 'INACTIVE',
-        created_at: new Date(item.created_at as string),
-        total_users: Number(item.total_users || 0),
-        active_users: Number(item.active_users || 0),
+        createdAt: new Date(item.createdAt as string),
+        totalUsers: Number(item.totalUsers || 0),
+        activeUsers: Number(item.activeUsers || 0),
         students: Number(item.students || 0),
         teachers: Number(item.teachers || 0),
         staff: Number(item.staff || 0),
         parents: Number(item.parents || 0),
-        health_percentage: Number(item.health_percentage || 0),
+        healthPercentage: Number(item.healthPercentage || 0),
       }))
 
       const total = Number(totalResult[0]?.count || 0)
@@ -191,17 +197,21 @@ export class SuperAdminService {
    * Get user growth trends using optimized database view
    * Performance target: < 75ms
    */
-  async getUserGrowthTrends(query: UserGrowthQueryDto = {}): Promise<UserGrowthTrend[]> {
+  async getUserGrowthTrends(
+    query: UserGrowthQueryDto = {}
+  ): Promise<UserGrowthTrend[]> {
     const { months = 12 } = query
     const startTime = Date.now()
 
     try {
-      const rawResult = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+      const rawResult = await this.prisma.$queryRaw<
+        Array<Record<string, unknown>>
+      >`
         SELECT 
           month,
-          new_users,
-          active_new_users,
-          cumulative_users
+          "newUsers",
+          "activeNewUsers",
+          "cumulativeUsers"
         FROM super_admin_user_growth 
         WHERE month >= NOW() - INTERVAL '${months} months'
         ORDER BY month DESC
@@ -211,9 +221,9 @@ export class SuperAdminService {
       // Convert BigInt values to numbers for JSON serialization
       const result: UserGrowthTrend[] = rawResult.map(item => ({
         month: new Date(item.month as string),
-        new_users: Number(item.new_users || 0),
-        active_new_users: Number(item.active_new_users || 0),
-        cumulative_users: Number(item.cumulative_users || 0),
+        newUsers: Number(item.newUsers || 0),
+        activeNewUsers: Number(item.activeNewUsers || 0),
+        cumulativeUsers: Number(item.cumulativeUsers || 0),
       }))
 
       const executionTime = Date.now() - startTime
@@ -230,18 +240,19 @@ export class SuperAdminService {
    * Get recent activity using optimized database view
    * Performance target: < 60ms
    */
-  async getRecentActivity(query: RecentActivityQueryDto = {}): Promise<RecentActivity[]> {
+  async getRecentActivity(
+    query: RecentActivityQueryDto = {}
+  ): Promise<RecentActivity[]> {
     const { limit = 20, days = 7 } = query
     const startTime = Date.now()
 
     try {
       const result = await this.prisma.$queryRaw<RecentActivity[]>`
         SELECT 
-          activity_type,
+          "activityType",
           description,
-          institution_name,
-          role,
-          timestamp
+          timestamp,
+          "institutionId"
         FROM super_admin_recent_activity 
         WHERE timestamp >= NOW() - INTERVAL '${days} days'
         ORDER BY timestamp DESC
@@ -262,11 +273,15 @@ export class SuperAdminService {
    * Get detailed institution statistics by ID
    * Performance target: < 80ms
    */
-  async getInstitutionDetails(institutionId: number): Promise<InstitutionOverview | null> {
+  async getInstitutionDetails(
+    institutionId: number
+  ): Promise<InstitutionOverview | null> {
     const startTime = Date.now()
 
     try {
-      const rawResult = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+      const rawResult = await this.prisma.$queryRaw<
+        Array<Record<string, unknown>>
+      >`
         SELECT * FROM super_admin_institution_overview 
         WHERE id = ${institutionId}
         LIMIT 1
@@ -287,14 +302,14 @@ export class SuperAdminService {
         name: String(item.name),
         type: item.type as 'SCHOOL' | 'COLLEGE' | 'UNIVERSITY' | 'INSTITUTE',
         status: item.status as 'ACTIVE' | 'INACTIVE',
-        created_at: new Date(item.created_at as string),
-        total_users: Number(item.total_users || 0),
-        active_users: Number(item.active_users || 0),
+        createdAt: new Date(item.createdAt as string),
+        totalUsers: Number(item.totalUsers || 0),
+        activeUsers: Number(item.activeUsers || 0),
         students: Number(item.students || 0),
         teachers: Number(item.teachers || 0),
         staff: Number(item.staff || 0),
         parents: Number(item.parents || 0),
-        health_percentage: Number(item.health_percentage || 0),
+        healthPercentage: Number(item.healthPercentage || 0),
       }
 
       return result
@@ -308,7 +323,11 @@ export class SuperAdminService {
    * Get storage usage statistics (placeholder for future implementation)
    * Performance target: < 30ms
    */
-  async getStorageStats(): Promise<{ used: string; total: string; percentage: number }> {
+  async getStorageStats(): Promise<{
+    used: string
+    total: string
+    percentage: number
+  }> {
     // TODO: Implement actual storage calculation
     // For now, return mock data that matches the current frontend
     return {
@@ -344,20 +363,20 @@ export class SuperAdminService {
    */
   private getEmptySystemStats(): SystemStats {
     return {
-      total_institutions: 0,
-      inactive_institutions: 0,
-      total_students: 0,
-      total_teachers: 0,
-      total_admins: 0,
-      total_staff: 0,
-      total_parents: 0,
-      total_active_users: 0,
-      pending_users: 0,
-      suspended_users: 0,
-      locked_users: 0,
-      new_users_30d: 0,
-      new_institutions_30d: 0,
-      user_health_percentage: 0,
+      totalInstitutions: 0,
+      inactiveInstitutions: 0,
+      totalStudents: 0,
+      totalTeachers: 0,
+      totalAdmins: 0,
+      totalStaff: 0,
+      totalParents: 0,
+      totalActiveUsers: 0,
+      pendingUsers: 0,
+      suspendedUsers: 0,
+      lockedUsers: 0,
+      newUsers30d: 0,
+      newInstitutions30d: 0,
+      userHealthPercentage: 0,
     }
   }
 }

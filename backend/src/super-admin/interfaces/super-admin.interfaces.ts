@@ -4,28 +4,28 @@
  */
 export interface SystemStats {
   // Institution metrics
-  total_institutions: number
-  inactive_institutions: number
+  totalInstitutions: number
+  inactiveInstitutions: number
   
   // User metrics by role
-  total_students: number
-  total_teachers: number
-  total_admins: number
-  total_staff: number
-  total_parents: number
+  totalStudents: number
+  totalTeachers: number
+  totalAdmins: number
+  totalStaff: number
+  totalParents: number
   
   // User status metrics
-  total_active_users: number
-  pending_users: number
-  suspended_users: number
-  locked_users: number
+  totalActiveUsers: number
+  pendingUsers: number
+  suspendedUsers: number
+  lockedUsers: number
   
   // Recent activity (30 days)
-  new_users_30d: number
-  new_institutions_30d: number
+  newUsers30d: number
+  newInstitutions30d: number
   
   // System health
-  user_health_percentage: number
+  userHealthPercentage: number
 }
 
 /**
@@ -38,18 +38,18 @@ export interface InstitutionOverview {
   name: string
   type: 'SCHOOL' | 'COLLEGE' | 'UNIVERSITY' | 'INSTITUTE'
   status: 'ACTIVE' | 'INACTIVE'
-  created_at: Date
+  createdAt: Date
   
   // User counts
-  total_users: number
-  active_users: number
+  totalUsers: number
+  activeUsers: number
   students: number
   teachers: number
   staff: number
   parents: number
   
   // Health metrics
-  health_percentage: number
+  healthPercentage: number
 }
 
 /**
@@ -58,9 +58,9 @@ export interface InstitutionOverview {
  */
 export interface UserGrowthTrend {
   month: Date
-  new_users: number
-  active_new_users: number
-  cumulative_users: number
+  newUsers: number
+  activeNewUsers: number
+  cumulativeUsers: number
 }
 
 /**
@@ -68,11 +68,10 @@ export interface UserGrowthTrend {
  * Maps to super_admin_recent_activity database view
  */
 export interface RecentActivity {
-  activity_type: 'user_created' | 'institution_created'
+  activityType: 'user_registration' | 'institution_creation'
   description: string
-  institution_name: string | null
-  role: string
   timestamp: Date
+  institutionId: number | null
 }
 
 /**

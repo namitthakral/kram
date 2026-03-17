@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core'
 import * as compression from 'compression'
 import helmet from 'helmet'
 import { AppModule } from './app.module'
+import { CaseTransformInterceptor } from './common/interceptors/case-transform.interceptor'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -69,6 +70,10 @@ async function bootstrap() {
       transform: true,
     })
   )
+
+  // Global case transformation interceptor
+  // Converts all snake_case response keys to camelCase for frontend consistency
+  app.useGlobalInterceptors(new CaseTransformInterceptor())
 
   // No global prefix - routes are at root level (e.g., /auth/login, /students)
 

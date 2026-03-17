@@ -24,6 +24,7 @@ export class CreateStudentDto {
   lastName: string
 
   @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email: string
 
   @IsString()
@@ -96,6 +97,11 @@ export class CreateStudentDto {
   @IsOptional()
   emergencyContactPhone?: string
 
+  @IsOptional()
+  @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
+  emergencyContactEmail?: string
+
   @IsString()
   @MaxLength(5)
   @IsOptional()
@@ -156,6 +162,11 @@ export class UpdateStudentDto {
   @IsString()
   @IsOptional()
   emergencyContactPhone?: string
+
+  @IsOptional()
+  @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
+  emergencyContactEmail?: string
 
   @IsString()
   @MaxLength(5)

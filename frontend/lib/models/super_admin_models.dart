@@ -4,7 +4,7 @@ part 'super_admin_models.g.dart';
 
 /// System-wide statistics model
 /// Maps to SystemStats interface from backend
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable()
 class SystemStats {
   // Institution metrics
   final int totalInstitutions;
@@ -59,7 +59,7 @@ class SystemStats {
 
 /// Institution overview with user statistics
 /// Maps to InstitutionOverview interface from backend
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable()
 class InstitutionOverview {
   final int id;
   final String code;
@@ -117,7 +117,7 @@ class InstitutionOverview {
 
 /// User growth trend data
 /// Maps to UserGrowthTrend interface from backend
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable()
 class UserGrowthTrend {
   final DateTime month;
   final int newUsers;
@@ -137,37 +137,35 @@ class UserGrowthTrend {
 
 /// Recent activity item
 /// Maps to RecentActivity interface from backend
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable()
 class RecentActivity {
-  final String activityType; // 'user_created' | 'institution_created'
+  final String activityType; // 'user_registration' | 'institution_creation'
   final String description;
-  final String? institutionName;
-  final String role;
+  final int? institutionId;
   final DateTime timestamp;
 
   const RecentActivity({
     required this.activityType,
     required this.description,
-    this.institutionName,
-    required this.role,
+    this.institutionId,
     required this.timestamp,
   });
 
   factory RecentActivity.fromJson(Map<String, dynamic> json) => _$RecentActivityFromJson(json);
   Map<String, dynamic> toJson() => _$RecentActivityToJson(this);
 
-  /// Check if this is a user creation activity
-  bool get isUserCreated => activityType == 'user_created';
+  /// Check if this is a user registration activity
+  bool get isUserRegistration => activityType == 'user_registration';
 
   /// Check if this is an institution creation activity
-  bool get isInstitutionCreated => activityType == 'institution_created';
+  bool get isInstitutionCreation => activityType == 'institution_creation';
 
   /// Get activity icon based on type
   String get activityIcon {
     switch (activityType) {
-      case 'user_created':
+      case 'user_registration':
         return '👤';
-      case 'institution_created':
+      case 'institution_creation':
         return '🏢';
       default:
         return '📝';
@@ -211,7 +209,7 @@ class InstitutionListResponse {
 
 /// Super Admin dashboard response
 /// Aggregated response for dashboard API
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable()
 class SuperAdminDashboardResponse {
   final SystemStats stats;
   final InstitutionListResponse institutions;

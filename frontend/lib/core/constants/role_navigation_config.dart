@@ -14,7 +14,6 @@ import '../../modules/staff/screens/staff_schedule_screen.dart';
 import '../../modules/student/screens/student_academic_screen.dart';
 import '../../modules/student/screens/student_dashboard_screen.dart';
 import '../../modules/super_admin/screens/analytics_screen.dart';
-import '../../modules/super_admin/screens/institutions_screen.dart';
 import '../../modules/super_admin/screens/security_screen.dart';
 import '../../modules/super_admin/screens/system_settings_screen.dart';
 import '../../modules/teacher/screens/academic_management_screen.dart';
@@ -23,6 +22,7 @@ import '../../modules/teacher/screens/teacher_dashboard_screen.dart';
 import '../../utils/custom_images.dart';
 import '../../views/dashboard/staff_dashboard_screen.dart';
 import '../../views/dashboard/super_admin_dashboard_screen.dart';
+import '../../views/dashboard/super_admin_institutions_screen.dart';
 import '../../views/profile/profile_screen.dart';
 
 /// Role-based navigation configuration
@@ -283,7 +283,7 @@ class RoleNavigationConfig {
 
   static final List<Widget> _superAdminPages = [
     const SuperAdminDashboardScreen(),
-    const InstitutionsScreen(),
+    const SuperAdminInstitutionsScreen(),
     const AnalyticsScreen(),
     const SystemSettingsScreen(),
     const SecurityScreen(),

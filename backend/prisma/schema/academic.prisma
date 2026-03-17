@@ -20,12 +20,13 @@ model AcademicYear {
   createdAt    DateTime        @default(now()) @map("created_at")
 
   // Relations
-  institution  Institution     @relation(fields: [institutionId], references: [id])
-  semesters    Semester[]
-  feeStructures FeeStructure[]
-  teacherSubjects TeacherSubject[]
-  classTeachers ClassTeacher[]
-  timeTables   TimeTable[]
+  institution         Institution     @relation(fields: [institutionId], references: [id])
+  semesters           Semester[]
+  feeStructures       FeeStructure[]
+  teacherSubjects     TeacherSubject[]
+  classTeachers       ClassTeacher[]
+  timeTables          TimeTable[]
+  studentAcademicYears StudentAcademicYear[] // Students enrolled in this academic year
 
   @@map("academic_years")
 }

@@ -35,6 +35,7 @@ export class ParentInfoDto {
   @IsOptional()
   @IsEmail()
   @MaxLength(100)
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email?: string
 
   @IsOptional()
@@ -261,6 +262,7 @@ export class CreateUserDto {
   lastName: string
 
   @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email: string
 
   @IsOptional()
@@ -355,6 +357,7 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email?: string
 
   @IsOptional()

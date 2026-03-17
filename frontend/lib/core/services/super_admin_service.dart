@@ -21,16 +21,17 @@ class SuperAdminService {
     try {
       log('📊 Fetching super admin dashboard data...');
       
-      final response = await _apiService.dio.get(
-        '/super-admin/dashboard',
-        queryParameters: {
-          'institutionPage': institutionPage,
-          'institutionLimit': institutionLimit,
-        },
-      );
+      // The backend dashboard API doesn't accept query parameters
+      // It returns a fixed set of data optimized for dashboard
+      final response = await _apiService.dio.get('/super-admin/dashboard');
 
       log('✅ Dashboard data fetched successfully');
-      return SuperAdminDashboardResponse.fromJson(response.data);
+      log('🔍 Raw response stats: ${response.data['stats']}');
+      
+      final dashboardResponse = SuperAdminDashboardResponse.fromJson(response.data);
+      log('🔍 Parsed stats: totalInstitutions=${dashboardResponse.stats.totalInstitutions}');
+      
+      return dashboardResponse;
     } catch (e) {
       log('❌ Error fetching dashboard data: $e');
       rethrow;
@@ -65,9 +66,12 @@ class SuperAdminService {
     try {
       log('🏢 Fetching institutions (page: $page, limit: $limit)...');
       
+      // Convert page to offset for backend API
+      final offset = (page - 1) * limit;
+      
       final queryParams = <String, dynamic>{
-        'page': page,
         'limit': limit,
+        'offset': offset,
       };
 
       if (search != null && search.isNotEmpty) {
@@ -167,12 +171,64 @@ class SuperAdminService {
     try {
       log('🏥 Fetching system health metrics...');
       
-      final response = await _apiService.dio.get('/super-admin/health');
+      // Use system stats as health metrics since there's no separate health endpoint
+      final response = await _apiService.dio.get('/super-admin/stats');
 
       log('✅ System health metrics fetched successfully');
       return response.data;
     } catch (e) {
       log('❌ Error fetching system health: $e');
+      rethrow;
+    }
+  }
+
+  /// Get storage statistics
+  /// Returns system storage usage metrics
+  Future<Map<String, dynamic>> getStorageStats() async {
+    try {
+      log('💾 Fetching storage statistics...');
+      
+      final response = await _apiService.dio.get('/super-admin/storage-stats');
+
+      log('✅ Storage stats fetched successfully');
+      return response.data;
+    } catch (e) {
+      log('❌ Error fetching storage stats: $e');
+      rethrow;
+    }
+  }
+
+  /// Get active sessions count
+  /// Returns number of currently active user sessions
+  Future<int> getActiveSessionsCount() async {
+    try {
+      log('👥 Fetching active sessions count...');
+      
+      final response = await _apiService.dio.get('/super-admin/active-sessions');
+
+      log('✅ Active sessions count fetched successfully');
+      return response.data as int;
+    } catch (e) {
+      log('❌ Error fetching active sessions count: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new institution
+  /// Returns success response with created institution data
+  Future<Map<String, dynamic>> createInstitution(Map<String, dynamic> data) async {
+    try {
+      log('🏢 Creating new institution: ${data['name']}...');
+      
+      final response = await _apiService.dio.post(
+        '/institutions',
+        data: data,
+      );
+
+      log('✅ Institution created successfully');
+      return response.data;
+    } catch (e) {
+      log('❌ Error creating institution: $e');
       rethrow;
     }
   }

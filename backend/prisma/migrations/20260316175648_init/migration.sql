@@ -32,6 +32,9 @@ CREATE TYPE "SemesterStatus" AS ENUM ('UPCOMING', 'ACTIVE', 'COMPLETED');
 CREATE TYPE "StudentType" AS ENUM ('REGULAR', 'TRANSFER', 'EXCHANGE');
 
 -- CreateEnum
+CREATE TYPE "PromotionStatus" AS ENUM ('IN_PROGRESS', 'PROMOTED', 'REPEATED', 'FAILED', 'TRANSFERRED', 'COMPLETED');
+
+-- CreateEnum
 CREATE TYPE "ResidentialStatus" AS ENUM ('DAY_SCHOLAR', 'HOSTELER');
 
 -- CreateEnum
@@ -57,6 +60,9 @@ CREATE TYPE "AcademicRecordStatus" AS ENUM ('PASSED', 'FAILED', 'INCOMPLETE', 'W
 
 -- CreateEnum
 CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT', 'LATE', 'EXCUSED');
+
+-- CreateEnum
+CREATE TYPE "AttendanceType" AS ENUM ('DAILY', 'SUBJECT_WISE', 'EVENT', 'EXAM');
 
 -- CreateEnum
 CREATE TYPE "ClassSectionStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'CANCELLED');
@@ -373,16 +379,19 @@ CREATE TABLE "students" (
     "institution_id" INTEGER NOT NULL,
     "course_id" INTEGER,
     "class_division_id" INTEGER,
-    "admission_number" VARCHAR(50) NOT NULL,
     "roll_number" VARCHAR(50),
-    "admission_date" DATE,
-    "graduation_date" DATE,
     "current_semester" INTEGER,
     "current_year" INTEGER,
     "section" VARCHAR(10),
+    "admission_number" VARCHAR(50) NOT NULL,
+    "admission_date" DATE,
+    "graduation_date" DATE,
     "student_type" "StudentType" NOT NULL DEFAULT 'REGULAR',
     "residential_status" "ResidentialStatus" NOT NULL DEFAULT 'DAY_SCHOLAR',
     "transport_required" BOOLEAN NOT NULL DEFAULT false,
+    "class10_board_roll_no" VARCHAR(50),
+    "class12_board_roll_no" VARCHAR(50),
+    "college_roll_number" VARCHAR(50),
     "emergency_contact_name" VARCHAR(100),
     "emergency_contact_phone" VARCHAR(15),
     "emergency_contact_email" VARCHAR(100),
@@ -393,6 +402,32 @@ CREATE TABLE "students" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "students_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "student_academic_years" (
+    "id" SERIAL NOT NULL,
+    "student_id" INTEGER NOT NULL,
+    "academic_year_id" INTEGER NOT NULL,
+    "class_level" INTEGER NOT NULL,
+    "section" VARCHAR(10),
+    "roll_number" VARCHAR(50) NOT NULL,
+    "class_division_id" INTEGER,
+    "class_teacher_id" INTEGER,
+    "current_roll_number" VARCHAR(50),
+    "board_roll_number" VARCHAR(50),
+    "promotion_status" "PromotionStatus" NOT NULL DEFAULT 'IN_PROGRESS',
+    "final_grade" VARCHAR(5),
+    "final_percentage" DECIMAL(5,2),
+    "attendance_percentage" DECIMAL(5,2),
+    "total_working_days" INTEGER DEFAULT 0,
+    "total_days_present" INTEGER DEFAULT 0,
+    "enrollment_date" DATE NOT NULL,
+    "completion_date" DATE,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "student_academic_years_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -467,6 +502,7 @@ CREATE TABLE "academic_records" (
     "student_id" INTEGER NOT NULL,
     "semester_id" INTEGER NOT NULL,
     "subject_id" INTEGER NOT NULL,
+    "student_academic_year_id" INTEGER,
     "marks_obtained" DECIMAL(6,2),
     "max_marks" DECIMAL(6,2),
     "grade" VARCHAR(5),
@@ -484,9 +520,11 @@ CREATE TABLE "academic_records" (
 CREATE TABLE "attendance" (
     "id" SERIAL NOT NULL,
     "student_id" INTEGER NOT NULL,
-    "section_id" INTEGER NOT NULL,
+    "section_id" INTEGER,
+    "student_academic_year_id" INTEGER,
     "date" DATE NOT NULL,
     "status" "AttendanceStatus" NOT NULL,
+    "attendance_type" "AttendanceType" NOT NULL DEFAULT 'DAILY',
     "remarks" TEXT,
     "marked_by" INTEGER NOT NULL,
     "marked_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -534,6 +572,7 @@ CREATE TABLE "enrollments" (
     "student_id" INTEGER NOT NULL,
     "subject_id" INTEGER NOT NULL,
     "semester_id" INTEGER NOT NULL,
+    "student_academic_year_id" INTEGER,
     "enrollment_date" DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "enrollment_status" "EnrollmentStatus" NOT NULL DEFAULT 'ENROLLED',
     "grade" VARCHAR(5),
@@ -573,8 +612,10 @@ CREATE TABLE "exam_results" (
     "id" SERIAL NOT NULL,
     "exam_id" INTEGER NOT NULL,
     "student_id" INTEGER NOT NULL,
+    "student_academic_year_id" INTEGER,
     "marks_obtained" DECIMAL(6,2),
     "grade" VARCHAR(5),
+    "grade_points" DECIMAL(4,2),
     "rank_in_class" INTEGER,
     "remarks" TEXT,
     "is_absent" BOOLEAN NOT NULL DEFAULT false,
@@ -614,10 +655,11 @@ CREATE TABLE "submissions" (
     "id" SERIAL NOT NULL,
     "assignment_id" INTEGER NOT NULL,
     "student_id" INTEGER NOT NULL,
+    "student_academic_year_id" INTEGER,
     "file_url" VARCHAR(500),
     "file_name" VARCHAR(255),
     "file_size" INTEGER,
-    "submissionText" TEXT,
+    "submission_text" TEXT,
     "submitted_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "is_late" BOOLEAN NOT NULL DEFAULT false,
     "marks_obtained" DECIMAL(6,2),
@@ -658,6 +700,7 @@ CREATE TABLE "student_fees" (
     "student_id" INTEGER NOT NULL,
     "fee_structure_id" INTEGER NOT NULL,
     "semester_id" INTEGER,
+    "student_academic_year_id" INTEGER,
     "amount_due" DECIMAL(10,2) NOT NULL,
     "amount_paid" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "late_fee_applied" DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -704,7 +747,7 @@ CREATE TABLE "communications" (
     "content" TEXT NOT NULL,
     "communication_type" "CommunicationType" NOT NULL,
     "priority" "CommunicationPriority" NOT NULL DEFAULT 'MEDIUM',
-    "targetAudience" TEXT[],
+    "target_audience" TEXT[],
     "department_ids" INTEGER[],
     "program_ids" INTEGER[],
     "class_ids" INTEGER[],
@@ -1291,6 +1334,12 @@ CREATE UNIQUE INDEX "students_user_id_key" ON "students"("user_id");
 CREATE UNIQUE INDEX "students_admission_number_key" ON "students"("admission_number");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "student_academic_years_student_id_academic_year_id_key" ON "student_academic_years"("student_id", "academic_year_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "student_academic_years_academic_year_id_class_division_id_r_key" ON "student_academic_years"("academic_year_id", "class_division_id", "roll_number");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "teachers_user_id_key" ON "teachers"("user_id");
 
 -- CreateIndex
@@ -1405,6 +1454,18 @@ ALTER TABLE "students" ADD CONSTRAINT "students_course_id_fkey" FOREIGN KEY ("co
 ALTER TABLE "students" ADD CONSTRAINT "students_class_division_id_fkey" FOREIGN KEY ("class_division_id") REFERENCES "class_divisions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "student_academic_years" ADD CONSTRAINT "student_academic_years_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "student_academic_years" ADD CONSTRAINT "student_academic_years_academic_year_id_fkey" FOREIGN KEY ("academic_year_id") REFERENCES "academic_years"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "student_academic_years" ADD CONSTRAINT "student_academic_years_class_division_id_fkey" FOREIGN KEY ("class_division_id") REFERENCES "class_divisions"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "student_academic_years" ADD CONSTRAINT "student_academic_years_class_teacher_id_fkey" FOREIGN KEY ("class_teacher_id") REFERENCES "teachers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "teachers" ADD CONSTRAINT "teachers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1432,10 +1493,16 @@ ALTER TABLE "academic_records" ADD CONSTRAINT "academic_records_semester_id_fkey
 ALTER TABLE "academic_records" ADD CONSTRAINT "academic_records_subject_id_fkey" FOREIGN KEY ("subject_id") REFERENCES "subjects"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "academic_records" ADD CONSTRAINT "academic_records_student_academic_year_id_fkey" FOREIGN KEY ("student_academic_year_id") REFERENCES "student_academic_years"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "attendance" ADD CONSTRAINT "attendance_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "attendance" ADD CONSTRAINT "attendance_section_id_fkey" FOREIGN KEY ("section_id") REFERENCES "class_sections"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "attendance" ADD CONSTRAINT "attendance_section_id_fkey" FOREIGN KEY ("section_id") REFERENCES "class_sections"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "attendance" ADD CONSTRAINT "attendance_student_academic_year_id_fkey" FOREIGN KEY ("student_academic_year_id") REFERENCES "student_academic_years"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "attendance" ADD CONSTRAINT "attendance_marked_by_fkey" FOREIGN KEY ("marked_by") REFERENCES "teachers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1465,6 +1532,9 @@ ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_subject_id_fkey" FOREIGN K
 ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_semester_id_fkey" FOREIGN KEY ("semester_id") REFERENCES "semesters"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "enrollments" ADD CONSTRAINT "enrollments_student_academic_year_id_fkey" FOREIGN KEY ("student_academic_year_id") REFERENCES "student_academic_years"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "examinations" ADD CONSTRAINT "examinations_subject_id_fkey" FOREIGN KEY ("subject_id") REFERENCES "subjects"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1478,6 +1548,9 @@ ALTER TABLE "exam_results" ADD CONSTRAINT "exam_results_exam_id_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "exam_results" ADD CONSTRAINT "exam_results_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "exam_results" ADD CONSTRAINT "exam_results_student_academic_year_id_fkey" FOREIGN KEY ("student_academic_year_id") REFERENCES "student_academic_years"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "exam_results" ADD CONSTRAINT "exam_results_evaluated_by_fkey" FOREIGN KEY ("evaluated_by") REFERENCES "teachers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1496,6 +1569,9 @@ ALTER TABLE "submissions" ADD CONSTRAINT "submissions_assignment_id_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "submissions" ADD CONSTRAINT "submissions_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "submissions" ADD CONSTRAINT "submissions_student_academic_year_id_fkey" FOREIGN KEY ("student_academic_year_id") REFERENCES "student_academic_years"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "submissions" ADD CONSTRAINT "submissions_graded_by_fkey" FOREIGN KEY ("graded_by") REFERENCES "teachers"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1517,6 +1593,9 @@ ALTER TABLE "student_fees" ADD CONSTRAINT "student_fees_fee_structure_id_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "student_fees" ADD CONSTRAINT "student_fees_semester_id_fkey" FOREIGN KEY ("semester_id") REFERENCES "semesters"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "student_fees" ADD CONSTRAINT "student_fees_student_academic_year_id_fkey" FOREIGN KEY ("student_academic_year_id") REFERENCES "student_academic_years"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "payments" ADD CONSTRAINT "payments_student_id_fkey" FOREIGN KEY ("student_id") REFERENCES "students"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1739,3 +1818,107 @@ ALTER TABLE "questions" ADD CONSTRAINT "questions_section_id_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "question_options" ADD CONSTRAINT "question_options_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- ============================================================================
+-- DATABASE FUNCTIONS: KRAM ID GENERATION
+-- ============================================================================
+
+-- Function to generate unique Kram IDs
+-- Format: KRAM-{INSTITUTION_CODE}-{ROLE_PREFIX}{SEQUENCE}
+-- Example: KRAM-PPS-ST001, KRAM-PPS-TC001, KRAM-PPS-AD001
+CREATE OR REPLACE FUNCTION generate_kramid(institution_code TEXT, role_name TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    role_prefix TEXT;
+    sequence_num INTEGER;
+    kramid TEXT;
+    max_attempts INTEGER := 100;
+    attempt INTEGER := 0;
+BEGIN
+    -- Map role names to prefixes
+    CASE role_name
+        WHEN 'student' THEN role_prefix := 'ST';
+        WHEN 'teacher' THEN role_prefix := 'TC';
+        WHEN 'admin' THEN role_prefix := 'AD';
+        WHEN 'parent' THEN role_prefix := 'PR';
+        WHEN 'staff' THEN role_prefix := 'SF';
+        WHEN 'librarian' THEN role_prefix := 'LB';
+        WHEN 'accountant' THEN role_prefix := 'AC';
+        WHEN 'super_admin' THEN role_prefix := 'SA';
+        ELSE role_prefix := 'US'; -- Generic user
+    END CASE;
+    
+    -- Find the next available sequence number
+    LOOP
+        attempt := attempt + 1;
+        
+        -- Get the highest existing sequence for this institution and role
+        SELECT COALESCE(
+            MAX(
+                CAST(
+                    SUBSTRING(
+                        kram_id FROM 
+                        LENGTH('KRAM-' || institution_code || '-' || role_prefix) + 1
+                    ) AS INTEGER
+                )
+            ), 0
+        ) + attempt
+        INTO sequence_num
+        FROM users 
+        WHERE kram_id LIKE 'KRAM-' || institution_code || '-' || role_prefix || '%';
+        
+        -- Format the Kram ID
+        kramid := 'KRAM-' || institution_code || '-' || role_prefix || LPAD(sequence_num::TEXT, 3, '0');
+        
+        -- Check if this ID already exists
+        IF NOT EXISTS (SELECT 1 FROM users WHERE kram_id = kramid) THEN
+            RETURN kramid;
+        END IF;
+        
+        -- Prevent infinite loop
+        IF attempt >= max_attempts THEN
+            RAISE EXCEPTION 'Unable to generate unique Kram ID after % attempts', max_attempts;
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- SEED DATA: ESSENTIAL ROLES AND SUPER ADMIN USER
+-- ============================================================================
+
+-- Insert all system roles (based on the roles shown in Prisma Studio)
+INSERT INTO roles (role_name, description, created_at) VALUES 
+('super_admin', 'System Super Administrator', NOW()),
+('admin', 'Institution Administrator', NOW()),
+('student', 'Student', NOW()),
+('parent', 'Parent/Guardian', NOW()),
+('teacher', 'Teaching Faculty', NOW()),
+('librarian', 'Library Staff', NOW()),
+('staff', 'Support Staff', NOW()),
+('accountant', 'Accountant/Finance Staff', NOW());
+
+-- Insert default super admin user
+INSERT INTO users (
+  first_name, 
+  last_name,
+  uuid,
+  kram_id, 
+  email, 
+  password_hash, 
+  role_id, 
+  status, 
+  created_at, 
+  updated_at
+) VALUES (
+  'Namit', 
+  'Thakral', 
+  gen_random_uuid(),
+  'KRAM-SA26-DJHD',
+  'superadmin@kramedu.in', 
+  '$2b$10$Xy5E2YFR4eiPLQBOJfHI3ucAHK5PenmjIsHvfh0YWx/dlgvswfTKG',
+  1,
+  'ACTIVE', 
+  NOW(), 
+  NOW()
+);

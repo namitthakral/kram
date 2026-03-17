@@ -49,7 +49,7 @@ import '../modules/student/screens/student_question_paper_screen.dart';
 import '../modules/student/screens/timetable_screen.dart';
 import '../modules/super_admin/screens/analytics_screen.dart';
 import '../modules/super_admin/screens/create_institution_screen.dart';
-import '../modules/super_admin/screens/institutions_screen.dart';
+import '../views/dashboard/super_admin_institutions_screen.dart';
 import '../modules/super_admin/screens/security_screen.dart';
 import '../modules/super_admin/screens/system_settings_screen.dart';
 import '../modules/teacher/models/report_card_models.dart';
@@ -837,7 +837,7 @@ class RouterService {
           pageBuilder:
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: const InstitutionsScreen(),
+                child: const SuperAdminInstitutionsScreen(),
               ),
           routes: [
             GoRoute(

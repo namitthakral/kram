@@ -6,23 +6,35 @@ model Student {
   id                    Int              @id @default(autoincrement())
   userId                Int              @unique @map("user_id")
   institutionId         Int              @map("institution_id")
-  courseId              Int?             @map("course_id") // Course (program/stream) student is enrolled in
-  classDivisionId       Int?             @map("class_division_id") // Simple class division (e.g., "Class I - Section A")
+
+  // Legacy fields - will be removed in migration
+  courseId              Int?             @map("course_id") // Legacy - will be removed
+  classDivisionId       Int?             @map("class_division_id") // Legacy - will be removed
+  rollNumber            String?          @map("roll_number") @db.VarChar(50) // Legacy - will be removed
+  currentSemester       Int?             @map("current_semester") // Legacy - will be removed
+  currentYear           Int?             @map("current_year") // Legacy - will be removed
+  section               String?          @db.VarChar(10) // Legacy - will be removed
+
+  // Permanent student information
   admissionNumber       String           @unique @map("admission_number") @db.VarChar(50)
-  rollNumber            String?          @map("roll_number") @db.VarChar(50)
   admissionDate         DateTime?        @map("admission_date") @db.Date
   graduationDate        DateTime?        @map("graduation_date") @db.Date
-  currentSemester       Int?             @map("current_semester")
-  currentYear           Int?             @map("current_year")
-  section               String?          @db.VarChar(10)
   studentType           StudentType      @default(REGULAR) @map("student_type")
   residentialStatus     ResidentialStatus @default(DAY_SCHOLAR) @map("residential_status")
   transportRequired     Boolean          @default(false) @map("transport_required")
+
+  // Board examination roll numbers (permanent)
+  class10BoardRollNo    String?          @map("class10_board_roll_no") @db.VarChar(50)
+  class12BoardRollNo    String?          @map("class12_board_roll_no") @db.VarChar(50)
+  collegeRollNumber     String?          @map("college_roll_number") @db.VarChar(50)
+
+  // Personal information
   emergencyContactName  String?          @map("emergency_contact_name") @db.VarChar(100)
   emergencyContactPhone String?          @map("emergency_contact_phone") @db.VarChar(15)
   emergencyContactEmail String?          @map("emergency_contact_email") @db.VarChar(100)
   bloodGroup            String?          @map("blood_group") @db.VarChar(5)
   medicalConditions     String?          @map("medical_conditions")
+
   status                StudentStatus    @default(ACTIVE)
   createdAt             DateTime         @default(now()) @map("created_at")
   updatedAt             DateTime         @updatedAt @map("updated_at")
@@ -30,9 +42,12 @@ model Student {
   // Relations
   user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   institution           Institution      @relation(fields: [institutionId], references: [id])
+  academicYears         StudentAcademicYear[] // Academic progression history
+  parents               Parent[]
+  
+  // Legacy relations - will be removed in migration
   course                Course?          @relation(fields: [courseId], references: [id])
   classDivision         ClassDivision?   @relation(fields: [classDivisionId], references: [id])
-  parents               Parent[]
   academicRecords       AcademicRecord[]
   attendance            Attendance[]
   enrollments           Enrollment[]
@@ -48,6 +63,57 @@ model Student {
   applications          Application[]
 
   @@map("students")
+}
+
+// New StudentAcademicYear model - Central academic progression tracking
+model StudentAcademicYear {
+  id                    Int              @id @default(autoincrement())
+  studentId             Int              @map("student_id")
+  academicYearId        Int              @map("academic_year_id")
+
+  // Academic context for this year
+  classLevel            Int              @map("class_level") // 1, 2, 3, 4, 5, etc.
+  section               String?          @db.VarChar(10) // A, B, C
+  rollNumber            String           @map("roll_number") @db.VarChar(50)
+  classDivisionId       Int?             @map("class_division_id")
+  classTeacherId        Int?             @map("class_teacher_id")
+
+  // Roll number variants for this year
+  currentRollNumber     String?          @map("current_roll_number") @db.VarChar(50)
+  boardRollNumber       String?          @map("board_roll_number") @db.VarChar(50)
+
+  // Academic performance summary
+  promotionStatus       PromotionStatus  @default(IN_PROGRESS) @map("promotion_status")
+  finalGrade            String?          @db.VarChar(5) @map("final_grade")
+  finalPercentage       Decimal?         @db.Decimal(5,2) @map("final_percentage")
+  attendancePercentage  Decimal?         @db.Decimal(5,2) @map("attendance_percentage")
+  totalWorkingDays      Int?             @default(0) @map("total_working_days")
+  totalDaysPresent      Int?             @default(0) @map("total_days_present")
+
+  // Dates
+  enrollmentDate        DateTime         @map("enrollment_date") @db.Date
+  completionDate        DateTime?        @map("completion_date") @db.Date
+  
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  // Relations - Link ALL academic activities to specific academic year
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear          AcademicYear     @relation(fields: [academicYearId], references: [id])
+  classDivision         ClassDivision?   @relation(fields: [classDivisionId], references: [id])
+  classTeacher          Teacher?         @relation("StudentAcademicYearClassTeacher", fields: [classTeacherId], references: [id])
+
+  // Academic activities for this year - will be added in migration
+  examResults           ExamResult[]     @relation("StudentAcademicYearExamResults")
+  submissions           Submission[]     @relation("StudentAcademicYearSubmissions")
+  academicRecords       AcademicRecord[] @relation("StudentAcademicYearRecords")
+  attendance            Attendance[]     @relation("StudentAcademicYearAttendance")
+  enrollments           Enrollment[]     @relation("StudentAcademicYearEnrollments")
+  studentFees           StudentFee[]     @relation("StudentAcademicYearFees")
+
+  @@unique([studentId, academicYearId])
+  @@unique([academicYearId, classDivisionId, rollNumber])
+  @@map("student_academic_years")
 }
 
 model Teacher {
@@ -86,6 +152,7 @@ model Teacher {
   substitutions     TeacherSubstitution[] @relation("TeacherSubstitute")
   classTeacher      ClassTeacher[]
   questionPapers    QuestionPaper[]
+  studentAcademicYears StudentAcademicYear[] @relation("StudentAcademicYearClassTeacher")
 
   @@map("teachers")
 }
@@ -146,6 +213,15 @@ enum StudentType {
   REGULAR
   TRANSFER
   EXCHANGE
+}
+
+enum PromotionStatus {
+  IN_PROGRESS    // Currently studying
+  PROMOTED       // Promoted to next class
+  REPEATED       // Repeating same class
+  FAILED         // Failed, needs to repeat
+  TRANSFERRED    // Transferred to another school
+  COMPLETED      // Completed final year
 }
 
 enum ResidentialStatus {

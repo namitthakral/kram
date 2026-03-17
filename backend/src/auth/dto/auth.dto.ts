@@ -11,6 +11,7 @@ import {
 export class LoginDto {
   @IsOptional()
   @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email?: string
 
   @IsOptional()
@@ -35,6 +36,7 @@ export class SelfRegistrationDto {
 
   @IsOptional()
   @IsEmail()
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email?: string
 
   @IsOptional()

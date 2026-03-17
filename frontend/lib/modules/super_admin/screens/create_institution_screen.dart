@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../utils/custom_colors.dart';
 import '../../../utils/extensions.dart';
-import '../providers/institutions_provider.dart';
+import '../../../provider/super_admin/super_admin_provider.dart';
 
 class CreateInstitutionScreen extends StatefulWidget {
   const CreateInstitutionScreen({super.key});
@@ -104,7 +104,7 @@ class _CreateInstitutionScreenState extends State<CreateInstitutionScreen> {
       data['accreditation'] = _accreditationController.text.trim();
     }
 
-    final provider = context.read<InstitutionsProvider>();
+    final provider = context.read<SuperAdminProvider>();
     final success = await provider.createInstitution(data);
 
     if (!mounted) return;

@@ -30,25 +30,27 @@ model FeeStructure {
 }
 
 model StudentFee {
-  id                Int              @id @default(autoincrement())
-  studentId         Int              @map("student_id")
-  feeStructureId    Int              @map("fee_structure_id")
-  semesterId        Int?             @map("semester_id")
-  amountDue         Decimal          @map("amount_due") @db.Decimal(10, 2)
-  amountPaid        Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
-  lateFeeApplied    Decimal          @default(0) @map("late_fee_applied") @db.Decimal(10, 2)
-  discount          Decimal          @default(0) @db.Decimal(10, 2)
-  dueDate           DateTime         @map("due_date") @db.Date
-  status            FeeStatus        @default(PENDING)
-  remarks           String?
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
+  id                    Int              @id @default(autoincrement())
+  studentId             Int              @map("student_id")
+  feeStructureId        Int              @map("fee_structure_id")
+  semesterId            Int?             @map("semester_id")
+  studentAcademicYearId Int?             @map("student_academic_year_id") // NEW! Links to academic year
+  amountDue             Decimal          @map("amount_due") @db.Decimal(10, 2)
+  amountPaid            Decimal          @default(0) @map("amount_paid") @db.Decimal(10, 2)
+  lateFeeApplied        Decimal          @default(0) @map("late_fee_applied") @db.Decimal(10, 2)
+  discount              Decimal          @default(0) @db.Decimal(10, 2)
+  dueDate               DateTime         @map("due_date") @db.Date
+  status                FeeStatus        @default(PENDING)
+  remarks               String?
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  student           Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  feeStructure      FeeStructure     @relation(fields: [feeStructureId], references: [id])
-  semester          Semester?        @relation(fields: [semesterId], references: [id])
-  payments          Payment[]
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  feeStructure          FeeStructure     @relation(fields: [feeStructureId], references: [id])
+  semester              Semester?        @relation(fields: [semesterId], references: [id])
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearFees", fields: [studentAcademicYearId], references: [id])
+  payments              Payment[]
 
   @@unique([studentId, feeStructureId, semesterId], name: "unique_student_fee")
   @@map("student_fees")

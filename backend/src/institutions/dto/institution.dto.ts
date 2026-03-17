@@ -1,4 +1,5 @@
 import { InstitutionType } from '@prisma/client'
+import { Transform } from 'class-transformer'
 import {
   IsEmail,
   IsEnum,
@@ -61,6 +62,7 @@ export class CreateInstitutionDto {
   @IsOptional()
   @IsEmail()
   @MaxLength(100)
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email?: string
 
   @IsOptional()
@@ -122,6 +124,7 @@ export class UpdateInstitutionDto {
   @IsOptional()
   @IsEmail()
   @MaxLength(100)
+  @Transform(({ value }) => value?.toLowerCase().trim())
   email?: string
 
   @IsOptional()

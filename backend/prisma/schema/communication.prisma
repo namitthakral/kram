@@ -9,7 +9,7 @@ model Communication {
   content           String
   communicationType CommunicationType        @map("communication_type")
   priority          CommunicationPriority    @default(MEDIUM)
-  targetAudience    String[]                 // Array of roles: ["student", "teacher", "parent"]
+  targetAudience    String[]                 @map("target_audience") // Array of roles: ["student", "teacher", "parent"]
   
   // Optional targeting fields (for granular control)
   departmentIds     Int[]                    @map("department_ids") // Specific departments

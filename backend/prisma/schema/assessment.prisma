@@ -32,23 +32,26 @@ model Examination {
 }
 
 model ExamResult {
-  id          Int      @id @default(autoincrement())
-  examId      Int      @map("exam_id")
-  studentId   Int      @map("student_id")
-  marksObtained Decimal? @map("marks_obtained") @db.Decimal(6, 2)
-  grade       String?  @db.VarChar(5)
-  rankInClass Int?     @map("rank_in_class")
-  remarks     String?
-  isAbsent    Boolean  @default(false) @map("is_absent")
-  evaluatedBy Int?     @map("evaluated_by")
-  evaluatedAt DateTime? @map("evaluated_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id                    Int      @id @default(autoincrement())
+  examId                Int      @map("exam_id")
+  studentId             Int      @map("student_id")
+  studentAcademicYearId Int?     @map("student_academic_year_id") // NEW! Links to academic year
+  marksObtained         Decimal? @map("marks_obtained") @db.Decimal(6, 2)
+  grade                 String?  @db.VarChar(5)
+  gradePoints           Decimal? @map("grade_points") @db.Decimal(4, 2)
+  rankInClass           Int?     @map("rank_in_class")
+  remarks               String?
+  isAbsent              Boolean  @default(false) @map("is_absent")
+  evaluatedBy           Int?     @map("evaluated_by")
+  evaluatedAt           DateTime? @map("evaluated_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
   // Relations
-  exam        Examination @relation(fields: [examId], references: [id])
-  student     Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  evaluator   Teacher?    @relation(fields: [evaluatedBy], references: [id], onDelete: Cascade)
+  exam                  Examination @relation(fields: [examId], references: [id])
+  student               Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearExamResults", fields: [studentAcademicYearId], references: [id])
+  evaluator             Teacher?    @relation(fields: [evaluatedBy], references: [id], onDelete: Cascade)
 
   @@unique([examId, studentId], name: "unique_result")
   @@map("exam_results")
@@ -83,26 +86,28 @@ model Assignment {
 }
 
 model Submission {
-  id            Int              @id @default(autoincrement())
-  assignmentId  Int              @map("assignment_id")
-  studentId     Int              @map("student_id")
-  fileUrl       String?          @map("file_url") @db.VarChar(500)
-  fileName      String?          @map("file_name") @db.VarChar(255)
-  fileSize      Int?             @map("file_size")
-  submissionText String?
-  submittedAt   DateTime         @default(now()) @map("submitted_at")
-  isLate        Boolean          @default(false) @map("is_late")
-  marksObtained Decimal?         @map("marks_obtained") @db.Decimal(6, 2)
-  feedback      String?
-  gradedBy      Int?             @map("graded_by")
-  gradedAt      DateTime?        @map("graded_at")
-  status        SubmissionStatus @default(SUBMITTED)
-  version       Int              @default(1)
+  id                    Int              @id @default(autoincrement())
+  assignmentId          Int              @map("assignment_id")
+  studentId             Int              @map("student_id")
+  studentAcademicYearId Int?             @map("student_academic_year_id") // NEW! Links to academic year
+  fileUrl               String?          @map("file_url") @db.VarChar(500)
+  fileName              String?          @map("file_name") @db.VarChar(255)
+  fileSize              Int?             @map("file_size")
+  submissionText        String?          @map("submission_text")
+  submittedAt           DateTime         @default(now()) @map("submitted_at")
+  isLate                Boolean          @default(false) @map("is_late")
+  marksObtained         Decimal?         @map("marks_obtained") @db.Decimal(6, 2)
+  feedback              String?
+  gradedBy              Int?             @map("graded_by")
+  gradedAt              DateTime?        @map("graded_at")
+  status                SubmissionStatus @default(SUBMITTED)
+  version               Int              @default(1)
 
   // Relations
-  assignment    Assignment       @relation(fields: [assignmentId], references: [id])
-  student       Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  grader        Teacher?         @relation(fields: [gradedBy], references: [id], onDelete: Cascade)
+  assignment            Assignment       @relation(fields: [assignmentId], references: [id])
+  student               Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentAcademicYear   StudentAcademicYear? @relation("StudentAcademicYearSubmissions", fields: [studentAcademicYearId], references: [id])
+  grader                Teacher?         @relation(fields: [gradedBy], references: [id], onDelete: Cascade)
 
   @@unique([assignmentId, studentId, version], name: "unique_submission")
   @@map("submissions")
