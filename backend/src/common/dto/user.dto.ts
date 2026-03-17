@@ -3,7 +3,7 @@ import {
   ResidentialStatus,
   StaffType,
   StudentType,
-  UserStatus,
+  UserAccountStatus,
 } from '@prisma/client'
 import { Transform, Type } from 'class-transformer'
 import {
@@ -319,8 +319,8 @@ export class CreateUserDto {
   profilePicture?: string
 
   @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus
+  @IsEnum(UserAccountStatus)
+  accountStatus?: UserAccountStatus
 
   // Role-specific data - provide based on roleId
   @IsOptional()
@@ -416,8 +416,8 @@ export class UpdateUserDto {
   profilePicture?: string
 
   @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus
+  @IsEnum(UserAccountStatus)
+  accountStatus?: UserAccountStatus
 }
 
 export class UserQueryDto {
@@ -441,8 +441,8 @@ export class UserQueryDto {
   roleId?: number
 
   @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus
+  @IsEnum(UserAccountStatus)
+  accountStatus?: UserAccountStatus
 
   @IsOptional()
   @IsString()

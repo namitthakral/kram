@@ -119,7 +119,7 @@ export class StudentsService {
 
     // Build where clause for students
     const where: Prisma.StudentWhereInput = {
-      status: { not: 'SUSPENDED' }, // Exclude soft deleted students
+      enrollmentStatus: { not: 'SUSPENDED' }, // Exclude soft deleted students
     }
 
     if (search) {
@@ -153,7 +153,7 @@ export class StudentsService {
               lastName: true,
               email: true,
               phone: true,
-              status: true,
+              accountStatus: true,
             },
           },
           institution: {
@@ -268,7 +268,7 @@ export class StudentsService {
     const student = await this.prisma.student.findFirst({
       where: {
         id,
-        status: { not: 'SUSPENDED' }, // Exclude soft deleted students
+        enrollmentStatus: { not: 'SUSPENDED' }, // Exclude soft deleted students
       },
       include: {
           user: {
@@ -280,7 +280,7 @@ export class StudentsService {
               lastName: true,
               email: true,
               phone: true,
-              status: true,
+              accountStatus: true,
               createdAt: true,
             },
           },
@@ -408,7 +408,7 @@ export class StudentsService {
         user: {
           uuid,
         },
-        status: { not: 'SUSPENDED' },
+        enrollmentStatus: { not: 'SUSPENDED' },
       },
       include: {
         user: {
@@ -420,7 +420,7 @@ export class StudentsService {
             lastName: true,
             email: true,
             phone: true,
-            status: true,
+            accountStatus: true,
             createdAt: true,
           },
         },
@@ -532,7 +532,7 @@ export class StudentsService {
           passwordHash: hashedPassword,
           roleId: studentRole.id,
           institutionId: studentData.institutionId,
-          status: 'ACTIVE',
+          accountStatus: 'ACTIVE',
         },
       })
 
@@ -570,7 +570,7 @@ export class StudentsService {
               lastName: true,
               email: true,
               phone: true,
-              status: true,
+              accountStatus: true,
             },
           },
           institution: {
@@ -694,7 +694,7 @@ export class StudentsService {
             lastName: true,
             email: true,
             phone: true,
-            status: true,
+            accountStatus: true,
           },
         },
         institution: {
@@ -743,7 +743,7 @@ export class StudentsService {
     const student = await this.prisma.student.update({
       where: { id },
       data: {
-        status: 'SUSPENDED',
+        enrollmentStatus: 'SUSPENDED',
       },
       include: {
         user: {
@@ -752,7 +752,7 @@ export class StudentsService {
             firstName: true,
             lastName: true,
             email: true,
-            status: true,
+            accountStatus: true,
           },
         },
         institution: {

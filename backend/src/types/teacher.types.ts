@@ -1,7 +1,7 @@
-import { EmploymentType, TeacherStatus } from '@prisma/client'
+import { EmploymentType, TeacherEmploymentStatus } from '@prisma/client'
 
 // Re-export Prisma enums for convenience
-export { EmploymentType, TeacherStatus }
+export { EmploymentType, TeacherEmploymentStatus }
 
 // Teacher Types
 export interface Teacher {
@@ -21,7 +21,7 @@ export interface Teacher {
   officeHours?: string
   researchInterests?: string
   publications?: string
-  status: TeacherStatus
+  employmentStatus: TeacherEmploymentStatus
   createdAt: Date
   updatedAt: Date
 }

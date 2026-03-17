@@ -2,7 +2,7 @@
 CREATE TYPE "SequenceResetPolicy" AS ENUM ('YEARLY', 'NEVER', 'MONTHLY');
 
 -- CreateEnum
-CREATE TYPE "UserStatus" AS ENUM ('PENDING_ACTIVATION', 'ACTIVE', 'SUSPENDED', 'LOCKED', 'INACTIVE');
+CREATE TYPE "UserAccountStatus" AS ENUM ('PENDING_ACTIVATION', 'ACTIVE', 'SUSPENDED', 'LOCKED', 'INACTIVE');
 
 -- CreateEnum
 CREATE TYPE "InstitutionType" AS ENUM ('SCHOOL', 'COLLEGE', 'UNIVERSITY', 'INSTITUTE');
@@ -38,13 +38,13 @@ CREATE TYPE "PromotionStatus" AS ENUM ('IN_PROGRESS', 'PROMOTED', 'REPEATED', 'F
 CREATE TYPE "ResidentialStatus" AS ENUM ('DAY_SCHOLAR', 'HOSTELER');
 
 -- CreateEnum
-CREATE TYPE "StudentStatus" AS ENUM ('ACTIVE', 'ALUMNI', 'DROPOUT', 'TRANSFERRED', 'SUSPENDED');
+CREATE TYPE "StudentEnrollmentStatus" AS ENUM ('PENDING_ENROLLMENT', 'ACTIVE', 'ALUMNI', 'DROPOUT', 'TRANSFERRED', 'SUSPENDED');
 
 -- CreateEnum
 CREATE TYPE "EmploymentType" AS ENUM ('FULL_TIME', 'PART_TIME', 'CONTRACT', 'VISITING');
 
 -- CreateEnum
-CREATE TYPE "TeacherStatus" AS ENUM ('ACTIVE', 'ON_LEAVE', 'RESIGNED', 'RETIRED');
+CREATE TYPE "TeacherEmploymentStatus" AS ENUM ('ACTIVE', 'ON_LEAVE', 'RESIGNED', 'RETIRED');
 
 -- CreateEnum
 CREATE TYPE "ParentRelation" AS ENUM ('FATHER', 'MOTHER', 'GUARDIAN', 'OTHER');
@@ -53,7 +53,7 @@ CREATE TYPE "ParentRelation" AS ENUM ('FATHER', 'MOTHER', 'GUARDIAN', 'OTHER');
 CREATE TYPE "StaffType" AS ENUM ('ADMINISTRATIVE', 'TECHNICAL', 'SUPPORT', 'SECURITY', 'MAINTENANCE', 'TRANSPORT', 'CLEANING', 'CAFETERIA', 'MEDICAL', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "StaffStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'ON_LEAVE', 'RESIGNED', 'TERMINATED', 'RETIRED');
+CREATE TYPE "StaffEmploymentStatus" AS ENUM ('ACTIVE', 'INACTIVE', 'ON_LEAVE', 'RESIGNED', 'TERMINATED', 'RETIRED');
 
 -- CreateEnum
 CREATE TYPE "AcademicRecordStatus" AS ENUM ('PASSED', 'FAILED', 'INCOMPLETE', 'WITHDRAWN');
@@ -198,7 +198,7 @@ CREATE TABLE "users" (
     "institution_id" INTEGER,
     "last_login" TIMESTAMP(3),
     "login_attempts" INTEGER NOT NULL DEFAULT 0,
-    "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
+    "account_status" "UserAccountStatus" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -397,7 +397,7 @@ CREATE TABLE "students" (
     "emergency_contact_email" VARCHAR(100),
     "blood_group" VARCHAR(5),
     "medical_conditions" TEXT,
-    "status" "StudentStatus" NOT NULL DEFAULT 'ACTIVE',
+    "enrollment_status" "StudentEnrollmentStatus" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -447,7 +447,7 @@ CREATE TABLE "teachers" (
     "office_hours" VARCHAR(200),
     "research_interests" TEXT,
     "publications" TEXT,
-    "status" "TeacherStatus" NOT NULL DEFAULT 'ACTIVE',
+    "employment_status" "TeacherEmploymentStatus" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -489,7 +489,7 @@ CREATE TABLE "staff" (
     "experience" VARCHAR(300),
     "emergency_contact" VARCHAR(15),
     "address" TEXT,
-    "status" "StaffStatus" NOT NULL DEFAULT 'ACTIVE',
+    "employment_status" "StaffEmploymentStatus" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -1907,7 +1907,7 @@ INSERT INTO users (
   email, 
   password_hash, 
   role_id, 
-  status, 
+  account_status, 
   created_at, 
   updated_at
 ) VALUES (
@@ -1916,7 +1916,7 @@ INSERT INTO users (
   gen_random_uuid(),
   'KRAM-SA26-DJHD',
   'superadmin@kramedu.in', 
-  '$2b$10$Xy5E2YFR4eiPLQBOJfHI3ucAHK5PenmjIsHvfh0YWx/dlgvswfTKG',
+  '$2b$10$4wTikP4R3Y6YOJbBjh7pmO7/our0SOG.Slb6AYVefAoiayAghzZim',
   1,
   'ACTIVE', 
   NOW(), 

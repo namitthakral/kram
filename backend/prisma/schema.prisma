@@ -31,7 +31,7 @@ model User {
   institutionId     Int?     @map("institution_id")
   lastLogin         DateTime? @map("last_login")
   loginAttempts     Int      @default(0) @map("login_attempts")
-  status            UserStatus @default(ACTIVE)
+  accountStatus     UserAccountStatus @default(ACTIVE) @map("account_status")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -226,7 +226,7 @@ enum SequenceResetPolicy {
 }
 
 // Core System Enums
-enum UserStatus {
+enum UserAccountStatus {
   PENDING_ACTIVATION    // New users with temporary passwords (replaces: isTemporaryPassword + mustChangePassword + INACTIVE)
   ACTIVE               // Normal active users
   SUSPENDED            // Admin-suspended users
@@ -459,7 +459,7 @@ model Student {
   bloodGroup            String?          @map("blood_group") @db.VarChar(5)
   medicalConditions     String?          @map("medical_conditions")
 
-  status                StudentStatus    @default(ACTIVE)
+  enrollmentStatus      StudentEnrollmentStatus @default(ACTIVE) @map("enrollment_status")
   createdAt             DateTime         @default(now()) @map("created_at")
   updatedAt             DateTime         @updatedAt @map("updated_at")
 
@@ -556,7 +556,7 @@ model Teacher {
   officeHours       String?          @map("office_hours") @db.VarChar(200)
   researchInterests String?          @map("research_interests")
   publications      String?
-  status            TeacherStatus    @default(ACTIVE)
+  employmentStatus  TeacherEmploymentStatus @default(ACTIVE) @map("employment_status")
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
@@ -618,7 +618,7 @@ model Staff {
   experience        String?          @db.VarChar(300)
   emergencyContact  String?          @map("emergency_contact") @db.VarChar(15)
   address           String?
-  status            StaffStatus      @default(ACTIVE)
+  employmentStatus  StaffEmploymentStatus @default(ACTIVE) @map("employment_status")
   createdAt         DateTime         @default(now()) @map("created_at")
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
@@ -653,12 +653,13 @@ enum ResidentialStatus {
   HOSTELER
 }
 
-enum StudentStatus {
-  ACTIVE
-  ALUMNI
-  DROPOUT
-  TRANSFERRED
-  SUSPENDED
+enum StudentEnrollmentStatus {
+  PENDING_ENROLLMENT   // Admitted but not enrolled
+  ACTIVE              // Currently enrolled
+  ALUMNI              // Graduated
+  DROPOUT             // Left school
+  TRANSFERRED         // Moved to another institution
+  SUSPENDED           // Academically suspended
 }
 
 enum EmploymentType {
@@ -668,11 +669,11 @@ enum EmploymentType {
   VISITING
 }
 
-enum TeacherStatus {
-  ACTIVE
-  ON_LEAVE
-  RESIGNED
-  RETIRED
+enum TeacherEmploymentStatus {
+  ACTIVE              // Currently employed
+  ON_LEAVE            // Temporary leave
+  RESIGNED            // Employment ended
+  RETIRED             // Retired
 }
 
 enum ParentRelation {
@@ -695,13 +696,13 @@ enum StaffType {
   OTHER
 }
 
-enum StaffStatus {
-  ACTIVE
-  INACTIVE
-  ON_LEAVE
-  RESIGNED
-  TERMINATED
-  RETIRED
+enum StaffEmploymentStatus {
+  ACTIVE              // Currently employed
+  INACTIVE            // Temporarily inactive
+  ON_LEAVE            // Temporary leave
+  RESIGNED            // Employment ended
+  TERMINATED          // Terminated
+  RETIRED             // Retired
 }
 
 

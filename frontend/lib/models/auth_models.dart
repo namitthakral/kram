@@ -231,7 +231,7 @@ class User {
         json['institution'] != null
             ? Institution.fromJson(json['institution'])
             : null,
-    status: json['status'],
+    status: json['accountStatus'] ?? json['status'], // Support both old and new field names
     mustChangePassword: json['mustChangePassword'] ?? false,
     isTemporaryPassword: json['isTemporaryPassword'] ?? false,
     createdAt:
@@ -365,7 +365,7 @@ class Student {
     emergencyContactPhone: json['emergencyContactPhone'],
     bloodGroup: json['bloodGroup'],
     medicalConditions: json['medicalConditions'],
-    status: json['status'],
+    status: json['enrollmentStatus'] ?? json['status'], // Support both old and new field names
     createdAt:
         json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     updatedAt:
@@ -459,7 +459,7 @@ class Teacher {
     officeHours: json['officeHours'],
     researchInterests: json['researchInterests'],
     publications: json['publications'],
-    status: json['status'],
+    status: json['employmentStatus'] ?? json['status'], // Support both old and new field names
     createdAt: DateTime.parse(json['createdAt']),
     updatedAt: DateTime.parse(json['updatedAt']),
   );

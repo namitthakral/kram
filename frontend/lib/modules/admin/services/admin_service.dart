@@ -537,7 +537,14 @@ class AdminService {
       );
 
       if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
+        // Handle both wrapped and unwrapped responses
+        final responseData = response.data;
+        if (responseData is Map<String, dynamic>) {
+          return responseData;
+        } else {
+          // If response is not a map, return success indicator
+          return {'success': true, 'data': responseData};
+        }
       } else {
         throw DioException(
           requestOptions: response.requestOptions,

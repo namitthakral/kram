@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_student_fees_student_academic_year_id ON student_
 
 -- Index on users table for role-based queries
 CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
-CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
+CREATE INDEX IF NOT EXISTS idx_users_account_status ON users(account_status);
 CREATE INDEX IF NOT EXISTS idx_users_institution_id ON users(institution_id);
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 
@@ -38,7 +38,7 @@ CREATE INDEX IF NOT EXISTS idx_institutions_created_at ON institutions(created_a
 
 -- Composite indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_users_role_institution ON users(role_id, institution_id);
-CREATE INDEX IF NOT EXISTS idx_users_status_created ON users(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_users_account_status_created ON users(account_status, created_at);
 
 -- ============================================================================
 -- STEP 3: ADDITIONAL PERFORMANCE INDEXES FOR NEW API ENDPOINTS
@@ -138,25 +138,25 @@ SELECT
   -- User status counts (ONLY institutional users, excluding super_admins)
   (SELECT COUNT(*) FROM users u 
    JOIN roles r ON r.id = u.role_id 
-   WHERE u.status = 'ACTIVE' 
+   WHERE u.account_status = 'ACTIVE' 
    AND r.role_name != 'super_admin' 
    AND u.institution_id IS NOT NULL) as "totalActiveUsers",
    
   (SELECT COUNT(*) FROM users u 
    JOIN roles r ON r.id = u.role_id 
-   WHERE u.status = 'PENDING_ACTIVATION' 
+   WHERE u.account_status = 'PENDING_ACTIVATION' 
    AND r.role_name != 'super_admin' 
    AND u.institution_id IS NOT NULL) as "pendingUsers",
    
   (SELECT COUNT(*) FROM users u 
    JOIN roles r ON r.id = u.role_id 
-   WHERE u.status = 'SUSPENDED' 
+   WHERE u.account_status = 'SUSPENDED' 
    AND r.role_name != 'super_admin' 
    AND u.institution_id IS NOT NULL) as "suspendedUsers",
    
   (SELECT COUNT(*) FROM users u 
    JOIN roles r ON r.id = u.role_id 
-   WHERE u.status = 'LOCKED' 
+   WHERE u.account_status = 'LOCKED' 
    AND r.role_name != 'super_admin' 
    AND u.institution_id IS NOT NULL) as "lockedUsers",
   
@@ -179,7 +179,7 @@ SELECT
       ROUND((
         (SELECT COUNT(*) FROM users u 
          JOIN roles r ON r.id = u.role_id 
-         WHERE u.status = 'ACTIVE' 
+         WHERE u.account_status = 'ACTIVE' 
          AND r.role_name != 'super_admin' 
          AND u.institution_id IS NOT NULL)::numeric / 
         (SELECT COUNT(*) FROM users u 
@@ -230,7 +230,7 @@ LEFT JOIN (
   SELECT 
     u.institution_id,
     COUNT(*) as total_users,
-    COUNT(CASE WHEN u.status = 'ACTIVE' THEN 1 END) as active_users,
+    COUNT(CASE WHEN u.account_status = 'ACTIVE' THEN 1 END) as active_users,
     COUNT(CASE WHEN r.role_name = 'student' THEN 1 END) as students,
     COUNT(CASE WHEN r.role_name = 'teacher' THEN 1 END) as teachers,
     COUNT(CASE WHEN r.role_name = 'staff' THEN 1 END) as staff,
@@ -245,7 +245,7 @@ LEFT JOIN (
     u.institution_id,
     CONCAT(u.first_name, ' ', u.last_name) as admin_name,
     u.email as admin_email,
-    u.status as admin_status
+    u.account_status as admin_status
   FROM users u
   JOIN roles r ON u.role_id = r.id
   WHERE r.role_name = 'admin'
@@ -262,7 +262,7 @@ CREATE OR REPLACE VIEW super_admin_user_growth AS
 SELECT 
   DATE_TRUNC('month', created_at) as month,
   COUNT(*) as "newUsers",
-  COUNT(CASE WHEN status = 'ACTIVE' THEN 1 END) as "activeNewUsers",
+  COUNT(CASE WHEN account_status = 'ACTIVE' THEN 1 END) as "activeNewUsers",
   SUM(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', created_at)) as "cumulativeUsers"
 FROM users 
 WHERE created_at >= NOW() - INTERVAL '12 months'

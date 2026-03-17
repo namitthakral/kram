@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client'
-import { Decimal } from '@prisma/client/runtime/library'
 import {
   BadRequestException,
   ConflictException,
@@ -8,6 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
+import { Prisma } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { ProgressUpdaterService } from '../students/services/progress-updater.service'
@@ -55,11 +55,10 @@ export class TeachersService {
     private progressUpdater: ProgressUpdaterService
   ) {}
 
-  
   private getFullName(firstName: string, lastName: string): string {
     return `${firstName} ${lastName}`.trim()
   }
-/**
+  /**
    * Helper method to get UTC date at midnight to avoid timezone issues
    * when comparing with database DATE columns
    */
@@ -113,12 +112,11 @@ export class TeachersService {
         data: {
           firstName,
           lastName,
-          
           email,
           phone,
           passwordHash: hashedPassword,
           roleId: teacherRole.id,
-          status: 'ACTIVE',
+          accountStatus: 'ACTIVE',
         },
       })
 
@@ -139,13 +137,14 @@ export class TeachersService {
               lastName: true,
               email: true,
               phone: true,
-              status: true,
+              accountStatus: true,
             },
           },
           institution: {
             select: {
               id: true,
-              name: true, type: true,
+              name: true,
+              type: true,
             },
           },
         },
@@ -179,7 +178,7 @@ export class TeachersService {
       limit,
       search,
       employmentType,
-      status,
+      employmentStatus,
       sortBy,
       sortOrder,
     } = query
@@ -188,7 +187,7 @@ export class TeachersService {
     // Build where clause with proper Prisma typing
     // institutionId from current user (required): admins see only their institution; super_admins see all (null)
     const where: Prisma.TeacherWhereInput = {
-      status: { not: 'RESIGNED' }, // Exclude resigned teachers by default
+      employmentStatus: { not: 'RESIGNED' }, // Exclude resigned teachers by default
       ...(search && {
         OR: [
           { employeeId: { contains: search, mode: 'insensitive' } },
@@ -201,7 +200,7 @@ export class TeachersService {
       }),
       ...(institutionId !== null && { institutionId }),
       ...(employmentType && { employmentType }),
-      ...(status && { status }), // This will override the default filter if provided
+      ...(employmentStatus && { employmentStatus }), // This will override the default filter if provided
     }
 
     // Build orderBy clause with proper typing
@@ -222,16 +221,18 @@ export class TeachersService {
               id: true,
               uuid: true,
               kramid: true,
-              firstName: true, lastName: true,
+              firstName: true,
+              lastName: true,
               email: true,
               phone: true,
-              status: true,
+              accountStatus: true,
             },
           },
           institution: {
             select: {
               id: true,
-              name: true, type: true,
+              name: true,
+              type: true,
             },
           },
           teacherSubjects: {
@@ -260,7 +261,7 @@ export class TeachersService {
     const teacher = await this.prisma.teacher.findFirst({
       where: {
         id,
-        status: { not: 'RESIGNED' }, // Exclude resigned teachers
+        employmentStatus: { not: 'RESIGNED' }, // Exclude resigned teachers
       },
       include: {
         user: {
@@ -268,10 +269,11 @@ export class TeachersService {
             id: true,
             uuid: true,
             kramid: true,
-            firstName: true, lastName: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true,
-            status: true,
+            accountStatus: true,
           },
         },
         institution: true,
@@ -316,7 +318,7 @@ export class TeachersService {
         user: {
           uuid,
         },
-        status: { not: 'RESIGNED' },
+        employmentStatus: { not: 'RESIGNED' },
       },
       include: {
         user: {
@@ -324,10 +326,11 @@ export class TeachersService {
             id: true,
             uuid: true,
             kramid: true,
-            firstName: true, lastName: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true,
-            status: true,
+            accountStatus: true,
           },
         },
         institution: true,
@@ -443,7 +446,9 @@ export class TeachersService {
       ...(updateTeacherDto.publications && {
         publications: updateTeacherDto.publications,
       }),
-      ...(updateTeacherDto.status && { status: updateTeacherDto.status }),
+      ...(updateTeacherDto.employmentStatus && {
+        employmentStatus: updateTeacherDto.employmentStatus,
+      }),
     }
 
     // Handle joinDate separately
@@ -451,8 +456,8 @@ export class TeachersService {
       updateData.joinDate = new Date(updateTeacherDto.joinDate)
     }
 
-    // Run in a transaction: update teacher record, then optionally sync user.status.
-    // userStatus (UserStatus enum) controls login access; teacher.status controls employment state.
+    // Run in a transaction: update teacher record, then optionally sync user.accountStatus.
+    // userAccountStatus (UserAccountStatus enum) controls login access; teacher.employmentStatus controls employment state.
     const teacher = await this.prisma.$transaction(async tx => {
       // If subjectIds provided, handle TeacherSubject sync and update specialization string
       if (updateTeacherDto.subjectIds) {
@@ -510,29 +515,31 @@ export class TeachersService {
             select: {
               id: true,
               uuid: true,
-              firstName: true, lastName: true,
+              firstName: true,
+              lastName: true,
               email: true,
               phone: true,
-              status: true,
+              accountStatus: true,
             },
           },
           institution: {
             select: {
               id: true,
-              name: true, type: true,
+              name: true,
+              type: true,
             },
           },
         },
       })
 
       // If userStatus was provided, update the linked User account status
-      if (updateTeacherDto.userStatus) {
+      if (updateTeacherDto.userAccountStatus) {
         await tx.user.update({
           where: { id: updated.userId },
-          data: { status: updateTeacherDto.userStatus },
+          data: { accountStatus: updateTeacherDto.userAccountStatus },
         })
         // Reflect the new user status in the returned object so the caller sees it
-        updated.user.status = updateTeacherDto.userStatus
+        updated.user.accountStatus = updateTeacherDto.userAccountStatus
       }
 
       return updated
@@ -554,12 +561,13 @@ export class TeachersService {
     // Soft delete by updating status
     const teacher = await this.prisma.teacher.update({
       where: { id },
-      data: { status: 'RESIGNED' },
+      data: { employmentStatus: 'RESIGNED' },
       include: {
         user: {
           select: {
             id: true,
-            firstName: true, lastName: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -705,9 +713,9 @@ export class TeachersService {
     // Matching logic: same courseId and same sectionName
     // Note: ClassTeacher model has courseId, section (string), classLevel
     // ClassSection model has courseId (via subject or direct), sectionName
-    return classes.map((cls) => {
+    return classes.map(cls => {
       const isClassTeacher = classTeacherAssignments.some(
-        (assignment) =>
+        assignment =>
           assignment.courseId === cls.subject.courseId &&
           assignment.section === cls.sectionName
       )
@@ -736,10 +744,10 @@ export class TeachersService {
     }
 
     // Check if teacher is currently employed (not resigned/retired/on leave)
-    if (teacher.status !== 'ACTIVE') {
+    if (teacher.employmentStatus !== 'ACTIVE') {
       return {
         hasAccess: false,
-        reason: `Not an active teacher (Status: ${teacher.status})`,
+        reason: `Not an active teacher (Status: ${teacher.employmentStatus})`,
       }
     }
 
@@ -943,13 +951,14 @@ export class TeachersService {
             sectionId: { in: sectionIds },
           },
         },
-        status: 'ACTIVE',
+        enrollmentStatus: 'ACTIVE',
       },
       include: {
         user: {
           select: {
             id: true,
-            firstName: true, lastName: true,
+            firstName: true,
+            lastName: true,
             lastLogin: true,
           },
         },
@@ -2223,7 +2232,9 @@ export class TeachersService {
           include: {
             student: {
               select: {
-                user: { select: { firstName: true, lastName: true, email: true } },
+                user: {
+                  select: { firstName: true, lastName: true, email: true },
+                },
                 admissionNumber: true,
               },
             },
@@ -2508,7 +2519,9 @@ export class TeachersService {
           include: {
             student: {
               select: {
-                user: { select: { firstName: true, lastName: true, email: true } },
+                user: {
+                  select: { firstName: true, lastName: true, email: true },
+                },
                 admissionNumber: true,
               },
             },
@@ -2697,9 +2710,17 @@ export class TeachersService {
         submissions: submissions.map(s => ({
           id: s.id,
           student: {
-            name: this.getFullName(s.student.user.firstName, s.student.user.lastName),
+            name: this.getFullName(
+              s.student.user.firstName,
+              s.student.user.lastName
+            ),
             uuid: s.student.user.uuid,
-            avatar: this.getInitials(this.getFullName(s.student.user.firstName, s.student.user.lastName)),
+            avatar: this.getInitials(
+              this.getFullName(
+                s.student.user.firstName,
+                s.student.user.lastName
+              )
+            ),
             admissionNumber: s.student.admissionNumber,
           },
           assignment: {
@@ -2762,14 +2783,15 @@ export class TeachersService {
             sectionId: { in: sectionIds },
           },
         },
-        status: 'ACTIVE',
+        enrollmentStatus: 'ACTIVE',
       },
       select: {
         id: true,
         admissionNumber: true,
         user: {
           select: {
-            firstName: true, lastName: true,
+            firstName: true,
+            lastName: true,
             uuid: true,
             lastLogin: true,
           },
@@ -2824,7 +2846,9 @@ export class TeachersService {
           id: student.id,
           name: this.getFullName(student.user.firstName, student.user.lastName),
           uuid: student.user.uuid,
-          avatar: this.getInitials(this.getFullName(student.user.firstName, student.user.lastName)),
+          avatar: this.getInitials(
+            this.getFullName(student.user.firstName, student.user.lastName)
+          ),
           admissionNumber: student.admissionNumber,
           riskLevel: analysis.riskLevel,
           riskScore: analysis.riskScore,
@@ -3189,7 +3213,8 @@ export class TeachersService {
             include: {
               user: {
                 select: {
-                  firstName: true, lastName: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                 },
               },
@@ -3242,7 +3267,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -3377,7 +3403,8 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      firstName: true, lastName: true,
+                      firstName: true,
+                      lastName: true,
                     },
                   },
                 },
@@ -3405,7 +3432,8 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      firstName: true, lastName: true,
+                      firstName: true,
+                      lastName: true,
                     },
                   },
                 },
@@ -3502,7 +3530,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -3663,7 +3692,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
                 uuid: true,
               },
             },
@@ -3701,7 +3731,10 @@ export class TeachersService {
         markedAt: record.markedAt,
         student: {
           id: record.student.id,
-          name: this.getFullName(record.student.user.firstName, record.student.user.lastName),
+          name: this.getFullName(
+            record.student.user.firstName,
+            record.student.user.lastName
+          ),
           uuid: record.student.user.uuid,
           admissionNumber: record.student.admissionNumber,
           rollNumber: record.student.rollNumber,
@@ -3828,7 +3861,8 @@ export class TeachersService {
             include: {
               user: {
                 select: {
-                  firstName: true, lastName: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                 },
               },
@@ -3868,7 +3902,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -4001,7 +4036,8 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      firstName: true, lastName: true,
+                      firstName: true,
+                      lastName: true,
                     },
                   },
                 },
@@ -4035,7 +4071,8 @@ export class TeachersService {
                 include: {
                   user: {
                     select: {
-                      firstName: true, lastName: true,
+                      firstName: true,
+                      lastName: true,
                     },
                   },
                 },
@@ -4122,7 +4159,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -4132,7 +4170,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
               },
             },
           },
@@ -4210,13 +4249,21 @@ export class TeachersService {
         results: results.map(r => ({
           id: r.id,
           studentId: r.studentId,
-          studentName: this.getFullName(r.student.user.firstName, r.student.user.lastName),
+          studentName: this.getFullName(
+            r.student.user.firstName,
+            r.student.user.lastName
+          ),
           studentEmail: r.student.user.email,
           marksObtained: r.marksObtained?.toNumber() || null,
           grade: r.grade,
           isAbsent: r.isAbsent,
           remarks: r.remarks,
-          evaluatedBy: r.evaluator?.user ? this.getFullName(r.evaluator.user.firstName, r.evaluator.user.lastName) : null,
+          evaluatedBy: r.evaluator?.user
+            ? this.getFullName(
+                r.evaluator.user.firstName,
+                r.evaluator.user.lastName
+              )
+            : null,
           evaluatedAt: r.evaluatedAt,
         })),
       },
@@ -4320,7 +4367,8 @@ export class TeachersService {
           include: {
             user: {
               select: {
-                firstName: true, lastName: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -4516,7 +4564,7 @@ export class TeachersService {
       const students = await this.prisma.student.findMany({
         where: {
           courseId: request.courseId,
-          status: { not: 'SUSPENDED' },
+          enrollmentStatus: { not: 'SUSPENDED' },
         },
         select: { id: true },
       })
@@ -4551,7 +4599,7 @@ export class TeachersService {
     const students = await this.prisma.student.findMany({
       where: {
         id: { in: studentIds },
-        status: { not: 'SUSPENDED' },
+        enrollmentStatus: { not: 'SUSPENDED' },
       },
       include: {
         user: {
@@ -4559,7 +4607,8 @@ export class TeachersService {
             id: true,
             uuid: true,
             kramid: true,
-            firstName: true, lastName: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -4615,7 +4664,9 @@ export class TeachersService {
         // Create summary
         studentSummaries.push({
           studentId: student.id,
-          studentName: student.user ? this.getFullName(student.user.firstName, student.user.lastName) : 'Unknown Student',
+          studentName: student.user
+            ? this.getFullName(student.user.firstName, student.user.lastName)
+            : 'Unknown Student',
           admissionNumber: student.admissionNumber,
           rollNumber: student.rollNumber,
           sgpa: reportCard.performanceSummary.sgpa,
@@ -4933,8 +4984,7 @@ export class TeachersService {
         ? Math.round((totalGradePoints / totalCredits) * 100) / 100
         : 0
     // Convert to 10-point scale for display and grade (4 * 2.5 = 10)
-    const sgpa =
-      Math.round(Math.min(10, (sgpa4 / 4) * 10) * 100) / 100
+    const sgpa = Math.round(Math.min(10, (sgpa4 / 4) * 10) * 100) / 100
 
     // Calculate CGPA
     let cumulativeGradePoints = 0
@@ -4950,8 +5000,7 @@ export class TeachersService {
       cumulativeCredits > 0
         ? Math.round((cumulativeGradePoints / cumulativeCredits) * 100) / 100
         : 0
-    const cgpa =
-      Math.round(Math.min(10, (cgpa4 / 4) * 10) * 100) / 100
+    const cgpa = Math.round(Math.min(10, (cgpa4 / 4) * 10) * 100) / 100
 
     // Calculate class rank
     const studentRankIndex = studentGpas.findIndex(
@@ -5038,16 +5087,17 @@ export class TeachersService {
       where: { user: { uuid: userUuid } },
       include: {
         user: {
-          select: { institutionId: true }
+          select: { institutionId: true },
         },
         institution: {
           select: {
             id: true,
-            name: true, type: true,
-            code: true
-          }
-        }
-      }
+            name: true,
+            type: true,
+            code: true,
+          },
+        },
+      },
     })
 
     if (!teacher) {
@@ -5055,7 +5105,11 @@ export class TeachersService {
     }
 
     // Check authorization - teachers can only access their own info
-    if (currentUser.uuid !== userUuid && currentUser.role.roleName !== 'admin' && currentUser.role.roleName !== 'super_admin') {
+    if (
+      currentUser.uuid !== userUuid &&
+      currentUser.role.roleName !== 'admin' &&
+      currentUser.role.roleName !== 'super_admin'
+    ) {
       throw new ForbiddenException('Access denied')
     }
 
@@ -5065,8 +5119,8 @@ export class TeachersService {
         id: teacher.institution.id,
         name: teacher.institution.name,
         type: teacher.institution.type,
-        code: teacher.institution.code
-      }
+        code: teacher.institution.code,
+      },
     }
   }
 }

@@ -1,9 +1,9 @@
-import { ParentRelation, UserStatus } from '@prisma/client'
+import { ParentRelation, UserAccountStatus } from '@prisma/client'
 import { Student } from './student.types'
 import { Teacher } from './teacher.types'
 
 // Re-export Prisma enums for convenience
-export { ParentRelation, UserStatus }
+export { ParentRelation, UserAccountStatus }
 
 // Core User Types (using Prisma camelCase field names)
 export interface User {
@@ -18,7 +18,7 @@ export interface User {
   roleId: number
   lastLogin?: Date
   loginAttempts: number
-  status: UserStatus
+  accountStatus: UserAccountStatus
   institutionId?: number | null
   createdAt: Date
   updatedAt: Date
@@ -73,7 +73,7 @@ export interface Staff {
   experience?: string
   emergencyContact?: string
   address?: string
-  status?: string
+  employmentStatus?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -120,29 +120,29 @@ export class UserHelpers {
   /**
    * Check if user needs password change (has temporary password)
    */
-  static needsPasswordChange(status: UserStatus): boolean {
-    return status === 'PENDING_ACTIVATION'
+  static needsPasswordChange(accountStatus: UserAccountStatus): boolean {
+    return accountStatus === 'PENDING_ACTIVATION'
   }
 
   /**
    * Check if user account is blocked from login
    */
-  static isBlocked(status: UserStatus): boolean {
-    return status === 'SUSPENDED' || status === 'LOCKED'
+  static isBlocked(accountStatus: UserAccountStatus): boolean {
+    return accountStatus === 'SUSPENDED' || accountStatus === 'LOCKED'
   }
 
   /**
    * Check if user can login (not blocked, but may need password change)
    */
-  static canLogin(status: UserStatus): boolean {
-    return status === 'ACTIVE' || status === 'PENDING_ACTIVATION'
+  static canLogin(accountStatus: UserAccountStatus): boolean {
+    return accountStatus === 'ACTIVE' || accountStatus === 'PENDING_ACTIVATION'
   }
 
   /**
    * Get user-friendly status description
    */
-  static getStatusDescription(status: UserStatus): string {
-    switch (status) {
+  static getStatusDescription(accountStatus: UserAccountStatus): string {
+    switch (accountStatus) {
       case 'PENDING_ACTIVATION':
         return 'Account requires password change'
       case 'ACTIVE':

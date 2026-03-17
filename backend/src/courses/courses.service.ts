@@ -179,7 +179,7 @@ export class CoursesService {
       where,
       include: {
         students: {
-          where: { status: 'ACTIVE' },
+          where: { enrollmentStatus: 'ACTIVE' },
           select: {
             id: true,
             section: true,
@@ -264,7 +264,7 @@ export class CoursesService {
       where: { id: courseId },
       include: {
         students: {
-          where: { status: 'ACTIVE' },
+          where: { enrollmentStatus: 'ACTIVE' },
           select: {
             id: true,
             section: true,
@@ -519,7 +519,7 @@ export class CoursesService {
         student: {
           courseId: classSection.subject.courseId,
           section: classSection.sectionName,
-          status: 'ACTIVE',
+          enrollmentStatus: 'ACTIVE',
         },
       },
       include: {
@@ -1261,7 +1261,7 @@ export class CoursesService {
           _count: {
             select: {
               students: {
-                where: { status: 'ACTIVE' }, // Only count active students
+                where: { enrollmentStatus: 'ACTIVE' }, // Only count active students
               },
             },
           },

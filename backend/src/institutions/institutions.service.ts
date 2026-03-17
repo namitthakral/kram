@@ -88,7 +88,7 @@ export class InstitutionsService {
             role: {
               roleName: 'admin',
             },
-            status: { in: ['ACTIVE', 'INACTIVE'] },
+            accountStatus: { in: ['ACTIVE', 'INACTIVE'] },
           },
           select: {
             id: true,
@@ -97,7 +97,7 @@ export class InstitutionsService {
             lastName: true,
             email: true,
             phone: true,
-            status: true,
+            accountStatus: true,
           },
         },
       },
@@ -119,7 +119,7 @@ export class InstitutionsService {
             role: {
               roleName: 'admin',
             },
-            status: { in: ['ACTIVE', 'INACTIVE'] },
+            accountStatus: { in: ['ACTIVE', 'INACTIVE'] },
           },
           select: {
             id: true,
@@ -128,7 +128,7 @@ export class InstitutionsService {
             lastName: true,
             email: true,
             phone: true,
-            status: true,
+            accountStatus: true,
           },
         },
       },

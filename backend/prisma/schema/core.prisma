@@ -15,7 +15,7 @@ model User {
   institutionId     Int?     @map("institution_id")
   lastLogin         DateTime? @map("last_login")
   loginAttempts     Int      @default(0) @map("login_attempts")
-  status            UserStatus @default(ACTIVE)
+  accountStatus     UserAccountStatus @default(ACTIVE) @map("account_status")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
@@ -210,7 +210,7 @@ enum SequenceResetPolicy {
 }
 
 // Core System Enums
-enum UserStatus {
+enum UserAccountStatus {
   PENDING_ACTIVATION    // New users with temporary passwords (replaces: isTemporaryPassword + mustChangePassword + INACTIVE)
   ACTIVE               // Normal active users
   SUSPENDED            // Admin-suspended users

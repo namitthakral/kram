@@ -1,4 +1,4 @@
-import { EmploymentType, TeacherStatus, UserStatus } from '@prisma/client'
+import { EmploymentType, TeacherEmploymentStatus, UserAccountStatus } from '@prisma/client'
 import { Transform } from 'class-transformer'
 import {
   IsArray,
@@ -87,8 +87,8 @@ export class CreateTeacherDto {
   publications?: string
 
   @IsOptional()
-  @IsEnum(TeacherStatus)
-  status?: TeacherStatus
+  @IsEnum(TeacherEmploymentStatus)
+  employmentStatus?: TeacherEmploymentStatus
 }
 
 export class UpdateTeacherDto {
@@ -141,13 +141,13 @@ export class UpdateTeacherDto {
   publications?: string
 
   @IsOptional()
-  @IsEnum(TeacherStatus)
-  status?: TeacherStatus
+  @IsEnum(TeacherEmploymentStatus)
+  employmentStatus?: TeacherEmploymentStatus
 
   // Controls the linked User's account status (ACTIVE / INACTIVE)
   @IsOptional()
-  @IsEnum(UserStatus)
-  userStatus?: UserStatus
+  @IsEnum(UserAccountStatus)
+  userAccountStatus?: UserAccountStatus
 
   @IsOptional()
   @IsArray()
@@ -194,8 +194,8 @@ export class TeacherQueryDto {
   @Transform(({ value }) =>
     value === '' || value === null || value === undefined ? undefined : value
   )
-  @IsEnum(TeacherStatus)
-  status?: TeacherStatus
+  @IsEnum(TeacherEmploymentStatus)
+  employmentStatus?: TeacherEmploymentStatus
 
   @IsOptional()
   @IsString()

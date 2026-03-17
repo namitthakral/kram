@@ -155,8 +155,8 @@ export class ContextService {
     }
 
     const [studentCount, teacherCount, courseCount] = await Promise.all([
-      this.prisma.student.count({ where: { institutionId, status: 'ACTIVE' } }),
-      this.prisma.teacher.count({ where: { institutionId, status: 'ACTIVE' } }),
+      this.prisma.student.count({ where: { institutionId, enrollmentStatus: 'ACTIVE' } }),
+      this.prisma.teacher.count({ where: { institutionId, employmentStatus: 'ACTIVE' } }),
       this.prisma.course.count({ where: { institutionId, status: 'ACTIVE' } }),
     ])
 

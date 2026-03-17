@@ -7,11 +7,11 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import * as bcrypt from 'bcryptjs'
+import { CreateParentDataDto } from '../common/dto/user.dto'
 import { IdGenerationService } from '../id-generation/id-generation.service'
 import { PrismaService } from '../prisma/prisma.service'
 import { generateTemporaryPassword } from '../utils/kramid.util'
 import { CreateUserDto, UpdateUserDto, UserQueryDto } from './dto/user.dto'
-import { CreateParentDataDto } from '../common/dto/user.dto'
 
 @Injectable()
 export class UsersService {
@@ -96,9 +96,9 @@ export class UsersService {
           phone: createUserDto.phoneNumber,
           firstName: createUserDto.firstName,
           lastName: createUserDto.lastName,
-          status: isTemporaryPassword
+          accountStatus: isTemporaryPassword
             ? 'INACTIVE'
-            : createUserDto.status || 'ACTIVE',
+            : createUserDto.accountStatus || 'ACTIVE',
         },
       })
 
@@ -162,8 +162,16 @@ export class UsersService {
             })
 
             // Create parent records if student data includes parent information
-            if (studentData.fatherInfo || studentData.motherInfo || studentData.guardianInfo) {
-              await this.createParentRecords((profile as { id: number }).id, studentData, createUserDto.institutionId)
+            if (
+              studentData.fatherInfo ||
+              studentData.motherInfo ||
+              studentData.guardianInfo
+            ) {
+              await this.createParentRecords(
+                (profile as { id: number }).id,
+                studentData,
+                createUserDto.institutionId
+              )
             }
           }
           break
@@ -241,9 +249,13 @@ export class UsersService {
 
         case 'parent':
           if (createUserDto.parentData || role.roleName === 'parent') {
-            const parentData: Partial<CreateParentDataDto> = createUserDto.parentData || {}
-            
-            if (!parentData.childKramid || parentData.childKramid.trim() === '') {
+            const parentData: Partial<CreateParentDataDto> =
+              createUserDto.parentData || {}
+
+            if (
+              !parentData.childKramid ||
+              parentData.childKramid.trim() === ''
+            ) {
               throw new BadRequestException(
                 'parentData with valid childKramid is required for parent role'
               )
@@ -271,8 +283,7 @@ export class UsersService {
                     | 'MOTHER'
                     | 'GUARDIAN'
                     | 'OTHER') || 'GUARDIAN',
-                isPrimaryContact:
-                  parentData.isPrimaryContact ?? true,
+                isPrimaryContact: parentData.isPrimaryContact ?? true,
                 occupation: parentData.occupation,
                 annualIncome: parentData.annualIncome,
                 educationLevel: parentData.educationLevel,
@@ -393,7 +404,8 @@ export class UsersService {
   }
 
   async findAll(query: UserQueryDto, institutionId: number | null = null) {
-    const { page, limit, search, roleId, status, sortBy, sortOrder } = query
+    const { page, limit, search, roleId, accountStatus, sortBy, sortOrder } =
+      query
     const skip = (page - 1) * limit
 
     // Build where clause with proper Prisma typing
@@ -407,7 +419,7 @@ export class UsersService {
         ],
       }),
       ...(roleId && { roleId }),
-      ...(status && { status }),
+      ...(accountStatus && { accountStatus }),
     }
 
     if (institutionId) {
@@ -544,7 +556,10 @@ export class UsersService {
     }
 
     // Check if email already exists (if being updated)
-    if (updateUserDto.email && updateUserDto.email.toLowerCase() !== existingUser.email?.toLowerCase()) {
+    if (
+      updateUserDto.email &&
+      updateUserDto.email.toLowerCase() !== existingUser.email?.toLowerCase()
+    ) {
       const emailExists = await this.prisma.user.findUnique({
         where: { email: updateUserDto.email.toLowerCase() },
       })
@@ -590,7 +605,9 @@ export class UsersService {
             })(),
           }
         : {}),
-      ...(updateUserDto.status && { status: updateUserDto.status }),
+      ...(updateUserDto.accountStatus && {
+        accountStatus: updateUserDto.accountStatus,
+      }),
     }
 
     // Hash password if being updated
@@ -629,7 +646,7 @@ export class UsersService {
     // Soft delete by updating status
     const user = await this.prisma.user.update({
       where: { id },
-      data: { status: 'INACTIVE' },
+      data: { accountStatus: 'INACTIVE' },
       include: {
         role: true,
       },
@@ -663,7 +680,7 @@ export class UsersService {
     query: UserQueryDto,
     institutionId: number | null = null
   ) {
-    const { page, limit, search, status, sortBy, sortOrder } = query
+    const { page, limit, search, accountStatus, sortBy, sortOrder } = query
     const skip = (page - 1) * limit
 
     // Build where clause with proper Prisma typing
@@ -677,7 +694,7 @@ export class UsersService {
           { phone: { contains: search, mode: 'insensitive' } },
         ],
       }),
-      ...(status && { status }),
+      ...(accountStatus && { accountStatus }),
     }
 
     if (institutionId) {
@@ -753,10 +770,10 @@ export class UsersService {
       await Promise.all([
         this.prisma.user.count({ where: baseWhere }),
         this.prisma.user.count({
-          where: { ...baseWhere, status: 'ACTIVE' },
+          where: { ...baseWhere, accountStatus: 'ACTIVE' },
         }),
         this.prisma.user.count({
-          where: { ...baseWhere, status: 'INACTIVE' },
+          where: { ...baseWhere, accountStatus: 'INACTIVE' },
         }),
         this.prisma.user.groupBy({
           by: ['roleId'],
@@ -937,7 +954,10 @@ export class UsersService {
     }
 
     // Check if email already exists (if being updated)
-    if (updateUserDto.email && updateUserDto.email.toLowerCase() !== existingUser.email?.toLowerCase()) {
+    if (
+      updateUserDto.email &&
+      updateUserDto.email.toLowerCase() !== existingUser.email?.toLowerCase()
+    ) {
       const emailExists = await this.prisma.user.findUnique({
         where: { email: updateUserDto.email.toLowerCase() },
       })
@@ -983,7 +1003,9 @@ export class UsersService {
             })(),
           }
         : {}),
-      ...(updateUserDto.status && { status: updateUserDto.status }),
+      ...(updateUserDto.accountStatus && {
+        accountStatus: updateUserDto.accountStatus,
+      }),
     }
 
     // Hash password if being updated
@@ -1043,7 +1065,7 @@ export class UsersService {
     // Soft delete by updating status
     const user = await this.prisma.user.update({
       where: { uuid },
-      data: { status: 'INACTIVE' },
+      data: { accountStatus: 'INACTIVE' },
       include: {
         role: true,
       },
@@ -1121,7 +1143,11 @@ export class UsersService {
             isPrimaryContact: false, // Will be updated later based on guardian logic
           },
         })
-        createdParents.push({ type: 'father', user: fatherUser, parent: fatherParent })
+        createdParents.push({
+          type: 'father',
+          user: fatherUser,
+          parent: fatherParent,
+        })
       }
     }
 
@@ -1145,14 +1171,20 @@ export class UsersService {
             isPrimaryContact: false, // Will be updated later based on guardian logic
           },
         })
-        createdParents.push({ type: 'mother', user: motherUser, parent: motherParent })
+        createdParents.push({
+          type: 'mother',
+          user: motherUser,
+          parent: motherParent,
+        })
       }
     }
 
     // Handle Guardian logic
     if (studentData.guardianSameAsParent && studentData.guardianParentType) {
       // Guardian is same as father or mother - mark that parent as primary contact
-      const guardianParent = createdParents.find(p => p.type === studentData.guardianParentType)
+      const guardianParent = createdParents.find(
+        p => p.type === studentData.guardianParentType
+      )
       if (guardianParent) {
         await this.prisma.parent.update({
           where: { id: guardianParent.parent.id },
@@ -1235,15 +1267,21 @@ export class UsersService {
         passwordHash: hashedPassword,
         roleId: parentRoleId,
         institutionId,
-        status: 'INACTIVE',
+        accountStatus: 'INACTIVE',
       },
     })
 
-    console.log(`Created parent user: ${name} (${email}) with temp password: ${tempPassword}`)
-    
+    console.log(
+      `Created parent user: ${name} (${email}) with temp password: ${tempPassword}`
+    )
+
     // Generate Kram ID for parent user
-    const kramid = await this.generateKramIdForUser(parentUser.id, institutionId, 'parent')
-    
+    const kramid = await this.generateKramIdForUser(
+      parentUser.id,
+      institutionId,
+      'parent'
+    )
+
     return { ...parentUser, kramid }
   }
 
@@ -1257,11 +1295,13 @@ export class UsersService {
   ): Promise<string | null> {
     const institution = await this.prisma.institution.findUnique({
       where: { id: institutionId },
-      select: { code: true }
+      select: { code: true },
     })
 
     if (!institution?.code) {
-      console.warn(`Cannot generate Kram ID - institution code not found for ID: ${institutionId}`)
+      console.warn(
+        `Cannot generate Kram ID - institution code not found for ID: ${institutionId}`
+      )
       return null
     }
 

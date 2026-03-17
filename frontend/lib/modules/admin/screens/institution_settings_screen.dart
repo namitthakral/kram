@@ -35,6 +35,8 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -49,18 +51,25 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
           _adminService.getInstitutionProfile(institutionId),
           _adminService.getIdConfig(institutionId),
         ]);
+
+        if (!mounted) return;
+
         setState(() {
           _schoolInfo = results[0] as Map<String, dynamic>?;
           _idConfig = results[1] as Map<String, dynamic>?;
           _isLoading = false;
         });
       } else {
+        if (!mounted) return;
+
         setState(() {
           _error = 'Institution ID not found';
           _isLoading = false;
         });
       }
     } on Exception catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -114,15 +123,15 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
                     if (_idConfig != null) ...[
                       _buildConfigItem(
                         'Admission ID Format',
-                        _idConfig!['admissionIdFormat'],
+                        _idConfig!['admissionNumberFormat'],
                       ),
                       _buildConfigItem(
-                        'Employee ID Format',
-                        _idConfig!['employeeIdFormat'],
+                        'Teacher Employee ID Format',
+                        _idConfig!['teacherEmployeeIdFormat'],
                       ),
                       _buildConfigItem(
                         'Roll No Format',
-                        _idConfig!['rollNoFormat'],
+                        _idConfig!['rollNumberFormat'],
                       ),
                     ],
                     const SizedBox(height: 24),
@@ -168,75 +177,91 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
     if (institutionId == null) return;
 
     final admissionController = TextEditingController(
-      text: _idConfig?['admissionIdFormat']?.toString() ?? '',
+      text: _idConfig?['admissionNumberFormat']?.toString() ?? '',
     );
     final employeeController = TextEditingController(
-      text: _idConfig?['employeeIdFormat']?.toString() ?? '',
+      text: _idConfig?['teacherEmployeeIdFormat']?.toString() ?? '',
     );
     final rollNoController = TextEditingController(
-      text: _idConfig?['rollNoFormat']?.toString() ?? '',
+      text: _idConfig?['rollNumberFormat']?.toString() ?? '',
     );
 
-    CustomFormDialog.show<void>(
+    showDialog<void>(
       context: context,
-      title: context.translate('edit_configuration'),
-      subtitle: 'ID format patterns for admission, employee, and roll number',
-      headerIcon: Icons.settings_applications_rounded,
-      cancelText: context.translate('cancel'),
-      confirmColor: AppTheme.blue500,
-      maxWidth: 500,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CustomTextField(
-            label: 'Admission ID Format',
-            hintText: 'e.g. ADM-YYYY-NNNN',
-            controller: admissionController,
+      builder:
+          (dialogContext) => CustomFormDialog(
+            title: context.translate('edit_configuration'),
+            subtitle:
+                'ID format patterns for admission, employee, and roll number',
+            headerIcon: Icons.settings_applications_rounded,
+            cancelText: context.translate('cancel'),
+            confirmColor: AppTheme.blue500,
+            maxWidth: 500,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CustomTextField(
+                  label: 'Admission ID Format',
+                  hintText: 'e.g. ADM-YYYY-NNNN',
+                  controller: admissionController,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Teacher Employee ID Format',
+                  hintText: 'e.g. EMP-NNNN',
+                  controller: employeeController,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Roll No Format',
+                  hintText: 'e.g. RNNN',
+                  controller: rollNoController,
+                ),
+              ],
+            ),
+            onConfirm: () async {
+              if (_isSaving) return;
+              if (!mounted) return;
+
+              setState(() => _isSaving = true);
+
+              try {
+                final result = await _adminService
+                    .updateIdConfig(institutionId, {
+                      'admissionNumberFormat': admissionController.text.trim(),
+                      'teacherEmployeeIdFormat': employeeController.text.trim(),
+                      'rollNumberFormat': rollNoController.text.trim(),
+                    });
+
+                if (!mounted) return;
+
+                // Close modal using the dialog context
+                Navigator.of(dialogContext).pop();
+
+                // Show success message
+                showCustomSnackbar(
+                  message: 'Configuration saved successfully',
+                  type: SnackbarType.success,
+                );
+
+                // Reload data in background without blocking
+                _loadData();
+              } on Exception catch (e) {
+                if (!mounted) return;
+
+                showCustomSnackbar(
+                  message: e.toString().replaceFirst('Exception: ', ''),
+                  type: SnackbarType.error,
+                );
+              } finally {
+                if (mounted) {
+                  setState(() => _isSaving = false);
+                }
+              }
+            },
+            onCancel: () => Navigator.of(dialogContext).pop(),
           ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Employee ID Format',
-            hintText: 'e.g. EMP-NNNN',
-            controller: employeeController,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'Roll No Format',
-            hintText: 'e.g. RNNN',
-            controller: rollNoController,
-          ),
-        ],
-      ),
-      onConfirm: () async {
-        if (_isSaving) return;
-        setState(() => _isSaving = true);
-        try {
-          await _adminService.updateIdConfig(institutionId, {
-            'admissionIdFormat': admissionController.text.trim(),
-            'employeeIdFormat': employeeController.text.trim(),
-            'rollNoFormat': rollNoController.text.trim(),
-          });
-          if (mounted) {
-            Navigator.of(context).pop();
-            _loadData();
-            showCustomSnackbar(
-              message: 'Configuration saved successfully',
-              type: SnackbarType.success,
-            );
-          }
-        } on Exception catch (e) {
-          if (mounted) {
-            showCustomSnackbar(
-              message: e.toString().replaceFirst('Exception: ', ''),
-              type: SnackbarType.error,
-            );
-          }
-        } finally {
-          if (mounted) setState(() => _isSaving = false);
-        }
-      },
-      onCancel: () => Navigator.of(context).pop(),
     ).then((_) {
       admissionController.dispose();
       employeeController.dispose();

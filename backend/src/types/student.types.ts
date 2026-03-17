@@ -1,7 +1,7 @@
-import { ResidentialStatus, StudentStatus, StudentType } from '@prisma/client'
+import { ResidentialStatus, StudentEnrollmentStatus, StudentType } from '@prisma/client'
 
 // Re-export Prisma enums for convenience
-export { ResidentialStatus, StudentStatus, StudentType }
+export { ResidentialStatus, StudentEnrollmentStatus, StudentType }
 
 // Student Types
 export interface Student {
@@ -23,7 +23,7 @@ export interface Student {
   emergencyContactPhone?: string
   bloodGroup?: string
   medicalConditions?: string
-  status: StudentStatus
+  enrollmentStatus: StudentEnrollmentStatus
   createdAt: Date
   updatedAt: Date
 }
