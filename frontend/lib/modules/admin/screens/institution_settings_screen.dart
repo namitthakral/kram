@@ -217,9 +217,6 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
             'employeeIdFormat': employeeController.text.trim(),
             'rollNoFormat': rollNoController.text.trim(),
           });
-          admissionController.dispose();
-          employeeController.dispose();
-          rollNoController.dispose();
           if (mounted) {
             Navigator.of(context).pop();
             _loadData();
@@ -239,12 +236,12 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
           if (mounted) setState(() => _isSaving = false);
         }
       },
-      onCancel: () {
-        admissionController.dispose();
-        employeeController.dispose();
-        rollNoController.dispose();
-      },
-    );
+      onCancel: () => Navigator.of(context).pop(),
+    ).then((_) {
+      admissionController.dispose();
+      employeeController.dispose();
+      rollNoController.dispose();
+    });
   }
 
   Widget _buildSchoolInfoSection() {
@@ -529,18 +526,6 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
                     ? null
                     : accreditationController.text.trim(),
           });
-          _disposeControllers(
-            nameController,
-            addressController,
-            cityController,
-            stateController,
-            countryController,
-            phoneController,
-            emailController,
-            websiteController,
-            establishedController,
-            accreditationController,
-          );
           if (mounted) {
             Navigator.of(context).pop();
             _loadData();
@@ -560,21 +545,21 @@ class _InstitutionSettingsScreenState extends State<InstitutionSettingsScreen> {
           if (mounted) setState(() => _isSaving = false);
         }
       },
-      onCancel: () {
-        _disposeControllers(
-          nameController,
-          addressController,
-          cityController,
-          stateController,
-          countryController,
-          phoneController,
-          emailController,
-          websiteController,
-          establishedController,
-          accreditationController,
-        );
-      },
-    );
+      onCancel: () => Navigator.of(context).pop(),
+    ).then((_) {
+      _disposeControllers(
+        nameController,
+        addressController,
+        cityController,
+        stateController,
+        countryController,
+        phoneController,
+        emailController,
+        websiteController,
+        establishedController,
+        accreditationController,
+      );
+    });
   }
 
   void _disposeControllers(

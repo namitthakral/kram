@@ -331,7 +331,7 @@ export class AdminService {
       })
     } else if (roleName === 'parent' && createUserDto.parentData) {
       const pd = createUserDto.parentData
-      
+
       if (!pd.childKramid || pd.childKramid.trim() === '') {
         throw new BadRequestException(
           'parentData with valid childKramid is required for parent role'
@@ -682,7 +682,7 @@ export class AdminService {
     }
 
     // Update name if firstName or lastName is changed
-    const updateData: Prisma.UserUpdateInput = { 
+    const updateData: Prisma.UserUpdateInput = {
       ...updateUserDto,
       ...(updateUserDto.email && { email: updateUserDto.email.toLowerCase() })
     }
@@ -968,7 +968,7 @@ export class AdminService {
 
     // Check for active term/semester restriction
     const restrictionInfo = await this.checkGradingRestriction(institutionId, institution.type)
-    
+
     if (restrictionInfo.isRestricted) {
       throw new ForbiddenException({
         message: restrictionInfo.message,
@@ -1059,7 +1059,7 @@ export class AdminService {
 
     // Check for active term/semester restriction
     const restrictionInfo = await this.checkGradingRestriction(institutionId, institution.type)
-    
+
     if (restrictionInfo.isRestricted) {
       throw new ForbiddenException({
         message: restrictionInfo.message,
@@ -1228,7 +1228,7 @@ export class AdminService {
         avg_grade: number
       }>
     >`
-      SELECT 
+      SELECT
         t.id as teacher_id,
         u as teacher_name,
         COALESCE(s.subject_name, 'Multiple Subjects') as subject_name,
@@ -1236,14 +1236,14 @@ export class AdminService {
         COALESCE(
           ROUND(
             AVG(
-              CASE 
-                WHEN er.marks_obtained IS NOT NULL AND e.total_marks > 0 
+              CASE
+                WHEN er.marks_obtained IS NOT NULL AND e.total_marks > 0
                 THEN (er.marks_obtained::DECIMAL / e.total_marks) * 100
                 ELSE NULL
               END
-            ), 
+            ),
             2
-          ), 
+          ),
           0
         ) as avg_grade
       FROM teachers t
@@ -1378,20 +1378,20 @@ export class AdminService {
         attendance_rate: number
       }>
     >`
-      SELECT 
+      SELECT
         CONCAT(s.subject_name, ' (', cs.section_name, ')') as class_name,
         COUNT(DISTINCT e.studentId) as student_count,
         COALESCE(
           ROUND(
             AVG(
-              CASE 
-                WHEN ar.marks_obtained IS NOT NULL AND ar.max_marks > 0 
+              CASE
+                WHEN ar.marks_obtained IS NOT NULL AND ar.max_marks > 0
                 THEN (ar.marks_obtained::DECIMAL / ar.max_marks) * 100
                 ELSE NULL
               END
-            ), 
+            ),
             2
-          ), 
+          ),
           0
         ) as avg_grade,
         COALESCE(
@@ -1507,7 +1507,7 @@ export class AdminService {
         attendance_rate: number
       }>
     >`
-      SELECT 
+      SELECT
         s.subject_name,
         cs.section_name,
         ROUND(
@@ -1522,8 +1522,8 @@ export class AdminService {
         AND a.date >= CURRENT_DATE - INTERVAL '7 days'
         AND (${institutionId}::int IS NULL OR t.institutionId = ${institutionId})
       GROUP BY cs.id, s.subject_name, cs.section_name
-      HAVING 
-        COUNT(a.id) > 0 
+      HAVING
+        COUNT(a.id) > 0
         AND ROUND((COUNT(*) FILTER (WHERE a.status = 'PRESENT')::DECIMAL / NULLIF(COUNT(a.id), 0)) * 100, 1) < 78
       LIMIT 50
     `
@@ -1731,10 +1731,10 @@ export class AdminService {
     })
 
     console.log(`Created parent user: ${name} (${email}) with temp password: ${tempPassword}`)
-    
+
     // Generate Kram ID for parent user
     const kramid = await this.generateKramIdForUser(parentUser.id, adminInstitutionId, 'parent')
-    
+
     return { ...parentUser, kramid }
   }
 
@@ -1790,9 +1790,9 @@ export class AdminService {
   private async checkGradingRestriction(institutionId: number, institutionType: string) {
     // Check for active semester/term (unified logic for both schools and colleges)
     const activePeriod = await this.prisma.semester.findFirst({
-      where: { 
+      where: {
         academicYear: { institutionId },
-        status: 'ACTIVE' 
+        status: 'ACTIVE'
       },
       select: {
         id: true,
@@ -1808,7 +1808,7 @@ export class AdminService {
     if (activePeriod) {
       // Adaptive terminology based on institution type
       const periodType = institutionType === 'SCHOOL' ? 'term' : 'semester'
-      
+
       return {
         isRestricted: true,
         message: `Cannot modify grading configuration during active ${periodType}`,
@@ -1833,7 +1833,7 @@ export class AdminService {
    */
   async getInstitutionInfo(institutionId: number, adminInstitutionId: number | null) {
     if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
-      throw new ForbiddenException('Access denied to this institution')
+      throw new ForbiddenException('Access denied to this institution info')
     }
 
     const institution = await this.prisma.institution.findUnique({
@@ -1843,16 +1843,54 @@ export class AdminService {
         type: true,
         code: true
       }
+      include: {
+        gradingConfig: true,
+        idConfig: true,
+      },
     })
 
     if (!institution) {
       throw new NotFoundException('Institution not found')
     }
 
-    return { 
-      success: true, 
-      data: institution 
+    return {
+      success: true,
+      data: institution
     }
+  }
+
+  // ID Configuration Methods
+  async getIdConfig(institutionId: number, adminInstitutionId: number | null) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('Access denied to this institution ID config')
+    }
+    return this.idGeneration.getIdConfig(institutionId)
+  }
+
+  async updateIdConfig(
+    institutionId: number,
+    updates: any,
+    adminInstitutionId: number | null
+  ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException(
+        'You can only update ID config for your own institution'
+      )
+    }
+    return this.idGeneration.updateIdConfig(institutionId, updates)
+  }
+
+  async previewId(
+    institutionId: number,
+    dto: { template: string; context: any },
+    adminInstitutionId: number | null
+  ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException(
+        'You can only preview IDs for your own institution'
+      )
+    }
+    return this.idGeneration.previewId(institutionId, dto.template, dto.context)
   }
 
   /**
@@ -1873,7 +1911,7 @@ export class AdminService {
     }
 
     const restrictionInfo = await this.checkGradingRestriction(institutionId, institution.type)
-    
+
     return {
       success: true,
       data: restrictionInfo
