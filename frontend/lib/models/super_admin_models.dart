@@ -6,30 +6,6 @@ part 'super_admin_models.g.dart';
 /// Maps to SystemStats interface from backend
 @JsonSerializable()
 class SystemStats {
-  // Institution metrics
-  final int totalInstitutions;
-  final int inactiveInstitutions;
-  
-  // User metrics by role
-  final int totalStudents;
-  final int totalTeachers;
-  final int totalAdmins;
-  final int totalStaff;
-  final int totalParents;
-  
-  // User status metrics
-  final int totalActiveUsers;
-  final int pendingUsers;
-  final int suspendedUsers;
-  final int lockedUsers;
-  
-  // Recent activity (30 days)
-  final int newUsers30d;
-  final int newInstitutions30d;
-  
-  // System health
-  final double userHealthPercentage;
-
   const SystemStats({
     required this.totalInstitutions,
     required this.inactiveInstitutions,
@@ -47,38 +23,46 @@ class SystemStats {
     required this.userHealthPercentage,
   });
 
-  factory SystemStats.fromJson(Map<String, dynamic> json) => _$SystemStatsFromJson(json);
+  factory SystemStats.fromJson(Map<String, dynamic> json) =>
+      _$SystemStatsFromJson(json);
+  // Institution metrics
+  final int totalInstitutions;
+  final int inactiveInstitutions;
+
+  // User metrics by role
+  final int totalStudents;
+  final int totalTeachers;
+  final int totalAdmins;
+  final int totalStaff;
+  final int totalParents;
+
+  // User status metrics
+  final int totalActiveUsers;
+  final int pendingUsers;
+  final int suspendedUsers;
+  final int lockedUsers;
+
+  // Recent activity (30 days)
+  final int newUsers30d;
+  final int newInstitutions30d;
+
+  // System health
+  final double userHealthPercentage;
   Map<String, dynamic> toJson() => _$SystemStatsToJson(this);
 
   /// Get total users across all categories
-  int get totalUsers => totalActiveUsers + pendingUsers + suspendedUsers + lockedUsers;
+  int get totalUsers =>
+      totalActiveUsers + pendingUsers + suspendedUsers + lockedUsers;
 
   /// Get formatted health percentage
-  String get formattedHealthPercentage => '${userHealthPercentage.toStringAsFixed(1)}%';
+  String get formattedHealthPercentage =>
+      '${userHealthPercentage.toStringAsFixed(1)}%';
 }
 
 /// Institution overview with user statistics
 /// Maps to InstitutionOverview interface from backend
 @JsonSerializable()
 class InstitutionOverview {
-  final int id;
-  final String code;
-  final String name;
-  final String type; // 'SCHOOL' | 'COLLEGE' | 'UNIVERSITY' | 'INSTITUTE'
-  final String status; // 'ACTIVE' | 'INACTIVE'
-  final DateTime createdAt;
-  
-  // User counts
-  final int totalUsers;
-  final int activeUsers;
-  final int students;
-  final int teachers;
-  final int staff;
-  final int parents;
-  
-  // Health metrics
-  final double healthPercentage;
-
   const InstitutionOverview({
     required this.id,
     required this.code,
@@ -93,16 +77,43 @@ class InstitutionOverview {
     required this.staff,
     required this.parents,
     required this.healthPercentage,
+    this.adminName,
+    this.adminEmail,
+    this.adminStatus,
   });
 
-  factory InstitutionOverview.fromJson(Map<String, dynamic> json) => _$InstitutionOverviewFromJson(json);
+  factory InstitutionOverview.fromJson(Map<String, dynamic> json) =>
+      _$InstitutionOverviewFromJson(json);
+  final int id;
+  final String code;
+  final String name;
+  final String type; // 'SCHOOL' | 'COLLEGE' | 'UNIVERSITY' | 'INSTITUTE'
+  final String status; // 'ACTIVE' | 'INACTIVE'
+  final DateTime createdAt;
+
+  // Admin information
+  final String? adminName;
+  final String? adminEmail;
+  final String? adminStatus;
+
+  // User counts
+  final int totalUsers;
+  final int activeUsers;
+  final int students;
+  final int teachers;
+  final int staff;
+  final int parents;
+
+  // Health metrics
+  final double healthPercentage;
   Map<String, dynamic> toJson() => _$InstitutionOverviewToJson(this);
 
   /// Check if institution is active
   bool get isActive => status == 'ACTIVE';
 
   /// Get formatted health percentage
-  String get formattedHealthPercentage => '${healthPercentage.toStringAsFixed(1)}%';
+  String get formattedHealthPercentage =>
+      '${healthPercentage.toStringAsFixed(1)}%';
 
   /// Get user summary string
   String get userSummary {
@@ -119,11 +130,6 @@ class InstitutionOverview {
 /// Maps to UserGrowthTrend interface from backend
 @JsonSerializable()
 class UserGrowthTrend {
-  final DateTime month;
-  final int newUsers;
-  final int activeNewUsers;
-  final int cumulativeUsers;
-
   const UserGrowthTrend({
     required this.month,
     required this.newUsers,
@@ -131,7 +137,12 @@ class UserGrowthTrend {
     required this.cumulativeUsers,
   });
 
-  factory UserGrowthTrend.fromJson(Map<String, dynamic> json) => _$UserGrowthTrendFromJson(json);
+  factory UserGrowthTrend.fromJson(Map<String, dynamic> json) =>
+      _$UserGrowthTrendFromJson(json);
+  final DateTime month;
+  final int newUsers;
+  final int activeNewUsers;
+  final int cumulativeUsers;
   Map<String, dynamic> toJson() => _$UserGrowthTrendToJson(this);
 }
 
@@ -139,19 +150,19 @@ class UserGrowthTrend {
 /// Maps to RecentActivity interface from backend
 @JsonSerializable()
 class RecentActivity {
+  const RecentActivity({
+    required this.activityType,
+    required this.description,
+    required this.timestamp,
+    this.institutionId,
+  });
+
+  factory RecentActivity.fromJson(Map<String, dynamic> json) =>
+      _$RecentActivityFromJson(json);
   final String activityType; // 'user_registration' | 'institution_creation'
   final String description;
   final int? institutionId;
   final DateTime timestamp;
-
-  const RecentActivity({
-    required this.activityType,
-    required this.description,
-    this.institutionId,
-    required this.timestamp,
-  });
-
-  factory RecentActivity.fromJson(Map<String, dynamic> json) => _$RecentActivityFromJson(json);
   Map<String, dynamic> toJson() => _$RecentActivityToJson(this);
 
   /// Check if this is a user registration activity
@@ -176,11 +187,6 @@ class RecentActivity {
 /// Pagination metadata
 @JsonSerializable()
 class PaginationMeta {
-  final int total;
-  final int page;
-  final int limit;
-  final int totalPages;
-
   const PaginationMeta({
     required this.total,
     required this.page,
@@ -188,22 +194,24 @@ class PaginationMeta {
     required this.totalPages,
   });
 
-  factory PaginationMeta.fromJson(Map<String, dynamic> json) => _$PaginationMetaFromJson(json);
+  factory PaginationMeta.fromJson(Map<String, dynamic> json) =>
+      _$PaginationMetaFromJson(json);
+  final int total;
+  final int page;
+  final int limit;
+  final int totalPages;
   Map<String, dynamic> toJson() => _$PaginationMetaToJson(this);
 }
 
 /// Institution list response with pagination
 @JsonSerializable()
 class InstitutionListResponse {
+  const InstitutionListResponse({required this.data, required this.meta});
+
+  factory InstitutionListResponse.fromJson(Map<String, dynamic> json) =>
+      _$InstitutionListResponseFromJson(json);
   final List<InstitutionOverview> data;
   final PaginationMeta meta;
-
-  const InstitutionListResponse({
-    required this.data,
-    required this.meta,
-  });
-
-  factory InstitutionListResponse.fromJson(Map<String, dynamic> json) => _$InstitutionListResponseFromJson(json);
   Map<String, dynamic> toJson() => _$InstitutionListResponseToJson(this);
 }
 
@@ -211,11 +219,6 @@ class InstitutionListResponse {
 /// Aggregated response for dashboard API
 @JsonSerializable()
 class SuperAdminDashboardResponse {
-  final SystemStats stats;
-  final InstitutionListResponse institutions;
-  final List<UserGrowthTrend> userGrowth;
-  final List<RecentActivity> recentActivity;
-
   const SuperAdminDashboardResponse({
     required this.stats,
     required this.institutions,
@@ -223,6 +226,11 @@ class SuperAdminDashboardResponse {
     required this.recentActivity,
   });
 
-  factory SuperAdminDashboardResponse.fromJson(Map<String, dynamic> json) => _$SuperAdminDashboardResponseFromJson(json);
+  factory SuperAdminDashboardResponse.fromJson(Map<String, dynamic> json) =>
+      _$SuperAdminDashboardResponseFromJson(json);
+  final SystemStats stats;
+  final InstitutionListResponse institutions;
+  final List<UserGrowthTrend> userGrowth;
+  final List<RecentActivity> recentActivity;
   Map<String, dynamic> toJson() => _$SuperAdminDashboardResponseToJson(this);
 }

@@ -6,24 +6,24 @@ export interface SystemStats {
   // Institution metrics
   totalInstitutions: number
   inactiveInstitutions: number
-  
+
   // User metrics by role
   totalStudents: number
   totalTeachers: number
   totalAdmins: number
   totalStaff: number
   totalParents: number
-  
+
   // User status metrics
   totalActiveUsers: number
   pendingUsers: number
   suspendedUsers: number
   lockedUsers: number
-  
+
   // Recent activity (30 days)
   newUsers30d: number
   newInstitutions30d: number
-  
+
   // System health
   userHealthPercentage: number
 }
@@ -39,7 +39,12 @@ export interface InstitutionOverview {
   type: 'SCHOOL' | 'COLLEGE' | 'UNIVERSITY' | 'INSTITUTE'
   status: 'ACTIVE' | 'INACTIVE'
   createdAt: Date
-  
+
+  // Admin information
+  adminName: string | null
+  adminEmail: string | null
+  adminStatus: string | null
+
   // User counts
   totalUsers: number
   activeUsers: number
@@ -47,7 +52,7 @@ export interface InstitutionOverview {
   teachers: number
   staff: number
   parents: number
-  
+
   // Health metrics
   healthPercentage: number
 }

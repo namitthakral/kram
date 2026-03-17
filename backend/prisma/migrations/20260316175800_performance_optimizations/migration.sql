@@ -203,6 +203,11 @@ SELECT
   i.status,
   i.created_at as "createdAt",
   
+  -- Admin information
+  admin_info.admin_name as "adminName",
+  admin_info.admin_email as "adminEmail",
+  admin_info.admin_status as "adminStatus",
+  
   -- User counts by institution
   COALESCE(user_counts.total_users, 0) as "totalUsers",
   COALESCE(user_counts.active_users, 0) as "activeUsers",
@@ -235,6 +240,17 @@ LEFT JOIN (
   WHERE u.institution_id IS NOT NULL
   GROUP BY u.institution_id
 ) user_counts ON i.id = user_counts.institution_id
+LEFT JOIN (
+  SELECT 
+    u.institution_id,
+    CONCAT(u.first_name, ' ', u.last_name) as admin_name,
+    u.email as admin_email,
+    u.status as admin_status
+  FROM users u
+  JOIN roles r ON u.role_id = r.id
+  WHERE r.role_name = 'admin'
+  AND u.institution_id IS NOT NULL
+) admin_info ON i.id = admin_info.institution_id
 WHERE i.id IS NOT NULL
 ORDER BY i.created_at DESC;
 
@@ -260,9 +276,9 @@ ORDER BY month DESC;
 CREATE OR REPLACE VIEW super_admin_recent_activity AS
 SELECT 
   'user_registration' as "activityType",
-  CONCAT(first_name, ' ', last_name) as description,
-  created_at as timestamp,
-  institution_id as "institutionId"
+  CONCAT(u.first_name, ' ', u.last_name) as description,
+  u.created_at as timestamp,
+  u.institution_id as "institutionId"
 FROM users u
 JOIN roles r ON r.id = u.role_id
 WHERE u.created_at >= NOW() - INTERVAL '7 days'
@@ -271,11 +287,11 @@ AND u.institution_id IS NOT NULL
 UNION ALL
 SELECT 
   'institution_creation' as "activityType",
-  name as description,
-  created_at as timestamp,
-  id as "institutionId"
-FROM institutions 
-WHERE created_at >= NOW() - INTERVAL '7 days'
+  i.name as description,
+  i.created_at as timestamp,
+  i.id as "institutionId"
+FROM institutions i
+WHERE i.created_at >= NOW() - INTERVAL '7 days'
 ORDER BY timestamp DESC;
 
 -- ============================================================================
