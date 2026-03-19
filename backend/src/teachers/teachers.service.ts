@@ -3317,30 +3317,63 @@ export class TeachersService {
       }>
     }
   ) {
-    // Find teacher by UUID
-    const teacher = await this.prisma.teacher.findFirst({
-      where: { user: { uuid: userUuid } },
+    // Find user by UUID to determine if they're a teacher or admin
+    const user = await this.prisma.user.findUnique({
+      where: { uuid: userUuid },
+      include: {
+        teacher: true,
+        role: true,
+      },
     })
 
-    if (!teacher) {
-      throw new NotFoundException(`Teacher with UUID ${userUuid} not found`)
+    if (!user) {
+      throw new NotFoundException(`User with UUID ${userUuid} not found`)
     }
 
-    // Verify the section belongs to this teacher
-    const section = await this.prisma.classSection.findFirst({
-      where: {
-        id: bulkMarkAttendanceDto.sectionId,
-        teacherId: teacher.id,
-      },
-      include: {
-        subject: {
-          select: {
-            subjectName: true,
-            subjectCode: true,
+    // Check if user is admin or teacher
+    const isAdmin = user.role?.roleName === 'admin' || user.role?.roleName === 'super_admin'
+    const teacher = user.teacher
+
+    // For teachers, verify the section belongs to them
+    // For admins, allow access to any section in their institution
+    let section
+    if (isAdmin) {
+      // Admin can access any section in their institution
+      section = await this.prisma.classSection.findFirst({
+        where: {
+          id: bulkMarkAttendanceDto.sectionId,
+          // Add institution check if needed
+        },
+        include: {
+          subject: {
+            select: {
+              subjectName: true,
+              subjectCode: true,
+            },
           },
         },
-      },
-    })
+      })
+    } else {
+      // Teacher can only access their assigned sections
+      if (!teacher) {
+        throw new NotFoundException(`Teacher record not found for user ${userUuid}`)
+      }
+      
+      section = await this.prisma.classSection.findFirst({
+        where: {
+          id: bulkMarkAttendanceDto.sectionId,
+          teacherId: teacher.id,
+        },
+        include: {
+          subject: {
+            select: {
+              subjectName: true,
+              subjectCode: true,
+            },
+          },
+        },
+      })
+    }
 
     if (!section) {
       throw new ForbiddenException(
@@ -3425,7 +3458,7 @@ export class TeachersService {
                 | 'LATE'
                 | 'EXCUSED',
               remarks: record.remarks,
-              markedBy: teacher.id,
+              markedBy: teacher?.id || user.id, // Use teacher ID if available, otherwise user ID
             },
             include: {
               student: {

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../provider/login_signup/login_provider.dart';
 import '../../../utils/custom_colors.dart';
-import '../../../utils/custom_snackbar.dart';
 import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_dialog.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
@@ -23,7 +22,6 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
   // Filter States
   String? _selectedClassName;
   String? _selectedSectionName;
-  String? _selectedSubjectName;
 
   @override
   void initState() {
@@ -39,8 +37,10 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
     if (userUuid != null) {
       final teacherId = loginProvider.currentUser?.teacher?.id;
       // Create fresh state
-      context.read<AttendanceProvider>().reset();
-      await context.read<AttendanceProvider>().loadInitialData(
+      final provider = context.read<AttendanceProvider>();
+      provider.reset();
+      provider.setMode('marking'); // Set to marking mode for teachers
+      await provider.loadInitialData(
         userUuid,
         teacherId: teacherId,
       );
@@ -53,69 +53,24 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
   void _checkAutoSelections(AttendanceProvider provider) {
     if (!mounted) return;
 
-    final classNames =
-        provider.availableClasses
-            .map((c) => c.className ?? 'Class')
-            .toSet()
-            .toList()
-          ..sort();
-
     var stateChanged = false;
 
-    // 1. Auto-select Class
-    if (_selectedClassName == null && classNames.length == 1) {
-      _selectedClassName = classNames.first;
+    // 1. Auto-select Course if only one available
+    if (_selectedClassName == null && provider.availableCourses.length == 1) {
+      _selectedClassName = provider.availableCourses.first.name;
       stateChanged = true;
     }
 
-    // 2. Auto-select Section
-    final sections =
-        _selectedClassName == null
-              ? <String>[]
-              : provider.availableClasses
-                  .where((c) => (c.className ?? 'Class') == _selectedClassName)
-                  .map((c) => c.sectionName)
-                  .toSet()
-                  .toList()
-          ..sort();
-
-    if (_selectedClassName != null &&
-        _selectedSectionName == null &&
-        sections.length == 1) {
-      _selectedSectionName = sections.first;
-      stateChanged = true;
-    } else if (_selectedClassName != null &&
-        _selectedSectionName != null &&
-        !sections.contains(_selectedSectionName)) {
-      _selectedSectionName = null;
-      stateChanged = true;
-    }
-
-    // 3. Auto-select Subject
-    final subjects =
-        (_selectedClassName == null || _selectedSectionName == null)
-              ? <String>[]
-              : provider.availableClasses
-                  .where(
-                    (c) =>
-                        (c.className ?? 'Class') == _selectedClassName &&
-                        c.sectionName == _selectedSectionName,
-                  )
-                  .map((c) => c.subjectName ?? 'Unknown Subject')
-                  .toSet()
-                  .toList()
-          ..sort();
-
-    if (_selectedClassName != null &&
-        _selectedSectionName != null &&
-        _selectedSubjectName == null &&
-        subjects.length == 1) {
-      _selectedSubjectName = subjects.first;
-      stateChanged = true;
-    } else if (_selectedSubjectName != null &&
-        !subjects.contains(_selectedSubjectName)) {
-      _selectedSubjectName = null;
-      stateChanged = true;
+    // 2. Auto-select Section if course is selected and only one section available
+    if (_selectedClassName != null && _selectedSectionName == null) {
+      final selectedCourse = provider.availableCourses
+          .firstWhere((c) => c.name == _selectedClassName, orElse: () => 
+              CourseInfo(id: 0, name: '', code: '', totalStudents: 0, sections: []));
+      
+      if (selectedCourse.sections.length == 1) {
+        _selectedSectionName = selectedCourse.sections.first.name;
+        stateChanged = true;
+      }
     }
 
     if (stateChanged) {
@@ -125,29 +80,30 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
   }
 
   void _updateSelection(AttendanceProvider provider) {
-    // If all three filters are selected, try to find the matching class
-    if (_selectedClassName != null &&
-        _selectedSectionName != null &&
-        _selectedSubjectName != null) {
-      try {
-        final match = provider.availableClasses.firstWhere(
-          (c) =>
-              c.className == _selectedClassName &&
-              c.sectionName == _selectedSectionName &&
-              c.subjectName == _selectedSubjectName,
-        );
-        if (provider.selectedClass != match) {
-          provider.setSelectedClass(match);
-        }
-      } on Exception {
-        // No match found
-        if (provider.selectedClass != null) {
-          provider.setSelectedClass(null);
-        }
+    // Step 1: Select course if class name is selected
+    if (_selectedClassName != null) {
+      final course = provider.availableCourses
+          .firstWhere((c) => c.name == _selectedClassName, orElse: () => 
+              CourseInfo(id: 0, name: '', code: '', totalStudents: 0, sections: []));
+      
+      if (course.id != 0 && provider.selectedCourse?.id != course.id) {
+        provider.setSelectedCourse(course);
       }
     } else {
-      if (provider.selectedClass != null) {
-        provider.setSelectedClass(null);
+      if (provider.selectedCourse != null) {
+        provider.setSelectedCourse(null);
+      }
+      return;
+    }
+
+    // Step 2: Select section if section name is selected
+    if (_selectedSectionName != null) {
+      if (provider.selectedSection != _selectedSectionName) {
+        provider.setSelectedSection(_selectedSectionName);
+      }
+    } else {
+      if (provider.selectedSection != null) {
+        provider.setSelectedSection(null);
       }
     }
   }
@@ -159,80 +115,80 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
     final user = loginProvider.currentUser;
     final userInitials = UserUtils.getInitials(user?.name ?? 'Teacher');
 
-    // Check loading state for initial classes load
-    final isLoadingClasses =
-        provider.isLoading && provider.availableClasses.isEmpty;
+    // Check loading state for initial courses load
+    final isLoadingCourses =
+        provider.isLoading && provider.availableCourses.isEmpty;
 
     // --- Derived Lists Logic ---
 
-    // 1. Unique Class Names
-    final classNames =
-        provider.availableClasses
-            .map((c) => c.className ?? 'Class')
-            .toSet()
+    // 1. Available Course Names
+    final courseNames = provider.availableCourses.map((c) => c.name).toList()
+      ..sort();
+
+    // 2. Available Sections for Selected Course
+    final sections = _selectedClassName != null
+        ? provider.availableCourses
+            .firstWhere((c) => c.name == _selectedClassName, orElse: () => 
+                CourseInfo(id: 0, name: '', code: '', totalStudents: 0, sections: []))
+            .sections
+            .map((s) => s.name)
             .toList()
-          ..sort(); // Optional: Sort alphabetically
-
-    // 2. Sections (Filtered by Class)
-    final sections =
-        _selectedClassName == null
-              ? <String>[]
-              : provider.availableClasses
-                  .where((c) => (c.className ?? 'Class') == _selectedClassName)
-                  .map((c) => c.sectionName)
-                  .toSet()
-                  .toList()
-          ..sort();
-
-    // 3. Subjects (Filtered by Class AND Section)
-    final subjects =
-        (_selectedClassName == null || _selectedSectionName == null)
-              ? <String>[]
-              : provider.availableClasses
-                  .where(
-                    (c) =>
-                        (c.className ?? 'Class') == _selectedClassName &&
-                        c.sectionName == _selectedSectionName,
-                  )
-                  .map((c) => c.subjectName ?? 'Unknown Subject')
-                  .toSet()
-                  .toList()
-          ..sort();
+        : <String>[];
 
     return CustomMainScreenWithAppbar(
-      title: 'Attendance',
-      appBarConfig: AppBarConfig.teacher(
-        userInitials: userInitials,
-        userName: user?.name ?? 'Teacher',
-        designation: user?.teacher?.designation ?? 'Faculty',
-        employeeId: user?.teacher?.employeeId ?? 'N/A',
-        onNotificationIconPressed: () {},
-      ),
+      title: 'Mark Attendance',
+      appBarConfig: user?.teacher != null 
+        ? AppBarConfig.teacher(
+            userInitials: userInitials,
+            userName: user?.name ?? 'Teacher',
+            designation: user?.teacher?.designation ?? 'Faculty',
+            employeeId: user?.teacher?.employeeId ?? 'N/A',
+            onNotificationIconPressed: () {},
+          )
+        : AppBarConfig.admin(
+            userInitials: userInitials,
+            userName: user?.name ?? 'Admin',
+            institutionName: user?.institution?.name ?? 'School',
+            onNotificationIconPressed: () {},
+          ),
       floatingActionButton:
-          (provider.selectedClass != null && !provider.isLoading)
+          (provider.selectedCourse != null && !provider.isLoading)
               ? FloatingActionButton.extended(
                 onPressed: () async {
-                  final teacherUuid = user?.uuid;
+                  final userUuid = user?.uuid;
                   final teacherId = user?.teacher?.id;
 
-                  if (teacherUuid != null && teacherId != null) {
+                  if (userUuid != null) {
+                    // For teacher users, use their teacher ID
                     final success = await provider.saveAttendance(
-                      teacherUuid,
-                      teacherId,
+                      userUuid,
+                      teacherId ?? 0,
+                      institutionType: user?.institution?.type,
                     );
                     if (context.mounted) {
                       if (success) {
-                        showCustomSnackbar(
-                          message: 'Attendance saved successfully',
-                          type: SnackbarType.success,
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Attendance saved successfully'),
+                            backgroundColor: Colors.green,
+                          ),
                         );
                       } else {
-                        showCustomSnackbar(
-                          message: provider.error ?? 'Failed to save',
-                          type: SnackbarType.error,
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(provider.error ?? 'Failed to save'),
+                            backgroundColor: Colors.red,
+                          ),
                         );
                       }
                     }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Error: User information missing'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 },
                 backgroundColor: CustomAppColors.primaryBlue,
@@ -265,25 +221,23 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
                 ),
                 const SizedBox(width: 8),
 
-                // 2. Class (Flex 2)
+                // 2. Course/Class (Flex 3)
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: _GenericSelector<String>(
                     label: 'Class',
                     selectedValue: _selectedClassName,
-                    items: classNames,
-                    isLoading: isLoadingClasses,
-                    itemLabelBuilder: (s) => 'Class $s', // Add prefix
+                    items: courseNames,
+                    isLoading: isLoadingCourses,
+                    itemLabelBuilder: (s) => s,
                     onItemSelected: (val) {
                       setState(() {
                         _selectedClassName = val;
-                        _selectedSectionName = null;
-                        _selectedSubjectName = null;
+                        _selectedSectionName = null; // Reset section when class changes
                       });
-                      // Update provider outside setState to avoid rebuild loops
                       _updateSelection(provider);
                     },
-                    placeholder: 'Class',
+                    placeholder: 'Select Class',
                     iconData: Icons.class_,
                     compact: true,
                   ),
@@ -297,43 +251,17 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
                     label: 'Section',
                     selectedValue: _selectedSectionName,
                     items: sections,
-                    isLoading: isLoadingClasses,
-                    itemLabelBuilder: (s) => 'Sec $s', // Add prefix
+                    isLoading: isLoadingCourses,
+                    itemLabelBuilder: (s) => 'Sec $s',
                     onItemSelected: (val) {
                       setState(() {
                         _selectedSectionName = val;
-                        _selectedSubjectName = null;
                       });
-                      // Update provider outside setState to avoid rebuild loops
                       _updateSelection(provider);
                     },
-                    placeholder: 'Sec',
+                    placeholder: _selectedClassName == null ? 'Select Class First' : 'All Sections',
                     iconData: Icons.view_module,
                     isDisabled: _selectedClassName == null,
-                    compact: true,
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // 4. Subject (Flex 3)
-                Expanded(
-                  flex: 3,
-                  child: _GenericSelector<String>(
-                    label: 'Subject',
-                    selectedValue: _selectedSubjectName,
-                    items: subjects,
-                    isLoading: isLoadingClasses,
-                    itemLabelBuilder: (s) => s,
-                    onItemSelected: (val) {
-                      setState(() {
-                        _selectedSubjectName = val;
-                      });
-                      // Update provider outside setState to avoid rebuild loops
-                      _updateSelection(provider);
-                    },
-                    placeholder: 'Subject',
-                    iconData: Icons.book,
-                    isDisabled: _selectedSectionName == null,
                     compact: true,
                   ),
                 ),
@@ -341,8 +269,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
             ),
           ),
 
-          // Summary & Bulk Actions
-          if (provider.selectedClass != null && provider.students.isNotEmpty)
+        // Summary & Bulk Actions
+        if (provider.selectedCourse != null && provider.students.isNotEmpty)
             _AttendanceSummaryBar(
               summary: provider.summary,
               onMarkAllPresent: provider.markAllPresent,
@@ -354,8 +282,8 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
             child:
                 provider.isLoading && provider.students.isEmpty
                     ? const UnifiedLoader()
-                    : provider.selectedClass == null
-                    ? _buildEmptyState('Select a Subject and Section to view')
+                    : provider.selectedCourse == null
+                    ? _buildEmptyState('Select a Class to mark attendance')
                     : provider.students.isEmpty
                     ? _buildEmptyState('No students found in this class')
                     : _StudentList(
@@ -366,6 +294,7 @@ class _AttendanceViewScreenState extends State<AttendanceViewScreen> {
 
           // Bottom padding for FAB
           const SizedBox(height: 80),
+
         ],
       ),
     );

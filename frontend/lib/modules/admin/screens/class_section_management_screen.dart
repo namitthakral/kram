@@ -42,10 +42,12 @@ class _ClassSectionManagementScreenState
     final loginProvider = context.read<LoginProvider>();
     final user = loginProvider.currentUser;
     final institutionId = user?.institutionId;
+    final institutionType = user?.institution?.type;
 
     if (mounted) {
       await context.read<ClassSectionManagementProvider>().fetchClassSections(
         institutionId: institutionId,
+        institutionType: institutionType,
       );
     }
   }
@@ -178,12 +180,18 @@ class _ClassSectionManagementScreenState
                                   '')
                               .toString()
                               .toLowerCase();
-                      final teacherName =
-                          (section['teacher']?['user']?['name'] ??
-                                  section['teacher']?['name'] ??
-                                  '')
-                              .toString()
-                              .toLowerCase();
+                      final teacher = section['teacher'] as Map<String, dynamic>?;
+                      String teacherName = '';
+                      if (teacher != null) {
+                        if (teacher.containsKey('name') && teacher['name'] != null) {
+                          teacherName = teacher['name'].toString().toLowerCase();
+                        } else {
+                          final teacherUser = teacher['user'] as Map<String, dynamic>?;
+                          final firstName = teacherUser?['firstName']?.toString() ?? '';
+                          final lastName = teacherUser?['lastName']?.toString() ?? '';
+                          teacherName = '$firstName $lastName'.trim().toLowerCase();
+                        }
+                      }
 
                       return sectionName.contains(_searchQuery) ||
                           subjectName.contains(_searchQuery) ||
@@ -239,9 +247,23 @@ class _ClassSectionManagementScreenState
 
     // Teacher can be nested (complex) or direct (simple)
     final teacher = section['teacher'] as Map<String, dynamic>?;
-    final teacherUser = teacher?['user'] as Map<String, dynamic>?;
-    final teacherName =
-        teacherUser?['name'] ?? teacher?['name'] ?? 'No Teacher Assigned';
+    String displayTeacherName = 'No Teacher Assigned';
+    
+    if (teacher != null) {
+      // Check if teacher has pre-formatted name (from class divisions API)
+      if (teacher.containsKey('name') && teacher['name'] != null) {
+        displayTeacherName = teacher['name'].toString();
+      } else {
+        // Fallback to nested user structure (from class sections API)
+        final teacherUser = teacher['user'] as Map<String, dynamic>?;
+        final firstName = teacherUser?['firstName']?.toString() ?? '';
+        final lastName = teacherUser?['lastName']?.toString() ?? '';
+        final teacherName = '$firstName $lastName'.trim();
+        if (teacherName.isNotEmpty) {
+          displayTeacherName = teacherName;
+        }
+      }
+    }
 
     final maxCapacity = section['maxCapacity']?.toString() ?? '';
     final room = section['room'] ?? section['roomNumber'] ?? '';
@@ -365,7 +387,7 @@ class _ClassSectionManagementScreenState
               children: [
                 Icon(Icons.person, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
-                Text(teacherName, style: const TextStyle(fontSize: 14)),
+                Text(displayTeacherName, style: const TextStyle(fontSize: 14)),
                 if (maxCapacity.isNotEmpty) ...[
                   const SizedBox(width: 16),
                   Icon(Icons.people, size: 16, color: Colors.grey[600]),

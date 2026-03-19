@@ -14,16 +14,29 @@ class ClassSectionService {
 
   final ApiService _apiService = ApiService();
 
-  /// Get all class sections with optional filters
+  /// Get all class sections with optional filters - OPTIMIZED VERSION
   ///
   /// Endpoint: GET /class-sections
+  ///
+  /// This method uses the optimized backend endpoint that returns all
+  /// class section data in a single API call, eliminating the need for
+  /// multiple separate API calls.
   ///
   /// [institutionId] - Optional institution ID filter
   /// [semesterId] - Optional semester ID filter
   /// [courseId] - Optional course ID filter
   /// [teacherId] - Optional teacher ID filter
   /// [status] - Optional status filter (ACTIVE, INACTIVE)
-  Future<List<dynamic>> getClassSections({
+  ///
+  /// Returns comprehensive class section data including:
+  /// - Section details (name, capacity, enrollment)
+  /// - Subject information (name, code, credits)
+  /// - Course/Program details
+  /// - Semester and Academic Year info
+  /// - Teacher details
+  /// - Institution information
+  /// - Performance metrics (execution time)
+  Future<Map<String, dynamic>> getClassSectionsOptimized({
     int? institutionId,
     int? semesterId,
     int? courseId,
@@ -56,8 +69,13 @@ class ClassSectionService {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data['data'] as List<dynamic>? ?? [];
-        return data;
+        final responseData = response.data as Map<String, dynamic>;
+
+        // Log performance metrics
+        final executionTime = responseData['executionTime'] ?? 0;
+        print('Class sections loaded in ${executionTime}ms');
+
+        return responseData;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -77,6 +95,34 @@ class ClassSectionService {
         defaultMessage: 'Failed to load class sections',
       );
     }
+  }
+
+  /// Get all class sections with optional filters
+  ///
+  /// This method uses the optimized backend endpoint for better performance.
+  /// Returns only the data array for backward compatibility.
+  ///
+  /// [institutionId] - Optional institution ID filter
+  /// [semesterId] - Optional semester ID filter
+  /// [courseId] - Optional course ID filter
+  /// [teacherId] - Optional teacher ID filter
+  /// [status] - Optional status filter (ACTIVE, INACTIVE)
+  Future<List<dynamic>> getClassSections({
+    int? institutionId,
+    int? semesterId,
+    int? courseId,
+    int? teacherId,
+    String? status,
+  }) async {
+    final response = await getClassSectionsOptimized(
+      institutionId: institutionId,
+      semesterId: semesterId,
+      courseId: courseId,
+      teacherId: teacherId,
+      status: status,
+    );
+    
+    return response['data'] as List<dynamic>? ?? [];
   }
 
   /// Get all courses with their sections
@@ -290,6 +336,139 @@ class ClassSectionService {
       throw ApiErrorHandler.handleException(
         e,
         defaultMessage: 'Failed to get subjects for course',
+      );
+    }
+  }
+
+  /// Get ALL students in a course (across all sections) - OPTIMIZED
+  ///
+  /// Endpoint: GET /courses/:courseId/students
+  ///
+  /// [courseId] - The Course ID
+  ///
+  /// Returns all students in the course grouped by sections.
+  /// This replaces multiple API calls to individual sections.
+  Future<Map<String, dynamic>> getAllCourseStudents(int courseId) async {
+    try {
+      print('Fetching ALL students for courseId: $courseId');
+
+      final response = await _apiService.dio.get('/courses/$courseId/students');
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load all course students',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load all course students',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load all course students',
+      );
+    }
+  }
+
+  /// Get students enrolled in a specific course section
+  ///
+  /// Endpoint: GET /courses/:courseId/sections/:sectionName/students
+  ///
+  /// [courseId] - The Course ID
+  /// [sectionName] - The section name (e.g., 'A', 'B')
+  ///
+  /// Returns students enrolled in the specified course section.
+  /// This is useful for marking attendance for course-based sections.
+  Future<Map<String, dynamic>> getCourseStudents({
+    required int courseId,
+    required String sectionName,
+  }) async {
+    try {
+      print('Fetching students for courseId: $courseId, section: $sectionName');
+
+      final response = await _apiService.dio.get(
+        '/courses/$courseId/sections/$sectionName/students',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load course students',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load course students',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load course students',
+      );
+    }
+  }
+
+  /// Get class-level attendance for a specific date
+  ///
+  /// Endpoint: GET /students/attendance/class/date/:date
+  ///
+  /// [date] - Date in YYYY-MM-DD format
+  /// [classLevel] - Class level (optional)
+  /// [academicYearId] - Academic year ID (optional)
+  /// [sectionId] - Section ID for filtering (optional)
+  ///
+  /// Returns attendance records for all students in the class/section
+  Future<Map<String, dynamic>> getClassAttendance({
+    required String date,
+    int? classLevel,
+    int? academicYearId,
+    int? sectionId,
+  }) async {
+    try {
+      print('Fetching class attendance for date: $date, classLevel: $classLevel, sectionId: $sectionId');
+
+      // Build query parameters
+      final queryParams = <String, dynamic>{};
+      if (classLevel != null) queryParams['classLevel'] = classLevel.toString();
+      if (academicYearId != null) queryParams['academicYearId'] = academicYearId.toString();
+      if (sectionId != null) queryParams['sectionId'] = sectionId.toString();
+
+      final response = await _apiService.dio.get(
+        '/students/attendance/class/date/$date',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to load class attendance',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to load class attendance',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to load class attendance',
       );
     }
   }

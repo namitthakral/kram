@@ -279,4 +279,55 @@ class AttendanceService {
       );
     }
   }
+
+  /// Mark course-based attendance for schools
+  ///
+  /// Endpoint: POST /courses/:courseId/sections/:sectionName/attendance
+  ///
+  /// [courseId] - Course ID
+  /// [sectionName] - Section name (e.g., 'A', 'B')
+  /// [date] - Date in YYYY-MM-DD format
+  /// [attendanceRecords] - List of attendance records with studentId and status
+  Future<Map<String, dynamic>> markCourseAttendance({
+    required int courseId,
+    required String sectionName,
+    required String date,
+    required List<Map<String, dynamic>> attendanceRecords,
+  }) async {
+    try {
+      final requestData = {
+        'date': date,
+        'attendanceRecords': attendanceRecords,
+      };
+
+      // Debug logging
+      print('Marking course attendance with data: $requestData');
+
+      final response = await _apiService.dio.post(
+        '/courses/$courseId/sections/$sectionName/attendance',
+        data: requestData,
+      );
+
+      if (response.statusCode == 201) {
+        return response.data as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to mark course attendance',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to mark course attendance',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to mark course attendance',
+      );
+    }
+  }
 }

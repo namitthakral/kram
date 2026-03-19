@@ -804,10 +804,17 @@ class _TimetableTemplateScreenState extends State<TimetableTemplateScreen> {
                         hint: 'Select a teacher',
                         items: [
                           ...teachersList.map(
-                            (teacher) => DropdownMenuItem(
-                              value: teacher['name'] as String,
-                              child: Text(teacher['name'] as String),
-                            ),
+                            (teacher) {
+                              final user = teacher['user'] as Map<String, dynamic>?;
+                              final firstName = user?['firstName'] as String? ?? '';
+                              final lastName = user?['lastName'] as String? ?? '';
+                              final teacherName = '$firstName $lastName'.trim();
+                              final displayName = teacherName.isEmpty ? 'Teacher' : teacherName;
+                              return DropdownMenuItem(
+                                value: displayName,
+                                child: Text(displayName),
+                              );
+                            },
                           ),
                           const DropdownMenuItem(
                             value: 'Custom',

@@ -325,7 +325,7 @@ class _AddTeacherDialogState extends State<AddTeacherDialog> {
         'address': _addressController.text.trim(),
         'institutionId': institutionId,
         'roleId': 5, // Teacher role ID
-        'status': _status,
+        'accountStatus': _status,
         'teacherData': {
           'designation': _designationController.text.trim(),
           'qualification': _qualificationController.text.trim(),

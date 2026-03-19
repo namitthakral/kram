@@ -11,6 +11,7 @@ import '../../../utils/user_utils.dart';
 import '../../../widgets/custom_widgets/custom_main_screen_with_appbar.dart';
 import '../services/admin_service.dart';
 import '../widgets/add_semester_dialog.dart';
+import '../widgets/create_academic_year_dialog.dart';
 
 class AcademicYearManagementScreen extends StatefulWidget {
   const AcademicYearManagementScreen({super.key});
@@ -26,6 +27,7 @@ class _AcademicYearManagementScreenState
   List<AcademicYear> _years = [];
   final Map<int, List<Semester>> _semesters = {};
   final Map<int, bool> _loadingSemesters = {};
+  final Set<int> _loadedSemesters = {}; // Track which years have loaded semesters
   bool _isLoadingYears = true;
   bool _isSchool = false;
   String? _error;
@@ -42,6 +44,9 @@ class _AcademicYearManagementScreenState
       _isLoadingYears = true;
       _error = null;
     });
+    
+    // Clear semester cache when refreshing years
+    _clearSemesterCache();
 
     try {
       final loginProvider = context.read<LoginProvider>();
@@ -54,9 +59,11 @@ class _AcademicYearManagementScreenState
         _isLoadingYears = false;
       });
 
-      // Load semesters for each year
+      // Load semesters for CURRENT years immediately (since they auto-expand)
       for (final year in years) {
-        _loadSemesters(year.id);
+        if (year.status.toUpperCase() == 'CURRENT') {
+          _loadSemesters(year.id);
+        }
       }
     } on Exception catch (e) {
       if (!mounted) return;
@@ -75,6 +82,7 @@ class _AcademicYearManagementScreenState
       if (!mounted) return;
       setState(() {
         _semesters[yearId] = semesters;
+        _loadedSemesters.add(yearId); // Mark as loaded
       });
     } on Exception catch (e) {
       debugPrint('Error loading semesters for year $yearId: $e');
@@ -83,6 +91,84 @@ class _AcademicYearManagementScreenState
         setState(() => _loadingSemesters[yearId] = false);
       }
     }
+  }
+
+  void _clearSemesterCache() {
+    _semesters.clear();
+    _loadingSemesters.clear();
+    _loadedSemesters.clear();
+  }
+
+  Future<void> _showCreateAcademicYearDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const CreateAcademicYearDialog(),
+    );
+
+    if (result == true) {
+      _loadYears();
+    }
+  }
+
+  Future<void> _deleteAcademicYear(int yearId, String yearName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.translate('delete_academic_year')),
+        content: Text(
+          context.translate('delete_academic_year_confirmation')
+              .replaceFirst('{yearName}', yearName),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.translate('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: Text(context.translate('delete')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _adminService.deleteAcademicYear(yearId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(context.translate('academic_year_deleted_successfully')),
+              backgroundColor: Colors.green,
+            ),
+          );
+          _loadYears();
+        }
+      } on Exception catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_formatErrorMessage(e.toString())),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  String _formatErrorMessage(String error) {
+    if (error.contains('Cannot delete academic year that has')) {
+      return context.translate('cannot_delete_academic_year_with_dependencies');
+    }
+    // Clean up technical error prefixes
+    if (error.startsWith('Exception: ')) {
+      error = error.substring(11);
+    }
+    return error;
   }
 
   @override
@@ -100,6 +186,13 @@ class _AcademicYearManagementScreenState
         userName: userName,
         institutionName: user?.institution?.name ?? '',
         onNotificationIconPressed: () {},
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showCreateAcademicYearDialog,
+        icon: const Icon(Icons.add),
+        label: Text(context.translate('add_academic_year')),
+        backgroundColor: AppTheme.blue500,
+        foregroundColor: Colors.white,
       ),
       child:
           _isLoadingYears
@@ -163,23 +256,40 @@ class _AcademicYearManagementScreenState
       ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
-        initiallyExpanded: year.status.toUpperCase() == 'ACTIVE',
+        initiallyExpanded: year.status.toUpperCase() == 'CURRENT',
         backgroundColor: Colors.white,
         collapsedBackgroundColor: Colors.white,
+        onExpansionChanged: (isExpanded) {
+          if (isExpanded && !_loadedSemesters.contains(year.id)) {
+            _loadSemesters(year.id);
+          }
+        },
         tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         title: Row(
           children: [
-            Text(
-              year.yearName,
-              style: const TextStyle(
-                fontWeight: AppTheme.fontWeightBold,
-                fontSize: AppTheme.fontSizeLg,
-                color: AppTheme.slate800,
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    year.yearName,
+                    style: const TextStyle(
+                      fontWeight: AppTheme.fontWeightBold,
+                      fontSize: AppTheme.fontSizeLg,
+                      color: AppTheme.slate800,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  _buildStatusBadge(year.status),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            _buildStatusBadge(year.status),
+            IconButton(
+              onPressed: () => _deleteAcademicYear(year.id, year.yearName),
+              icon: const Icon(Icons.delete_outline),
+              color: Colors.red[400],
+              tooltip: context.translate('delete_academic_year'),
+            ),
           ],
         ),
         subtitle: Text(

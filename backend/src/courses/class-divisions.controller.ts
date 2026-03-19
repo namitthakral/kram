@@ -48,6 +48,27 @@ export class ClassDivisionsController {
   }
 
   /**
+   * Get all class divisions for an institution (optimized for admin dashboard)
+   */
+  @Get()
+  @Roles('super_admin', 'admin', 'teacher')
+  async getAllClassDivisions(
+    @CurrentUser() user: UserWithRelations,
+    @Query('courseId') courseId?: string,
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    
+    if (courseId) {
+      // Get divisions for specific course (existing functionality)
+      const courseIdNum = parseInt(courseId, 10)
+      return this.coursesService.getClassDivisions(courseIdNum, institutionId)
+    } else {
+      // Get all divisions for institution (new optimized endpoint)
+      return this.coursesService.getAllClassDivisionsForInstitution(institutionId)
+    }
+  }
+
+  /**
    * Get all class divisions for a course (with pagination)
    */
   @Get('course/:courseId')

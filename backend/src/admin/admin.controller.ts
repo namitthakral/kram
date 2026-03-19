@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -16,14 +17,15 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
-import { UserWithRelations } from '../types/auth.types'
 import {
   CreateUserDto,
   UpdateUserDto,
   UserQueryDto,
 } from '../common/dto/user.dto'
 import { UpdateInstitutionDto } from '../institutions/dto/institution.dto'
+import { UserWithRelations } from '../types/auth.types'
 import { AdminService } from './admin.service'
+import { UpdateExaminationPolicyDto } from './dto/examination-policy.dto'
 import { UpdateGradingConfigDto } from './dto/grading-config.dto'
 import { CreateSemesterDto, UpdateSemesterDto } from './dto/semester.dto'
 
@@ -38,6 +40,44 @@ export class AdminController {
     return this.adminService.getAcademicYears(this.resolveInstitutionId(user))
   }
 
+  @Post('academic-years')
+  @Roles('super_admin', 'admin')
+  createAcademicYear(
+    @Body() createAcademicYearDto: any,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.createAcademicYear(
+      createAcademicYearDto,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Put('academic-years/:id')
+  @Roles('super_admin', 'admin')
+  updateAcademicYear(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateAcademicYearDto: any,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.updateAcademicYear(
+      id,
+      updateAcademicYearDto,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Delete('academic-years/:id')
+  @Roles('super_admin', 'admin')
+  deleteAcademicYear(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.deleteAcademicYear(
+      id,
+      this.resolveInstitutionId(user)
+    )
+  }
+
   @Get('semesters/:academicYearId')
   getSemesters(@Param('academicYearId') academicYearId: string) {
     return this.adminService.getSemesters(+academicYearId)
@@ -48,7 +88,10 @@ export class AdminController {
     @Body() dto: CreateSemesterDto,
     @CurrentUser() user: UserWithRelations
   ) {
-    return this.adminService.createSemester(dto, this.resolveInstitutionId(user))
+    return this.adminService.createSemester(
+      dto,
+      this.resolveInstitutionId(user)
+    )
   }
 
   @Patch('semesters/:id')
@@ -360,6 +403,96 @@ export class AdminController {
       severity,
       limit ? parseInt(limit) : 20,
       institutionId
+    )
+  }
+
+  // Examination Oversight Endpoints (Admin Read-Only)
+  @Get('examinations/schedule')
+  getExaminationSchedule(
+    @CurrentUser() user: UserWithRelations,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('status') status?: string,
+    @Query('examType') examType?: string,
+    @Query('subjectId') subjectId?: string,
+    @Query('limit') limit?: string,
+    @Query('page') page?: string
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.adminService.getExaminationSchedule(institutionId, {
+      startDate,
+      endDate,
+      status,
+      examType,
+      subjectId: subjectId ? parseInt(subjectId) : undefined,
+      limit: limit ? parseInt(limit) : undefined,
+      page: page ? parseInt(page) : undefined,
+    })
+  }
+
+  @Get('examinations/completion-stats')
+  getExaminationCompletionStats(@CurrentUser() user: UserWithRelations) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.adminService.getExaminationCompletionStats(institutionId)
+  }
+
+  @Get('examinations/analytics')
+  getExaminationAnalytics(
+    @CurrentUser() user: UserWithRelations,
+    @Query('period') period?: 'week' | 'month' | 'semester' | 'year'
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.adminService.getExaminationAnalytics(institutionId, period)
+  }
+
+  // Examination Policy Configuration Endpoints
+  @Get('institutions/:institutionId/examination-policy')
+  getExaminationPolicy(
+    @Param('institutionId') institutionId: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.getExaminationPolicy(
+      +institutionId,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Put('institutions/:institutionId/examination-policy')
+  updateExaminationPolicy(
+    @Param('institutionId') institutionId: string,
+    @Body() updateDto: UpdateExaminationPolicyDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.updateExaminationPolicy(
+      +institutionId,
+      updateDto,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Post('institutions/:institutionId/examination-policy/reset')
+  @HttpCode(HttpStatus.OK)
+  resetExaminationPolicy(
+    @Param('institutionId') institutionId: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.adminService.resetExaminationPolicy(
+      +institutionId,
+      this.resolveInstitutionId(user)
+    )
+  }
+
+  @Get('examinations/compliance-report')
+  getExaminationComplianceReport(
+    @CurrentUser() user: UserWithRelations,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string
+  ) {
+    const institutionId = this.resolveInstitutionId(user)
+    return this.adminService.getExaminationComplianceReport(
+      institutionId,
+      startDate,
+      endDate
     )
   }
 

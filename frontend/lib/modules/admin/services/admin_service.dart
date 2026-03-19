@@ -237,6 +237,98 @@ class AdminService {
     }
   }
 
+  /// Create a new academic year
+  ///
+  /// Endpoint: POST /admin/academic-years
+  Future<AcademicYear> createAcademicYear({
+    required String yearName,
+    required DateTime startDate,
+    required DateTime endDate,
+    String status = 'FUTURE',
+  }) async {
+    try {
+      final response = await _apiService.dio.post(
+        '/admin/academic-years',
+        data: {
+          'yearName': yearName,
+          'startDate': startDate.toIso8601String().split('T')[0],
+          'endDate': endDate.toIso8601String().split('T')[0],
+          'status': status,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        return AcademicYear.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to create academic year',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to create academic year: $e');
+    }
+  }
+
+  /// Update an existing academic year
+  ///
+  /// Endpoint: PUT /admin/academic-years/:id
+  Future<AcademicYear> updateAcademicYear({
+    required int id,
+    String? yearName,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? status,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (yearName != null) data['yearName'] = yearName;
+      if (startDate != null) data['startDate'] = startDate.toIso8601String().split('T')[0];
+      if (endDate != null) data['endDate'] = endDate.toIso8601String().split('T')[0];
+      if (status != null) data['status'] = status;
+
+      final response = await _apiService.dio.put(
+        '/admin/academic-years/$id',
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        return AcademicYear.fromJson(response.data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to update academic year',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to update academic year: $e');
+    }
+  }
+
+  /// Delete an academic year
+  ///
+  /// Endpoint: DELETE /admin/academic-years/:id
+  Future<void> deleteAcademicYear(int id) async {
+    try {
+      final response = await _apiService.dio.delete('/admin/academic-years/$id');
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to delete academic year',
+        );
+      }
+    } on Exception catch (e) {
+      throw Exception('Failed to delete academic year: $e');
+    }
+  }
+
   /// Get list of semesters for an academic year
   ///
   /// Endpoint: GET /admin/semesters/:academicYearId

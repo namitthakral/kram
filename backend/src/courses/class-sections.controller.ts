@@ -17,7 +17,7 @@ import { Roles } from '../auth/decorators/roles.decorator'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { UserWithRelations } from '../types/auth.types'
-import { CoursesService } from './courses.service'
+import { CoursesService, ClassSectionDetailedResult } from './courses.service'
 import { ClassSectionQueryDto } from './dto/class-section.dto'
 import { CreateClassSectionDto } from './dto/create-class-section.dto'
 import { UpdateClassSectionDto } from './dto/update-class-section.dto'
@@ -36,18 +36,31 @@ import { UpdateClassSectionDto } from './dto/update-class-section.dto'
 export class ClassSectionsController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  private resolveInstitutionId(user: UserWithRelations): number | null {
-    return (
+  private async resolveInstitutionId(user: UserWithRelations): Promise<number | null> {
+    let id = (
       user.institutionId ??
       user.staff?.institutionId ??
       user.teacher?.institutionId ??
       user.student?.institutionId ??
       null
     )
+
+    // Fallback for admins who don't have an institutionId set
+    if (
+      id == null &&
+      (user.role?.roleName === 'super_admin' || user.role?.roleName === 'admin')
+    ) {
+      // For admin users without institutionId, use the first institution as fallback
+      // This handles legacy admin accounts that weren't created with institutionId
+      const firstInstitution = await this.coursesService.getFirstInstitution()
+      id = firstInstitution?.id ?? null
+    }
+
+    return id
   }
 
   /**
-   * Get all class sections
+   * Get all class sections - OPTIMIZED VERSION
    *
    * Query params:
    * - institutionId: Filter by institution
@@ -56,16 +69,26 @@ export class ClassSectionsController {
    * - teacherId: Filter by teacher
    * - status: Filter by status (ACTIVE, INACTIVE)
    *
+   * Performance optimized with single database query using view
+   * Target execution time: < 100ms
+   *
    * Example response:
    * {
-   *   "id": 1,
-   *   "sectionName": "A",
-   *   "maxCapacity": 60,
-   *   "currentEnrollment": 55,
-   *   "subject": { "name": "Data Structures", "code": "CS201" },
-   *   "course": { "name": "B.Sc. Computer Science" },
-   *   "semester": { "name": "Semester 3" },
-   *   "teacher": { "name": "Dr. Sharma" }
+   *   "success": true,
+   *   "data": [{
+   *     "id": 1,
+   *     "sectionName": "A",
+   *     "maxCapacity": 60,
+   *     "currentEnrollment": 55,
+   *     "subject": { "name": "Data Structures", "code": "CS201" },
+   *     "course": { "name": "B.Sc. Computer Science" },
+   *     "semester": { "name": "Semester 3" },
+   *     "teacher": { "name": "Dr. Sharma" },
+   *     "academicYear": { "name": "2024-25" },
+   *     "institution": { "name": "ABC College" }
+   *   }],
+   *   "count": 25,
+   *   "executionTime": 45
    * }
    */
   @Get()
@@ -73,9 +96,14 @@ export class ClassSectionsController {
   async findAll(
     @Query() query: ClassSectionQueryDto,
     @CurrentUser() user: UserWithRelations
-  ) {
-    const institutionId = this.resolveInstitutionId(user)
-    return this.coursesService.getClassSections(
+  ): Promise<{
+    success: boolean
+    data: ClassSectionDetailedResult[]
+    count: number
+    executionTime: number
+  }> {
+    const institutionId = await this.resolveInstitutionId(user)
+    return this.coursesService.getClassSectionsOptimized(
       {
         institutionId: query.institutionId,
         semesterId: query.semesterId,
@@ -132,7 +160,7 @@ export class ClassSectionsController {
     @Body() createClassSectionDto: CreateClassSectionDto,
     @CurrentUser() user: UserWithRelations
   ) {
-    const institutionId = this.resolveInstitutionId(user)
+    const institutionId = await this.resolveInstitutionId(user)
     return this.coursesService.createClassSection(createClassSectionDto, institutionId)
   }
 
@@ -146,7 +174,7 @@ export class ClassSectionsController {
     @Body() updateClassSectionDto: UpdateClassSectionDto,
     @CurrentUser() user: UserWithRelations
   ) {
-    const institutionId = this.resolveInstitutionId(user)
+    const institutionId = await this.resolveInstitutionId(user)
     return this.coursesService.updateClassSection(id, updateClassSectionDto, institutionId)
   }
 
@@ -160,7 +188,7 @@ export class ClassSectionsController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: UserWithRelations
   ) {
-    const institutionId = this.resolveInstitutionId(user)
+    const institutionId = await this.resolveInstitutionId(user)
     return this.coursesService.deleteClassSection(id, institutionId)
   }
 }

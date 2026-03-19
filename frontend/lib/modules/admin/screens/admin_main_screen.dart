@@ -24,7 +24,6 @@ class AdminMainScreen extends StatelessWidget {
     return CustomMainScreenWithAppbar(
       title: context.translate('admin_features'),
       appBarConfig: AppBarConfig.admin(
-        showBackButton: false,
         userInitials: userInitials,
         userName: userName,
         institutionName: user?.institution?.name ?? '',
@@ -94,7 +93,7 @@ class AdminMainScreen extends StatelessWidget {
                   title: context.translate('examinations'),
                   icon: Icons.quiz_rounded,
                   color: const Color(0xFFf43f5e),
-                  onTap: () => context.push('/academic/exams'),
+                  onTap: () => context.push('/admin/examinations'),
                 ),
                 FeatureActionCard(
                   title: context.translate('fees_management'),
@@ -119,6 +118,12 @@ class AdminMainScreen extends StatelessWidget {
                   icon: Icons.grid_view_rounded,
                   color: const Color(0xFF06b6d4),
                   onTap: () => context.push('/grading-config'),
+                ),
+                FeatureActionCard(
+                  title: context.translate('academic_year_management'),
+                  icon: Icons.calendar_view_month_rounded,
+                  color: const Color(0xFF8b5a2b),
+                  onTap: () => context.push('/academic-management'),
                 ),
                 FeatureActionCard(
                   title: context.translate('institution_settings'),

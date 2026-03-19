@@ -149,7 +149,7 @@ export class CommunicationsService {
           student: { select: { institutionId: true } },
           teacher: { select: { institutionId: true } },
           staff: { select: { institutionId: true } },
-          parent: {
+          parents: {
             select: {
               student: {
                 select: {
@@ -168,7 +168,7 @@ export class CommunicationsService {
           user.student?.institutionId ??
           user.teacher?.institutionId ??
           user.staff?.institutionId ??
-          user.parent?.student?.institutionId ??
+          user.parents?.[0]?.student?.institutionId ??
           null
       }
     }
@@ -442,7 +442,7 @@ export class CommunicationsService {
         key !== 'publishDate' &&
         key !== 'expiryDate'
       ) {
-        (updateData as Record<string, unknown>)[key] = value
+        ;(updateData as Record<string, unknown>)[key] = value
       }
     })
 

@@ -7,12 +7,19 @@ import 'package:provider/provider.dart';
 
 import '../modules/admin/screens/academic_year_management_screen.dart';
 import '../modules/admin/screens/admin_dashboard_screen.dart';
+import '../modules/admin/screens/admin_examination_analytics_screen.dart';
+import '../modules/admin/screens/admin_examination_compliance_screen.dart';
+import '../modules/admin/screens/admin_examination_oversight_screen.dart';
+import '../modules/admin/screens/admin_examination_policy_screen.dart';
+import '../modules/admin/screens/admin_examination_schedule_screen.dart';
 import '../modules/admin/screens/admin_main_screen.dart';
 import '../modules/admin/screens/admin_reports_screen.dart';
 import '../modules/admin/screens/admin_staff_management_screen.dart';
 import '../modules/admin/screens/admin_student_management_screen.dart';
 import '../modules/admin/screens/admin_teachers_screen.dart';
 import '../modules/admin/screens/admin_user_management_screen.dart';
+import '../modules/admin/screens/admin_attendance_view_screen.dart';
+import '../provider/login_signup/login_provider.dart';
 import '../modules/admin/screens/class_section_management_screen.dart';
 import '../modules/admin/screens/course_management_screen.dart';
 import '../modules/admin/screens/grading_config_screen.dart';
@@ -318,11 +325,19 @@ class RouterService {
             GoRoute(
               path: 'attendance',
               name: 'attendance_view',
-              pageBuilder:
-                  (context, state) => _buildPageWithTransition(
-                    key: state.pageKey,
-                    child: const AttendanceViewScreen(),
-                  ),
+              pageBuilder: (context, state) {
+                // Check user role to determine which screen to show
+                final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+                final user = loginProvider.currentUser;
+                final isAdmin = user?.role == 'admin' || user?.role == 'super_admin';
+                
+                return _buildPageWithTransition(
+                  key: state.pageKey,
+                  child: isAdmin 
+                      ? const AdminAttendanceViewScreen()
+                      : const AttendanceViewScreen(),
+                );
+              },
             ),
             GoRoute(
               path: 'mark-attendance',
@@ -736,6 +751,52 @@ class RouterService {
               (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const InstitutionSettingsScreen(),
+              ),
+        ),
+        // Admin Examination Oversight Routes
+        GoRoute(
+          path: '/admin/examinations',
+          name: 'admin_examinations',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminExaminationOversightScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin/examinations/schedule',
+          name: 'admin_examinations_schedule',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminExaminationScheduleScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin/examinations/policies',
+          name: 'admin_examinations_policies',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminExaminationPolicyScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin/examinations/analytics',
+          name: 'admin_examinations_analytics',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminExaminationAnalyticsScreen(),
+              ),
+        ),
+        GoRoute(
+          path: '/admin/examinations/compliance',
+          name: 'admin_examinations_compliance',
+          pageBuilder:
+              (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const AdminExaminationComplianceScreen(),
               ),
         ),
         GoRoute(

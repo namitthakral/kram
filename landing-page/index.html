@@ -117,9 +117,10 @@
 
       .logo {
         font-family: var(--font-display);
-        font-size: 1.75rem;
+        font-size: 2.2rem;
         font-weight: 600;
         letter-spacing: -0.02em;
+        text-decoration: none;
         background: linear-gradient(
           135deg,
           var(--color-text),
@@ -1300,6 +1301,65 @@
         }
       }
 
+      /* Hindi transition styles */
+      .intro-hindi {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        opacity: 0;
+        z-index: 10;
+      }
+
+      .hindi-text {
+        font-family: var(--font-display);
+        font-size: clamp(4rem, 15vw, 10rem);
+        font-weight: 700;
+        line-height: 1;
+        background: linear-gradient(
+          135deg,
+          var(--color-primary) 0%,
+          var(--color-accent) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        margin-bottom: 1rem;
+      }
+
+      .hindi-meaning {
+        font-size: 1.2rem;
+        color: var(--color-text-muted);
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        margin: 0;
+      }
+
+      /* Animation for Hindi phase */
+      .intro-hindi.show {
+        animation: hindiIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes hindiIn {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.8) translateY(30px);
+        }
+        100% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1) translateY(0);
+        }
+      }
+
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+      }
+
       body.loading {
         overflow: hidden;
       }
@@ -1349,6 +1409,11 @@
         </div>
         <div class="intro-line"></div>
         <p class="intro-tagline">Education Management, Reimagined</p>
+
+        <!-- Hindi transition -->
+        <div class="intro-hindi" id="introHindi">
+          <span class="hindi-text">क्रम</span>
+        </div>
       </div>
     </div>
 
@@ -2429,6 +2494,25 @@
 
       // Intro animation
       window.addEventListener('load', () => {
+        // After the initial KRAM sequence, show Hindi transition
+        setTimeout(() => {
+          const introGrid = document.querySelector('.intro-grid')
+          const introLine = document.querySelector('.intro-line')
+          const introTagline = document.querySelector('.intro-tagline')
+          const introHindi = document.getElementById('introHindi')
+
+          // Fade out the English content
+          introGrid.style.animation = 'fadeOut 0.8s ease forwards'
+          introLine.style.animation = 'fadeOut 0.8s ease forwards'
+          introTagline.style.animation = 'fadeOut 0.8s ease forwards'
+
+          // Show Hindi after English fades
+          setTimeout(() => {
+            introHindi.classList.add('show')
+          }, 400)
+        }, 2800) // After English sequence completes
+
+        // Final transition to main page
         setTimeout(() => {
           const intro = document.getElementById('intro')
           intro.classList.add('fade-out')
@@ -2438,7 +2522,7 @@
           setTimeout(() => {
             intro.remove()
           }, 1000)
-        }, 3600) // Total intro duration
+        }, 5200) // Extended total duration
       })
 
       // Scroll animations

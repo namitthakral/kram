@@ -24,6 +24,7 @@ import {
 } from './dto/course-query.dto'
 import { CreateCourseDto } from './dto/create-course.dto'
 import { UpdateCourseDto } from './dto/update-course.dto'
+import { CourseAttendanceDto } from './dto/course-attendance.dto'
 
 @Controller('courses')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -100,6 +101,22 @@ export class CoursesController {
   }
 
   /**
+   * Get students enrolled in a specific course section
+   * 
+   * @param courseId - The course ID
+   * @param sectionName - The section name (e.g., 'A', 'B')
+   */
+  @Get(':courseId/sections/:sectionName/students')
+  @Roles('super_admin', 'admin', 'teacher')
+  async getCourseSectionStudents(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Param('sectionName') sectionName: string,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.coursesService.getCourseStudents(courseId, sectionName)
+  }
+
+  /**
    * Get sections for a specific course
    * Returns detailed breakdown by section with student counts
    */
@@ -153,5 +170,40 @@ export class CoursesController {
   ) {
     const institutionId = this.resolveInstitutionId(user)
     return this.coursesService.deleteCourse(id, institutionId)
+  }
+
+  /**
+   * Get all students in a course (across all sections)
+   * GET /courses/:courseId/students
+   */
+  @Get(':courseId/students')
+  @Roles('super_admin', 'admin', 'teacher')
+  async getAllCourseStudents(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    const institutionId = await this.resolveInstitutionId(user)
+    return this.coursesService.getAllCourseStudents(courseId, institutionId)
+  }
+
+  /**
+   * Mark attendance for a course section (School Mode)
+   * POST /courses/:courseId/sections/:sectionName/attendance
+   */
+  @Post(':courseId/sections/:sectionName/attendance')
+  @Roles('super_admin', 'admin', 'teacher')
+  @HttpCode(HttpStatus.CREATED)
+  async markCourseAttendance(
+    @Param('courseId', ParseIntPipe) courseId: number,
+    @Param('sectionName') sectionName: string,
+    @Body() attendanceDto: CourseAttendanceDto,
+    @CurrentUser() user: UserWithRelations
+  ) {
+    return this.coursesService.markCourseAttendance(
+      courseId,
+      sectionName,
+      attendanceDto,
+      user
+    )
   }
 }

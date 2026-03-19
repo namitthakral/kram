@@ -69,12 +69,16 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
     if (query.isEmpty) return _teachers;
     return _teachers.where((t) {
       final user = t['user'] as Map<String, dynamic>?;
-      final name = (user?['name'] as String? ?? '').toLowerCase();
+      final firstName = (user?['firstName'] as String? ?? '').toLowerCase();
+      final lastName = (user?['lastName'] as String? ?? '').toLowerCase();
+      final fullName = '$firstName $lastName'.trim().toLowerCase();
       final email = (user?['email'] as String? ?? '').toLowerCase();
       final designation = (t['designation'] as String? ?? '').toLowerCase();
       final specialization =
           (t['specialization'] as String? ?? '').toLowerCase();
-      return name.contains(query) ||
+      return fullName.contains(query) ||
+          firstName.contains(query) ||
+          lastName.contains(query) ||
           email.contains(query) ||
           designation.contains(query) ||
           specialization.contains(query);
@@ -84,7 +88,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
   int get _activeCount =>
       _teachers.where((t) {
         final user = t['user'] as Map<String, dynamic>?;
-        return (user?['status'] as String? ?? 'ACTIVE') == 'ACTIVE';
+        return (user?['accountStatus'] as String? ?? 'ACTIVE') == 'ACTIVE';
       }).length;
 
   @override
@@ -277,12 +281,15 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
 
   Widget _teacherCard(t) {
     final user = t['user'] as Map<String, dynamic>?;
-    final name = user?['name'] as String? ?? 'Teacher';
-    final initials = UserUtils.getInitials(name);
+    final firstName = user?['firstName'] as String? ?? '';
+    final lastName = user?['lastName'] as String? ?? '';
+    final name = '$firstName $lastName'.trim();
+    final displayName = name.isEmpty ? 'Teacher' : name;
+    final initials = UserUtils.getInitials(displayName);
     final designation =
         t['designation'] as String? ?? t['specialization'] as String? ?? '—';
     final phone = user?['phone'] as String? ?? user?['email'] as String? ?? '—';
-    final status = user?['status'] as String? ?? 'ACTIVE';
+    final status = user?['accountStatus'] as String? ?? 'ACTIVE';
     final joinedAt = user?['createdAt'] as String?;
     final dateStr =
         joinedAt != null ? joinedAt.toString().split('T').first : '—';
@@ -318,7 +325,7 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name,
+                        displayName,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -424,17 +431,20 @@ class _AdminTeachersScreenState extends State<AdminTeachersScreen> {
         rows:
             teachers.map((t) {
               final user = t['user'] as Map<String, dynamic>?;
-              final name = user?['name'] as String? ?? '—';
+              final firstName = user?['firstName'] as String? ?? '';
+              final lastName = user?['lastName'] as String? ?? '';
+              final name = '$firstName $lastName'.trim();
+              final displayName = name.isEmpty ? '—' : name;
               final designation =
                   t['designation'] as String? ??
                   t['specialization'] as String? ??
                   '—';
               final phone =
                   user?['phone'] as String? ?? user?['email'] as String? ?? '—';
-              final status = user?['status'] as String? ?? 'ACTIVE';
+              final status = user?['accountStatus'] as String? ?? 'ACTIVE';
               return DataRow(
                 cells: [
-                  DataCell(Text(name)),
+                  DataCell(Text(displayName)),
                   DataCell(Text(designation)),
                   DataCell(Text(phone)),
                   DataCell(Text(status)),

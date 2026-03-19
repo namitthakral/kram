@@ -115,7 +115,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
         return instId ? { institutionId: instId } : {}
       },
       parent: async user => {
-        return { id: user.parent?.studentId || -1 }
+        return { id: user.parents?.[0]?.studentId || -1 }
       },
     },
   },
@@ -160,7 +160,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
         const studentIds = await getTeacherStudentIds(user, prisma)
         return { studentId: { in: studentIds } }
       },
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}
@@ -185,7 +185,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
         })
         return { sectionId: { in: sections.map(s => s.id) } }
       },
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}
@@ -207,7 +207,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
         const studentIds = await getTeacherStudentIds(user, prisma)
         return { studentId: { in: studentIds } }
       },
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}
@@ -288,7 +288,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
     scopeByRole: {
       student: async user => ({ studentId: user.student?.id || -1 }),
       teacher: async user => ({ evaluatedBy: user.teacher?.id || -1 }),
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}
@@ -306,7 +306,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
     filterableFields: ['status', 'semesterId'],
     scopeByRole: {
       student: async user => ({ studentId: user.student?.id || -1 }),
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}
@@ -323,7 +323,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
     filterableFields: ['status', 'paymentMethod', 'paymentMode'],
     scopeByRole: {
       student: async user => ({ studentId: user.student?.id || -1 }),
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}
@@ -364,7 +364,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
       }),
       parent: async (user, prisma) => {
         const student = await prisma.student.findUnique({
-          where: { id: user.parent?.studentId },
+          where: { id: user.parents?.[0]?.studentId },
           select: { institutionId: true },
         })
         return { institutionId: student?.institutionId || -1 }
@@ -399,7 +399,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
       }),
       parent: async (user, prisma) => {
         const student = await prisma.student.findUnique({
-          where: { id: user.parent?.studentId },
+          where: { id: user.parents?.[0]?.studentId },
           select: { institutionId: true },
         })
         return { course: { institutionId: student?.institutionId || -1 } }
@@ -446,7 +446,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
       }),
       parent: async (user, prisma) => {
         const student = await prisma.student.findUnique({
-          where: { id: user.parent?.studentId },
+          where: { id: user.parents?.[0]?.studentId },
           select: { institutionId: true },
         })
         return { institutionId: student?.institutionId || -1, isActive: true }
@@ -472,7 +472,7 @@ export const MODEL_ACCESS_CONFIG: Record<string, ModelAccessEntry> = {
         const studentIds = await getTeacherStudentIds(user, prisma)
         return { studentId: { in: studentIds } }
       },
-      parent: async user => ({ studentId: user.parent?.studentId || -1 }),
+      parent: async user => ({ studentId: user.parents?.[0]?.studentId || -1 }),
       admin: async (user, prisma) => {
         const instId = await getAdminInstitutionId(user, prisma)
         return instId ? { student: { institutionId: instId } } : {}

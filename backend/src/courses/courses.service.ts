@@ -12,6 +12,8 @@ import { CreateCourseDto } from './dto/create-course.dto'
 import { UpdateClassDivisionDto } from './dto/update-class-division.dto'
 import { UpdateClassSectionDto } from './dto/update-class-section.dto'
 import { UpdateCourseDto } from './dto/update-course.dto'
+import { CourseAttendanceDto } from './dto/course-attendance.dto'
+import { UserWithRelations } from '../types/auth.types'
 
 export interface CourseQueryParams {
   institutionId?: number
@@ -34,9 +36,108 @@ export interface CourseWithSections {
   sections: SectionInfo[]
 }
 
+// Interface for optimized class sections database view result
+export interface ClassSectionDetailedResult {
+  id: number
+  section_name: string
+  max_capacity: number
+  current_enrollment: number
+  room_number: string | null
+  schedule: object | null
+  status: string
+  subject_id: number
+  subject_name: string
+  subject_code: string | null
+  credits: number | null
+  subject_type: string
+  course_id: number | null
+  course_name: string | null
+  course_code: string | null
+  degree_type: string | null
+  semester_id: number
+  semester_name: string
+  semester_number: number
+  semester_start_date: Date
+  semester_end_date: Date
+  semester_status: string
+  academic_year_id: number
+  year_name: string
+  academic_year_start_date: Date
+  academic_year_end_date: Date
+  academic_year_status: string
+  teacher_id: number | null
+  teacher_uuid: string | null
+  teacher_first_name: string | null
+  teacher_last_name: string | null
+  teacher_email: string | null
+  institution_id: number | null
+  institution_name: string | null
+  institution_code: string | null
+  institution_type: string | null
+}
+
 @Injectable()
 export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Get the first institution (used as fallback for admin users)
+   */
+  async getFirstInstitution(): Promise<{ id: number } | null> {
+    return this.prisma.institution.findFirst({
+      orderBy: { id: 'asc' },
+      select: { id: true },
+    })
+  }
+
+  /**
+   * Get students enrolled in a specific course section
+   * @param courseId - The course ID
+   * @param sectionName - The section name (e.g., 'A', 'B')
+   */
+  async getCourseStudents(courseId: number, sectionName: string) {
+    const students = await this.prisma.student.findMany({
+      where: {
+        courseId: courseId,
+        section: sectionName,
+        enrollmentStatus: 'ACTIVE',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [
+        { user: { firstName: 'asc' } },
+        { user: { lastName: 'asc' } },
+      ],
+    })
+
+    return {
+      success: true,
+      data: {
+        courseId,
+        sectionName,
+        students: students.map(student => ({
+          id: student.id,
+          userId: student.userId,
+          name: this.getFullName(
+            student.user.firstName,
+            student.user.lastName
+          ),
+          email: student.user.email,
+          admissionNumber: student.admissionNumber,
+          rollNumber: student.rollNumber,
+          section: student.section,
+        })),
+      },
+    }
+  }
 
   /**
    * Helper function to get full name from firstName and lastName
@@ -190,6 +291,7 @@ export class CoursesService {
             academicYear: {
               status: 'CURRENT',
             },
+            isActive: true, // Only include active class teacher assignments
           },
           include: {
             teacher: {
@@ -277,6 +379,7 @@ export class CoursesService {
             academicYear: {
               status: 'CURRENT',
             },
+            isActive: true, // Only include active class teacher assignments
           },
           include: {
             teacher: {
@@ -373,8 +476,9 @@ export class CoursesService {
   }
 
   /**
-   * Get all class sections (subject-based sections)
+   * Get all class sections (subject-based sections) - OPTIMIZED VERSION
    * These are sections for specific subjects in a semester
+   * Uses database view for optimal performance with single query
    * @param institutionId - When provided (admin), scope to teacher's institution. When null (super_admin), no scope.
    */
   async getClassSections(
@@ -409,13 +513,23 @@ export class CoursesService {
     if (!institutionId && query.institutionId) {
       subjectFilter.course = { institutionId: query.institutionId }
     }
-    if (Object.keys(subjectFilter).length > 0) {
-      where.subject = subjectFilter
+
+    // Filter by institution
+    if (institutionId) {
+      if (query.teacherId) {
+        // If teacherId is specified, filter by teacher's institution
+        where.teacher = { institutionId }
+      } else {
+        // If no teacherId (admin case), filter by subject's course institution
+        subjectFilter.course = { 
+          ...(subjectFilter.course as Record<string, unknown> || {}),
+          institutionId 
+        }
+      }
     }
 
-    // Filter by institution: via teacher (ClassSection has no direct institutionId)
-    if (institutionId) {
-      where.teacher = { institutionId }
+    if (Object.keys(subjectFilter).length > 0) {
+      where.subject = subjectFilter
     }
 
     const classSections = await this.prisma.classSection.findMany({
@@ -482,6 +596,131 @@ export class CoursesService {
           : null,
       })),
       count: classSections.length,
+    }
+  }
+
+  /**
+   * Get all class sections using optimized database view - PERFORMANCE OPTIMIZED
+   * Single query with all related data pre-joined
+   * Target: < 100ms execution time
+   */
+  async getClassSectionsOptimized(
+    query: {
+      institutionId?: number
+      semesterId?: number
+      courseId?: number
+      teacherId?: number
+      status?: string
+    },
+    institutionId: number | null
+  ): Promise<{
+    success: boolean
+    data: ClassSectionDetailedResult[]
+    count: number
+    executionTime: number
+  }> {
+    const startTime = Date.now()
+    
+    // Build WHERE conditions for raw query
+    const conditions: string[] = []
+    const params: (string | number)[] = []
+    let paramIndex = 1
+
+    // Status filter (default to ACTIVE)
+    const statusFilter = query.status || 'ACTIVE'
+    conditions.push(`cs.status = $${paramIndex}`)
+    params.push(statusFilter)
+    paramIndex++
+
+    // Semester filter
+    if (query.semesterId) {
+      conditions.push(`cs.semester_id = $${paramIndex}`)
+      params.push(query.semesterId)
+      paramIndex++
+    }
+
+    // Course filter
+    if (query.courseId) {
+      conditions.push(`cs.course_id = $${paramIndex}`)
+      params.push(query.courseId)
+      paramIndex++
+    }
+
+    // Teacher filter
+    if (query.teacherId) {
+      conditions.push(`cs.teacher_id = $${paramIndex}`)
+      params.push(query.teacherId)
+      paramIndex++
+    }
+
+    // Institution filter
+    if (institutionId) {
+      conditions.push(`cs.institution_id = $${paramIndex}`)
+      params.push(institutionId)
+      paramIndex++
+    } else if (query.institutionId) {
+      conditions.push(`cs.institution_id = $${paramIndex}`)
+      params.push(query.institutionId)
+      paramIndex++
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    const sqlQuery = `
+      SELECT 
+        id,
+        section_name,
+        max_capacity,
+        current_enrollment,
+        room_number,
+        schedule,
+        status,
+        subject_id,
+        subject_name,
+        subject_code,
+        credits,
+        subject_type,
+        course_id,
+        course_name,
+        course_code,
+        degree_type,
+        semester_id,
+        semester_name,
+        semester_number,
+        semester_start_date,
+        semester_end_date,
+        semester_status,
+        academic_year_id,
+        year_name,
+        academic_year_start_date,
+        academic_year_end_date,
+        academic_year_status,
+        teacher_id,
+        teacher_uuid,
+        teacher_first_name,
+        teacher_last_name,
+        teacher_email,
+        institution_id,
+        institution_name,
+        institution_code,
+        institution_type
+      FROM class_sections_detailed cs
+      ${whereClause}
+      ORDER BY cs.section_name ASC, cs.subject_name ASC
+    `
+
+    const results = await this.prisma.$queryRawUnsafe<ClassSectionDetailedResult[]>(
+      sqlQuery,
+      ...params
+    )
+
+    const executionTime = Date.now() - startTime
+
+    return {
+      success: true,
+      data: results,
+      count: results.length,
+      executionTime,
     }
   }
 
@@ -1197,6 +1436,102 @@ export class CoursesService {
   // ============================================================================
 
   /**
+   * Get all class divisions for an institution (Performance Optimized)
+   * Single query to fetch all divisions across all courses for admin dashboard
+   * Query time target: < 100ms
+   */
+  async getAllClassDivisionsForInstitution(institutionId: number | null) {
+    if (!institutionId) {
+      throw new ForbiddenException('Institution ID is required')
+    }
+
+    const startTime = Date.now()
+
+    const divisions = await this.prisma.classDivision.findMany({
+      where: {
+        course: {
+          institutionId: institutionId,
+        },
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        sectionName: true,
+        maxCapacity: true,
+        roomNumber: true,
+        schedule: true,
+        status: true,
+        createdAt: true,
+        course: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            degreeType: true,
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+          },
+        },
+        // Get current enrollment count
+        _count: {
+          select: {
+            studentAcademicYears: true,
+          },
+        },
+      },
+      orderBy: [
+        { course: { name: 'asc' } },
+        { sectionName: 'asc' },
+      ],
+    })
+
+
+    // Transform the data to include computed fields
+    const transformedDivisions = divisions.map(division => {
+      
+      return {
+        id: division.id,
+        sectionName: division.sectionName,
+        maxCapacity: division.maxCapacity,
+        roomNumber: division.roomNumber,
+        schedule: division.schedule,
+        status: division.status,
+        createdAt: division.createdAt,
+        course: division.course,
+        currentEnrollment: division._count.studentAcademicYears,
+        teacher: division.teacher ? {
+          id: division.teacher.id,
+          name: `${division.teacher.user.firstName} ${division.teacher.user.lastName}`,
+          email: division.teacher.user.email,
+        } : null,
+      }
+    })
+
+    const executionTime = Date.now() - startTime
+
+    return {
+      success: true,
+      message: 'Class divisions retrieved successfully',
+      data: transformedDivisions,
+      meta: {
+        total: divisions.length,
+        executionTime,
+      },
+    }
+  }
+
+  /**
    * Get all class divisions for a course (Performance Optimized)
    * Query time target: < 50ms
    * Uses selective field loading and pagination
@@ -1367,23 +1702,6 @@ export class CoursesService {
         courseId: createClassDivisionDto.courseId,
         sectionName: createClassDivisionDto.sectionName,
       },
-    })
-
-    if (existingDivision) {
-      throw new ConflictException(
-        `Class division '${createClassDivisionDto.sectionName}' already exists for this course`
-      )
-    }
-
-    const classDivision = await this.prisma.classDivision.create({
-      data: {
-        courseId: createClassDivisionDto.courseId,
-        sectionName: createClassDivisionDto.sectionName,
-        teacherId: createClassDivisionDto.teacherId,
-        maxCapacity: createClassDivisionDto.maxCapacity,
-        roomNumber: createClassDivisionDto.roomNumber,
-        status: createClassDivisionDto.status || 'ACTIVE',
-      },
       include: {
         course: {
           select: {
@@ -1392,22 +1710,248 @@ export class CoursesService {
             code: true,
           },
         },
-        teacher: {
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
+      },
+    })
+
+    if (existingDivision) {
+      if (existingDivision.status === 'ACTIVE') {
+        throw new ConflictException(
+          `Class division '${createClassDivisionDto.sectionName}' already exists for this course`
+        )
+      } else {
+        // Reactivate existing INACTIVE division instead of creating new one
+        console.log(`🔄 Reactivating existing INACTIVE division: courseId=${createClassDivisionDto.courseId}, section=${createClassDivisionDto.sectionName}`)
+        
+        return await this.reactivateClassDivision(existingDivision.id, createClassDivisionDto, adminInstitutionId)
+      }
+    }
+
+    // Use transaction to ensure both ClassDivision and ClassTeacher are created atomically
+    const classDivision = await this.prisma.$transaction(async (tx) => {
+      // Create the class division
+      const newClassDivision = await tx.classDivision.create({
+        data: {
+          courseId: createClassDivisionDto.courseId,
+          sectionName: createClassDivisionDto.sectionName,
+          teacherId: createClassDivisionDto.teacherId,
+          maxCapacity: createClassDivisionDto.maxCapacity,
+          roomNumber: createClassDivisionDto.roomNumber,
+          status: createClassDivisionDto.status || 'ACTIVE',
+        },
+        include: {
+          course: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+          teacher: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
               },
             },
           },
         },
-      },
+      })
+
+      // Create ClassTeacher record if teacher is assigned
+      if (createClassDivisionDto.teacherId) {
+        // Get current academic year (try CURRENT first, then FUTURE as fallback)
+        let currentAcademicYear = await tx.academicYear.findFirst({
+          where: {
+            institutionId: adminInstitutionId,
+            status: 'CURRENT',
+          },
+        })
+
+        if (!currentAcademicYear) {
+          currentAcademicYear = await tx.academicYear.findFirst({
+            where: {
+              institutionId: adminInstitutionId,
+              status: 'FUTURE',
+            },
+          })
+        }
+
+        if (currentAcademicYear) {
+          const courseName = newClassDivision.course?.name || `Course ${newClassDivision.courseId}`
+          
+          console.log(`🔄 Creating ClassTeacher for new division: teacherId=${createClassDivisionDto.teacherId}, courseId=${newClassDivision.courseId}, classLevel=${courseName}, section=${newClassDivision.sectionName}, academicYearId=${currentAcademicYear.id}`)
+          
+          try {
+            await tx.classTeacher.upsert({
+              where: {
+                unique_class_teacher: {
+                  courseId: newClassDivision.courseId,
+                  classLevel: courseName,
+                  section: newClassDivision.sectionName,
+                  academicYearId: currentAcademicYear.id,
+                },
+              },
+              update: {
+                teacherId: createClassDivisionDto.teacherId,
+                isActive: true,
+              },
+              create: {
+                teacherId: createClassDivisionDto.teacherId,
+                courseId: newClassDivision.courseId,
+                classLevel: courseName,
+                section: newClassDivision.sectionName,
+                academicYearId: currentAcademicYear.id,
+                isActive: true,
+              },
+            })
+
+            console.log(`✅ Created ClassTeacher assignment for new division: teacherId=${createClassDivisionDto.teacherId}, courseId=${newClassDivision.courseId}, classLevel=${courseName}, section=${newClassDivision.sectionName}`)
+          } catch (error) {
+            console.error('❌ Failed to create ClassTeacher assignment for new division:', error)
+            // Throw error to rollback transaction if ClassTeacher operation fails
+            throw error
+          }
+        } else {
+          console.warn(`⚠️ No active academic year found for institution ${adminInstitutionId}. ClassTeacher record not created.`)
+        }
+      }
+
+      return newClassDivision
     })
 
     return {
       message: 'Class division created successfully',
+      data: {
+        id: classDivision.id,
+        sectionName: classDivision.sectionName,
+        maxCapacity: classDivision.maxCapacity,
+        roomNumber: classDivision.roomNumber,
+        status: classDivision.status,
+        course: classDivision.course,
+        teacher: classDivision.teacher
+          ? {
+              id: classDivision.teacher.id,
+              name: this.getFullName(
+                classDivision.teacher.user.firstName,
+                classDivision.teacher.user.lastName
+              ),
+              email: classDivision.teacher.user.email,
+            }
+          : null,
+        createdAt: classDivision.createdAt,
+      },
+    }
+  }
+
+  /**
+   * Reactivate an existing INACTIVE class division with new data
+   */
+  private async reactivateClassDivision(
+    existingDivisionId: number,
+    createClassDivisionDto: CreateClassDivisionDto,
+    adminInstitutionId: number | null
+  ) {
+    // Use transaction to ensure both ClassDivision and ClassTeacher are updated atomically
+    const classDivision = await this.prisma.$transaction(async (tx) => {
+      // Reactivate and update the existing class division
+      const reactivatedDivision = await tx.classDivision.update({
+        where: { id: existingDivisionId },
+        data: {
+          teacherId: createClassDivisionDto.teacherId,
+          maxCapacity: createClassDivisionDto.maxCapacity,
+          roomNumber: createClassDivisionDto.roomNumber,
+          status: 'ACTIVE',
+          updatedAt: new Date(),
+        },
+        include: {
+          course: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+          teacher: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      })
+
+      // Create/reactivate ClassTeacher record if teacher is assigned
+      if (createClassDivisionDto.teacherId) {
+        // Get current academic year (try CURRENT first, then FUTURE as fallback)
+        let currentAcademicYear = await tx.academicYear.findFirst({
+          where: {
+            institutionId: adminInstitutionId,
+            status: 'CURRENT',
+          },
+        })
+
+        if (!currentAcademicYear) {
+          currentAcademicYear = await tx.academicYear.findFirst({
+            where: {
+              institutionId: adminInstitutionId,
+              status: 'FUTURE',
+            },
+          })
+        }
+
+        if (currentAcademicYear) {
+          const courseName = reactivatedDivision.course?.name || `Course ${reactivatedDivision.courseId}`
+          
+          console.log(`🔄 Reactivating ClassTeacher for reactivated division: teacherId=${createClassDivisionDto.teacherId}, courseId=${reactivatedDivision.courseId}, classLevel=${courseName}, section=${reactivatedDivision.sectionName}, academicYearId=${currentAcademicYear.id}`)
+          
+          try {
+            await tx.classTeacher.upsert({
+              where: {
+                unique_class_teacher: {
+                  courseId: reactivatedDivision.courseId,
+                  classLevel: courseName,
+                  section: reactivatedDivision.sectionName,
+                  academicYearId: currentAcademicYear.id,
+                },
+              },
+              update: {
+                teacherId: createClassDivisionDto.teacherId,
+                isActive: true,
+              },
+              create: {
+                teacherId: createClassDivisionDto.teacherId,
+                courseId: reactivatedDivision.courseId,
+                classLevel: courseName,
+                section: reactivatedDivision.sectionName,
+                academicYearId: currentAcademicYear.id,
+                isActive: true,
+              },
+            })
+
+            console.log(`✅ Reactivated ClassTeacher assignment for division: teacherId=${createClassDivisionDto.teacherId}, courseId=${reactivatedDivision.courseId}, classLevel=${courseName}, section=${reactivatedDivision.sectionName}`)
+          } catch (error) {
+            console.error('❌ Failed to reactivate ClassTeacher assignment:', error)
+            // Throw error to rollback transaction if ClassTeacher operation fails
+            throw error
+          }
+        } else {
+          console.warn(`⚠️ No active academic year found for institution ${adminInstitutionId}. ClassTeacher record not reactivated.`)
+        }
+      }
+
+      return reactivatedDivision
+    })
+
+    return {
+      message: 'Class division reactivated successfully',
       data: {
         id: classDivision.id,
         sectionName: classDivision.sectionName,
@@ -1490,6 +2034,7 @@ export class CoursesService {
           courseId: existingDivision.courseId,
           sectionName: updateClassDivisionDto.sectionName,
           id: { not: id },
+          status: 'ACTIVE', // Only check active divisions to allow reusing names of deleted divisions
         },
       })
 
@@ -1500,35 +2045,123 @@ export class CoursesService {
       }
     }
 
-    const updatedDivision = await this.prisma.classDivision.update({
-      where: { id },
-      data: {
-        sectionName: updateClassDivisionDto.sectionName,
-        teacherId: updateClassDivisionDto.teacherId,
-        maxCapacity: updateClassDivisionDto.maxCapacity,
-        roomNumber: updateClassDivisionDto.roomNumber,
-        status: updateClassDivisionDto.status,
-      },
-      include: {
-        course: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
+    // Handle ClassTeacher assignment when teacherId changes
+    const oldTeacherId = existingDivision.teacherId
+    const newTeacherId = updateClassDivisionDto.teacherId
+
+    // Use transaction to ensure data consistency between class_divisions and class_teachers
+    const updatedDivision = await this.prisma.$transaction(async (tx) => {
+      // First, update the class division
+      const division = await tx.classDivision.update({
+        where: { id },
+        data: {
+          sectionName: updateClassDivisionDto.sectionName,
+          teacherId: updateClassDivisionDto.teacherId,
+          maxCapacity: updateClassDivisionDto.maxCapacity,
+          roomNumber: updateClassDivisionDto.roomNumber,
+          status: updateClassDivisionDto.status,
         },
-        teacher: {
-          include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
+        include: {
+          course: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+          teacher: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
               },
             },
           },
         },
-      },
+      })
+
+      // Manage ClassTeacher record for attendance authorization (inside transaction)
+      if (oldTeacherId !== newTeacherId) {
+        // Get current academic year (try CURRENT first, then FUTURE as fallback)
+        let currentAcademicYear = await tx.academicYear.findFirst({
+          where: { status: 'CURRENT' },
+        })
+
+        if (!currentAcademicYear) {
+          currentAcademicYear = await tx.academicYear.findFirst({
+            where: { status: 'FUTURE' },
+            orderBy: { startDate: 'asc' },
+          })
+        }
+
+        console.log('🔍 Academic year found:', currentAcademicYear ? `ID: ${currentAcademicYear.id}, Name: ${currentAcademicYear.yearName}` : 'None')
+
+        if (!currentAcademicYear) {
+          throw new NotFoundException(
+            'No active academic year found. Please create an academic year with CURRENT or FUTURE status to assign class teachers.'
+          )
+        }
+        // Remove old ClassTeacher assignment if exists
+        if (oldTeacherId) {
+          const courseName = existingDivision.course?.name || `Course ${existingDivision.courseId}`
+          
+          console.log(`🗑️ Removing old ClassTeacher: teacherId=${oldTeacherId}, courseId=${existingDivision.courseId}, classLevel=${courseName}, section=${existingDivision.sectionName}`)
+          
+          await tx.classTeacher.deleteMany({
+            where: {
+              teacherId: oldTeacherId,
+              courseId: existingDivision.courseId,
+              classLevel: courseName,
+              section: existingDivision.sectionName,
+              academicYearId: currentAcademicYear.id,
+            },
+          })
+        }
+
+        // Create new ClassTeacher assignment if new teacher is assigned
+        if (newTeacherId) {
+          const sectionName = updateClassDivisionDto.sectionName || existingDivision.sectionName
+          const courseName = existingDivision.course?.name || `Course ${existingDivision.courseId}`
+          
+          console.log(`🔄 Creating ClassTeacher: teacherId=${newTeacherId}, courseId=${existingDivision.courseId}, classLevel=${courseName}, section=${sectionName}, academicYearId=${currentAcademicYear.id}`)
+          
+          try {
+            await tx.classTeacher.upsert({
+              where: {
+                unique_class_teacher: {
+                  courseId: existingDivision.courseId,
+                  classLevel: courseName, // Use course name as class level for schools
+                  section: sectionName,
+                  academicYearId: currentAcademicYear.id,
+                },
+              },
+              update: {
+                teacherId: newTeacherId,
+                isActive: true,
+              },
+              create: {
+                teacherId: newTeacherId,
+                courseId: existingDivision.courseId,
+                classLevel: courseName, // Use course name as class level for schools
+                section: sectionName,
+                academicYearId: currentAcademicYear.id,
+                isActive: true,
+              },
+            })
+
+            console.log(`✅ Created ClassTeacher assignment: teacherId=${newTeacherId}, courseId=${existingDivision.courseId}, classLevel=${courseName}, section=${sectionName}`)
+          } catch (error) {
+            console.error('❌ Failed to create ClassTeacher assignment:', error)
+            // Throw error to rollback transaction if ClassTeacher operation fails
+            throw error
+          }
+        }
+      }
+
+      return division
     })
 
     return {
@@ -1559,48 +2192,294 @@ export class CoursesService {
    * Delete a class division
    */
   async deleteClassDivision(id: number, adminInstitutionId: number | null) {
-    const existingDivision = await this.prisma.classDivision.findUnique({
-      where: { id },
-      include: {
-        course: {
-          include: { institution: true },
-        },
-        _count: {
-          select: {
-            students: true,
+    // Use transaction to ensure both ClassDivision and ClassTeacher are updated atomically
+    return await this.prisma.$transaction(async (tx) => {
+      const existingDivision = await tx.classDivision.findUnique({
+        where: { id },
+        include: {
+          course: {
+            include: { institution: true },
           },
+          _count: {
+            select: {
+              students: true,
+            },
+          },
+        },
+      })
+
+      if (!existingDivision) {
+        throw new NotFoundException(`Class division with ID ${id} not found`)
+      }
+
+      if (
+        adminInstitutionId &&
+        existingDivision.course.institutionId !== adminInstitutionId
+      ) {
+        throw new ForbiddenException(
+          'You can only delete class divisions in your own institution'
+        )
+      }
+
+      // Check if there are students assigned to this division
+      if (existingDivision._count.students > 0) {
+        throw new ConflictException(
+          'Cannot delete class division with assigned students.'
+        )
+      }
+
+      // Soft delete the class division
+      const deletedDivision = await tx.classDivision.update({
+        where: { id },
+        data: { status: 'INACTIVE' },
+      })
+
+      // Soft delete related ClassTeacher records if teacher was assigned
+      if (existingDivision.teacherId) {
+        const courseName = existingDivision.course?.name || `Course ${existingDivision.courseId}`
+        
+        console.log(`🗑️ Soft deleting ClassTeacher records for deleted division: teacherId=${existingDivision.teacherId}, courseId=${existingDivision.courseId}, classLevel=${courseName}, section=${existingDivision.sectionName}`)
+        
+        const updatedClassTeachers = await tx.classTeacher.updateMany({
+          where: {
+            teacherId: existingDivision.teacherId,
+            courseId: existingDivision.courseId,
+            classLevel: courseName,
+            section: existingDivision.sectionName,
+          },
+          data: { 
+            isActive: false, // Soft delete - preserve data for audit trail
+          },
+        })
+
+        console.log(`✅ Soft deleted ${updatedClassTeachers.count} ClassTeacher record(s) for division: ${courseName} - Section ${existingDivision.sectionName}`)
+      }
+
+      return {
+        message: 'Class division deleted successfully',
+        data: deletedDivision,
+      }
+    })
+  }
+
+  /**
+   * Get all students in a course (across all sections)
+   * Optimized single query instead of multiple section queries
+   */
+  async getAllCourseStudents(courseId: number, institutionId: number | null) {
+    // Verify course exists and user has access
+    const course = await this.prisma.course.findFirst({
+      where: {
+        id: courseId,
+        ...(institutionId && { institutionId }),
+      },
+      select: { id: true, name: true, code: true },
+    })
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`)
+    }
+
+    // Get all students in this course with their section information
+    const students = await this.prisma.student.findMany({
+      where: {
+        courseId: courseId,
+        enrollmentStatus: 'ACTIVE',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [
+        { section: 'asc' },
+        { rollNumber: 'asc' },
+      ],
+    })
+
+    // Group students by section
+    const sectionMap = new Map<string, any[]>()
+    students.forEach(student => {
+      const sectionName = student.section || 'Unassigned'
+      if (!sectionMap.has(sectionName)) {
+        sectionMap.set(sectionName, [])
+      }
+      
+      sectionMap.get(sectionName)!.push({
+        id: student.id,
+        userId: student.userId,
+        name: this.getFullName(student.user.firstName, student.user.lastName),
+        rollNumber: student.rollNumber,
+        admissionNumber: student.admissionNumber,
+        section: student.section,
+      })
+    })
+
+    // Build response with sections and their students
+    const sections = Array.from(sectionMap.entries()).map(([sectionName, sectionStudents]) => ({
+      sectionName,
+      studentCount: sectionStudents.length,
+      students: sectionStudents,
+    }))
+
+    return {
+      success: true,
+      data: {
+        course: {
+          id: course.id,
+          name: course.name,
+          code: course.code,
+        },
+        totalStudents: students.length,
+        sections,
+        // Also provide flat list for backward compatibility
+        allStudents: students.map(student => ({
+          id: student.id,
+          userId: student.userId,
+          name: this.getFullName(student.user.firstName, student.user.lastName),
+          rollNumber: student.rollNumber,
+          admissionNumber: student.admissionNumber,
+          section: student.section,
+        })),
+      },
+    }
+  }
+
+  /**
+   * Mark attendance for a course section (School Mode)
+   * This creates attendance records without requiring class sections
+   */
+  async markCourseAttendance(
+    courseId: number,
+    sectionName: string,
+    attendanceDto: CourseAttendanceDto,
+    user: UserWithRelations
+  ) {
+    // Verify the course exists and user has access
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      include: {
+        institution: {
+          select: { id: true, name: true, type: true },
         },
       },
     })
 
-    if (!existingDivision) {
-      throw new NotFoundException(`Class division with ID ${id} not found`)
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`)
     }
 
-    if (
-      adminInstitutionId &&
-      existingDivision.course.institutionId !== adminInstitutionId
-    ) {
-      throw new ForbiddenException(
-        'You can only delete class divisions in your own institution'
-      )
-    }
+    // Check if user has permission (teacher must be assigned to this course or admin)
+    const isAdmin = user.role?.roleName === 'super_admin' || user.role?.roleName === 'admin'
+    
+    if (!isAdmin) {
+      // Non-admin users must be teachers assigned to this course
+      if (!user.teacher) {
+        throw new ForbiddenException(
+          'You must be a teacher to mark attendance for course sections'
+        )
+      }
 
-    // Check if there are students assigned to this division
-    if (existingDivision._count.students > 0) {
-      throw new ConflictException(
-        'Cannot delete class division with assigned students.'
-      )
-    }
+      // For teachers, verify they are assigned to this course
+      const teacherAssignment = await this.prisma.classTeacher.findFirst({
+        where: {
+          teacherId: user.teacher.id,
+          courseId: courseId,
+          section: sectionName,
+          academicYear: {
+            status: 'CURRENT',
+          },
+        },
+      })
 
-    const deletedDivision = await this.prisma.classDivision.update({
-      where: { id },
-      data: { status: 'INACTIVE' },
+      if (!teacherAssignment) {
+        throw new ForbiddenException(
+          'You are not authorized to mark attendance for this course section'
+        )
+      }
+    }
+    // Admins can mark attendance for any course section
+
+    // Get students in this course section
+    const students = await this.prisma.student.findMany({
+      where: {
+        courseId: courseId,
+        section: sectionName,
+        enrollmentStatus: 'ACTIVE',
+      },
+      select: { id: true },
     })
 
+    if (students.length === 0) {
+      throw new NotFoundException(
+        `No active students found in course ${courseId}, section ${sectionName}`
+      )
+    }
+
+    const attendanceDate = new Date(attendanceDto.date)
+    const markerId = user.teacher?.id || user.id // Use teacher ID if available, otherwise user ID
+
+    // Create attendance records
+    const attendanceRecords = []
+    for (const record of attendanceDto.attendanceRecords) {
+      // Verify student belongs to this course section
+      const studentExists = students.some(s => s.id === record.studentId)
+      if (!studentExists) {
+        continue // Skip invalid students
+      }
+
+      // Check if attendance already exists for this student and date
+      const existingAttendance = await this.prisma.attendance.findFirst({
+        where: {
+          studentId: record.studentId,
+          date: attendanceDate,
+          sectionId: null, // Course-based attendance doesn't use section ID
+        },
+      })
+
+      if (existingAttendance) {
+        // Update existing attendance
+        await this.prisma.attendance.update({
+          where: { id: existingAttendance.id },
+          data: {
+            status: record.status,
+            remarks: record.remarks,
+            markedBy: markerId,
+            markedAt: new Date(),
+          },
+        })
+      } else {
+        // Create new attendance record
+        const attendanceRecord = await this.prisma.attendance.create({
+          data: {
+            studentId: record.studentId,
+            date: attendanceDate,
+            status: record.status,
+            attendanceType: 'DAILY',
+            remarks: record.remarks,
+            markedBy: markerId,
+            sectionId: null, // Course-based attendance doesn't use section ID
+          },
+        })
+        attendanceRecords.push(attendanceRecord)
+      }
+    }
+
     return {
-      message: 'Class division deleted successfully',
-      data: deletedDivision,
+      success: true,
+      message: 'Course attendance marked successfully',
+      data: {
+        courseId,
+        sectionName,
+        date: attendanceDto.date,
+        recordsProcessed: attendanceDto.attendanceRecords.length,
+        recordsCreated: attendanceRecords.length,
+      },
     }
   }
 }

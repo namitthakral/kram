@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { Prisma, UserAccountStatus } from '@prisma/client'
+import { ExamStatus, ExamType, Prisma, UserAccountStatus } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import {
   CreateUserDto,
@@ -17,6 +17,7 @@ import { UpdateInstitutionDto } from '../institutions/dto/institution.dto'
 import { PrismaService } from '../prisma/prisma.service'
 import { UserHelpers } from '../types/user.types'
 import { generateTemporaryPassword } from '../utils/kramid.util'
+import { UpdateExaminationPolicyDto } from './dto/examination-policy.dto'
 import { UpdateGradingConfigDto } from './dto/grading-config.dto'
 import { CreateSemesterDto, UpdateSemesterDto } from './dto/semester.dto'
 
@@ -36,6 +37,184 @@ export class AdminService {
         startDate: 'desc',
       },
     })
+  }
+
+  async createAcademicYear(
+    data: {
+      yearName: string
+      startDate: string
+      endDate: string
+      status?: 'CURRENT' | 'PAST' | 'FUTURE'
+    },
+    institutionId: number | null
+  ) {
+    if (!institutionId) {
+      throw new ForbiddenException('Institution ID is required')
+    }
+
+    // Validate dates
+    const startDate = new Date(data.startDate)
+    const endDate = new Date(data.endDate)
+    
+    if (startDate >= endDate) {
+      throw new ConflictException('Start date must be before end date')
+    }
+
+    // Check for duplicate year name in the same institution
+    const existingYear = await this.prisma.academicYear.findFirst({
+      where: {
+        institutionId,
+        yearName: data.yearName,
+      },
+    })
+
+    if (existingYear) {
+      throw new ConflictException(
+        `Academic year '${data.yearName}' already exists for this institution`
+      )
+    }
+
+    // If status is CURRENT, set all other years to PAST
+    if (data.status === 'CURRENT') {
+      await this.prisma.academicYear.updateMany({
+        where: {
+          institutionId,
+          status: 'CURRENT',
+        },
+        data: {
+          status: 'PAST',
+        },
+      })
+    }
+
+    return this.prisma.academicYear.create({
+      data: {
+        institutionId,
+        yearName: data.yearName,
+        startDate,
+        endDate,
+        status: data.status || 'FUTURE',
+      },
+    })
+  }
+
+  async updateAcademicYear(
+    id: number,
+    data: {
+      yearName?: string
+      startDate?: string
+      endDate?: string
+      status?: 'CURRENT' | 'PAST' | 'FUTURE'
+    },
+    institutionId: number | null
+  ) {
+    if (!institutionId) {
+      throw new ForbiddenException('Institution ID is required')
+    }
+
+    // Check if academic year exists and belongs to institution
+    const existingYear = await this.prisma.academicYear.findFirst({
+      where: {
+        id,
+        institutionId,
+      },
+    })
+
+    if (!existingYear) {
+      throw new NotFoundException('Academic year not found')
+    }
+
+    // Validate dates if provided
+    let startDate, endDate
+    if (data.startDate) startDate = new Date(data.startDate)
+    if (data.endDate) endDate = new Date(data.endDate)
+    
+    if (startDate && endDate && startDate >= endDate) {
+      throw new ConflictException('Start date must be before end date')
+    }
+
+    // Check for duplicate year name if changing
+    if (data.yearName && data.yearName !== existingYear.yearName) {
+      const duplicateYear = await this.prisma.academicYear.findFirst({
+        where: {
+          institutionId,
+          yearName: data.yearName,
+          id: { not: id },
+        },
+      })
+
+      if (duplicateYear) {
+        throw new ConflictException(
+          `Academic year '${data.yearName}' already exists for this institution`
+        )
+      }
+    }
+
+    // If status is being set to CURRENT, set all other years to PAST
+    if (data.status === 'CURRENT') {
+      await this.prisma.academicYear.updateMany({
+        where: {
+          institutionId,
+          status: 'CURRENT',
+          id: { not: id },
+        },
+        data: {
+          status: 'PAST',
+        },
+      })
+    }
+
+    return this.prisma.academicYear.update({
+      where: { id },
+      data: {
+        ...(data.yearName && { yearName: data.yearName }),
+        ...(startDate && { startDate }),
+        ...(endDate && { endDate }),
+        ...(data.status && { status: data.status }),
+      },
+    })
+  }
+
+  async deleteAcademicYear(id: number, institutionId: number | null) {
+    if (!institutionId) {
+      throw new ForbiddenException('Institution ID is required')
+    }
+
+    // Check if academic year exists and belongs to institution
+    const existingYear = await this.prisma.academicYear.findFirst({
+      where: {
+        id,
+        institutionId,
+      },
+    })
+
+    if (!existingYear) {
+      throw new NotFoundException('Academic year not found')
+    }
+
+    // Check if academic year has dependencies (semesters, class teachers, etc.)
+    const semesterCount = await this.prisma.semester.count({
+      where: { academicYearId: id },
+    })
+
+    const classTeacherCount = await this.prisma.classTeacher.count({
+      where: { academicYearId: id },
+    })
+
+    if (semesterCount > 0 || classTeacherCount > 0) {
+      throw new ConflictException(
+        'Cannot delete academic year that has semesters or class teacher assignments. Please remove dependencies first.'
+      )
+    }
+
+    await this.prisma.academicYear.delete({
+      where: { id },
+    })
+
+    return {
+      success: true,
+      message: 'Academic year deleted successfully',
+    }
   }
 
   async getSemesters(academicYearId: number) {
@@ -317,7 +496,7 @@ export class AdminService {
           student.id,
           sd,
           adminInstitutionId,
-          prisma as any
+          prisma
         )
       } else if (roleName === 'teacher' && createUserDto.teacherData) {
         const td = createUserDto.teacherData
@@ -470,7 +649,7 @@ export class AdminService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
         },
         skip,
         take: limit,
@@ -587,7 +766,7 @@ export class AdminService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
         },
         skip,
         take: limit,
@@ -617,7 +796,7 @@ export class AdminService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
       },
     })
 
@@ -646,7 +825,7 @@ export class AdminService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
       },
     })
 
@@ -716,7 +895,7 @@ export class AdminService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
       },
     })
 
@@ -1123,6 +1302,7 @@ export class AdminService {
       classPerformance,
       financialOverview,
       systemAlerts,
+      examinationOverview,
     ] = await Promise.all([
       this.getBasicStats(institutionId),
       this.getTeacherPerformanceData(10, institutionId),
@@ -1131,6 +1311,7 @@ export class AdminService {
       this.getClassPerformanceData(institutionId),
       this.getFinancialOverviewData(institutionId),
       this.getSystemAlertsData(undefined, 20, institutionId),
+      this.getExaminationOverviewData(institutionId),
     ])
 
     return {
@@ -1141,6 +1322,7 @@ export class AdminService {
       class_performance: classPerformance,
       financial_overview: financialOverview,
       system_alerts: systemAlerts,
+      examination_overview: examinationOverview,
     }
   }
 
@@ -1586,6 +1768,153 @@ export class AdminService {
   }
 
   /**
+   * Get examination overview data for dashboard
+   */
+  private async getExaminationOverviewData(
+    institutionId: number | null = null
+  ) {
+    const instFilter: Prisma.ExaminationWhereInput = institutionId
+      ? { subject: { course: { institutionId } } }
+      : {}
+
+    // Get current date ranges
+    const now = new Date()
+    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+    const [
+      totalExams,
+      thisWeekExams,
+      thisMonthExams,
+      upcomingExams,
+      completedExams,
+      pendingEvaluations,
+      averageScore,
+      examTypeDistribution,
+    ] = await Promise.all([
+      // Total examinations
+      this.prisma.examination.count({ where: instFilter }),
+
+      // This week's examinations
+      this.prisma.examination.count({
+        where: {
+          ...instFilter,
+          examDate: { gte: startOfWeek },
+        },
+      }),
+
+      // This month's examinations
+      this.prisma.examination.count({
+        where: {
+          ...instFilter,
+          examDate: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        },
+      }),
+
+      // Upcoming examinations (next 30 days)
+      this.prisma.examination.count({
+        where: {
+          ...instFilter,
+          status: 'SCHEDULED',
+          examDate: {
+            gte: now,
+            lte: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+
+      // Completed examinations
+      this.prisma.examination.count({
+        where: { ...instFilter, status: 'COMPLETED' },
+      }),
+
+      // Pending evaluations
+      this.prisma.examination.count({
+        where: {
+          ...instFilter,
+          status: 'COMPLETED',
+          results: {
+            some: {
+              marksObtained: null,
+              isAbsent: false,
+            },
+          },
+        },
+      }),
+
+      // Average score across all completed exams
+      this.prisma.examResult.aggregate({
+        _avg: { marksObtained: true },
+        where: {
+          marksObtained: { not: null },
+          isAbsent: false,
+          exam: instFilter,
+        },
+      }),
+
+      // Exam type distribution
+      this.prisma.examination.groupBy({
+        by: ['examType'],
+        _count: { id: true },
+        where: instFilter,
+      }),
+    ])
+
+    // Get recent examination activity
+    const recentExams = await this.prisma.examination.findMany({
+      where: instFilter,
+      include: {
+        subject: { select: { subjectName: true } },
+        creator: {
+          select: {
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
+        _count: {
+          select: {
+            results: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    })
+
+    return {
+      summary: {
+        totalExams,
+        thisWeekExams,
+        thisMonthExams,
+        upcomingExams,
+        completedExams,
+        pendingEvaluations,
+        averageScore: averageScore._avg.marksObtained
+          ? Math.round(Number(averageScore._avg.marksObtained) * 100) / 100
+          : 0,
+      },
+      examTypeDistribution: examTypeDistribution.map(item => ({
+        type: item.examType,
+        count: item._count.id,
+      })),
+      recentActivity: recentExams.map(exam => ({
+        id: exam.id,
+        examName: exam.examName,
+        examType: exam.examType,
+        subject: exam.subject.subjectName,
+        creator: `${exam.creator.user.firstName} ${exam.creator.user.lastName}`,
+        status: exam.status,
+        examDate: exam.examDate,
+        studentsCount: exam._count.results,
+        createdAt: exam.createdAt,
+      })),
+    }
+  }
+
+  /**
    * Create parent records for a student based on provided parent information
    */
   private async createParentRecords(
@@ -1598,7 +1927,7 @@ export class AdminService {
       guardianParentType?: 'father' | 'mother'
     },
     adminInstitutionId: number | null,
-    prisma = this.prisma
+    prisma: Prisma.TransactionClient = this.prisma
   ) {
     const parentRole = await prisma.role.findFirst({
       where: { roleName: { equals: 'parent', mode: 'insensitive' } },
@@ -1628,14 +1957,34 @@ export class AdminService {
         prisma
       )
       if (fatherUser) {
-        const fatherParent = await prisma.parent.create({
-          data: {
+        // Check if parent-student relationship already exists
+        let fatherParent = await prisma.parent.findFirst({
+          where: {
             userId: fatherUser.id,
             studentId,
             relation: 'FATHER',
-            isPrimaryContact: false, // Will be updated later based on guardian logic
           },
         })
+
+        // Create only if relationship doesn't exist
+        if (!fatherParent) {
+          fatherParent = await prisma.parent.create({
+            data: {
+              userId: fatherUser.id,
+              studentId,
+              relation: 'FATHER',
+              isPrimaryContact: false, // Will be updated later based on guardian logic
+            },
+          })
+          console.log(
+            `Created new father-student relationship: ${fatherUser.firstName} ${fatherUser.lastName} -> Student ${studentId}`
+          )
+        } else {
+          console.log(
+            `Father-student relationship already exists: ${fatherUser.firstName} ${fatherUser.lastName} -> Student ${studentId}`
+          )
+        }
+
         createdParents.push({
           type: 'father',
           user: fatherUser,
@@ -1657,14 +2006,34 @@ export class AdminService {
         prisma
       )
       if (motherUser) {
-        const motherParent = await prisma.parent.create({
-          data: {
+        // Check if parent-student relationship already exists
+        let motherParent = await prisma.parent.findFirst({
+          where: {
             userId: motherUser.id,
             studentId,
             relation: 'MOTHER',
-            isPrimaryContact: false, // Will be updated later based on guardian logic
           },
         })
+
+        // Create only if relationship doesn't exist
+        if (!motherParent) {
+          motherParent = await prisma.parent.create({
+            data: {
+              userId: motherUser.id,
+              studentId,
+              relation: 'MOTHER',
+              isPrimaryContact: false, // Will be updated later based on guardian logic
+            },
+          })
+          console.log(
+            `Created new mother-student relationship: ${motherUser.firstName} ${motherUser.lastName} -> Student ${studentId}`
+          )
+        } else {
+          console.log(
+            `Mother-student relationship already exists: ${motherUser.firstName} ${motherUser.lastName} -> Student ${studentId}`
+          )
+        }
+
         createdParents.push({
           type: 'mother',
           user: motherUser,
@@ -1698,14 +2067,38 @@ export class AdminService {
         prisma
       )
       if (guardianUser) {
-        await prisma.parent.create({
-          data: {
+        // Check if guardian-student relationship already exists
+        const guardianParent = await prisma.parent.findFirst({
+          where: {
             userId: guardianUser.id,
             studentId,
             relation: 'GUARDIAN',
-            isPrimaryContact: true,
           },
         })
+
+        // Create only if relationship doesn't exist
+        if (!guardianParent) {
+          await prisma.parent.create({
+            data: {
+              userId: guardianUser.id,
+              studentId,
+              relation: 'GUARDIAN',
+              isPrimaryContact: true,
+            },
+          })
+          console.log(
+            `Created new guardian-student relationship: ${guardianUser.firstName} ${guardianUser.lastName} -> Student ${studentId}`
+          )
+        } else {
+          // Update existing guardian to be primary contact
+          await prisma.parent.update({
+            where: { id: guardianParent.id },
+            data: { isPrimaryContact: true },
+          })
+          console.log(
+            `Guardian-student relationship already exists: ${guardianUser.firstName} ${guardianUser.lastName} -> Student ${studentId}`
+          )
+        }
       }
     } else if (createdParents.length > 0) {
       // No explicit guardian, make first parent the primary contact
@@ -1723,7 +2116,7 @@ export class AdminService {
     parentInfo: { name: string; email?: string; mobile?: string },
     parentRoleId: number,
     adminInstitutionId: number | null,
-    prisma = this.prisma
+    prisma: Prisma.TransactionClient = this.prisma
   ) {
     const name = parentInfo.name.trim()
     const email = parentInfo.email?.trim()
@@ -1741,7 +2134,9 @@ export class AdminService {
     })
 
     if (existingUser) {
-      console.log(`Parent user already exists for email: ${email}`)
+      console.log(
+        `Parent user already exists for email: ${email} (${name}) - will reuse existing user`
+      )
       return existingUser
     }
 
@@ -1789,7 +2184,7 @@ export class AdminService {
     userId: number,
     institutionId: number | null,
     roleName: string,
-    prisma = this.prisma
+    prisma: Prisma.TransactionClient = this.prisma
   ): Promise<string | null> {
     if (!institutionId) {
       console.warn(`Cannot generate Kram ID - no institution ID provided`)
@@ -1919,7 +2314,13 @@ export class AdminService {
 
   async updateIdConfig(
     institutionId: number,
-    updates: any,
+    updates: {
+      admissionNumberFormat?: string
+      rollNumberFormat?: string
+      teacherEmployeeIdFormat?: string
+      staffEmployeeIdFormat?: string
+      sequenceResetPolicy?: 'YEARLY' | 'MONTHLY' | 'NEVER'
+    },
     adminInstitutionId: number | null
   ) {
     if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
@@ -1932,7 +2333,17 @@ export class AdminService {
 
   async previewId(
     institutionId: number,
-    dto: { template: string; context: any },
+    dto: {
+      template: string
+      context: Partial<{
+        year?: number
+        month?: number
+        institutionCode?: string
+        courseCode?: string
+        section?: string
+        sequence?: number
+      }>
+    },
     adminInstitutionId: number | null
   ) {
     if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
@@ -1971,6 +2382,764 @@ export class AdminService {
     return {
       success: true,
       data: restrictionInfo,
+    }
+  }
+
+  // ==================== Examination Oversight (Admin) ====================
+
+  /**
+   * Get examination schedule overview for admin oversight (read-only)
+   */
+  async getExaminationSchedule(
+    institutionId: number | null,
+    filters?: {
+      startDate?: string
+      endDate?: string
+      status?: string
+      examType?: string
+      subjectId?: number
+      limit?: number
+      page?: number
+    }
+  ) {
+    const {
+      startDate,
+      endDate,
+      status,
+      examType,
+      subjectId,
+      limit = 50,
+      page = 1,
+    } = filters || {}
+
+    const skip = (page - 1) * limit
+    const where: Prisma.ExaminationWhereInput = {}
+
+    // Institution filter
+    if (institutionId) {
+      where.subject = { course: { institutionId } }
+    }
+
+    // Date range filter
+    if (startDate || endDate) {
+      where.examDate = {}
+      if (startDate) where.examDate.gte = new Date(startDate)
+      if (endDate) where.examDate.lte = new Date(endDate)
+    }
+
+    // Status filter
+    if (status) {
+      where.status = status as ExamStatus
+    }
+
+    // Exam type filter
+    if (examType) {
+      where.examType = examType as ExamType
+    }
+
+    // Subject filter
+    if (subjectId) {
+      where.subjectId = subjectId
+    }
+
+    const [examinations, total] = await Promise.all([
+      this.prisma.examination.findMany({
+        where,
+        include: {
+          subject: {
+            select: {
+              id: true,
+              subjectName: true,
+              subjectCode: true,
+            },
+          },
+          semester: {
+            select: {
+              id: true,
+              semesterName: true,
+              academicYear: {
+                select: {
+                  yearName: true,
+                },
+              },
+            },
+          },
+          creator: {
+            select: {
+              id: true,
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          results: {
+            select: {
+              id: true,
+              marksObtained: true,
+              isAbsent: true,
+            },
+          },
+        },
+        orderBy: [{ examDate: 'asc' }, { startTime: 'asc' }],
+        skip,
+        take: limit,
+      }),
+      this.prisma.examination.count({ where }),
+    ])
+
+    // Calculate completion statistics for each exam
+    const examinationsWithStats = examinations.map(exam => {
+      const totalResults = exam.results.length
+      const completedResults = exam.results.filter(
+        r => r.marksObtained !== null || r.isAbsent
+      ).length
+      const absentCount = exam.results.filter(r => r.isAbsent).length
+
+      return {
+        id: exam.id,
+        examName: exam.examName,
+        examType: exam.examType,
+        examDate: exam.examDate,
+        startTime: exam.startTime,
+        durationMinutes: exam.durationMinutes,
+        totalMarks: exam.totalMarks,
+        venue: exam.venue,
+        status: exam.status,
+        subject: exam.subject,
+        semester: exam.semester,
+        creator: {
+          id: exam.creator.id,
+          name: `${exam.creator.user.firstName} ${exam.creator.user.lastName}`,
+          email: exam.creator.user.email,
+        },
+        statistics: {
+          totalStudents: totalResults,
+          completedEvaluations: completedResults,
+          pendingEvaluations: totalResults - completedResults,
+          absentStudents: absentCount,
+          completionPercentage:
+            totalResults > 0
+              ? Math.round((completedResults / totalResults) * 100)
+              : 0,
+        },
+      }
+    })
+
+    return {
+      success: true,
+      data: {
+        examinations: examinationsWithStats,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    }
+  }
+
+  /**
+   * Get examination completion monitoring dashboard
+   */
+  async getExaminationCompletionStats(institutionId: number | null) {
+    const instFilter: Prisma.ExaminationWhereInput = institutionId
+      ? { subject: { course: { institutionId } } }
+      : {}
+
+    const [
+      totalExams,
+      scheduledExams,
+      ongoingExams,
+      completedExams,
+      cancelledExams,
+      upcomingExams,
+      overdueEvaluations,
+    ] = await Promise.all([
+      // Total examinations
+      this.prisma.examination.count({ where: instFilter }),
+
+      // Scheduled examinations
+      this.prisma.examination.count({
+        where: { ...instFilter, status: 'SCHEDULED' },
+      }),
+
+      // Ongoing examinations
+      this.prisma.examination.count({
+        where: { ...instFilter, status: 'ONGOING' },
+      }),
+
+      // Completed examinations
+      this.prisma.examination.count({
+        where: { ...instFilter, status: 'COMPLETED' },
+      }),
+
+      // Cancelled examinations
+      this.prisma.examination.count({
+        where: { ...instFilter, status: 'CANCELLED' },
+      }),
+
+      // Upcoming examinations (next 7 days)
+      this.prisma.examination.count({
+        where: {
+          ...instFilter,
+          status: 'SCHEDULED',
+          examDate: {
+            gte: new Date(),
+            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      }),
+
+      // Overdue evaluations (completed exams with pending results)
+      this.prisma.examination.count({
+        where: {
+          ...instFilter,
+          status: 'COMPLETED',
+          results: {
+            some: {
+              marksObtained: null,
+              isAbsent: false,
+            },
+          },
+        },
+      }),
+    ])
+
+    // Get exam type distribution
+    const examTypeDistribution = await this.prisma.examination.groupBy({
+      by: ['examType'],
+      _count: { id: true },
+      where: instFilter,
+    })
+
+    // Get recent examination activity
+    const recentActivity = await this.prisma.examination.findMany({
+      where: instFilter,
+      include: {
+        subject: {
+          select: { subjectName: true },
+        },
+        creator: {
+          select: {
+            user: {
+              select: { firstName: true, lastName: true },
+            },
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+    })
+
+    return {
+      success: true,
+      data: {
+        overview: {
+          totalExams,
+          scheduledExams,
+          ongoingExams,
+          completedExams,
+          cancelledExams,
+          upcomingExams,
+          overdueEvaluations,
+        },
+        examTypeDistribution: examTypeDistribution.map(item => ({
+          examType: item.examType,
+          count: item._count.id,
+        })),
+        recentActivity: recentActivity.map(exam => ({
+          id: exam.id,
+          examName: exam.examName,
+          examType: exam.examType,
+          subject: exam.subject.subjectName,
+          creator: `${exam.creator.user.firstName} ${exam.creator.user.lastName}`,
+          status: exam.status,
+          examDate: exam.examDate,
+          updatedAt: exam.updatedAt,
+        })),
+      },
+    }
+  }
+
+  /**
+   * Get examination analytics for admin dashboard
+   */
+  async getExaminationAnalytics(
+    institutionId: number | null,
+    period: 'week' | 'month' | 'semester' | 'year' = 'month'
+  ) {
+    const instFilter: Prisma.ExaminationWhereInput = institutionId
+      ? { subject: { course: { institutionId } } }
+      : {}
+
+    // Calculate date range based on period
+    const now = new Date()
+    let startDate: Date
+
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        break
+      case 'month':
+        startDate = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          now.getDate()
+        )
+        break
+      case 'semester':
+        startDate = new Date(
+          now.getFullYear(),
+          now.getMonth() - 6,
+          now.getDate()
+        )
+        break
+      case 'year':
+        startDate = new Date(
+          now.getFullYear() - 1,
+          now.getMonth(),
+          now.getDate()
+        )
+        break
+    }
+
+    // Get examination trends
+    const examTrends = await this.prisma.examination.findMany({
+      where: {
+        ...instFilter,
+        createdAt: { gte: startDate },
+      },
+      select: {
+        createdAt: true,
+        examType: true,
+        status: true,
+      },
+    })
+
+    // Group by time period
+    const trendData = new Map<
+      string,
+      { scheduled: number; completed: number; cancelled: number }
+    >()
+
+    examTrends.forEach(exam => {
+      const key = exam.createdAt.toISOString().substring(0, 10) // YYYY-MM-DD
+      if (!trendData.has(key)) {
+        trendData.set(key, { scheduled: 0, completed: 0, cancelled: 0 })
+      }
+      const data = trendData.get(key)!
+
+      if (exam.status === 'SCHEDULED') data.scheduled++
+      else if (exam.status === 'COMPLETED') data.completed++
+      else if (exam.status === 'CANCELLED') data.cancelled++
+    })
+
+    // Get performance metrics
+    const performanceMetrics = await this.prisma.$queryRaw<
+      Array<{
+        subject_name: string
+        avg_score: number
+        total_exams: string
+        completion_rate: number
+      }>
+    >`
+      SELECT
+        s.subject_name,
+        COALESCE(
+          ROUND(
+            AVG(
+              CASE
+                WHEN er.marks_obtained IS NOT NULL AND e.total_marks > 0
+                THEN (er.marks_obtained::DECIMAL / e.total_marks) * 100
+                ELSE NULL
+              END
+            ),
+            2
+          ),
+          0
+        ) as avg_score,
+        COUNT(DISTINCT e.id) as total_exams,
+        COALESCE(
+          ROUND(
+            (COUNT(er.id) FILTER (WHERE er.marks_obtained IS NOT NULL OR er.is_absent = true)::DECIMAL / 
+             NULLIF(COUNT(er.id), 0)) * 100,
+            2
+          ),
+          0
+        ) as completion_rate
+      FROM subjects s
+      LEFT JOIN examinations e ON s.id = e.subject_id
+      LEFT JOIN exam_results er ON e.id = er.exam_id
+      WHERE e.created_at >= $1
+        ${institutionId ? `AND s.institution_id = $2` : ''}
+      GROUP BY s.id, s.subject_name
+      ORDER BY avg_score DESC
+      LIMIT 20
+    `
+
+    return {
+      success: true,
+      data: {
+        period,
+        trends: Array.from(trendData.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([date, data]) => ({
+            date,
+            scheduled: data.scheduled,
+            completed: data.completed,
+            cancelled: data.cancelled,
+          })),
+        subjectPerformance: performanceMetrics.map(metric => ({
+          subject: metric.subject_name,
+          averageScore: metric.avg_score,
+          totalExams: Number(metric.total_exams),
+          completionRate: metric.completion_rate,
+        })),
+      },
+    }
+  }
+
+  /**
+   * Get examination policy configuration for an institution
+   */
+  async getExaminationPolicy(
+    institutionId: number,
+    adminInstitutionId: number | null
+  ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('Access denied to this institution')
+    }
+
+    // Verify institution exists
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+    })
+
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`
+      )
+    }
+
+    // Get examination policy config
+    const policy = await this.prisma.institutionExaminationPolicy.findUnique({
+      where: { institutionId },
+    })
+
+    if (!policy) {
+      return {
+        success: true,
+        message: 'No custom examination policy found. Using default settings.',
+        data: null,
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Examination policy retrieved successfully',
+      data: policy,
+    }
+  }
+
+  /**
+   * Update or create examination policy configuration for an institution
+   */
+  async updateExaminationPolicy(
+    institutionId: number,
+    updateDto: UpdateExaminationPolicyDto,
+    adminInstitutionId: number | null
+  ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('Access denied to this institution')
+    }
+
+    // Verify institution exists
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+    })
+
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`
+      )
+    }
+
+    // Check for active term/semester restriction for critical policy changes
+    const criticalPolicyFields = [
+      'defaultPassingPercentage',
+      'enforceGradingScale',
+      'minAttendanceForExam',
+    ]
+
+    const hasCriticalChanges = criticalPolicyFields.some(
+      field =>
+        updateDto[field as keyof UpdateExaminationPolicyDto] !== undefined
+    )
+
+    if (hasCriticalChanges) {
+      const restrictionInfo = await this.checkGradingRestriction(
+        institutionId,
+        institution.type
+      )
+
+      if (restrictionInfo.isRestricted) {
+        throw new ForbiddenException({
+          message:
+            'Cannot modify critical examination policies during active period',
+          error: 'ACTIVE_PERIOD_RESTRICTION',
+          details: restrictionInfo.details,
+        })
+      }
+    }
+
+    // Validate policy constraints
+    if (
+      updateDto.minGapBetweenExamsDays !== undefined &&
+      updateDto.maxExamsPerDay !== undefined
+    ) {
+      if (
+        updateDto.maxExamsPerDay > 5 &&
+        updateDto.minGapBetweenExamsDays < 1
+      ) {
+        throw new BadRequestException(
+          'High exam frequency requires minimum gap between exams'
+        )
+      }
+    }
+
+    if (
+      updateDto.makeupExamPenaltyPercentage !== undefined &&
+      !updateDto.allowMakeupExams
+    ) {
+      throw new BadRequestException(
+        'Cannot set makeup exam penalty when makeup exams are not allowed'
+      )
+    }
+
+    // Upsert examination policy config
+    const policy = await this.prisma.institutionExaminationPolicy.upsert({
+      where: { institutionId },
+      update: updateDto,
+      create: {
+        institutionId,
+        ...updateDto,
+      },
+    })
+
+    return {
+      success: true,
+      message: 'Examination policy updated successfully',
+      data: policy,
+    }
+  }
+
+  /**
+   * Reset examination policy configuration to defaults
+   */
+  async resetExaminationPolicy(
+    institutionId: number,
+    adminInstitutionId: number | null
+  ) {
+    if (adminInstitutionId !== null && institutionId !== adminInstitutionId) {
+      throw new ForbiddenException('Access denied to this institution')
+    }
+
+    // Verify institution exists
+    const institution = await this.prisma.institution.findUnique({
+      where: { id: institutionId },
+    })
+
+    if (!institution) {
+      throw new NotFoundException(
+        `Institution with ID ${institutionId} not found`
+      )
+    }
+
+    // Check for active term/semester restriction
+    const restrictionInfo = await this.checkGradingRestriction(
+      institutionId,
+      institution.type
+    )
+
+    if (restrictionInfo.isRestricted) {
+      throw new ForbiddenException({
+        message: 'Cannot reset examination policies during active period',
+        error: 'ACTIVE_PERIOD_RESTRICTION',
+        details: restrictionInfo.details,
+      })
+    }
+
+    // Delete existing policy config (will use defaults)
+    await this.prisma.institutionExaminationPolicy.deleteMany({
+      where: { institutionId },
+    })
+
+    return {
+      success: true,
+      message: 'Examination policy reset to default values successfully',
+    }
+  }
+
+  /**
+   * Get examination policy violations and compliance report
+   */
+  async getExaminationComplianceReport(
+    institutionId: number | null,
+    startDate?: string,
+    endDate?: string
+  ) {
+    const instFilter: Prisma.ExaminationWhereInput = institutionId
+      ? { subject: { course: { institutionId } } }
+      : {}
+    const dateFilter: { gte?: Date; lte?: Date } = {}
+
+    if (startDate) dateFilter.gte = new Date(startDate)
+    if (endDate) dateFilter.lte = new Date(endDate)
+
+    if (Object.keys(dateFilter).length > 0) {
+      ;(instFilter as Prisma.ExaminationWhereInput).examDate = dateFilter
+    }
+
+    // Get policy configuration
+    const policy = institutionId
+      ? await this.prisma.institutionExaminationPolicy.findUnique({
+          where: { institutionId },
+        })
+      : null
+
+    // Default policy values
+    const defaultPolicy = {
+      maxEvaluationDays: 7,
+      minAdvanceNoticeDays: 3,
+      maxExamDurationMinutes: 180,
+      defaultPassingPercentage: 40,
+    }
+
+    const activePolicy = policy || defaultPolicy
+
+    // Check evaluation delays
+    const overdueEvaluations = await this.prisma.examination.findMany({
+      where: {
+        ...instFilter,
+        status: 'COMPLETED',
+        examDate: {
+          lte: new Date(
+            Date.now() -
+              (activePolicy.maxEvaluationDays || 7) * 24 * 60 * 60 * 1000
+          ),
+        },
+        results: {
+          some: {
+            marksObtained: null,
+            isAbsent: false,
+          },
+        },
+      },
+      include: {
+        subject: { select: { subjectName: true } },
+        creator: {
+          select: {
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+    })
+
+    // Check short notice exams
+    const shortNoticeExams = await this.prisma.examination.findMany({
+      where: {
+        ...instFilter,
+        status: { in: ['SCHEDULED', 'ONGOING'] },
+        examDate: {
+          gte: new Date(),
+          lte: new Date(
+            Date.now() +
+              (activePolicy.minAdvanceNoticeDays || 3) * 24 * 60 * 60 * 1000
+          ),
+        },
+        createdAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Created in last 24 hours
+        },
+      },
+      include: {
+        subject: { select: { subjectName: true } },
+        creator: {
+          select: {
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+    })
+
+    // Check excessive exam durations
+    const longDurationExams = await this.prisma.examination.findMany({
+      where: {
+        ...instFilter,
+        durationMinutes: {
+          gt: activePolicy.maxExamDurationMinutes || 180,
+        },
+      },
+      include: {
+        subject: { select: { subjectName: true } },
+        creator: {
+          select: {
+            user: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+    })
+
+    return {
+      success: true,
+      data: {
+        policyConfiguration: activePolicy,
+        violations: {
+          overdueEvaluations: overdueEvaluations.map(exam => ({
+            examId: exam.id,
+            examName: exam.examName,
+            subject: exam.subject.subjectName,
+            examDate: exam.examDate,
+            creator: `${exam.creator.user.firstName} ${exam.creator.user.lastName}`,
+            daysOverdue:
+              Math.floor(
+                (Date.now() - exam.examDate!.getTime()) / (24 * 60 * 60 * 1000)
+              ) - (activePolicy.maxEvaluationDays || 7),
+          })),
+          shortNoticeExams: shortNoticeExams.map(exam => ({
+            examId: exam.id,
+            examName: exam.examName,
+            subject: exam.subject.subjectName,
+            examDate: exam.examDate,
+            creator: `${exam.creator.user.firstName} ${exam.creator.user.lastName}`,
+            noticeGiven: Math.floor(
+              (exam.examDate!.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+            ),
+            minimumRequired: activePolicy.minAdvanceNoticeDays || 3,
+          })),
+          longDurationExams: longDurationExams.map(exam => ({
+            examId: exam.id,
+            examName: exam.examName,
+            subject: exam.subject.subjectName,
+            duration: exam.durationMinutes,
+            maximumAllowed: activePolicy.maxExamDurationMinutes || 180,
+            creator: `${exam.creator.user.firstName} ${exam.creator.user.lastName}`,
+          })),
+        },
+        summary: {
+          totalViolations:
+            overdueEvaluations.length +
+            shortNoticeExams.length +
+            longDurationExams.length,
+          overdueEvaluationsCount: overdueEvaluations.length,
+          shortNoticeExamsCount: shortNoticeExams.length,
+          longDurationExamsCount: longDurationExams.length,
+        },
+      },
     }
   }
 }

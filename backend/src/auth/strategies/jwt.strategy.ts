@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
-import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../../prisma/prisma.service'
-import { UserWithRelations, JWTPayload } from '../../types/auth.types'
+import { JWTPayload, UserWithRelations } from '../../types/auth.types'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
         staff: true,
       },
     })

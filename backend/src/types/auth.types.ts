@@ -5,7 +5,7 @@ export type UserWithRelations = User & {
   role: Role
   student?: Student | null
   teacher?: Teacher | null
-  parent?: Parent | null
+  parents?: Parent[] | null
   staff?: Staff | null
 }
 

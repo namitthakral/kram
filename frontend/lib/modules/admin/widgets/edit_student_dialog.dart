@@ -490,7 +490,9 @@ class _EditStudentDialogState extends State<EditStudentDialog> {
 
           if (user == null) return const SizedBox.shrink();
 
-          final name = user['name'] as String? ?? '';
+          final firstName = user['firstName'] as String? ?? '';
+          final lastName = user['lastName'] as String? ?? '';
+          final name = '$firstName $lastName'.trim();
           final email = user['email'] as String? ?? '';
           final phone = user['phone'] as String? ?? '';
 

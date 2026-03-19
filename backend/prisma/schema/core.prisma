@@ -24,7 +24,7 @@ model User {
   institution       Institution? @relation(fields: [institutionId], references: [id])
   student           Student?
   teacher           Teacher?
-  parent            Parent?
+  parents           Parent[]  // Changed from Parent? to Parent[] for one-to-many
   staff             Staff?
   payments          Payment[]
   communicationsCreated Communication[]
@@ -104,6 +104,7 @@ model Institution {
   systemAlerts    SystemAlert[]
   gradingConfig   InstitutionGradingConfig?
   idConfig        InstitutionIdConfig?
+  examinationPolicy InstitutionExaminationPolicy?
 
   @@map("institutions")
 }
@@ -201,6 +202,63 @@ model InstitutionIdConfig {
   institution             Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   
   @@map("institution_id_configs")
+}
+
+model InstitutionExaminationPolicy {
+  id                      Int      @id @default(autoincrement())
+  institutionId           Int      @unique @map("institution_id")
+  
+  // Examination Scheduling Policies
+  minAdvanceNoticeDays    Int?     @default(3) @map("min_advance_notice_days")
+  maxExamDurationMinutes  Int?     @default(180) @map("max_exam_duration_minutes")
+  maxExamsPerDay          Int?     @default(3) @map("max_exams_per_day")
+  minGapBetweenExamsDays  Int?     @default(0) @map("min_gap_between_exams_days")
+  
+  // Evaluation Policies
+  maxEvaluationDays       Int?     @default(7) @map("max_evaluation_days")
+  requireEvaluatorApproval Boolean? @default(false) @map("require_evaluator_approval")
+  allowSelfEvaluation     Boolean? @default(true) @map("allow_self_evaluation")
+  requireDoubleEvaluation Boolean? @default(false) @map("require_double_evaluation")
+  
+  // Result Publication Policies
+  resultPublicationDelayDays Int?  @default(0) @map("result_publication_delay_days")
+  requireAdminApprovalForPublication Boolean? @default(false) @map("require_admin_approval_for_publication")
+  allowResultModification Boolean? @default(true) @map("allow_result_modification")
+  resultModificationWindowDays Int? @default(7) @map("result_modification_window_days")
+  
+  // Grade Boundaries and Standards
+  defaultPassingPercentage Decimal? @default(40) @map("default_passing_percentage") @db.Decimal(5, 2)
+  enforceGradingScale     Boolean? @default(true) @map("enforce_grading_scale")
+  allowGradeInflation     Boolean? @default(false) @map("allow_grade_inflation")
+  
+  // Attendance and Makeup Policies
+  minAttendanceForExam    Decimal? @default(75) @map("min_attendance_for_exam") @db.Decimal(5, 2)
+  allowMakeupExams        Boolean? @default(true) @map("allow_makeup_exams")
+  makeupExamWindowDays    Int?     @default(7) @map("makeup_exam_window_days")
+  makeupExamPenaltyPercentage Decimal? @default(0) @map("makeup_exam_penalty_percentage") @db.Decimal(5, 2)
+  
+  // Security and Integrity Policies
+  requireProctoring       Boolean? @default(false) @map("require_proctoring")
+  allowOpenBook           Boolean? @default(false) @map("allow_open_book")
+  requirePlagiarismCheck  Boolean? @default(false) @map("require_plagiarism_check")
+  examConductGuidelines   String?  @map("exam_conduct_guidelines")
+  
+  // Notification Policies
+  notifyStudentsOnSchedule Boolean? @default(true) @map("notify_students_on_schedule")
+  notifyParentsOnResults  Boolean? @default(true) @map("notify_parents_on_results")
+  sendReminderNotifications Boolean? @default(true) @map("send_reminder_notifications")
+  reminderDaysBeforeExam  Int?     @default(1) @map("reminder_days_before_exam")
+  
+  // Metadata
+  isActive                Boolean  @default(true) @map("is_active")
+  notes                   String?
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  institution             Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  
+  @@map("institution_examination_policies")
 }
 
 enum SequenceResetPolicy {

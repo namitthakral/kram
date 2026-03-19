@@ -339,7 +339,6 @@ class _SuperAdminInstitutionsScreenState
     }
   }
 
-
   Widget _buildInstitutionsGrid(SuperAdminProvider provider) =>
       GridView.builder(
         padding: const EdgeInsets.all(16),
@@ -753,11 +752,11 @@ class _SuperAdminInstitutionsScreenState
     ),
   );
 
-  void _showCreateAdminDialog(
+  Future<void> _showCreateAdminDialog(
     BuildContext context,
     InstitutionOverview institution,
-  ) {
-    showDialog(
+  ) async {
+    final result = await showDialog<bool>(
       context: context,
       builder:
           (context) => CreateInstitutionAdminDialog(
@@ -765,6 +764,11 @@ class _SuperAdminInstitutionsScreenState
             institutionName: institution.name,
           ),
     );
+
+    // Refresh institutions list if admin was created successfully
+    if (result == true) {
+      _loadInstitutions();
+    }
   }
 
   void _viewInstitutionDetails(InstitutionOverview institution) {

@@ -55,6 +55,7 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
     // Initialize teacher selection
     final teacher = widget.section['teacher'] as Map<String, dynamic>?;
     _selectedTeacherId = teacher?['id'] as int?;
+    
   }
 
   Future<void> _loadTeachers() async {
@@ -68,6 +69,7 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
         _teachers = teachersList;
         _loadingTeachers = false;
       });
+      
     } on Exception catch (e) {
       setState(() {
         _teachers = [];
@@ -101,8 +103,23 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
     final semester = widget.section['semester'] as Map<String, dynamic>?;
     final semesterName = semester?['semesterName'] ?? 'Unknown Semester';
     final teacher = widget.section['teacher'] as Map<String, dynamic>?;
-    final teacherUser = teacher?['user'] as Map<String, dynamic>?;
-    final teacherName = teacherUser?['name'] ?? 'No Teacher Assigned';
+    String displayTeacherName = 'No Teacher Assigned';
+    
+    if (teacher != null) {
+      // Check if teacher has pre-formatted name (from class divisions API)
+      if (teacher.containsKey('name') && teacher['name'] != null) {
+        displayTeacherName = teacher['name'].toString();
+      } else {
+        // Fallback to nested user structure (from class sections API)
+        final teacherUser = teacher['user'] as Map<String, dynamic>?;
+        final firstName = teacherUser?['firstName'] as String? ?? '';
+        final lastName = teacherUser?['lastName'] as String? ?? '';
+        final teacherName = '$firstName $lastName'.trim();
+        if (teacherName.isNotEmpty) {
+          displayTeacherName = teacherName;
+        }
+      }
+    }
 
     return Dialog(
       child: Container(
@@ -198,7 +215,7 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              teacherName,
+                              displayTeacherName,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -270,7 +287,7 @@ class _EditClassSectionDialogState extends State<EditClassSectionDialog> {
 
                       // Teacher Dropdown (Optional)
                       DropdownButtonFormField<int>(
-                        initialValue: _selectedTeacherId,
+                        value: _selectedTeacherId,
                         decoration: InputDecoration(
                           labelText: context.translate('teacher'),
                           border: const OutlineInputBorder(),

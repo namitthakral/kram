@@ -70,7 +70,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
       _employmentType = 'FULL_TIME';
     }
     final user = t['user'] as Map<String, dynamic>?;
-    _status = (user?['status'] as String?) ?? 'ACTIVE';
+    _status = (user?['accountStatus'] as String?) ?? 'ACTIVE';
     if (_status != 'ACTIVE' && _status != 'INACTIVE') _status = 'ACTIVE';
   }
 
@@ -100,7 +100,10 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
 
   String get _teacherName {
     final user = widget.teacher['user'] as Map<String, dynamic>?;
-    return user?['name'] as String? ?? 'Teacher';
+    final firstName = user?['firstName'] as String? ?? '';
+    final lastName = user?['lastName'] as String? ?? '';
+    final fullName = '$firstName $lastName'.trim();
+    return fullName.isEmpty ? 'Teacher' : fullName;
   }
 
   String get _teacherUuid {
@@ -334,7 +337,7 @@ class _EditTeacherDialogState extends State<EditTeacherDialog> {
         if (_experienceController.text.trim().isNotEmpty)
           'experienceYears': int.parse(_experienceController.text.trim()),
         'employmentType': _employmentType,
-        'userStatus': _status,
+        'userAccountStatus': _status,
       };
       await _teacherService.updateTeacher(uuid, data);
       if (mounted) {

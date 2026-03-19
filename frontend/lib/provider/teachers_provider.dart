@@ -118,6 +118,12 @@ class TeachersProvider extends ChangeNotifier {
   /// Get teacher name by UUID
   String? getTeacherNameByUuid(String uuid) {
     final teacher = getTeacherByUuid(uuid);
-    return teacher?['name'] as String?;
+    if (teacher == null) return null;
+    
+    final user = teacher['user'] as Map<String, dynamic>?;
+    final firstName = user?['firstName'] as String? ?? '';
+    final lastName = user?['lastName'] as String? ?? '';
+    final fullName = '$firstName $lastName'.trim();
+    return fullName.isEmpty ? null : fullName;
   }
 }

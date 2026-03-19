@@ -175,7 +175,7 @@ class _AdminUserManagementScreenState extends State<AdminUserManagementScreen> {
     final email = userData['email'] ?? '';
     final role = userData['role']?['roleName'] ?? 'No Role';
     final kramid = userData['kramid'] ?? '';
-    final status = userData['status'] ?? 'UNKNOWN';
+    final status = userData['accountStatus'] ?? 'UNKNOWN';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),

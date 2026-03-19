@@ -159,7 +159,7 @@ model Teacher {
 
 model Parent {
   id                Int            @id @default(autoincrement())
-  userId            Int            @unique @map("user_id")
+  userId            Int            @map("user_id")
   studentId         Int            @map("student_id")
   relation          ParentRelation
   occupation        String?        @db.VarChar(100)
@@ -173,6 +173,8 @@ model Parent {
   user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   student           Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  // Allow same parent to be linked to multiple students, but prevent duplicate parent-student relationships
+  @@unique([userId, studentId])
   @@map("parents")
 }
 

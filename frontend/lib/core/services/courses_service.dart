@@ -506,6 +506,35 @@ class CoursesService {
     throw Exception('Failed to get class sections');
   }
 
+  /// Get all class divisions for institution (optimized for admin dashboard)
+  Future<List<dynamic>> getAllClassDivisions() async {
+    try {
+      final response = await _apiService.dio.get('/class-divisions');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        return data['data'] as List<dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+          error: 'Failed to get all class divisions',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiErrorHandler.handleDioException(
+        e,
+        defaultMessage: 'Failed to get all class divisions',
+      );
+    } on Exception catch (e) {
+      throw ApiErrorHandler.handleException(
+        e,
+        defaultMessage: 'Failed to get all class divisions',
+      );
+    }
+  }
+
   /// Get class divisions for a course (direct API call for advanced usage)
   Future<List<dynamic>> getClassDivisions(int courseId) async {
     try {

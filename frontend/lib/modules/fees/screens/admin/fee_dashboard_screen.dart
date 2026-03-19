@@ -321,7 +321,12 @@ class _PaymentListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = payment.student?['user'];
-    final studentName = user is Map ? (user['name']?.toString() ?? '-') : '-';
+    final studentName = user is Map ? (() {
+      final firstName = user['firstName']?.toString() ?? '';
+      final lastName = user['lastName']?.toString() ?? '';
+      final fullName = '$firstName $lastName'.trim();
+      return fullName.isEmpty ? '-' : fullName;
+    })() : '-';
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(

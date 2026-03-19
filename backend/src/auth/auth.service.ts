@@ -42,7 +42,7 @@ export class AuthService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
           staff: true,
         },
       })
@@ -53,7 +53,7 @@ export class AuthService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
           staff: true,
         },
       })
@@ -64,7 +64,7 @@ export class AuthService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
           staff: true,
         },
       })
@@ -165,7 +165,7 @@ export class AuthService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
         staff: true,
       },
     })
@@ -193,7 +193,9 @@ export class AuthService {
 
     // Check if account is blocked from login
     if (UserHelpers.isBlocked(user.accountStatus)) {
-      const statusDescription = UserHelpers.getStatusDescription(user.accountStatus)
+      const statusDescription = UserHelpers.getStatusDescription(
+        user.accountStatus
+      )
       throw new UnauthorizedException(
         `Login denied: ${statusDescription}. Please contact support.`
       )
@@ -214,7 +216,9 @@ export class AuthService {
     // Allow login for ACTIVE and PENDING_ACTIVATION users
     // Frontend will handle password change requirement for PENDING_ACTIVATION
     if (!UserHelpers.canLogin(user.accountStatus)) {
-      const statusDescription = UserHelpers.getStatusDescription(user.accountStatus)
+      const statusDescription = UserHelpers.getStatusDescription(
+        user.accountStatus
+      )
       throw new UnauthorizedException(
         `Login denied: ${statusDescription}. Please contact support.`
       )
@@ -313,7 +317,8 @@ export class AuthService {
           loginAttempts: newAttempts,
           // Lock account if max attempts reached (unless already suspended)
           ...(shouldLock &&
-            userToUpdate.accountStatus !== ('SUSPENDED' as UserAccountStatus) && {
+            userToUpdate.accountStatus !==
+              ('SUSPENDED' as UserAccountStatus) && {
               accountStatus: 'LOCKED' as UserAccountStatus,
             }),
         },
@@ -334,7 +339,7 @@ export class AuthService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
       },
     })
 
@@ -600,18 +605,15 @@ export class AuthService {
       throw new ConflictException('Student not found with the provided Kram ID')
     }
 
-    // Check if parent record exists
-    const parentRecord = await this.prisma.parent.findUnique({
-      where: { userId: parentUserId },
+    // Check if parent record exists for this user and student
+    const parentRecord = await this.prisma.parent.findFirst({
+      where: {
+        userId: parentUserId,
+        studentId: childUser.student.id,
+      },
     })
 
-    if (parentRecord) {
-      // Update existing parent record
-      await this.prisma.parent.update({
-        where: { userId: parentUserId },
-        data: { studentId: childUser.student.id },
-      })
-    } else {
+    if (!parentRecord) {
       // Create new parent record
       await this.prisma.parent.create({
         data: {

@@ -89,6 +89,8 @@ class UserManagementProvider extends ChangeNotifier {
         if (pagination != null) {
           _totalPages = pagination['totalPages'] as int? ?? 1;
         }
+        // Explicitly notify listeners after updating the users list
+        notifyListeners();
       } else {
         setError('Failed to load users');
       }

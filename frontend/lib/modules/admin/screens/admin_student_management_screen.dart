@@ -514,7 +514,7 @@ class _AdminStudentManagementScreenState
       phone = parentUser?['phone'] as String? ?? '—';
     }
     if (phone.isEmpty) phone = '—';
-    final status = user?['status'] as String? ?? 'ACTIVE';
+    final status = user?['accountStatus'] as String? ?? 'ACTIVE';
     final admissionDate = s['admissionDate'] as String?;
     final dateStr =
         admissionDate != null ? admissionDate.toString().split('T').first : '—';
@@ -699,7 +699,7 @@ class _AdminStudentManagementScreenState
                   ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'.trim()
                   : '—';
               final phone = user?['phone'] as String? ?? '—';
-              final status = user?['status'] as String? ?? 'ACTIVE';
+              final status = user?['accountStatus'] as String? ?? 'ACTIVE';
               return DataRow(
                 cells: [
                   DataCell(Text(name)),
@@ -813,7 +813,7 @@ class _AdminStudentManagementScreenState
         : '';
     final phone = user?['phone'] as String? ?? '';
     final email = user?['email'] as String? ?? '';
-    final status = user?['status'] as String? ?? 'ACTIVE';
+    final status = user?['accountStatus'] as String? ?? 'ACTIVE';
     final studentType = student['studentType'] as String? ?? '';
     final residentialStatus = student['residentialStatus'] as String? ?? '';
 

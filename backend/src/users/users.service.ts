@@ -326,7 +326,7 @@ export class UsersService {
             institution: { select: { id: true, name: true, type: true } },
           },
         },
-        parent: {
+        parents: {
           include: {
             student: {
               include: {
@@ -431,7 +431,7 @@ export class UsersService {
             { student: { institutionId } },
             { teacher: { institutionId } },
             { staff: { institutionId } },
-            { parent: { student: { institutionId } } },
+            { parents: { some: { student: { institutionId } } } },
           ],
         },
       ]
@@ -453,7 +453,7 @@ export class UsersService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
           staff: true,
         },
       }),
@@ -498,7 +498,7 @@ export class UsersService {
             institution: true,
           },
         },
-        parent: {
+        parents: {
           include: {
             student: {
               include: {
@@ -533,7 +533,7 @@ export class UsersService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
         staff: true,
       },
     })
@@ -623,7 +623,7 @@ export class UsersService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
         staff: true,
       },
     })
@@ -706,7 +706,7 @@ export class UsersService {
             { student: { institutionId } },
             { teacher: { institutionId } },
             { staff: { institutionId } },
-            { parent: { student: { institutionId } } },
+            { parents: { some: { student: { institutionId } } } },
           ],
         },
       ]
@@ -728,7 +728,7 @@ export class UsersService {
           role: true,
           student: true,
           teacher: true,
-          parent: true,
+          parents: true,
           staff: true,
         },
       }),
@@ -760,7 +760,7 @@ export class UsersService {
             { student: { institutionId } },
             { teacher: { institutionId } },
             { staff: { institutionId } },
-            { parent: { student: { institutionId } } },
+            { parents: { some: { student: { institutionId } } } },
           ],
         }
       : undefined
@@ -826,7 +826,7 @@ export class UsersService {
             institution: true,
           },
         },
-        parent: {
+        parents: {
           include: {
             student: {
               include: {
@@ -854,7 +854,7 @@ export class UsersService {
       user.student?.institutionId ??
       user.teacher?.institutionId ??
       user.staff?.institutionId ??
-      user.parent?.student?.institutionId ??
+      user.parents?.[0]?.student?.institutionId ??
       null
     if (
       adminInstitutionId !== null &&
@@ -890,7 +890,7 @@ export class UsersService {
             institution: true,
           },
         },
-        parent: {
+        parents: {
           include: {
             student: {
               include: {
@@ -930,7 +930,7 @@ export class UsersService {
         student: true,
         teacher: true,
         staff: true,
-        parent: { include: { student: true } },
+        parents: { include: { student: true } },
       },
     })
 
@@ -943,7 +943,7 @@ export class UsersService {
       existingUser.student?.institutionId ??
       existingUser.teacher?.institutionId ??
       existingUser.staff?.institutionId ??
-      existingUser.parent?.student?.institutionId ??
+      existingUser.parents?.[0]?.student?.institutionId ??
       null
     if (
       adminInstitutionId !== null &&
@@ -1021,7 +1021,7 @@ export class UsersService {
         role: true,
         student: true,
         teacher: true,
-        parent: true,
+        parents: true,
         staff: true,
       },
     })
@@ -1039,7 +1039,7 @@ export class UsersService {
         student: true,
         teacher: true,
         staff: true,
-        parent: { include: { student: true } },
+        parents: { include: { student: true } },
       },
     })
 
@@ -1052,7 +1052,7 @@ export class UsersService {
       existingUser.student?.institutionId ??
       existingUser.teacher?.institutionId ??
       existingUser.staff?.institutionId ??
-      existingUser.parent?.student?.institutionId ??
+      existingUser.parents?.[0]?.student?.institutionId ??
       null
     if (
       adminInstitutionId !== null &&
@@ -1120,7 +1120,7 @@ export class UsersService {
     const createdParents: Array<{
       type: string
       user: { id: number }
-      parent: { id: number }
+      parents: { id: number }
     }> = []
 
     // Create Father record if provided
@@ -1146,7 +1146,7 @@ export class UsersService {
         createdParents.push({
           type: 'father',
           user: fatherUser,
-          parent: fatherParent,
+          parents: fatherParent,
         })
       }
     }
@@ -1174,7 +1174,7 @@ export class UsersService {
         createdParents.push({
           type: 'mother',
           user: motherUser,
-          parent: motherParent,
+          parents: motherParent,
         })
       }
     }
@@ -1187,7 +1187,7 @@ export class UsersService {
       )
       if (guardianParent) {
         await this.prisma.parent.update({
-          where: { id: guardianParent.parent.id },
+          where: { id: guardianParent.parents.id },
           data: { isPrimaryContact: true },
         })
       }
@@ -1215,7 +1215,7 @@ export class UsersService {
     } else if (createdParents.length > 0) {
       // No explicit guardian, make first parent the primary contact
       await this.prisma.parent.update({
-        where: { id: createdParents[0].parent.id },
+        where: { id: createdParents[0].parents.id },
         data: { isPrimaryContact: true },
       })
     }

@@ -138,10 +138,12 @@ class _TimetableScreenState extends State<TimetableScreen> {
                       // Handle teacher name parsing based on observation log
                       var teacherName = 'Teacher';
                       if (entry['teacher'] != null) {
-                        teacherName =
-                            entry['teacher']['name'] ??
-                            entry['teacher']['user']?['name'] ??
-                            'Teacher';
+                        final teacher = entry['teacher'] as Map<String, dynamic>;
+                        final user = teacher['user'] as Map<String, dynamic>?;
+                        final firstName = user?['firstName'] as String? ?? '';
+                        final lastName = user?['lastName'] as String? ?? '';
+                        final fullName = '$firstName $lastName'.trim();
+                        teacherName = fullName.isEmpty ? 'Teacher' : fullName;
                       }
 
                       // Format time range

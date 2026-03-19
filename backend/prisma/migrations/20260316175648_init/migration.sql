@@ -1300,6 +1300,45 @@ CREATE TABLE "question_options" (
     CONSTRAINT "question_options_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "institution_examination_policies" (
+    "id" SERIAL NOT NULL,
+    "institution_id" INTEGER NOT NULL,
+    "min_advance_notice_days" INTEGER DEFAULT 3,
+    "max_exam_duration_minutes" INTEGER DEFAULT 180,
+    "max_exams_per_day" INTEGER DEFAULT 3,
+    "min_gap_between_exams_days" INTEGER DEFAULT 0,
+    "max_evaluation_days" INTEGER DEFAULT 7,
+    "require_evaluator_approval" BOOLEAN DEFAULT false,
+    "allow_self_evaluation" BOOLEAN DEFAULT true,
+    "require_double_evaluation" BOOLEAN DEFAULT false,
+    "result_publication_delay_days" INTEGER DEFAULT 0,
+    "require_admin_approval_for_publication" BOOLEAN DEFAULT false,
+    "allow_result_modification" BOOLEAN DEFAULT true,
+    "result_modification_window_days" INTEGER DEFAULT 7,
+    "default_passing_percentage" DECIMAL(5,2) DEFAULT 40,
+    "enforce_grading_scale" BOOLEAN DEFAULT true,
+    "allow_grade_inflation" BOOLEAN DEFAULT false,
+    "min_attendance_for_exam" DECIMAL(5,2) DEFAULT 75,
+    "allow_makeup_exams" BOOLEAN DEFAULT true,
+    "makeup_exam_window_days" INTEGER DEFAULT 7,
+    "makeup_exam_penalty_percentage" DECIMAL(5,2) DEFAULT 0,
+    "require_proctoring" BOOLEAN DEFAULT false,
+    "allow_open_book" BOOLEAN DEFAULT false,
+    "require_plagiarism_check" BOOLEAN DEFAULT false,
+    "exam_conduct_guidelines" TEXT,
+    "notify_students_on_schedule" BOOLEAN DEFAULT true,
+    "notify_parents_on_results" BOOLEAN DEFAULT true,
+    "send_reminder_notifications" BOOLEAN DEFAULT true,
+    "reminder_days_before_exam" INTEGER DEFAULT 1,
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "notes" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "institution_examination_policies_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_uuid_key" ON "users"("uuid");
 
@@ -1346,7 +1385,12 @@ CREATE UNIQUE INDEX "teachers_user_id_key" ON "teachers"("user_id");
 CREATE UNIQUE INDEX "teachers_employee_id_key" ON "teachers"("employee_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "parents_user_id_key" ON "parents"("user_id");
+-- Add composite unique constraint to prevent duplicate parent-student relationships
+-- while allowing same parent to be linked to multiple students
+CREATE UNIQUE INDEX "parents_user_id_student_id_key" ON "parents"("user_id", "student_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "institution_examination_policies_institution_id_key" ON "institution_examination_policies"("institution_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "staff_user_id_key" ON "staff"("user_id");
@@ -1818,6 +1862,103 @@ ALTER TABLE "questions" ADD CONSTRAINT "questions_section_id_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "question_options" ADD CONSTRAINT "question_options_question_id_fkey" FOREIGN KEY ("question_id") REFERENCES "questions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "institution_examination_policies" ADD CONSTRAINT "institution_examination_policies_institution_id_fkey" FOREIGN KEY ("institution_id") REFERENCES "institutions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- ============================================================================
+-- CLASS SECTIONS OPTIMIZATION: DATABASE VIEW AND INDEXES
+-- ============================================================================
+
+-- Create optimized view for class sections with all related data
+CREATE OR REPLACE VIEW class_sections_detailed AS
+SELECT 
+    cs.id,
+    cs.section_name,
+    cs.max_capacity,
+    cs.current_enrollment,
+    cs.room_number,
+    cs.schedule,
+    cs.status,
+    cs.created_at,
+    cs.updated_at,
+    
+    -- Subject details
+    s.id as subject_id,
+    s.subject_name,
+    s.subject_code,
+    s.credits,
+    s.subject_type,
+    
+    -- Course details
+    c.id as course_id,
+    c.name as course_name,
+    c.code as course_code,
+    c.degree_type,
+    
+    -- Semester details
+    sem.id as semester_id,
+    sem.semester_name,
+    sem.semester_number,
+    sem.start_date as semester_start_date,
+    sem.end_date as semester_end_date,
+    sem.status as semester_status,
+    
+    -- Academic Year details
+    ay.id as academic_year_id,
+    ay.year_name,
+    ay.start_date as academic_year_start_date,
+    ay.end_date as academic_year_end_date,
+    ay.status as academic_year_status,
+    
+    -- Teacher details
+    t.id as teacher_id,
+    u.uuid as teacher_uuid,
+    u.first_name as teacher_first_name,
+    u.last_name as teacher_last_name,
+    u.email as teacher_email,
+    
+    -- Institution details
+    i.id as institution_id,
+    i.name as institution_name,
+    i.code as institution_code,
+    i.type as institution_type
+    
+FROM class_sections cs
+INNER JOIN subjects s ON cs.subject_id = s.id
+LEFT JOIN courses c ON s.course_id = c.id
+INNER JOIN semesters sem ON cs.semester_id = sem.id
+INNER JOIN academic_years ay ON sem.academic_year_id = ay.id
+LEFT JOIN teachers t ON cs.teacher_id = t.id
+LEFT JOIN users u ON t.user_id = u.id
+LEFT JOIN institutions i ON (
+    c.institution_id = i.id OR 
+    t.institution_id = i.id OR 
+    u.institution_id = i.id
+);
+
+-- Create indexes for optimal performance
+CREATE INDEX IF NOT EXISTS idx_class_sections_status_semester 
+ON class_sections(status, semester_id);
+
+CREATE INDEX IF NOT EXISTS idx_class_sections_teacher_institution 
+ON class_sections(teacher_id) 
+INCLUDE (status, semester_id);
+
+CREATE INDEX IF NOT EXISTS idx_subjects_course_status 
+ON subjects(course_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_semesters_academic_year_status 
+ON semesters(academic_year_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_teachers_institution_active 
+ON teachers(institution_id) 
+WHERE employment_status = 'ACTIVE';
+
+-- Composite index for common filter combinations
+CREATE INDEX IF NOT EXISTS idx_class_sections_filters 
+ON class_sections(status, semester_id, teacher_id) 
+INCLUDE (section_name, max_capacity, current_enrollment);
 
 -- ============================================================================
 -- DATABASE FUNCTIONS: KRAM ID GENERATION

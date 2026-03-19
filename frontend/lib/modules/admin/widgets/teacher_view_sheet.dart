@@ -31,13 +31,18 @@ class _TeacherViewSheetState extends State<TeacherViewSheet> {
   void initState() {
     super.initState();
     final user = (widget.teacher['user'] as Map<String, dynamic>?) ?? {};
-    _localUserStatus = (user['status'] as String?) ?? 'ACTIVE';
+    _localUserStatus = (user['accountStatus'] as String?) ?? 'ACTIVE';
   }
 
   Map<String, dynamic> get _user =>
       (widget.teacher['user'] as Map<String, dynamic>?) ?? {};
 
-  String get _name => _user['name'] as String? ?? 'Teacher';
+  String get _name {
+    final firstName = _user['firstName'] as String? ?? '';
+    final lastName = _user['lastName'] as String? ?? '';
+    final fullName = '$firstName $lastName'.trim();
+    return fullName.isEmpty ? 'Teacher' : fullName;
+  }
   String get _email => _user['email'] as String? ?? '—';
   String get _phone => _user['phone'] as String? ?? '—';
   // Use local mutable state so toggles re-render immediately

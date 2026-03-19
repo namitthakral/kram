@@ -104,10 +104,9 @@ export class ContextService {
   }
 
   private async getParentContext(userId: number): Promise<string> {
-    const parent = await this.prisma.parent.findUnique({
+    const parent = await this.prisma.parent.findFirst({
       where: { userId },
-      select: {
-        relation: true,
+      include: {
         student: {
           select: {
             admissionNumber: true,
@@ -155,8 +154,12 @@ export class ContextService {
     }
 
     const [studentCount, teacherCount, courseCount] = await Promise.all([
-      this.prisma.student.count({ where: { institutionId, enrollmentStatus: 'ACTIVE' } }),
-      this.prisma.teacher.count({ where: { institutionId, employmentStatus: 'ACTIVE' } }),
+      this.prisma.student.count({
+        where: { institutionId, enrollmentStatus: 'ACTIVE' },
+      }),
+      this.prisma.teacher.count({
+        where: { institutionId, employmentStatus: 'ACTIVE' },
+      }),
       this.prisma.course.count({ where: { institutionId, status: 'ACTIVE' } }),
     ])
 

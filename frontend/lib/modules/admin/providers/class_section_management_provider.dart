@@ -20,6 +20,7 @@ class ClassSectionManagementProvider extends ChangeNotifier {
   int? _lastCourseId;
   int? _lastSemesterId;
   int? _lastTeacherId;
+  String? _lastInstitutionType;
 
   // Getters
   bool get isLoading => _isLoading;
@@ -44,12 +45,13 @@ class ClassSectionManagementProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Fetch all class sections (combines both simple divisions and complex sections)
+  /// Fetch class sections using smart API selection based on institution type
   Future<void> fetchClassSections({
     int? institutionId,
     int? courseId,
     int? semesterId,
     int? teacherId,
+    String? institutionType,
   }) async {
     try {
       setLoading(value: true);
@@ -60,67 +62,96 @@ class ClassSectionManagementProvider extends ChangeNotifier {
       _lastCourseId = courseId;
       _lastSemesterId = semesterId;
       _lastTeacherId = teacherId;
+      _lastInstitutionType = institutionType;
 
-      // Get both simple class divisions and complex class sections
-      final allSections = <dynamic>[];
-
-      // 1. Fetch complex class sections (subject-based)
-      try {
-        final complexSections = await _classSectionService.getClassSections(
+      // Smart API selection based on institution type
+      final isSchool = institutionType == 'SCHOOL';
+      
+      if (isSchool) {
+        // Schools: Fetch class divisions only (simple class organization)
+        await _fetchClassDivisions(courseId);
+      } else {
+        // Colleges/Universities: Fetch class sections only (subject-specific)
+        await _fetchClassSections(
           institutionId: institutionId,
           courseId: courseId,
           semesterId: semesterId,
           teacherId: teacherId,
-          status: 'ACTIVE',
         );
-        allSections.addAll(complexSections);
-      } on Exception catch (e) {
-        print('Error fetching complex sections: $e');
       }
-
-      // 2. Fetch simple class divisions and convert to section format
-      if (courseId != null) {
-        try {
-          final divisions = await _coursesService.getClassDivisions(courseId);
-          final convertedDivisions = await _convertDivisionsToSections(
-            divisions,
-            courseId,
-          );
-          allSections.addAll(convertedDivisions);
-        } on Exception catch (e) {
-          print('Error fetching class divisions: $e');
-        }
-      } else {
-        // If no specific course, we need to fetch divisions for all courses
-        try {
-          final courses = await _coursesService.getAllCourses();
-          for (final course in courses) {
-            final courseData = course as Map<String, dynamic>;
-            final courseIdInt = courseData['id'] as int;
-            try {
-              final divisions = await _coursesService.getClassDivisions(
-                courseIdInt,
-              );
-              final convertedDivisions = await _convertDivisionsToSections(
-                divisions,
-                courseIdInt,
-              );
-              allSections.addAll(convertedDivisions);
-            } on Exception catch (e) {
-              print('Error fetching divisions for course $courseIdInt: $e');
-            }
-          }
-        } on Exception catch (e) {
-          print('Error fetching courses for divisions: $e');
-        }
-      }
-
-      _classSections = allSections;
     } on Exception catch (e) {
       setError(e.toString());
     } finally {
       setLoading(value: false);
     }
+  }
+
+  /// Fetch class divisions for schools using optimized single API call
+  Future<void> _fetchClassDivisions(int? courseId) async {
+    if (courseId != null) {
+      // Fetch divisions for specific course
+      final divisions = await _coursesService.getClassDivisions(courseId);
+      final convertedDivisions = await _convertDivisionsToSections(
+        divisions,
+        courseId,
+      );
+      _classSections = convertedDivisions;
+    } else {
+      // Fetch ALL divisions for institution in single optimized call
+      final allDivisions = await _coursesService.getAllClassDivisions();
+      
+      // Convert to consistent format (divisions already have course info)
+      _classSections = allDivisions.map((division) {
+        final divisionData = division as Map<String, dynamic>;
+        final course = divisionData['course'] as Map<String, dynamic>?;
+        
+        
+        return {
+          'id': divisionData['id'],
+          'sectionName': divisionData['sectionName'],
+          'maxCapacity': divisionData['maxCapacity'],
+          'currentEnrollment': divisionData['currentEnrollment'] ?? 0,
+          'room': divisionData['roomNumber'] ?? '',
+          'schedule': divisionData['schedule'] ?? '',
+          'status': divisionData['status'] ?? 'ACTIVE',
+          'teacher': divisionData['teacher'],
+          // Create a pseudo-subject structure for consistent display
+          'subject': {
+            'id': course?['id'],
+            'subjectName': course?['name'] ?? 'Unknown Course',
+            'subjectCode': course?['code'] ?? '',
+            'course': course,
+          },
+          'course': course,
+          'semester': null, // Simple divisions don't have semesters
+          '_isSimpleDivision': true, // Flag to identify source
+        };
+      }).toList();
+    }
+  }
+
+  /// Fetch class sections for colleges/universities
+  Future<void> _fetchClassSections({
+    int? institutionId,
+    int? courseId,
+    int? semesterId,
+    int? teacherId,
+  }) async {
+    // Use the optimized API endpoint for better performance
+    final response = await _classSectionService.getClassSectionsOptimized(
+      institutionId: institutionId,
+      courseId: courseId,
+      semesterId: semesterId,
+      teacherId: teacherId,
+      status: 'ACTIVE',
+    );
+
+    // Extract data from optimized response
+    _classSections = response['data'] as List<dynamic>? ?? [];
+    
+    // Log performance metrics
+    final executionTime = response['executionTime'] ?? 0;
+    print('Class sections loaded in ${executionTime}ms (optimized)');
   }
 
   /// Convert class divisions to section format for consistent UI display
@@ -197,10 +228,11 @@ class ClassSectionManagementProvider extends ChangeNotifier {
         courseId: _lastCourseId,
         semesterId: _lastSemesterId,
         teacherId: _lastTeacherId,
+        institutionType: _lastInstitutionType,
       );
       return true;
     } on Exception catch (e) {
-      setError(e.toString());
+      setError(_formatErrorMessage(e.toString()));
       return false;
     } finally {
       _isCreating = false;
@@ -220,7 +252,11 @@ class ClassSectionManagementProvider extends ChangeNotifier {
 
       // Find the section to determine if it's a simple division or complex section
       final section = getClassSectionById(sectionId);
-      final isSimpleDivision = section?['_isSimpleDivision'] == true;
+      if (section == null) {
+        throw Exception('Class section with ID $sectionId not found');
+      }
+      final isSimpleDivision = section['_isSimpleDivision'] == true;
+      print('Updating section $sectionId: isSimpleDivision=$isSimpleDivision');
 
       if (isSimpleDivision) {
         // Update using class divisions API
@@ -236,10 +272,22 @@ class ClassSectionManagementProvider extends ChangeNotifier {
         courseId: _lastCourseId,
         semesterId: _lastSemesterId,
         teacherId: _lastTeacherId,
+        institutionType: _lastInstitutionType,
       );
       return true;
     } on Exception catch (e) {
-      setError(e.toString());
+      // Format error message for better user experience
+      String errorMessage = e.toString();
+      
+      // Clean up common error prefixes
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      if (errorMessage.startsWith('DioException: ')) {
+        errorMessage = errorMessage.substring(14);
+      }
+      
+      setError(_formatErrorMessage(errorMessage));
       return false;
     } finally {
       _isUpdating = false;
@@ -256,7 +304,10 @@ class ClassSectionManagementProvider extends ChangeNotifier {
 
       // Find the section to determine if it's a simple division or complex section
       final section = getClassSectionById(sectionId);
-      final isSimpleDivision = section?['_isSimpleDivision'] == true;
+      if (section == null) {
+        throw Exception('Class section with ID $sectionId not found');
+      }
+      final isSimpleDivision = section['_isSimpleDivision'] == true;
 
       if (isSimpleDivision) {
         // Delete using class divisions API
@@ -280,10 +331,11 @@ class ClassSectionManagementProvider extends ChangeNotifier {
         courseId: _lastCourseId,
         semesterId: _lastSemesterId,
         teacherId: _lastTeacherId,
+        institutionType: _lastInstitutionType,
       );
       return true;
     } on Exception catch (e) {
-      setError(e.toString());
+      setError(_formatErrorMessage(e.toString()));
       return false;
     } finally {
       _isDeleting = false;
@@ -294,13 +346,46 @@ class ClassSectionManagementProvider extends ChangeNotifier {
   /// Get class section by ID
   Map<String, dynamic>? getClassSectionById(int sectionId) {
     try {
-      return _classSections.firstWhere(
-            (section) => section['id'] == sectionId,
-            orElse: () => null,
-          )
-          as Map<String, dynamic>?;
-    } on Exception catch (e) {
+      for (final section in _classSections) {
+        final sectionMap = section as Map<String, dynamic>;
+        if (sectionMap['id'] == sectionId) {
+          return sectionMap;
+        }
+      }
+      return null;
+    } on Exception {
       return null;
     }
+  }
+
+  /// Format error messages for better user experience
+  String _formatErrorMessage(String errorMessage) {
+    // Clean up common error prefixes
+    if (errorMessage.startsWith('Exception: ')) {
+      errorMessage = errorMessage.substring(11);
+    }
+    if (errorMessage.startsWith('DioException: ')) {
+      errorMessage = errorMessage.substring(14);
+    }
+    
+    // Handle specific error cases with user-friendly messages
+    if (errorMessage.contains('No active academic year found')) {
+      return 'Cannot assign teacher: No active academic year found. Please contact your administrator to set up the current academic year.';
+    }
+    
+    if (errorMessage.contains('Teacher with ID') && errorMessage.contains('not found')) {
+      return 'Selected teacher not found. Please try selecting a different teacher.';
+    }
+    
+    if (errorMessage.contains('already exists')) {
+      return 'A class section with this name already exists. Please choose a different name.';
+    }
+    
+    if (errorMessage.contains('institution')) {
+      return 'You can only manage class sections within your own institution.';
+    }
+    
+    // Return cleaned error message if no specific case matches
+    return errorMessage;
   }
 }
