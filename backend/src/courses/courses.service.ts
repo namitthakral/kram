@@ -2374,36 +2374,29 @@ export class CoursesService {
       throw new NotFoundException(`Course with ID ${courseId} not found`)
     }
 
-    // Check if user has permission (teacher must be assigned to this course or admin)
-    const isAdmin = user.role?.roleName === 'super_admin' || user.role?.roleName === 'admin'
-    
-    if (!isAdmin) {
-      // Non-admin users must be teachers assigned to this course
-      if (!user.teacher) {
-        throw new ForbiddenException(
-          'You must be a teacher to mark attendance for course sections'
-        )
-      }
-
-      // For teachers, verify they are assigned to this course
-      const teacherAssignment = await this.prisma.classTeacher.findFirst({
-        where: {
-          teacherId: user.teacher.id,
-          courseId: courseId,
-          section: sectionName,
-          academicYear: {
-            status: 'CURRENT',
-          },
-        },
-      })
-
-      if (!teacherAssignment) {
-        throw new ForbiddenException(
-          'You are not authorized to mark attendance for this course section'
-        )
-      }
+    // Only assigned class teachers may mark attendance (not admins)
+    if (!user.teacher) {
+      throw new ForbiddenException(
+        'You must be a teacher to mark attendance for course sections'
+      )
     }
-    // Admins can mark attendance for any course section
+
+    const teacherAssignment = await this.prisma.classTeacher.findFirst({
+      where: {
+        teacherId: user.teacher.id,
+        courseId: courseId,
+        section: sectionName,
+        academicYear: {
+          status: 'CURRENT',
+        },
+      },
+    })
+
+    if (!teacherAssignment) {
+      throw new ForbiddenException(
+        'You are not authorized to mark attendance for this course section'
+      )
+    }
 
     // Get students in this course section
     const students = await this.prisma.student.findMany({
@@ -2422,7 +2415,7 @@ export class CoursesService {
     }
 
     const attendanceDate = new Date(attendanceDto.date)
-    const markerId = user.teacher?.id || user.id // Use teacher ID if available, otherwise user ID
+    const markerId = user.teacher!.id
 
     // Create attendance records
     const attendanceRecords = []

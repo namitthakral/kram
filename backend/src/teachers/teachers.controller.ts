@@ -360,7 +360,7 @@ export class TeachersController {
 
   @Post(':user_uuid/attendance')
   @UseGuards(RolesGuard)
-  @Roles('teacher', 'super_admin', 'admin')
+  @Roles('teacher')
   @HttpCode(HttpStatus.CREATED)
   markAttendance(
     @Param('user_uuid') userUuid: string,
@@ -371,7 +371,7 @@ export class TeachersController {
 
   @Post(':user_uuid/attendance/bulk')
   @UseGuards(RolesGuard)
-  @Roles('teacher', 'super_admin', 'admin')
+  @Roles('teacher')
   @HttpCode(HttpStatus.CREATED)
   bulkMarkAttendance(
     @Param('user_uuid') userUuid: string,
@@ -385,7 +385,7 @@ export class TeachersController {
 
   @Patch(':user_uuid/attendance/:attendanceId')
   @UseGuards(RolesGuard)
-  @Roles('teacher', 'super_admin', 'admin')
+  @Roles('teacher')
   updateAttendance(
     @Param('user_uuid') userUuid: string,
     @Param('attendanceId') attendanceId: string,
@@ -400,7 +400,7 @@ export class TeachersController {
 
   @Delete(':user_uuid/attendance/:attendanceId')
   @UseGuards(RolesGuard)
-  @Roles('teacher', 'super_admin', 'admin')
+  @Roles('teacher')
   @HttpCode(HttpStatus.OK)
   deleteAttendance(
     @Param('user_uuid') userUuid: string,

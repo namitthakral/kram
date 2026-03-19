@@ -3330,50 +3330,25 @@ export class TeachersService {
       throw new NotFoundException(`User with UUID ${userUuid} not found`)
     }
 
-    // Check if user is admin or teacher
-    const isAdmin = user.role?.roleName === 'admin' || user.role?.roleName === 'super_admin'
     const teacher = user.teacher
-
-    // For teachers, verify the section belongs to them
-    // For admins, allow access to any section in their institution
-    let section
-    if (isAdmin) {
-      // Admin can access any section in their institution
-      section = await this.prisma.classSection.findFirst({
-        where: {
-          id: bulkMarkAttendanceDto.sectionId,
-          // Add institution check if needed
-        },
-        include: {
-          subject: {
-            select: {
-              subjectName: true,
-              subjectCode: true,
-            },
-          },
-        },
-      })
-    } else {
-      // Teacher can only access their assigned sections
-      if (!teacher) {
-        throw new NotFoundException(`Teacher record not found for user ${userUuid}`)
-      }
-      
-      section = await this.prisma.classSection.findFirst({
-        where: {
-          id: bulkMarkAttendanceDto.sectionId,
-          teacherId: teacher.id,
-        },
-        include: {
-          subject: {
-            select: {
-              subjectName: true,
-              subjectCode: true,
-            },
-          },
-        },
-      })
+    if (!teacher) {
+      throw new NotFoundException(`Teacher record not found for user ${userUuid}`)
     }
+
+    const section = await this.prisma.classSection.findFirst({
+      where: {
+        id: bulkMarkAttendanceDto.sectionId,
+        teacherId: teacher.id,
+      },
+      include: {
+        subject: {
+          select: {
+            subjectName: true,
+            subjectCode: true,
+          },
+        },
+      },
+    })
 
     if (!section) {
       throw new ForbiddenException(

@@ -329,7 +329,10 @@ class RouterService {
                 // Check user role to determine which screen to show
                 final loginProvider = Provider.of<LoginProvider>(context, listen: false);
                 final user = loginProvider.currentUser;
-                final isAdmin = user?.role == 'admin' || user?.role == 'super_admin';
+                // role is a Role object — compare roleName, not the object to a string
+                final roleName = user?.role?.roleName.toLowerCase();
+                final isAdmin =
+                    roleName == 'admin' || roleName == 'super_admin';
                 
                 return _buildPageWithTransition(
                   key: state.pageKey,

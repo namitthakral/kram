@@ -191,7 +191,7 @@ export class CoursesController {
    * POST /courses/:courseId/sections/:sectionName/attendance
    */
   @Post(':courseId/sections/:sectionName/attendance')
-  @Roles('super_admin', 'admin', 'teacher')
+  @Roles('teacher')
   @HttpCode(HttpStatus.CREATED)
   async markCourseAttendance(
     @Param('courseId', ParseIntPipe) courseId: number,
