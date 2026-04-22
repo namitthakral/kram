@@ -469,13 +469,15 @@ class _AdminStudentManagementScreenState
 
   Widget _studentCard(s) {
     final user = s['user'] as Map<String, dynamic>?;
-    final name = user != null 
-        ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim()
-        : '${s['admissionNumber']}';
+    final name =
+        user != null
+            ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim()
+            : '${s['admissionNumber']}';
     final initials = UserUtils.getInitials(name);
     // Get course info (now included directly in the API response)
     final course = s['course'] as Map<String, dynamic>?;
-    final courseName = course?['name'] as String? ?? 'Class ${s['courseId'] ?? ''}';
+    final courseName =
+        course?['name'] as String? ?? 'Class ${s['courseId'] ?? ''}';
     final section = s['section'] as String?;
     final classLabel =
         courseName.isNotEmpty
@@ -495,9 +497,11 @@ class _AdminStudentManagementScreenState
                 )['user']
                 as Map<String, dynamic>?
             : null;
-    final guardianName = guardian != null 
-        ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'.trim()
-        : '—';
+    final guardianName =
+        guardian != null
+            ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'
+                .trim()
+            : '—';
     // Get phone from student or primary parent contact
     var phone = user?['phone'] as String? ?? '';
     if (phone.isEmpty) {
@@ -670,12 +674,15 @@ class _AdminStudentManagementScreenState
         rows:
             students.map((s) {
               final user = s['user'] as Map<String, dynamic>?;
-              final name = user != null 
-                  ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim()
-                  : '—';
+              final name =
+                  user != null
+                      ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'
+                          .trim()
+                      : '—';
               // Get course info (now included directly in the API response)
               final course = s['course'] as Map<String, dynamic>?;
-              final courseName = course?['name'] as String? ?? 'Class ${s['courseId'] ?? ''}';
+              final courseName =
+                  course?['name'] as String? ?? 'Class ${s['courseId'] ?? ''}';
               final section = s['section'] as String?;
               final classLabel =
                   courseName.isNotEmpty
@@ -695,9 +702,11 @@ class _AdminStudentManagementScreenState
                           )['user']
                           as Map<String, dynamic>?
                       : null;
-              final guardianName = guardian != null 
-                  ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'.trim()
-                  : '—';
+              final guardianName =
+                  guardian != null
+                      ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'
+                          .trim()
+                      : '—';
               final phone = user?['phone'] as String? ?? '—';
               final status = user?['accountStatus'] as String? ?? 'ACTIVE';
               return DataRow(
@@ -785,13 +794,15 @@ class _AdminStudentManagementScreenState
 
   void _viewStudentDetails(BuildContext context, student) {
     final user = student['user'] as Map<String, dynamic>?;
-    final name = user != null 
-        ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim()
-        : 'Student';
+    final name =
+        user != null
+            ? '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim()
+            : 'Student';
     final admissionNumber = student['admissionNumber'] as String? ?? '';
     // Get course info (now included directly in the API response)
     final course = student['course'] as Map<String, dynamic>?;
-    final courseName = course?['name'] as String? ?? 'Class ${student['courseId'] ?? ''}';
+    final courseName =
+        course?['name'] as String? ?? 'Class ${student['courseId'] ?? ''}';
     final section = student['section'] as String? ?? '';
     final rollNumber = student['rollNumber'] as String? ?? '';
     final parents = student['parents'] as List<dynamic>? ?? [];
@@ -808,9 +819,11 @@ class _AdminStudentManagementScreenState
                 )['user']
                 as Map<String, dynamic>?
             : null;
-    final guardianName = guardian != null 
-        ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'.trim()
-        : '';
+    final guardianName =
+        guardian != null
+            ? '${guardian['firstName'] ?? ''} ${guardian['lastName'] ?? ''}'
+                .trim()
+            : '';
     final phone = user?['phone'] as String? ?? '';
     final email = user?['email'] as String? ?? '';
     final status = user?['accountStatus'] as String? ?? 'ACTIVE';
