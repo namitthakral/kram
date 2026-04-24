@@ -1,0 +1,109 @@
+---
+description: Flutter button cursor pointer behavior for web
+globs: "**/*.dart"
+alwaysApply: false
+---
+
+# Flutter Button Cursor Pointer Rule
+
+## Requirement
+
+ALL interactive buttons and clickable widgets MUST show a pointer cursor when enabled on web platforms.
+
+## Implementation
+
+### For Custom Buttons (InkWell, GestureDetector)
+
+```dart
+// ❌ BAD - No cursor pointer
+InkWell(
+  onTap: onPressed,
+  child: Container(...),
+)
+
+// ✅ GOOD - With cursor pointer
+InkWell(
+  onTap: onPressed,
+  mouseCursor: onPressed != null 
+    ? SystemMouseCursors.click 
+    : SystemMouseCursors.forbidden,
+  child: Container(...),
+)
+```
+
+### For Material Buttons
+
+```dart
+// ❌ BAD - Default cursor behavior
+ElevatedButton(
+  onPressed: onPressed,
+  child: Text('Click Me'),
+)
+
+// ✅ GOOD - With explicit cursor
+ElevatedButton(
+  onPressed: onPressed,
+  mouseCursor: onPressed != null 
+    ? SystemMouseCursors.click 
+    : SystemMouseCursors.forbidden,
+  child: Text('Click Me'),
+)
+```
+
+### For Container-based Buttons
+
+```dart
+// ❌ BAD - No cursor feedback
+GestureDetector(
+  onTap: onPressed,
+  child: Container(...),
+)
+
+// ✅ GOOD - With cursor feedback
+MouseRegion(
+  cursor: onPressed != null 
+    ? SystemMouseCursors.click 
+    : SystemMouseCursors.forbidden,
+  child: GestureDetector(
+    onTap: onPressed,
+    child: Container(...),
+  ),
+)
+```
+
+## Cursor Types
+
+- **`SystemMouseCursors.click`**: For enabled buttons
+- **`SystemMouseCursors.forbidden`**: For disabled buttons
+- **`SystemMouseCursors.basic`**: For non-interactive elements
+
+## Pattern for Custom Widgets
+
+```dart
+class CustomButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: onPressed != null 
+        ? SystemMouseCursors.click 
+        : SystemMouseCursors.forbidden,
+      child: InkWell(
+        onTap: onPressed,
+        mouseCursor: onPressed != null 
+          ? SystemMouseCursors.click 
+          : SystemMouseCursors.forbidden,
+        child: // ... button content
+      ),
+    );
+  }
+}
+```
+
+## Why This Matters
+
+- **Web UX**: Users expect pointer cursor on clickable elements
+- **Accessibility**: Clear visual feedback for interactive elements
+- **Professional**: Matches web standards and user expectations
+- **Disabled State**: Shows forbidden cursor when button is disabled

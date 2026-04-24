@@ -1,0 +1,1221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kram - Pitch Deck</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4338ca;
+        --secondary: #ec4899;
+        --accent: #f59e0b;
+        --success: #10b981;
+        --error: #ef4444;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-light: #64748b;
+        --surface: #ffffff;
+        --surface-elevated: #f8fafc;
+        --surface-accent: rgba(99, 102, 241, 0.05);
+        --border: rgba(148, 163, 184, 0.2);
+        --shadow-soft:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-medium:
+          0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --shadow-large: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Space Grotesk', sans-serif;
+        background:
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(120, 119, 198, 0.3),
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 119, 198, 0.3),
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 40%,
+            rgba(120, 219, 255, 0.2),
+            transparent 50%
+          ),
+          linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        min-height: 100vh;
+        color: var(--text-primary);
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+          repeat;
+        z-index: -1;
+      }
+
+      .presentation-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        position: relative;
+      }
+
+      .slide {
+        min-height: 100vh;
+        padding: 4rem 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        background: var(--surface);
+        margin: 2rem auto;
+        border-radius: 24px;
+        box-shadow: var(--shadow-large);
+        max-width: 1400px;
+        width: 95%;
+        border: 1px solid var(--border);
+        backdrop-filter: blur(20px);
+        overflow: hidden;
+      }
+
+      .slide::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: var(--gradient-primary);
+      }
+
+      .slide-number {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background: var(--gradient-primary);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow-medium);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .slide h1 {
+        font-family: 'Fraunces', serif;
+        font-size: clamp(3rem, 8vw, 6rem);
+        font-weight: 900;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 0.95;
+        letter-spacing: -0.02em;
+        position: relative;
+      }
+
+      .slide h1::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 4px;
+        background: var(--gradient-secondary);
+        border-radius: 2px;
+      }
+
+      .slide h2 {
+        font-family: 'Fraunces', serif;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        line-height: 1.1;
+        letter-spacing: -0.01em;
+      }
+
+      .slide h3 {
+        font-size: clamp(1.2rem, 3vw, 2rem);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--primary);
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 3rem;
+        line-height: 1.7;
+        max-width: 900px;
+        font-weight: 400;
+      }
+
+      .founder-info {
+        background: var(--surface-elevated);
+        padding: 3rem 4rem;
+        border-radius: 24px;
+        text-align: center;
+        margin-top: 4rem;
+        position: relative;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-medium);
+        backdrop-filter: blur(10px);
+      }
+
+      .founder-info::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-secondary);
+        border-radius: 24px 24px 0 0;
+      }
+
+      .founder-name {
+        font-family: 'Fraunces', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+      }
+
+      .founder-title {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .problem-item,
+      .solution-item,
+      .feature-item {
+        background: var(--surface-elevated);
+        padding: 3rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+      }
+
+      .problem-item::before,
+      .solution-item::before,
+      .feature-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        transition: all 0.3s ease;
+      }
+
+      .problem-item::before {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+      }
+
+      .solution-item::before {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      .feature-item::before {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+
+      .problem-item:hover,
+      .solution-item:hover,
+      .feature-item:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: var(--shadow-large);
+        border-color: rgba(99, 102, 241, 0.2);
+      }
+
+      .problem-item:hover::before,
+      .solution-item:hover::before,
+      .feature-item:hover::before {
+        height: 6px;
+      }
+
+      .bullet-list {
+        list-style: none;
+        padding: 0;
+        margin-top: 1.5rem;
+      }
+
+      .bullet-list li {
+        padding: 1rem 0;
+        font-size: 1.1rem;
+        line-height: 1.7;
+        position: relative;
+        padding-left: 3rem;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+      }
+
+      .bullet-list li::before {
+        content: '✦';
+        position: absolute;
+        left: 0;
+        top: 1rem;
+        color: var(--primary);
+        font-weight: bold;
+        font-size: 1.4rem;
+        animation: pulse 2s infinite;
+      }
+
+      .bullet-list li:hover {
+        color: var(--text-primary);
+        transform: translateX(5px);
+      }
+
+      .bullet-list li:hover::before {
+        color: var(--secondary);
+        transform: scale(1.2);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .highlight-box {
+        background: var(--gradient-secondary);
+        color: white;
+        padding: 3rem 4rem;
+        border-radius: 24px;
+        text-align: center;
+        margin: 3rem 0;
+        font-weight: 700;
+        font-size: 1.3rem;
+        box-shadow: var(--shadow-large);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .highlight-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 10px,
+          rgba(255, 255, 255, 0.05) 10px,
+          rgba(255, 255, 255, 0.05) 20px
+        );
+        animation: shimmer 3s linear infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%) translateY(-100%);
+        }
+        100% {
+          transform: translateX(100%) translateY(100%);
+        }
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2.5rem;
+        margin: 3rem 0;
+        width: 100%;
+      }
+
+      .stat-card {
+        background: var(--surface-elevated);
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        text-align: center;
+        border: 1px solid var(--border);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-accent);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-10px) scale(1.05);
+        box-shadow: var(--shadow-large);
+        border-color: var(--primary);
+      }
+
+      .stat-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .stat-number {
+        font-family: 'Fraunces', serif;
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        line-height: 1;
+      }
+
+      .stat-label {
+        font-size: 1.1rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .pillars-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 3rem;
+        margin: 4rem 0;
+        width: 100%;
+      }
+
+      .pillar {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--surface-elevated);
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .pillar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--surface-accent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .pillar:hover {
+        transform: translateY(-12px) rotate(2deg);
+        box-shadow: var(--shadow-large);
+      }
+
+      .pillar:hover::before {
+        opacity: 1;
+      }
+
+      .pillar-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        position: relative;
+        z-index: 2;
+      }
+
+      .pillar-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        position: relative;
+        z-index: 2;
+      }
+
+      .competitive-advantage {
+        background: var(--gradient-accent);
+        color: white;
+        padding: 4rem 3rem;
+        border-radius: 24px;
+        margin: 4rem 0;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-large);
+      }
+
+      .competitive-advantage::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: var(--gradient-accent);
+        border-radius: 24px;
+        z-index: -1;
+        filter: blur(20px);
+        opacity: 0.7;
+      }
+
+      .competitive-advantage h3 {
+        color: white;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        font-weight: 800;
+      }
+
+      .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 3rem;
+        width: 100%;
+        margin: 3rem 0;
+      }
+
+      .user-card {
+        background: var(--surface-elevated);
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        text-align: center;
+        border: 1px solid var(--border);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .user-card::before {
+        content: '';
+        position: absolute;
+        top: -100%;
+        left: -100%;
+        width: 300%;
+        height: 300%;
+        background: conic-gradient(
+          from 0deg,
+          transparent,
+          var(--primary),
+          transparent
+        );
+        opacity: 0;
+        transition: all 0.6s ease;
+      }
+
+      .user-card:hover {
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: var(--shadow-large);
+        border-color: var(--primary);
+      }
+
+      .user-card:hover::before {
+        opacity: 0.1;
+        animation: rotate 2s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .user-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      .user-description {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        line-height: 1.6;
+        font-weight: 500;
+        position: relative;
+        z-index: 2;
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 3rem;
+        right: 3rem;
+        display: flex;
+        gap: 1rem;
+        z-index: 1000;
+      }
+
+      .nav-btn {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 1rem;
+        box-shadow: var(--shadow-medium);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.6s ease;
+      }
+
+      .nav-btn:hover::before {
+        left: 100%;
+      }
+
+      .nav-btn:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: var(--shadow-large);
+      }
+
+      .nav-btn:active {
+        transform: translateY(-2px) scale(1.02);
+      }
+
+      .nav-btn:disabled {
+        background: linear-gradient(135deg, #9ca3af, #6b7280);
+        cursor: not-allowed;
+        transform: none;
+        opacity: 0.6;
+      }
+
+      .nav-btn:disabled:hover {
+        transform: none;
+        box-shadow: var(--shadow-medium);
+      }
+
+      @media (max-width: 1024px) {
+        .slide {
+          width: 98%;
+          margin: 1rem auto;
+          padding: 3rem 2rem;
+        }
+
+        .pillars-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .users-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 2rem;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .slide {
+          padding: 2rem 1.5rem;
+          margin: 1rem auto;
+        }
+
+        .slide-number {
+          top: 1rem;
+          right: 1rem;
+          padding: 0.6rem 1rem;
+          font-size: 0.8rem;
+        }
+
+        .users-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .founder-info {
+          padding: 2rem;
+          margin-top: 2rem;
+        }
+
+        .highlight-box {
+          padding: 2rem;
+          margin: 2rem 0;
+          font-size: 1.1rem;
+        }
+
+        .navigation {
+          bottom: 2rem;
+          right: 2rem;
+          flex-direction: column;
+        }
+
+        .nav-btn {
+          padding: 0.8rem 1.5rem;
+          font-size: 0.9rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .slide {
+          padding: 1.5rem 1rem;
+        }
+
+        .content-grid {
+          gap: 1.5rem;
+        }
+
+        .problem-item,
+        .solution-item,
+        .feature-item {
+          padding: 2rem 1.5rem;
+        }
+
+        .pillars-grid,
+        .users-grid,
+        .stats-grid {
+          gap: 2rem;
+        }
+      }
+
+      .slide:target {
+        animation: slideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(50px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* Smooth scroll behavior */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--gradient-primary);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="presentation-container">
+      <!-- Slide 1: Title -->
+      <div class="slide" id="slide1">
+        <div class="slide-number">01</div>
+        <h1>Kram</h1>
+        <p class="subtitle">
+          The operating system for parent-school engagement
+        </p>
+        <p class="subtitle">
+          Improving student outcomes through structured communication, real-time
+          insights, and actionable guidance.
+        </p>
+      </div>
+
+      <!-- Slide 2: Problem -->
+      <div class="slide" id="slide2">
+        <div class="slide-number">02</div>
+        <h2>🚨 Problem</h2>
+
+        <div class="content-grid">
+          <div class="problem-item">
+            <h3>Parents lack visibility into:</h3>
+            <ul class="bullet-list">
+              <li>What their child is learning</li>
+              <li>Where they are struggling</li>
+            </ul>
+          </div>
+
+          <div class="problem-item">
+            <h3>Communication is fragmented:</h3>
+            <ul class="bullet-list">
+              <li>WhatsApp groups = noise, not clarity</li>
+              <li>No structured updates</li>
+              <li>Teachers spend time manually updating parents</li>
+            </ul>
+          </div>
+
+          <div class="problem-item">
+            <h3>Schools rely on:</h3>
+            <ul class="bullet-list">
+              <li>Occasional PTMs (once every few months)</li>
+              <li>Static report cards</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          <strong>Result:</strong> Low engagement, delayed intervention, poor
+          student outcomes
+        </div>
+      </div>
+
+      <!-- Slide 3: Solution -->
+      <div class="slide" id="slide3">
+        <div class="slide-number">03</div>
+        <h2>💡 Solution</h2>
+
+        <div class="content-grid">
+          <div class="solution-item">
+            <h3>
+              Kram connects parents, teachers, and students on one platform
+            </h3>
+            <ul class="bullet-list">
+              <li>Real-time visibility into student progress</li>
+              <li>Structured communication (no chaos)</li>
+              <li>Actionable insights for parents</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 style="text-align: center; margin-top: 3rem">Core pillars:</h3>
+        <div class="pillars-grid">
+          <div class="pillar">
+            <div class="pillar-icon">📊</div>
+            <div class="pillar-title">Progress tracking</div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-icon">💬</div>
+            <div class="pillar-title">Communication</div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-icon">🎯</div>
+            <div class="pillar-title">Action-driven improvement</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Product -->
+      <div class="slide" id="slide4">
+        <div class="slide-number">04</div>
+        <h2>📱 Product</h2>
+
+        <div class="content-grid">
+          <div class="feature-item">
+            <h3>A simple, daily-use app for parents and schools</h3>
+            <ul class="bullet-list">
+              <li>
+                <strong>Home dashboard:</strong> Daily snapshot of child's
+                progress
+              </li>
+              <li>
+                <strong>Actions tab:</strong> What parents should do today
+              </li>
+              <li>
+                <strong>Progress tab:</strong> Academic + behavioral insights
+              </li>
+              <li>
+                <strong>Weekly reports:</strong> Clear, structured summaries
+              </li>
+              <li>
+                <strong>PTM integration:</strong> Better, data-driven
+                conversations
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          Designed for simplicity and consistency of use
+        </div>
+      </div>
+
+      <!-- Slide 5: Why Now -->
+      <div class="slide" id="slide5">
+        <div class="slide-number">05</div>
+        <h2>🔥 Why Now</h2>
+
+        <div class="content-grid">
+          <div class="solution-item">
+            <h3>Macro tailwinds are aligned</h3>
+            <ul class="bullet-list">
+              <li>
+                Smartphone penetration among parents is at an all-time high
+              </li>
+              <li>Schools are digitizing post-COVID</li>
+              <li>Parents are more involved in their child's education</li>
+              <li>Shift from "learning apps" → "outcome-driven tools"</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="highlight-box">
+          The infrastructure exists. The layer for engagement is missing.
+        </div>
+      </div>
+
+      <!-- Slide 6: Key Features -->
+      <div class="slide" id="slide6">
+        <div class="slide-number">06</div>
+        <h2>🎯 Key Features</h2>
+
+        <div class="content-grid">
+          <div class="feature-item">
+            <h3>Built to drive real behavior change</h3>
+            <ul class="bullet-list">
+              <li>
+                <strong>Weekly Parent Reports</strong> → Clear insights, not
+                just data
+              </li>
+              <li>
+                <strong>Action-based recommendations</strong> → "What to do
+                next" for parents
+              </li>
+              <li>
+                <strong>Notification + habit loop</strong> → Drives daily
+                engagement
+              </li>
+              <li>
+                <strong>PTM tracking & preparation</strong> → Makes meetings
+                more effective
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 7: Target Users -->
+      <div class="slide" id="slide7">
+        <div class="slide-number">07</div>
+        <h2>👥 Target Users</h2>
+
+        <h3 style="text-align: center; margin-bottom: 2rem">
+          Multi-sided ecosystem
+        </h3>
+
+        <div class="users-grid">
+          <div class="user-card">
+            <div class="user-title">🏫 Schools</div>
+            <div class="user-description">Decision makers, platform buyers</div>
+          </div>
+          <div class="user-card">
+            <div class="user-title">👩‍🏫 Teachers</div>
+            <div class="user-description">
+              Daily contributors of data & updates
+            </div>
+          </div>
+          <div class="user-card">
+            <div class="user-title">👨‍👩‍👧‍👦 Parents</div>
+            <div class="user-description">Primary engagement layer</div>
+          </div>
+          <div class="user-card">
+            <div class="user-title">🎓 Students (future)</div>
+            <div class="user-description">Beneficiaries and eventual users</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 8: Market Opportunity -->
+      <div class="slide" id="slide8">
+        <div class="slide-number">08</div>
+        <h2>📈 Market Opportunity</h2>
+
+        <h3 style="text-align: center; margin-bottom: 2rem">
+          Large and growing market
+        </h3>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">250M</div>
+            <div class="stat-label">School students in India</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">Millions</div>
+            <div class="stat-label">K-12 schools</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">Growing</div>
+            <div class="stat-label">Private school segment</div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="solution-item">
+            <h3>Opportunity:</h3>
+            <ul class="bullet-list">
+              <li>Digitize parent-school interaction layer</li>
+              <li>Expand into engagement, analytics, and outcomes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 9: Early Validation -->
+      <div class="slide" id="slide9">
+        <div class="slide-number">09</div>
+        <h2>🧪 Early Validation</h2>
+
+        <div class="content-grid">
+          <div class="solution-item">
+            <h3>Strong early signals</h3>
+            <ul class="bullet-list">
+              <li>Conducted parent & teacher interviews (MoM testing)</li>
+              <li>
+                <strong>Key insights:</strong>
+                <ul style="margin-left: 2rem; margin-top: 1rem">
+                  <li>Parents want clarity, not more messages</li>
+                  <li>Teachers want structured communication tools</li>
+                </ul>
+              </li>
+              <li>
+                <strong>Positive response to:</strong>
+                <ul style="margin-left: 2rem; margin-top: 1rem">
+                  <li>Weekly reports</li>
+                  <li>Action-based guidance</li>
+                </ul>
+              </li>
+              <li>Early design prototypes built and tested</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 10: Business Model -->
+      <div class="slide" id="slide10">
+        <div class="slide-number">10</div>
+        <h2>💰 Business Model</h2>
+
+        <div class="content-grid">
+          <div class="solution-item">
+            <h3>Simple, scalable SaaS model</h3>
+            <ul class="bullet-list">
+              <li>Subscription model for schools</li>
+              <li>Pricing per student per month</li>
+            </ul>
+          </div>
+
+          <div class="feature-item">
+            <h3>Potential expansion:</h3>
+            <ul class="bullet-list">
+              <li>Premium insights for parents</li>
+              <li>Add-on features for schools</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 11: Go-To-Market -->
+      <div class="slide" id="slide11">
+        <div class="slide-number">11</div>
+        <h2>🚀 Go-To-Market</h2>
+
+        <div class="content-grid">
+          <div class="solution-item">
+            <h3>Focused initial strategy</h3>
+            <ul class="bullet-list">
+              <li>Direct outreach to private schools</li>
+              <li>Founder-led sales</li>
+              <li>Pilot programs with early adopters</li>
+              <li>Parent pull → school adoption</li>
+            </ul>
+          </div>
+
+          <div class="feature-item">
+            <h3>Expansion via:</h3>
+            <ul class="bullet-list">
+              <li>Referrals between schools</li>
+              <li>Network effects within communities</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 12: Competition -->
+      <div class="slide" id="slide12">
+        <div class="slide-number">12</div>
+        <h2>🧱 Competition</h2>
+
+        <div class="content-grid">
+          <div class="problem-item">
+            <h3>Existing solutions are incomplete</h3>
+            <ul class="bullet-list">
+              <li><strong>WhatsApp</strong> → Unstructured, noisy</li>
+              <li>
+                <strong>School ERPs</strong> → Admin-focused, not
+                engagement-focused
+              </li>
+              <li>
+                <strong>EdTech apps</strong> → Not integrated with schools
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="competitive-advantage">
+          <h3>Kram's advantage:</h3>
+          <ul class="bullet-list" style="color: white">
+            <li>Focus on engagement + outcomes</li>
+            <li>Structured, actionable system</li>
+            <li>Built for daily use</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="navigation">
+      <button class="nav-btn" onclick="previousSlide()" id="prevBtn">
+        Previous
+      </button>
+      <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Next</button>
+    </div>
+
+    <script>
+      let currentSlide = 1
+      const totalSlides = 12
+
+      function updateNavigation() {
+        const prevBtn = document.getElementById('prevBtn')
+        const nextBtn = document.getElementById('nextBtn')
+
+        prevBtn.disabled = currentSlide === 1
+        nextBtn.disabled = currentSlide === totalSlides
+      }
+
+      function goToSlide(slideNumber) {
+        if (slideNumber >= 1 && slideNumber <= totalSlides) {
+          currentSlide = slideNumber
+          document.getElementById(`slide${slideNumber}`).scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          })
+          updateNavigation()
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          goToSlide(currentSlide + 1)
+        }
+      }
+
+      function previousSlide() {
+        if (currentSlide > 1) {
+          goToSlide(currentSlide - 1)
+        }
+      }
+
+      // Keyboard navigation
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+          nextSlide()
+        } else if (e.key === 'ArrowLeft') {
+          previousSlide()
+        } else if (e.key >= '1' && e.key <= '9') {
+          const slideNum = parseInt(e.key)
+          if (slideNum <= totalSlides) {
+            goToSlide(slideNum)
+          }
+        }
+      })
+
+      // Initialize navigation
+      updateNavigation()
+
+      // Smooth scrolling observer
+      const observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const slideId = entry.target.id
+              const slideNum = parseInt(slideId.replace('slide', ''))
+              currentSlide = slideNum
+              updateNavigation()
+            }
+          })
+        },
+        { threshold: 0.5 }
+      )
+
+      // Observe all slides
+      for (let i = 1; i <= totalSlides; i++) {
+        observer.observe(document.getElementById(`slide${i}`))
+      }
+    </script>
+  </body>
+</html>
