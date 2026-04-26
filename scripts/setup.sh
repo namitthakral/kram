@@ -27,6 +27,8 @@ cd backend && npm install && cd ..
 if command -v flutter &> /dev/null; then
     echo "📦 Installing Flutter dependencies..."
     cd frontend && flutter pub get && cd ..
+    echo "📦 Installing Flutter dependencies for v2..."
+    cd frontend-v2 && flutter pub get && cd ..
 else
     echo "⏭️  Skipping Flutter dependencies (Flutter not installed)"
 fi

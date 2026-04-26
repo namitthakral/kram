@@ -11,8 +11,7 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                // "--dart-define=BASE_URL=http://192.168.1.11:3001",
-                "--dart-define=BASE_URL=http://192.168.0.175:3001",
+                "--dart-define=BASE_URL=http://localhost:3000",
                 "-d",
                 "chrome",
                 "--web-port",
@@ -27,7 +26,7 @@
             "request": "launch",
             "type": "dart",
             "args": [
-                "--dart-define=BASE_URL=http://192.168.1.11:3001"
+                "--dart-define=BASE_URL=http://localhost:3000"
             ]
         },
         {
@@ -100,6 +99,70 @@
         {
             "name": "frontend (release mode)",
             "cwd": "frontend",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "Kram v2 (Local - Web)",
+            "cwd": "frontend-v2",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define=BASE_URL=http://localhost:3000",
+                "-d",
+                "chrome",
+                "--web-port",
+                "7001",
+                "--web-hostname",
+                "127.0.0.1"
+            ]
+        },
+        {
+            "name": "Kram v2 (Local - App)",
+            "cwd": "frontend-v2",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "--dart-define=BASE_URL=http://localhost:3000"
+            ]
+        },
+        {
+            "name": "Kram v2 (Production - Web)",
+            "cwd": "frontend-v2",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define=BASE_URL=https://api.kramedu.in",
+                "-d",
+                "chrome",
+                "--web-port",
+                "7001",
+                "--web-hostname",
+                "127.0.0.1"
+            ]
+        },
+        {
+            "name": "Kram v2 (Production - App)",
+            "cwd": "frontend-v2",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "--dart-define=BASE_URL=https://api.kramedu.in"
+            ]
+        },
+        {
+            "name": "frontend-v2 (profile mode)",
+            "cwd": "frontend-v2",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "frontend-v2 (release mode)",
+            "cwd": "frontend-v2",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
